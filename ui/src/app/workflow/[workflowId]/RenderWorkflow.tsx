@@ -23,6 +23,8 @@ import { AgentNode, EndCall, GlobalNode, QANode, StartCall, TriggerNode, Webhook
 import { PhoneCallDialog } from './components/PhoneCallDialog';
 import { VersionHistoryPanel, WorkflowVersion } from './components/VersionHistoryPanel';
 import { WorkflowEditorHeader } from "./components/WorkflowEditorHeader";
+import { WorkflowEditorRightRail } from './components/WorkflowEditorRightRail';
+import { WorkflowEditorShell } from './components/WorkflowEditorShell';
 import { WorkflowProvider } from "./contexts/WorkflowContext";
 import { useWorkflowState } from "./hooks/useWorkflowState";
 import { layoutNodes } from './utils/layoutNodes';
@@ -80,14 +82,12 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
         rfInstance,
         nodes,
         edges,
-        isAddNodePanelOpen,
         workflowName,
         isDirty,
         workflowValidationErrors,
         setNodes,
         setEdges,
         setIsDirty,
-        setIsAddNodePanelOpen,
         handleNodeSelect,
         saveWorkflow,
         onConnect,
@@ -295,6 +295,135 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
         readOnly: isViewingHistoricalVersion,
     }), [guardedSaveWorkflow, documents, tools, recordings, isViewingHistoricalVersion]);
 
+    const canvasReadOnly = isViewingHistoricalVersion;
+
+    const workflowCanvas = (
+        <>
+            <ReactFlow
+                key={activeVersionId ?? 'current'}
+                className="h-full w-full"
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                onConnect={canvasReadOnly ? undefined : onConnect}
+                minZoom={0.4}
+                onInit={(instance) => {
+                    rfInstance.current = instance;
+                    setTimeout(() => {
+                        instance.fitView({ padding: 0.2, duration: 200, maxZoom: 0.75 });
+                    }, 0);
+                }}
+                defaultEdgeOptions={defaultEdgeOptions}
+                defaultViewport={initialFlow?.viewport}
+                nodesDraggable={!canvasReadOnly}
+                nodesConnectable={!canvasReadOnly}
+                edgesReconnectable={!canvasReadOnly}
+                zoomOnDoubleClick={false}
+                deleteKeyCode={canvasReadOnly ? null : 'Backspace'}
+            >
+                <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#94a3b8" />
+
+                {!canvasReadOnly && (
+                    <Panel position="top-right">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => router.push(`/workflow/${workflowId}/settings`)}
+                                        className="bg-white shadow-sm hover:shadow-md"
+                                    >
+                                        <Settings className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">
+                                    <p>Workflow settings</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </Panel>
+                )}
+            </ReactFlow>
+
+            <div className="absolute bottom-12 left-8 z-10 flex gap-2">
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => rfInstance.current?.zoomIn()}
+                                className="bg-white shadow-sm hover:shadow-md h-8 w-8"
+                            >
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p>Zoom in</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => rfInstance.current?.zoomOut()}
+                                className="bg-white shadow-sm hover:shadow-md h-8 w-8"
+                            >
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p>Zoom out</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => rfInstance.current?.fitView()}
+                                className="bg-white shadow-sm hover:shadow-md h-8 w-8"
+                            >
+                                <Maximize2 className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                            <p>Fit view</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    {!canvasReadOnly && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => {
+                                        setNodes(layoutNodes(nodes, edges, 'TB', rfInstance));
+                                        setIsDirty(true);
+                                    }}
+                                    className="bg-white shadow-sm hover:shadow-md h-8 w-8"
+                                >
+                                    <BrushCleaning className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                                <p>Tidy Up</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                </TooltipProvider>
+            </div>
+        </>
+    );
+
     return (
         <WorkflowProvider value={workflowContextValue}>
             <div className="flex flex-col h-screen min-w-fit">
@@ -317,166 +446,26 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                     onPublished={handlePublished}
                 />
 
-                {/* Workflow Canvas */}
-                <div className="flex-1 relative">
-                    <ReactFlow
-                        key={activeVersionId ?? 'current'}
-                        nodes={nodes}
-                        edges={edges}
-                        onNodesChange={onNodesChange}
-                        onEdgesChange={onEdgesChange}
-                        nodeTypes={nodeTypes}
-                        edgeTypes={edgeTypes}
-                        onConnect={isViewingHistoricalVersion ? undefined : onConnect}
-                        minZoom={0.4}
-                        onInit={(instance) => {
-                            rfInstance.current = instance;
-                            // Center the workflow on load
-                            setTimeout(() => {
-                                instance.fitView({ padding: 0.2, duration: 200, maxZoom: 0.75 });
-                            }, 0);
-                        }}
-                        defaultEdgeOptions={defaultEdgeOptions}
-                        defaultViewport={initialFlow?.viewport}
-                        nodesDraggable={!isViewingHistoricalVersion}
-                        nodesConnectable={!isViewingHistoricalVersion}
-                        edgesReconnectable={!isViewingHistoricalVersion}
-                        zoomOnDoubleClick={false}
-                        deleteKeyCode={isViewingHistoricalVersion ? null : "Backspace"}
-                    >
-                        <Background
-                            variant={BackgroundVariant.Dots}
-                            gap={16}
-                            size={1}
-                            color="#94a3b8"
+                {/* Workflow canvas: full-width when viewing history; three-column shell when editing (WE-01-SHELL) */}
+                {canvasReadOnly ? (
+                    <div className="relative min-h-0 flex-1">{workflowCanvas}</div>
+                ) : (
+                    <div className="flex min-h-0 flex-1 flex-col">
+                        <WorkflowEditorShell
+                            workflowId={workflowId}
+                            left={
+                                <AddNodePanel
+                                    variant="inline"
+                                    isOpen
+                                    onClose={() => {}}
+                                    onNodeSelect={handleNodeSelect}
+                                />
+                            }
+                            center={<div className="relative h-full min-h-0 w-full">{workflowCanvas}</div>}
+                            right={<WorkflowEditorRightRail workflowId={workflowId} />}
                         />
-
-                        {/* Top-right controls - vertical layout (hidden when viewing history) */}
-                        {!isViewingHistoricalVersion && (
-                            <Panel position="top-right">
-                                <TooltipProvider>
-                                    <div className="flex flex-col gap-2">
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="default"
-                                                    size="icon"
-                                                    onClick={() => setIsAddNodePanelOpen(true)}
-                                                    className="shadow-md hover:shadow-lg"
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="left">
-                                                <p>Add node</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() => router.push(`/workflow/${workflowId}/settings`)}
-                                                    className="bg-white shadow-sm hover:shadow-md"
-                                                >
-                                                    <Settings className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent side="left">
-                                                <p>Workflow settings</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </div>
-                                </TooltipProvider>
-                            </Panel>
-                        )}
-                    </ReactFlow>
-
-                    {/* Bottom-left controls - horizontal layout with custom buttons */}
-                    <div className="absolute bottom-12 left-8 z-10 flex gap-2">
-                        <TooltipProvider>
-                            {/* Zoom In */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => rfInstance.current?.zoomIn()}
-                                        className="bg-white shadow-sm hover:shadow-md h-8 w-8"
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                    <p>Zoom in</p>
-                                </TooltipContent>
-                            </Tooltip>
-
-                            {/* Zoom Out */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => rfInstance.current?.zoomOut()}
-                                        className="bg-white shadow-sm hover:shadow-md h-8 w-8"
-                                    >
-                                        <Minus className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                    <p>Zoom out</p>
-                                </TooltipContent>
-                            </Tooltip>
-
-                            {/* Fit View */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => rfInstance.current?.fitView()}
-                                        className="bg-white shadow-sm hover:shadow-md h-8 w-8"
-                                    >
-                                        <Maximize2 className="h-4 w-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                    <p>Fit view</p>
-                                </TooltipContent>
-                            </Tooltip>
-
-                            {/* Tidy/Arrange Nodes (hidden when viewing history) */}
-                            {!isViewingHistoricalVersion && (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="icon"
-                                            onClick={() => {
-                                                setNodes(layoutNodes(nodes, edges, 'TB', rfInstance));
-                                                setIsDirty(true);
-                                            }}
-                                            className="bg-white shadow-sm hover:shadow-md h-8 w-8"
-                                        >
-                                            <BrushCleaning className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">
-                                        <p>Tidy Up</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            )}
-                        </TooltipProvider>
                     </div>
-                </div>
-
-                <AddNodePanel
-                    isOpen={isAddNodePanelOpen}
-                    onNodeSelect={handleNodeSelect}
-                    onClose={() => setIsAddNodePanelOpen(false)}
-                />
+                )}
 
                 <VersionHistoryPanel
                     isOpen={isVersionPanelOpen}

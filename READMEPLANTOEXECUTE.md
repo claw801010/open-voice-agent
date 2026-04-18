@@ -78,7 +78,7 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _None — set when you start work_ | | |
+| _None — last closed: `WE-01-SHELL`_ | | |
 
 ### Checklist before you add work from READMEPLANNING
 
@@ -176,9 +176,9 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Area | Today | Primary paths |
 |------|--------|----------------|
-| Layout | Full-width canvas under header; **no** persistent left/right rails | [ui/src/app/workflow/[workflowId]/RenderWorkflow.tsx](ui/src/app/workflow/[workflowId]/RenderWorkflow.tsx) |
+| Layout | **Three-column resizable shell** (palette \| canvas \| inspector rail); full-width canvas when viewing a **historical** version | [RenderWorkflow.tsx](ui/src/app/workflow/[workflowId]/RenderWorkflow.tsx), [WorkflowEditorShell.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorShell.tsx) |
 | Header | Name, save, publish, run/phone, version history | [ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx) |
-| Add nodes | Modal / panel from floating **+** (not a docked palette) | [ui/src/components/flow/AddNodePanel.tsx](ui/src/components/flow/AddNodePanel.tsx) |
+| Add nodes | **Docked** node palette (left rail); overlay variant still in [AddNodePanel](ui/src/components/flow/AddNodePanel.tsx) for reuse | [AddNodePanel.tsx](ui/src/components/flow/AddNodePanel.tsx) |
 | Settings | Separate **settings** route, not right rail | [ui/src/app/workflow/[workflowId]/settings/page.tsx](ui/src/app/workflow/[workflowId]/settings/page.tsx) |
 | Test / simulate | **Web call** dialog; not the same as inline “Test Agent” + AI user simulator | [ui/src/app/workflow/[workflowId]/components/PhoneCallDialog.tsx](ui/src/app/workflow/[workflowId]/components/PhoneCallDialog.tsx) |
 | Node types | `startCall`, `agentNode`, `endCall`, `globalNode`, `trigger`, `webhook`, `qa` | [ui/src/components/flow/types.ts](ui/src/components/flow/types.ts), [RenderWorkflow.tsx](ui/src/app/workflow/[workflowId]/RenderWorkflow.tsx) `nodeTypes` |
@@ -195,17 +195,17 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 ### WE-01-SHELL — Three-column resizable shell
 
-**Status:** `NotStarted`
+**Status:** `Done`
 
 **Goal:** Persistent **left rail** (palette width ~240–280px), **center** React Flow canvas, **right rail** (inspector / test ~320–400px), all **resizable** with persisted widths (localStorage or user prefs API later).
 
 **Acceptance criteria:**
 
-- [ ] Layout works at 1280px width without horizontal scroll on canvas controls.
+- [x] Layout works at 1280px width without horizontal scroll on canvas controls (`min-h-0` / `min-w-0` on panels; flex percentage defaults).
 - [ ] Rails collapse to icons on narrow breakpoints (optional follow-up: document breakpoint in READMENEWRELEASES).
-- [ ] No regression: save, publish, version history, read-only historical version still reachable.
+- [x] No regression: save, publish, version history, read-only historical version still reachable (historical view uses full-width canvas + read-only graph; editing uses shell).
 
-**Key files:** [RenderWorkflow.tsx](ui/src/app/workflow/[workflowId]/RenderWorkflow.tsx), new layout component under `ui/src/app/workflow/[workflowId]/components/` (suggested: `WorkflowEditorShell.tsx`).
+**Key files:** [RenderWorkflow.tsx](ui/src/app/workflow/[workflowId]/RenderWorkflow.tsx), [WorkflowEditorShell.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorShell.tsx), [WorkflowEditorRightRail.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorRightRail.tsx), [AddNodePanel.tsx](ui/src/components/flow/AddNodePanel.tsx) (`variant="inline"`).
 
 ---
 

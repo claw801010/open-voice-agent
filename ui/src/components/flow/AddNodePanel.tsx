@@ -16,6 +16,8 @@ type AddNodePanelProps = {
     isOpen: boolean;
     onClose: () => void;
     onNodeSelect: (nodeType: NodeType) => void;
+    /** Slide-over (default) or fixed left rail inside the workflow shell */
+    variant?: 'overlay' | 'inline';
 };
 
 const NODE_TYPES: NodeTypeConfig[] = [
@@ -112,8 +114,25 @@ function NodeSection({
     );
 }
 
-export default function AddNodePanel({ isOpen, onNodeSelect, onClose }: AddNodePanelProps) {
+function PaletteBody({ onNodeSelect }: { onNodeSelect: (nodeType: NodeType) => void }) {
+    return (
+        <div className="space-y-6">
+            <NodeSection title="Triggers" nodes={TRIGGER_NODE_TYPES} onNodeSelect={onNodeSelect} />
+            <NodeSection title="Agent Nodes" nodes={NODE_TYPES} onNodeSelect={onNodeSelect} />
+            <NodeSection title="Global Nodes" nodes={GLOBAL_NODE_TYPES} onNodeSelect={onNodeSelect} />
+            <NodeSection title="Integrations" nodes={INTEGRATION_NODE_TYPES} onNodeSelect={onNodeSelect} />
+        </div>
+    );
+}
+
+export default function AddNodePanel({
+    isOpen,
+    onNodeSelect,
+    onClose,
+    variant = 'overlay',
+}: AddNodePanelProps) {
     useEffect(() => {
+        if (variant !== 'overlay') return;
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && isOpen) {
                 onClose();
@@ -122,12 +141,37 @@ export default function AddNodePanel({ isOpen, onNodeSelect, onClose }: AddNodeP
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, variant]);
+
+    if (variant === 'inline') {
+        return (
+            <div className="flex h-full min-h-0 flex-col bg-background">
+                <div className="shrink-0 border-b border-border px-3 py-2">
+                    <div className="flex flex-col gap-1">
+                        <h2 className="text-sm font-semibold">Nodes</h2>
+                        <a
+                            href="https://docs.dograh.com/voice-agent/introduction"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
+                        >
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                            View nodes documentation
+                        </a>
+                    </div>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                    <PaletteBody onNodeSelect={onNodeSelect} />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
-            className={`fixed z-51 right-0 top-0 h-full w-80 bg-background shadow-lg transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
-                }`}
+            className={`fixed z-50 right-0 top-0 h-full w-80 bg-background shadow-lg transform transition-transform duration-300 ease-in-out ${
+                isOpen ? 'translate-x-0' : 'translate-x-full'
+            }`}
         >
             <div className="p-4 h-full overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
@@ -148,31 +192,7 @@ export default function AddNodePanel({ isOpen, onNodeSelect, onClose }: AddNodeP
                     </Button>
                 </div>
 
-                <div className="space-y-6">
-                    <NodeSection
-                        title="Triggers"
-                        nodes={TRIGGER_NODE_TYPES}
-                        onNodeSelect={onNodeSelect}
-                    />
-
-                    <NodeSection
-                        title="Agent Nodes"
-                        nodes={NODE_TYPES}
-                        onNodeSelect={onNodeSelect}
-                    />
-
-                    <NodeSection
-                        title="Global Nodes"
-                        nodes={GLOBAL_NODE_TYPES}
-                        onNodeSelect={onNodeSelect}
-                    />
-
-                    <NodeSection
-                        title="Integrations"
-                        nodes={INTEGRATION_NODE_TYPES}
-                        onNodeSelect={onNodeSelect}
-                    />
-                </div>
+                <PaletteBody onNodeSelect={onNodeSelect} />
             </div>
         </div>
     );
