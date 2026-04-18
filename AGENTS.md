@@ -2,6 +2,10 @@
 
 Dograh is a voice AI platform for building and deploying conversational AI agents with telephony and WebRTC support.
 
+## Fork documentation (FulliO / extended)
+
+Beyond this overview, the repo includes a **documentation suite** for product tiers, strategy, and execution: [DOCS.md](DOCS.md) (map), [READMEEXPERIENCE.md](READMEEXPERIENCE.md) (no-code / builder / ADK), [READMEPLANNING.md](READMEPLANNING.md), [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md).
+
 ## Project Structure
 
 ```

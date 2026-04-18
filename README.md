@@ -123,6 +123,12 @@ Visit [https://www.dograh.com](https://www.dograh.com/) for our managed cloud of
 
 You can go to [https://docs.dograh.com](https://docs.dograh.com/) for our documentation.
 
+**Fork / extended product docs** (tiers, strategy, execution, recipes): [DOCS.md](DOCS.md) — navigation map for [READMEEXPERIENCE.md](READMEEXPERIENCE.md), [READMEADK.md](READMEADK.md), [READMEPLANNING.md](READMEPLANNING.md), and related files.
+
+For repository-specific roadmap and product planning (competitive themes, latency/cost pillars, growth bets), see [READMEPLANNING.md](READMEPLANNING.md).
+
+To **execute** that roadmap with traceable work items and a **release log** when features ship, see [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) (e.g. **MK-01** vertical marketplace, **WE-01** workflow editor) and [READMENEWRELEASES.md](READMENEWRELEASES.md). The **industry × use case** catalog for “ready-to-bake” business voice is in [READMEPLANNING.md](READMEPLANNING.md) section 6. **Choose how you work:** [READMEEXPERIENCE.md](READMEEXPERIENCE.md) (no-code vs minimal-code vs full ADK). **Full API + MCP + IDE:** [READMEADK.md](READMEADK.md). **Strategy (three tiers):** [READMEPLANNING.md](READMEPLANNING.md) section 8. **Builder recipes (scaffold):** [recipes/README.md](recipes/README.md).
+
 ## 🤝Community & Support
 
 - GitHub Issues: Report bugs or request features

@@ -27,6 +27,7 @@ ui/
 | Reusable components | `src/components/` - organized by feature             |
 | Base UI primitives  | `src/components/ui/` - shadcn/ui components          |
 | Workflow builder    | `src/components/flow/` - React Flow based            |
+| Product tiers (no-code / builder / ADK) | Repo root [READMEEXPERIENCE.md](../READMEEXPERIENCE.md), [READMEADK.md](../READMEADK.md) |
 | API calls           | `src/client/` - auto-generated from OpenAPI spec     |
 | Auth utilities      | `src/lib/auth/`                                      |
 | Helper functions    | `src/lib/utils.ts`                                   |

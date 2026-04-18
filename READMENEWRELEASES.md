@@ -1,0 +1,58 @@
+# READMENEWRELEASES — what shipped (FulliO / fork)
+
+Human-readable **release log** tied to **[READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md)** work item IDs. Append **newest first** under Unreleased or under a dated version heading.
+
+Use this file to **prove momentum** to customers and partners: marketplace features (**MK-01**\*), workflow editor upgrades (**WE-01**\*), **experience tiers** (**DX-01**\* — no-code, builder, ADK), vertical packs, and infra changes should all appear here with **plain-language outcomes** (what businesses can do now that they could not before).
+
+## How to use with READMEPLANTOEXECUTE
+
+1. When a work package moves to **`Done`**, add an entry here (same PR or immediately after merge).
+2. In **READMEPLANTOEXECUTE**, set the item status to `Done` and add a link to the PR or commit SHA.
+3. Optionally bump **version** in [api/pyproject.toml](api/pyproject.toml) / [ui/package.json](ui/package.json) per your release process.
+4. For **marketplace-impacting** releases, add a **“For businesses”** bullet (which vertical or use case improved) so GTM can lift copy into your public site.
+
+---
+
+## Unreleased
+
+_No entries yet._
+
+<!-- Example entry (delete when real releases exist):
+
+### Workflow editor
+
+- **WE-01-SHELL** — Three-column resizable editor shell ([PR #000](https://github.com/example/pull/0)).
+  - Users: persistent left palette rail, right inspector placeholder, canvas unchanged logically.
+
+-->
+
+---
+
+## Template for a version block
+
+```markdown
+## YYYY-MM-DD — vX.Y.Z (codename optional)
+
+### Highlights
+- …
+
+### For businesses (marketplace / verticals)
+- … (e.g. “Retail WISMO template: install + Web try in under 5 minutes”)
+
+### READMEPLANTOEXECUTE IDs closed
+- **MK-01-…** / **WE-01-…** — one-line summary each
+
+### Migration / ops
+- …
+
+### Contributors
+- …
+```
+
+---
+
+## Changelog of this file
+
+| Date | Change |
+|------|--------|
+| 2026-04-17 | Initial file; template with “For businesses” / MK-01 guidance for marketplace releases. |
