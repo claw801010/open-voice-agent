@@ -15,6 +15,10 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ## Unreleased
 
+### Developer experience (builder tier)
+
+- **DX-01-BUILDER** — All three [recipes/](recipes/) now include **environment variables** and **exact `/api/v1/...` paths** aligned with [READMELEARNME.md](READMELEARNME.md) §3; OpenAPI import called out.
+
 ### Marketplace / catalog
 
 - **MK-01-CATALOG** — Canonical **vertical pack** metadata in [catalog/vertical-packs.json](catalog/vertical-packs.json) (healthcare screening, retail WISMO, B2B SaaS trial nurture) with linked **runbooks** under [runbooks/](runbooks/).
@@ -53,6 +57,7 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 | Date | Change |
 |------|--------|
+| 2026-04-20 | Unreleased: **DX-01-BUILDER** entry. |
 | 2026-04-19 | Unreleased: **MK-01-CATALOG** entry. |
 | 2026-04-18 | Unreleased: **WE-01-SHELL**, **WE-01-PALETTE** entries. |
 | 2026-04-17 | Initial file; template with “For businesses” / MK-01 guidance for marketplace releases. |

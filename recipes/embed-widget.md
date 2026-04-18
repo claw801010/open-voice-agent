@@ -2,6 +2,29 @@
 
 **Tier:** Builder (minimal code). **API:** authenticated REST; script tag returned by the API.
 
+## Environment variables
+
+| Variable | Where | Purpose |
+|----------|--------|---------|
+| `{BACKEND}` | Your deploy | Placeholder for public API base (e.g. `https://api.example.com`). Same as `{BACKEND}` in [recipes/README.md](README.md). |
+| `BACKEND_API_ENDPOINT` | API + reverse proxy | Public HTTP(S) base for webhooks and browser-accessible API ([READMEBUILDME.md](../READMEBUILDME.md)). |
+| `NEXT_PUBLIC_BACKEND_URL` | UI (Next.js) | Browser calls API when not same-origin ([READMEBUILDME.md](../READMEBUILDME.md)). |
+
+No extra env vars are *required* beyond a reachable API + valid auth for the embed-token call.
+
+## API paths ([READMELEARNME.md](../READMELEARNME.md) §3)
+
+Exact prefixes use **`/api/v1`** ([api/app.py](../api/app.py) `API_PREFIX`). Discover all operations: `GET {BACKEND}/api/v1/openapi.json`.
+
+| Method | Path | Notes |
+|--------|------|--------|
+| `POST` | `/api/v1/workflow/{workflow_id}/embed-token` | Creates/refreshes token; returns `embed_script` ([api/routes/workflow_embed.py](../api/routes/workflow_embed.py)). |
+| WebSocket | `/api/v1/ws/...` | WebRTC signaling ([READMELEARNME.md](../READMELEARNME.md) §4.1, [api/routes/webrtc_signaling.py](../api/routes/webrtc_signaling.py)). |
+| `GET` | `/api/v1/health` | Deployment sanity check ([READMELEARNME.md](../READMELEARNME.md) §3). |
+| `GET` | `/api/v1/openapi.json` | OpenAPI document (import into Postman/Insomnia). |
+
+TURN (if you debug NAT): paths under `/api/v1/turn/...` per [READMELEARNME.md](../READMELEARNME.md) §4.1.
+
 ## Outcome
 
 Visitors click your **embedded widget** and talk to a published workflow over **WebRTC** (browser), without building your own frontend.
@@ -28,6 +51,8 @@ Visitors click your **embedded widget** and talk to a published workflow over **
 4. **Test** on a staging domain listed in `allowed_domains` before production.
 
 5. **Escalate to ADK** if you need to automate token rotation or multi-tenant embeds — use [READMEADK.md](../READMEADK.md) + generated client.
+
+**Optional:** Import `{BACKEND}/api/v1/openapi.json` into Postman or `httpx` codegen.
 
 ## See also
 

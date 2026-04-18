@@ -6,9 +6,9 @@
 
 | Recipe | File | What it covers |
 |--------|------|----------------|
-| Voice widget on your site | [embed-widget.md](embed-widget.md) | `POST .../workflow/{id}/embed-token`, script tag |
-| Inbound phone → workflow | [inbound-pstn.md](inbound-pstn.md) | `POST .../telephony/inbound/{workflow_id}`, webhooks |
-| Outbound batch / campaigns | [outbound-campaign.md](outbound-campaign.md) | Campaign API + ops notes |
+| Voice widget on your site | [embed-widget.md](embed-widget.md) | Env vars (`BACKEND_API_ENDPOINT`, `NEXT_PUBLIC_BACKEND_URL`); `POST /api/v1/workflow/{id}/embed-token`; WebSocket `/api/v1/ws/...`; OpenAPI import |
+| Inbound phone → workflow | [inbound-pstn.md](inbound-pstn.md) | Env + provider creds; `POST /api/v1/telephony/inbound/{workflow_id}`; telephony WebSocket path |
+| Outbound batch / campaigns | [outbound-campaign.md](outbound-campaign.md) | Env; `POST /api/v1/campaign/create`, `/campaign/{id}/start`, etc.; compliance note for CSV/consent |
 
 **Execution tracking:** epic **DX-01-BUILDER** in [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md).
 

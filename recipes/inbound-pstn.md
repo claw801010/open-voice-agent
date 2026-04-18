@@ -2,6 +2,23 @@
 
 **Tier:** Builder (minimal code). **Concept:** your carrier sends call events to this API; audio streams over **WebSocket** to the voice pipeline.
 
+## Environment variables
+
+| Variable | Where | Purpose |
+|----------|--------|---------|
+| `{BACKEND}` | Your deploy | Public API base for webhooks (e.g. `https://api.example.com`). |
+| `BACKEND_API_ENDPOINT` | API / provider consoles | Must match the URL carriers call for webhooks ([READMEBUILDME.md](../READMEBUILDME.md)). |
+| Provider secrets | Dashboard or env | Twilio/Vonage/Telnyx credentials ([api/routes/credentials.py](../api/routes/credentials.py)); exact names depend on provider. |
+
+## API paths ([READMELEARNME.md](../READMELEARNME.md) §3)
+
+| Method | Path | Notes |
+|--------|------|--------|
+| `POST` | `/api/v1/telephony/inbound/{workflow_id}` | Inbound webhook entry ([api/routes/telephony.py](../api/routes/telephony.py)). |
+| WebSocket | `/api/v1/telephony/ws/{workflow_id}/{user_id}/{workflow_run_id}` | PSTN media stream ([READMELEARNME.md](../READMELEARNME.md) §3). |
+| `POST` | `/api/v1/telephony/initiate-call` | Outbound initiation (related; see §4.2). |
+| `GET` | `/api/v1/openapi.json` | Full route list. |
+
 ## Outcome
 
 A phone number rings your **workflow**: caller audio is processed by the same graph you built in the UI.

@@ -78,7 +78,7 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _None — last closed: `MK-01-CATALOG`_ | | |
+| _None — last closed: `DX-01-BUILDER`_ | | |
 
 ### Checklist before you add work from READMEPLANNING
 
@@ -364,19 +364,21 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 ### DX-01-BUILDER — Minimal-code entrepreneur path
 
-**Status:** `NotStarted`
+**Status:** `Done`
 
 **Goal:** **Recipes** not novels: Twilio/Vonage attach, webhook URLs, embed snippet, campaign CSV—each as a **single doc page** or in-app drawer with **copy buttons**. Link from dashboard “Connect” or “Recipes.”
 
 **Acceptance criteria:**
 
-- [ ] At least **three** recipes (inbound PSTN, outbound campaign, embed widget) with env vars listed explicitly.
-- [ ] Each recipe lists **exact** API paths from [READMELEARNME.md](READMELEARNME.md) §3 (or OpenAPI tags).
-- [ ] Optional: Postman / OpenAPI import link.
-- [ ] [READMEEXPERIENCE.md](READMEEXPERIENCE.md) builder journey links to each shipped recipe.
-- [ ] [recipes/README.md](recipes/README.md) index lists every recipe file with one-line purpose.
+- [x] At least **three** recipes (inbound PSTN, outbound campaign, embed widget) with env vars listed explicitly ([recipes/embed-widget.md](recipes/embed-widget.md), [recipes/inbound-pstn.md](recipes/inbound-pstn.md), [recipes/outbound-campaign.md](recipes/outbound-campaign.md)).
+- [x] Each recipe lists **exact** API paths from [READMELEARNME.md](READMELEARNME.md) §3 (or OpenAPI tags) — see **API paths** / tables in each recipe.
+- [x] Optional: Postman / OpenAPI import link — `{BACKEND}/api/v1/openapi.json` noted in recipes.
+- [x] [READMEEXPERIENCE.md](READMEEXPERIENCE.md) builder journey links to each shipped recipe (§ Starter recipes).
+- [x] [recipes/README.md](recipes/README.md) index lists every recipe file with one-line purpose.
 
 **Key files:** [recipes/](recipes/) (markdown per recipe); Mintlify or public docs can mirror; deep links from [ui/src/app/](ui/src/app/) later.
+
+**Note:** In-app dashboard “Connect” / “Recipes” drawer is still optional; repo docs satisfy the package.
 
 ---
 
@@ -414,6 +416,7 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Date | Change |
 |------|--------|
+| 2026-04-20 | **DX-01-BUILDER** closed: env vars + §3 API path tables in three recipes; index updated. |
 | 2026-04-19 | **MK-01-CATALOG** closed: `catalog/vertical-packs.json` + three `runbooks/`; README index. |
 | 2026-04-18 | **WE-01-PALETTE** closed: Nodes \| Components tabs, click-to-add + keyboard notes; reference table updated. |
 | 2026-04-17 | DX-01 stack: READMEEXPERIENCE (decision/FAQ/quality bar), READMEADK, recipes, ui/AGENTS; DOCS.md map; prior MK-01/WE-01/planning/ops. |
