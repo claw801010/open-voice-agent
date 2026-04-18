@@ -1,7 +1,8 @@
-import { ClipboardCheck, ExternalLink, Globe, Headset, Link2, LucideIcon, OctagonX, Play, Webhook, X } from 'lucide-react';
+import { Boxes, ClipboardCheck, ExternalLink, Globe, Headset, LayoutGrid, Link2, LucideIcon, OctagonX, Play, Webhook, X } from 'lucide-react';
 import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { NodeType } from './types';
 
@@ -114,14 +115,50 @@ function NodeSection({
     );
 }
 
-function PaletteBody({ onNodeSelect }: { onNodeSelect: (nodeType: NodeType) => void }) {
+/** Core call-flow nodes (WE-01-PALETTE — Nodes tab). */
+function PaletteNodesTab({ onNodeSelect }: { onNodeSelect: (nodeType: NodeType) => void }) {
     return (
         <div className="space-y-6">
             <NodeSection title="Triggers" nodes={TRIGGER_NODE_TYPES} onNodeSelect={onNodeSelect} />
-            <NodeSection title="Agent Nodes" nodes={NODE_TYPES} onNodeSelect={onNodeSelect} />
-            <NodeSection title="Global Nodes" nodes={GLOBAL_NODE_TYPES} onNodeSelect={onNodeSelect} />
-            <NodeSection title="Integrations" nodes={INTEGRATION_NODE_TYPES} onNodeSelect={onNodeSelect} />
+            <NodeSection title="Conversation" nodes={NODE_TYPES} onNodeSelect={onNodeSelect} />
         </div>
+    );
+}
+
+/** Global + integration nodes (WE-01-PALETTE — Components tab). Subflow components track under WE-01-SUBFLOWS. */
+function PaletteComponentsTab({ onNodeSelect }: { onNodeSelect: (nodeType: NodeType) => void }) {
+    return (
+        <div className="space-y-6">
+            <NodeSection title="Global" nodes={GLOBAL_NODE_TYPES} onNodeSelect={onNodeSelect} />
+            <NodeSection title="Integrations" nodes={INTEGRATION_NODE_TYPES} onNodeSelect={onNodeSelect} />
+            <p className="text-xs text-muted-foreground border-t border-border pt-3">
+                Reusable subflow components on the canvas are planned under{' '}
+                <span className="font-mono text-[0.7rem]">WE-01-SUBFLOWS</span>.
+            </p>
+        </div>
+    );
+}
+
+function PaletteTabs({ onNodeSelect, listClassName }: { onNodeSelect: (nodeType: NodeType) => void; listClassName?: string }) {
+    return (
+        <Tabs defaultValue="nodes" className="flex min-h-0 flex-1 flex-col gap-0">
+            <TabsList className={listClassName ?? 'mx-3 mt-2 grid w-[calc(100%-1.5rem)] grid-cols-2 shrink-0'}>
+                <TabsTrigger value="nodes" className="gap-1.5">
+                    <LayoutGrid className="size-3.5 opacity-70" aria-hidden />
+                    Nodes
+                </TabsTrigger>
+                <TabsTrigger value="components" className="gap-1.5">
+                    <Boxes className="size-3.5 opacity-70" aria-hidden />
+                    Components
+                </TabsTrigger>
+            </TabsList>
+            <TabsContent value="nodes" className="mt-0 min-h-0 flex-1 overflow-y-auto p-3">
+                <PaletteNodesTab onNodeSelect={onNodeSelect} />
+            </TabsContent>
+            <TabsContent value="components" className="mt-0 min-h-0 flex-1 overflow-y-auto p-3">
+                <PaletteComponentsTab onNodeSelect={onNodeSelect} />
+            </TabsContent>
+        </Tabs>
     );
 }
 
@@ -148,7 +185,7 @@ export default function AddNodePanel({
             <div className="flex h-full min-h-0 flex-col bg-background">
                 <div className="shrink-0 border-b border-border px-3 py-2">
                     <div className="flex flex-col gap-1">
-                        <h2 className="text-sm font-semibold">Nodes</h2>
+                        <h2 className="text-sm font-semibold">Palette</h2>
                         <a
                             href="https://docs.dograh.com/voice-agent/introduction"
                             target="_blank"
@@ -160,9 +197,7 @@ export default function AddNodePanel({
                         </a>
                     </div>
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto p-3">
-                    <PaletteBody onNodeSelect={onNodeSelect} />
-                </div>
+                <PaletteTabs onNodeSelect={onNodeSelect} />
             </div>
         );
     }
@@ -173,10 +208,10 @@ export default function AddNodePanel({
                 isOpen ? 'translate-x-0' : 'translate-x-full'
             }`}
         >
-            <div className="p-4 h-full overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
+            <div className="flex h-full min-h-0 flex-col overflow-hidden p-4">
+                <div className="flex justify-between items-center mb-2 shrink-0">
                     <div className="flex flex-col gap-1">
-                        <h2 className="text-lg font-semibold">Add New Node</h2>
+                        <h2 className="text-lg font-semibold">Palette</h2>
                         <a
                             href="https://docs.dograh.com/voice-agent/introduction"
                             target="_blank"
@@ -192,7 +227,7 @@ export default function AddNodePanel({
                     </Button>
                 </div>
 
-                <PaletteBody onNodeSelect={onNodeSelect} />
+                <PaletteTabs onNodeSelect={onNodeSelect} listClassName="mb-2 grid w-full grid-cols-2 shrink-0" />
             </div>
         </div>
     );

@@ -15,16 +15,10 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ## Unreleased
 
-_No entries yet._
-
-<!-- Example entry (delete when real releases exist):
-
 ### Workflow editor
 
-- **WE-01-SHELL** — Three-column resizable editor shell ([PR #000](https://github.com/example/pull/0)).
-  - Users: persistent left palette rail, right inspector placeholder, canvas unchanged logically.
-
--->
+- **WE-01-SHELL** — Three-column resizable shell: left palette, center React Flow, right inspector rail; layout widths persist in `localStorage` per workflow; historical versions stay full-width read-only.
+- **WE-01-PALETTE** — Palette uses **Nodes | Components** tabs (conversation path vs global/integrations); same click-to-add-at-center behavior; keyboard/Escape documented in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) under the package.
 
 ---
 
@@ -55,4 +49,5 @@ _No entries yet._
 
 | Date | Change |
 |------|--------|
+| 2026-04-18 | Unreleased: **WE-01-SHELL**, **WE-01-PALETTE** entries. |
 | 2026-04-17 | Initial file; template with “For businesses” / MK-01 guidance for marketplace releases. |

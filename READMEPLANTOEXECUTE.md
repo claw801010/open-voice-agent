@@ -78,7 +78,7 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _None — last closed: `WE-01-SHELL`_ | | |
+| _None — last closed: `WE-01-PALETTE`_ | | |
 
 ### Checklist before you add work from READMEPLANNING
 
@@ -178,7 +178,7 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 |------|--------|----------------|
 | Layout | **Three-column resizable shell** (palette \| canvas \| inspector rail); full-width canvas when viewing a **historical** version | [RenderWorkflow.tsx](ui/src/app/workflow/[workflowId]/RenderWorkflow.tsx), [WorkflowEditorShell.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorShell.tsx) |
 | Header | Name, save, publish, run/phone, version history | [ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx) |
-| Add nodes | **Docked** node palette (left rail); overlay variant still in [AddNodePanel](ui/src/components/flow/AddNodePanel.tsx) for reuse | [AddNodePanel.tsx](ui/src/components/flow/AddNodePanel.tsx) |
+| Add nodes | **Docked palette** with **Nodes \| Components** tabs; click-to-add at viewport center; overlay variant still available | [AddNodePanel.tsx](ui/src/components/flow/AddNodePanel.tsx) |
 | Settings | Separate **settings** route, not right rail | [ui/src/app/workflow/[workflowId]/settings/page.tsx](ui/src/app/workflow/[workflowId]/settings/page.tsx) |
 | Test / simulate | **Web call** dialog; not the same as inline “Test Agent” + AI user simulator | [ui/src/app/workflow/[workflowId]/components/PhoneCallDialog.tsx](ui/src/app/workflow/[workflowId]/components/PhoneCallDialog.tsx) |
 | Node types | `startCall`, `agentNode`, `endCall`, `globalNode`, `trigger`, `webhook`, `qa` | [ui/src/components/flow/types.ts](ui/src/components/flow/types.ts), [RenderWorkflow.tsx](ui/src/app/workflow/[workflowId]/RenderWorkflow.tsx) `nodeTypes` |
@@ -211,15 +211,20 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 ### WE-01-PALETTE — Docked node + component palette
 
-**Status:** `NotStarted`
+**Status:** `Done`
 
 **Goal:** Replace floating-only add flow with a **left dock** matching reference: tabs **Nodes | Components**; grouped draggable entries (colors/icons optional parity).
 
 **Acceptance criteria:**
 
-- [ ] All **existing** node types reachable from palette without opening a separate modal, or modal only for “advanced add”.
-- [ ] Drag-to-canvas or click-to-add at viewport center — pick one pattern and document it.
-- [ ] Keyboard: focus trap / Escape behavior documented.
+- [x] All **existing** node types reachable from palette without opening a separate modal, or modal only for “advanced add”.
+- [x] Drag-to-canvas or click-to-add at viewport center — pick one pattern and document it (**click-to-add** at viewport center via `handleNodeSelect` in [useWorkflowState.ts](ui/src/app/workflow/[workflowId]/hooks/useWorkflowState.ts); drag-from-palette not implemented).
+- [x] Keyboard: focus trap / Escape behavior documented (see **Keyboard / a11y** below).
+
+**Keyboard / a11y (implemented behavior):**
+
+- **Docked (inline) palette:** No modal focus trap — the palette is part of the page; **Escape** does **not** close it (use canvas / header as usual). Tab order includes the Radix **Tabs** list (arrow keys move between **Nodes** and **Components** per [Radix Tabs](https://www.radix-ui.com/primitives/docs/components/tabs#accessibility)).
+- **Overlay palette:** **Escape** closes the panel (existing behavior). Tabs behave the same as docked.
 
 **Key files:** [AddNodePanel.tsx](ui/src/components/flow/AddNodePanel.tsx), [useWorkflowState](ui/src/app/workflow/[workflowId]/hooks/useWorkflowState.ts) (or equivalent) for `handleNodeSelect`.
 
@@ -409,4 +414,5 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Date | Change |
 |------|--------|
+| 2026-04-18 | **WE-01-PALETTE** closed: Nodes \| Components tabs, click-to-add + keyboard notes; reference table updated. |
 | 2026-04-17 | DX-01 stack: READMEEXPERIENCE (decision/FAQ/quality bar), READMEADK, recipes, ui/AGENTS; DOCS.md map; prior MK-01/WE-01/planning/ops. |
