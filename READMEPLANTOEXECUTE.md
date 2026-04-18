@@ -78,7 +78,7 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _None — last closed: `DX-01-BUILDER`_ | | |
+| _None — last closed: `DX-01-ADK`_ | | |
 
 ### Checklist before you add work from READMEPLANNING
 
@@ -384,16 +384,16 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 ### DX-01-ADK — Agentic dev kit (IDE + API + MCP)
 
-**Status:** `NotStarted`
+**Status:** `Done`
 
 **Goal:** First-class **developer** surface: OpenAPI URL prominent in [READMEBUILDME.md](READMEBUILDME.md) / dev setup; **MCP** documented with auth (`X-API-Key` per [api/app.py](api/app.py)); `npm run generate-client` in CI docs; **Cursor/IDE** rules file optional (`.cursor/rules` or link to [AGENTS.md](AGENTS.md)); local **split stack** one screen.
 
 **Acceptance criteria:**
 
-- [ ] **[READMEADK.md](READMEADK.md)** kept accurate as the single entry point (base URL, `/api/v1/openapi.json`, `/api/v1/mcp`, WebSocket routes, auth headers).
-- [ ] Example: **MCP** tool call + **REST** workflow publish in **Python or curl**—minimal copy-paste.
-- [ ] Statement on **generated client** regeneration after API change ([ui/AGENTS.md](ui/AGENTS.md)).
-- [ ] [READMEEXPERIENCE.md](READMEEXPERIENCE.md) ADK journey points to READMEADK + upstream §.
+- [x] **[READMEADK.md](READMEADK.md)** kept accurate as the single entry point (base URL, `/api/v1/openapi.json`, `/api/v1/mcp`, WebSocket routes, auth headers).
+- [x] Example: **MCP** tool call + **REST** workflow publish in **Python or curl**—minimal copy-paste ([READMEADK.md](READMEADK.md) § “Copy-paste — org API key”).
+- [x] Statement on **generated client** regeneration after API change ([ui/AGENTS.md](ui/AGENTS.md)).
+- [x] [READMEEXPERIENCE.md](READMEEXPERIENCE.md) ADK journey points to READMEADK + [READMELEARNME.md](READMELEARNME.md) §10.
 
 **Key files:** [READMEADK.md](READMEADK.md) (maintain on each API surface change).
 
@@ -416,6 +416,7 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Date | Change |
 |------|--------|
+| 2026-04-21 | **DX-01-ADK** closed: READMEADK MCP+REST copy-paste; ui/AGENTS client policy; READMEEXPERIENCE ADK steps. |
 | 2026-04-20 | **DX-01-BUILDER** closed: env vars + §3 API path tables in three recipes; index updated. |
 | 2026-04-19 | **MK-01-CATALOG** closed: `catalog/vertical-packs.json` + three `runbooks/`; README index. |
 | 2026-04-18 | **WE-01-PALETTE** closed: Nodes \| Components tabs, click-to-add + keyboard notes; reference table updated. |

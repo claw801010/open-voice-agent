@@ -105,9 +105,9 @@ flowchart TD
 **Masterful bar:** one file (**READMEADK.md**) lists every surface; coding agents can drive the platform from OpenAPI + MCP without guesswork.
 
 1. **Clone** your fork; follow [READMEBUILDME.md](READMEBUILDME.md) split-stack dev.
-2. Keep **[READMEADK.md](READMEADK.md)** open: health, OpenAPI, auth, example `curl`.
-3. Run **`npm run generate-client`** in [ui/](ui/) after any backend route change.
-4. Use **`/api/v1/mcp`** for agentic tool flows ([READMELEARNME.md](READMELEARNME.md) §10).
+2. Keep **[READMEADK.md](READMEADK.md)** open: health, **`{BACKEND}/api/v1/openapi.json`**, auth, **MCP + REST copy-paste** (same file), and example `curl`.
+3. Run **`npm run generate-client`** in [ui/](ui/) after any backend route change (see [ui/AGENTS.md](ui/AGENTS.md)).
+4. Use **`{BACKEND}/api/v1/mcp`** for agentic tool flows — **READMEADK.md** (MCP Python) + [READMELEARNME.md](READMELEARNME.md) §10.
 5. Point **Cursor / Copilot** at [AGENTS.md](AGENTS.md) + OpenAPI JSON.
 6. **Pull upstream** on dedicated branches ([READMEBUILDME.md](READMEBUILDME.md) §6) before large feature work.
 7. **Ship** and log **DX-01** / **WE-01** / **MK-01** IDs in [READMENEWRELEASES.md](READMENEWRELEASES.md).

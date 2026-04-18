@@ -40,10 +40,13 @@ ui/
 - Zustand for state management
 - @xyflow/react for workflow builder
 
-## API Client
+## API Client (generated OpenAPI)
 
-The `src/client/` directory is auto-generated from the backend OpenAPI spec. Whenever you add a
-new api route in backend, and wish to use it in the UI, generate the client using below command.
+The `src/client/` directory is **auto-generated** from the backend OpenAPI spec. **Do not** hand-edit files under `src/client/`.
+
+- Whenever you add a backend route and call it from the UI, run **`npm run generate-client`** after the API is running at `{BACKEND}/api/v1/openapi.json` (see [ui/package.json](package.json) `openapi-ts` config).
+- **Before merging** UI that depends on new endpoints, regenerate the client so types and SDK calls match production OpenAPI—same rule as [READMEADK.md](../READMEADK.md) and repo root [AGENTS.md](../AGENTS.md).
+- Optional: in CI, fail the job if `npm run generate-client` produces a git diff (catches forgotten regeneration).
 
 ```bash
 npm run generate-client

@@ -15,6 +15,10 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ## Unreleased
 
+### Developer experience (ADK tier)
+
+- **DX-01-ADK** — [READMEADK.md](READMEADK.md) adds **copy-paste MCP (Python + `fastmcp`)** and **REST publish** (`curl` + httpx) with `X-API-Key`; [ui/AGENTS.md](ui/AGENTS.md) documents **generated client** regeneration and optional CI drift check; [READMEEXPERIENCE.md](READMEEXPERIENCE.md) ADK journey links tightened.
+
 ### Developer experience (builder tier)
 
 - **DX-01-BUILDER** — All three [recipes/](recipes/) now include **environment variables** and **exact `/api/v1/...` paths** aligned with [READMELEARNME.md](READMELEARNME.md) §3; OpenAPI import called out.
@@ -57,6 +61,7 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 | Date | Change |
 |------|--------|
+| 2026-04-21 | Unreleased: **DX-01-ADK** entry. |
 | 2026-04-20 | Unreleased: **DX-01-BUILDER** entry. |
 | 2026-04-19 | Unreleased: **MK-01-CATALOG** entry. |
 | 2026-04-18 | Unreleased: **WE-01-SHELL**, **WE-01-PALETTE** entries. |

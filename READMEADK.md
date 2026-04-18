@@ -41,7 +41,7 @@ npm run generate-client
 
 OpenAPI source: running backend’s `/api/v1/openapi.json` (see [ui/package.json](ui/package.json) `openapi-ts` config). **Do not** hand-edit [ui/src/client/](ui/src/client/).
 
-After changing backend routes, regenerate the client before merging UI that calls new endpoints.
+After changing backend routes, regenerate the client before merging UI that calls new endpoints. **CI:** add or keep a step that runs `npm run generate-client` when `api/` routes change if you gate merges on drift (see [ui/AGENTS.md](ui/AGENTS.md)).
 
 ---
 
@@ -75,6 +75,77 @@ with httpx.Client(base_url=BASE, headers={"Authorization": f"Bearer {TOKEN}"}) a
 ```
 
 Use the same base URL and headers for `POST`/`PATCH` workflow routes; prefer **generated** clients for production ([openapi-generator](https://openapi-generator.tech/) against `/api/v1/openapi.json`) if you do not use the TypeScript UI client.
+
+---
+
+## Copy-paste — org API key: MCP tool + REST publish
+
+Use an **organization API key** (`X-API-Key`) for both MCP and REST below ([api/mcp/auth.py](api/mcp/auth.py), [api/services/auth/depends.py](api/services/auth/depends.py)). Create keys via [api/routes/service_keys.py](api/routes/service_keys.py) / product UI.
+
+### MCP — call a tool (Python)
+
+Install **`fastmcp`** at the **same version** as the API server ([api/requirements.txt](api/requirements.txt), e.g. `fastmcp==3.2.4`):
+
+```bash
+pip install "fastmcp==3.2.4"
+```
+
+```python
+import asyncio
+import os
+
+from fastmcp import Client
+from fastmcp.client.transports.http import StreamableHttpTransport
+
+async def main() -> None:
+    backend = os.environ["BACKEND"].rstrip("/")
+    api_key = os.environ["X_API_KEY"]
+    transport = StreamableHttpTransport(
+        f"{backend}/api/v1/mcp",
+        headers={"X-API-Key": api_key},
+    )
+    async with Client(transport) as client:
+        result = await client.call_tool("list_workflows", {})
+        print(result)
+
+asyncio.run(main())
+```
+
+Tools live under [api/mcp/tools/](api/mcp/tools/) (e.g. `list_workflows`, `get_workflow`). Arguments must match each tool’s signature.
+
+### REST — publish the current draft (`curl`)
+
+`POST /api/v1/workflow/{workflow_id}/publish` ([api/routes/workflow.py](api/routes/workflow.py)):
+
+```bash
+export BACKEND="${BACKEND:-http://localhost:8000}"
+export X_API_KEY="your_org_api_key"
+export WORKFLOW_ID=123
+
+curl -sS -X POST "${BACKEND}/api/v1/workflow/${WORKFLOW_ID}/publish" \
+  -H "X-API-Key: ${X_API_KEY}" \
+  -H "Accept: application/json"
+```
+
+### REST — publish (Python, httpx)
+
+```python
+import os
+
+import httpx
+
+backend = os.environ["BACKEND"].rstrip("/")
+wid = os.environ["WORKFLOW_ID"]
+key = os.environ["X_API_KEY"]
+
+r = httpx.post(
+    f"{backend}/api/v1/workflow/{wid}/publish",
+    headers={"X-API-Key": key},
+    timeout=60.0,
+)
+r.raise_for_status()
+print(r.json())
+```
 
 ---
 
