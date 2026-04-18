@@ -1,0 +1,72 @@
+{
+  "catalog_version": 1,
+  "description": "Canonical vertical pack metadata for MK-01 marketplace work. DB-backed WorkflowTemplates may mirror these slugs; see api/db/models.py WorkflowTemplates.",
+  "packs": [
+    {
+      "slug": "healthcare-clinic-screening",
+      "industry": "Healthcare / clinics",
+      "display_name": "Patient screening & triage",
+      "summary": "After-hours and overflow voice flow for symptom triage, scheduling handoff, and scripted guardrails—designed for PHI minimization in the agent layer.",
+      "use_cases": [
+        "screening triage",
+        "appointment confirm/remind",
+        "post-visit follow-up prompts"
+      ],
+      "languages": ["en-US", "es-US"],
+      "supported_modes": ["webrtc", "pstn"],
+      "compliance_tags": ["HIPAA-oriented-design", "PHI-minimization", "no-recording-without-BAA"],
+      "preview_audio_url": null,
+      "cost_latency_estimate_band": "Medium latency (regional LLM + STT/TTS); cost scales with minutes and model tier",
+      "runbook_path": "runbooks/healthcare-clinic-screening.md",
+      "workflow_template": {
+        "source": "none_yet",
+        "workflow_templates_table_id": null,
+        "packaged_definition_ref": null
+      }
+    },
+    {
+      "slug": "retail-wismo-faq",
+      "industry": "Retail / e-commerce",
+      "display_name": "WISMO & store policy FAQ",
+      "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk—reduces tier-1 load while staying policy-safe.",
+      "use_cases": [
+        "where is my order (WISMO)",
+        "return window FAQ",
+        "store hours and pickup"
+      ],
+      "languages": ["en-US"],
+      "supported_modes": ["webrtc", "pstn"],
+      "compliance_tags": ["no-payment-card-in-prompt"],
+      "preview_audio_url": null,
+      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live order lookup tools add RTT",
+      "runbook_path": "runbooks/retail-wismo-faq.md",
+      "workflow_template": {
+        "source": "none_yet",
+        "workflow_templates_table_id": null,
+        "packaged_definition_ref": null
+      }
+    },
+    {
+      "slug": "b2b-saas-trial-nurture",
+      "industry": "B2B SaaS",
+      "display_name": "Trial nurture & PQL voice qual",
+      "summary": "Short qualification and onboarding check-in calls with CRM-friendly variables—pipeline velocity without full SDR staffing.",
+      "use_cases": [
+        "trial nurture",
+        "PQL voice qualification",
+        "onboarding check-in"
+      ],
+      "languages": ["en-US"],
+      "supported_modes": ["webrtc", "pstn"],
+      "compliance_tags": ["opt-in-recording-disclosure"],
+      "preview_audio_url": null,
+      "cost_latency_estimate_band": "Medium (conversation + optional tool calls to CRM)",
+      "runbook_path": "runbooks/b2b-saas-trial-nurture.md",
+      "workflow_template": {
+        "source": "none_yet",
+        "workflow_templates_table_id": null,
+        "packaged_definition_ref": null
+      }
+    }
+  ]
+}

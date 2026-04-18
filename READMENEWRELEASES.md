@@ -15,6 +15,10 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ## Unreleased
 
+### Marketplace / catalog
+
+- **MK-01-CATALOG** — Canonical **vertical pack** metadata in [catalog/vertical-packs.json](catalog/vertical-packs.json) (healthcare screening, retail WISMO, B2B SaaS trial nurture) with linked **runbooks** under [runbooks/](runbooks/).
+
 ### Workflow editor
 
 - **WE-01-SHELL** — Three-column resizable shell: left palette, center React Flow, right inspector rail; layout widths persist in `localStorage` per workflow; historical versions stay full-width read-only.
@@ -49,5 +53,6 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 | Date | Change |
 |------|--------|
+| 2026-04-19 | Unreleased: **MK-01-CATALOG** entry. |
 | 2026-04-18 | Unreleased: **WE-01-SHELL**, **WE-01-PALETTE** entries. |
 | 2026-04-17 | Initial file; template with “For businesses” / MK-01 guidance for marketplace releases. |
