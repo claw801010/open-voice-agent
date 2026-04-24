@@ -136,6 +136,136 @@
   animation: spin-slow 3s linear infinite;
 }
 
+/* WE-01-VISUAL-DEPTH — glass / bento / tactile surfaces (see READMEPLANTOEXECUTE.md) */
+@keyframes ovo-soft-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes ovo-glow-drift {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.05) translate(4px, -2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ovo-motion-safe-float,
+  .ovo-icon-float {
+    animation: none !important;
+  }
+
+  .ovo-motion-safe-glow {
+    animation: none !important;
+  }
+}
+
+.ovo-usage-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(var(--radius) + 10px);
+  border: 1px solid color-mix(in oklch, var(--border) 75%, transparent);
+  background:
+    radial-gradient(120% 80% at 0% 0%, color-mix(in oklch, var(--primary) 12%, transparent) 0%, transparent 55%),
+    radial-gradient(90% 70% at 100% 10%, color-mix(in oklch, var(--chart-2) 14%, transparent) 0%, transparent 50%),
+    linear-gradient(165deg, color-mix(in oklch, var(--card) 88%, transparent) 0%, var(--background) 55%, var(--background) 100%);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklch, var(--foreground) 6%, transparent),
+    0 12px 40px color-mix(in oklch, var(--foreground) 5%, transparent);
+}
+
+.dark .ovo-usage-hero {
+  background:
+    radial-gradient(120% 80% at 0% 0%, color-mix(in oklch, var(--chart-2) 18%, transparent) 0%, transparent 55%),
+    radial-gradient(90% 70% at 100% 0%, color-mix(in oklch, var(--chart-4) 12%, transparent) 0%, transparent 48%),
+    linear-gradient(165deg, color-mix(in oklch, var(--card) 55%, transparent) 0%, var(--background) 45%, var(--background) 100%);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklch, var(--foreground) 8%, transparent),
+    0 20px 50px color-mix(in oklch, black 45%, transparent);
+}
+
+.ovo-hero-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  pointer-events: none;
+  animation: ovo-glow-drift 14s ease-in-out infinite;
+}
+
+.ovo-motion-safe-glow {
+  animation: ovo-glow-drift 14s ease-in-out infinite;
+}
+
+.ovo-glass-panel {
+  border-radius: calc(var(--radius) + 6px);
+  border: 1px solid color-mix(in oklch, var(--border) 80%, transparent);
+  background: color-mix(in oklch, var(--card) 58%, transparent);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklch, var(--foreground) 7%, transparent),
+    0 4px 20px color-mix(in oklch, var(--foreground) 4%, transparent);
+}
+
+.dark .ovo-glass-panel {
+  background: color-mix(in oklch, var(--card) 42%, transparent);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklch, var(--foreground) 10%, transparent),
+    0 8px 32px color-mix(in oklch, black 40%, transparent);
+}
+
+.ovo-bento-cell {
+  border-radius: calc(var(--radius) + 4px);
+  border: 1px solid color-mix(in oklch, var(--border) 75%, transparent);
+  background: color-mix(in oklch, var(--card) 50%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in oklch, var(--foreground) 6%, transparent),
+    0 2px 12px color-mix(in oklch, var(--foreground) 4%, transparent);
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms ease,
+    border-color 280ms ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ovo-bento-cell:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in oklch, var(--foreground) 8%, transparent),
+      0 8px 28px color-mix(in oklch, var(--primary) 12%, transparent);
+    border-color: color-mix(in oklch, var(--ring) 35%, var(--border));
+  }
+
+  .ovo-bento-cell:active {
+    transform: translateY(0) scale(0.998);
+    transition-duration: 120ms;
+  }
+}
+
+.dark .ovo-bento-cell {
+  background: color-mix(in oklch, var(--card) 38%, transparent);
+}
+
+.ovo-icon-float {
+  animation: ovo-soft-float 4.5s ease-in-out infinite;
+}
+
+.ovo-motion-safe-float {
+  animation: ovo-soft-float 4.5s ease-in-out infinite;
+}
+
 /* Smaller Chatwoot bubble on workflow run pages */
 body.chatwoot-compact .woot--bubble-holder {
   transform: scale(0.7) !important;

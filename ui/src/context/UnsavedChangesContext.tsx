@@ -38,6 +38,7 @@ const UnsavedChangesContext = createContext<UnsavedChangesContextValue | null>(n
  *
  *  - Browser back / forward       (`popstate` with history-state tracking)
  *  - In-app link clicks           (document-level click capture on `<a>` tags)
+ *  - Tab close / refresh          (`beforeunload` — browser shows generic prompt)
  *
  * Sections register via the `useUnsavedChanges` hook.
  */
@@ -126,6 +127,17 @@ export function UnsavedChangesProvider({ children }: { children: React.ReactNode
         document.addEventListener("click", handleClick, true);
         return () => document.removeEventListener("click", handleClick, true);
     }, [askOrProceed]);
+
+    // -- 2. Tab close / refresh (`beforeunload`) -----------------------------
+    useEffect(() => {
+        if (!hasDirtyChanges) return;
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            e.preventDefault();
+            e.returnValue = "";
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, [hasDirtyChanges]);
 
     // -- 3. Browser back / forward (`popstate`) ------------------------------
     //

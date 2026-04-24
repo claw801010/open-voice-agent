@@ -84,6 +84,10 @@ class PipecatEngine:
         self.inference_llm = inference_llm or llm
         self.context = context
         self.workflow = workflow
+        # WE-01-SUBFLOWS: execution traverses ``_active_graph`` (main or a named subgraph).
+        self._active_graph: WorkflowGraph = workflow
+        # Stack of (graph to return to, node id to enter) when nesting subflows.
+        self._subflow_stack: list[tuple[WorkflowGraph, str]] = []
         self._call_context_vars = call_context_vars
         self._workflow_run_id = workflow_run_id
         self._node_transition_callback = node_transition_callback
@@ -208,6 +212,7 @@ class PipecatEngine:
         transition_speech: Optional[str] = None,
         transition_speech_type: Optional[str] = None,
         transition_speech_recording_id: Optional[str] = None,
+        enter_subflow: Optional[str] = None,
     ):
         async def transition_func(function_call_params: FunctionCallParams) -> None:
             """Inner function that handles the node change tool calls"""
@@ -258,7 +263,22 @@ class PipecatEngine:
                 # Set context for the new node, so that when the function call result
                 # frame is received by LLMContextAggregator and an LLM generation
                 # is done, we have updated context and functions
-                await self.set_node(transition_to_node)
+                if enter_subflow:
+                    sub = self._workflow.subflow_graphs.get(enter_subflow)
+                    if not sub:
+                        raise ValueError(
+                            f"Missing subgraph '{enter_subflow}' for transition (workflow bug)"
+                        )
+                    self._subflow_stack.append((self._active_graph, transition_to_node))
+                    self._active_graph = sub
+                    logger.info(
+                        "Entering subflow '%s' (resume prior graph at node %s after subflow ends)",
+                        enter_subflow,
+                        transition_to_node,
+                    )
+                    await self.set_node(sub.start_node_id)
+                else:
+                    await self.set_node(transition_to_node)
 
                 async def on_context_updated() -> None:
                     """
@@ -271,8 +291,10 @@ class PipecatEngine:
                     # If EndFrame reaches the LLM Processor before the ContextFrame, we might never run generation which
                     # might be intended
 
-                    # Queue EndFrame if we just transitioned to EndNode
+                    # Queue EndFrame if we just transitioned to EndNode (unless returning from a subflow)
                     if self._current_node.is_end:
+                        if await self._try_resume_from_subflow_end():
+                            return
                         await self.end_call_with_reason(
                             EndTaskReason.USER_QUALIFIED.value
                         )
@@ -297,6 +319,24 @@ class PipecatEngine:
 
         return transition_func
 
+    async def _try_resume_from_subflow_end(self) -> bool:
+        """If the current end node is inside a subgraph, pop the stack and resume the prior graph."""
+        if self._active_graph is self._workflow:
+            return False
+        if not self._subflow_stack:
+            logger.warning(
+                "End node inside subgraph but subflow stack is empty; ending call"
+            )
+            return False
+        prev_graph, resume_id = self._subflow_stack.pop()
+        self._active_graph = prev_graph
+        logger.info(
+            "Subflow finished; resuming prior graph at node %s",
+            resume_id,
+        )
+        await self.set_node(resume_id)
+        return True
+
     async def _register_transition_function_with_llm(
         self,
         name: str,
@@ -304,6 +344,7 @@ class PipecatEngine:
         transition_speech: Optional[str] = None,
         transition_speech_type: Optional[str] = None,
         transition_speech_recording_id: Optional[str] = None,
+        enter_subflow: Optional[str] = None,
     ):
         logger.debug(
             f"Registering function {name} to transition to node {transition_to_node} with LLM"
@@ -316,6 +357,7 @@ class PipecatEngine:
             transition_speech,
             transition_speech_type,
             transition_speech_recording_id,
+            enter_subflow=enter_subflow,
         )
 
         # Register function with LLM
@@ -493,6 +535,7 @@ class PipecatEngine:
                     outgoing_edge.transition_speech,
                     outgoing_edge.data.transition_speech_type,
                     outgoing_edge.data.transition_speech_recording_id,
+                    enter_subflow=outgoing_edge.data.enter_subflow,
                 )
 
         # Register custom tool handlers for this node
@@ -520,7 +563,7 @@ class PipecatEngine:
         """
         Simplified set_node implementation according to v2 PRD.
         """
-        node = self.workflow.nodes[node_id]
+        node = self._active_graph.nodes[node_id]
 
         logger.debug(
             f"Executing node: name: {node.name} is_static: {node.is_static} allow_interrupt: {node.allow_interrupt} is_end: {node.is_end}"

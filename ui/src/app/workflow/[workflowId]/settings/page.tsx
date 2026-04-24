@@ -3,8 +3,8 @@
 import { format } from "date-fns";
 import { ArrowLeft, BookA, Brain, CalendarIcon, Download, ExternalLink, FileDown, Loader2, Mic, Pause, PhoneOff, Play, Rocket, Settings, Trash2Icon, Upload, Variable, X } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { downloadWorkflowReportApiV1WorkflowWorkflowIdReportGet, getAmbientNoiseUploadUrlApiV1WorkflowAmbientNoiseUploadUrlPost, getWorkflowApiV1WorkflowFetchWorkflowIdGet } from "@/client/sdk.gen";
@@ -1045,7 +1045,11 @@ export default function WorkflowSettingsPage() {
 
     if (!user) return null;
 
-    return <WorkflowSettingsContent workflow={workflow} user={user} />;
+    return (
+        <Suspense fallback={<SpinLoader />}>
+            <WorkflowSettingsContent workflow={workflow} user={user} />
+        </Suspense>
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -1075,6 +1079,7 @@ function WorkflowSettingsInner({
     user: { id: string; email?: string };
 }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { dirtySections, confirmNavigate } = useUnsavedChangesContext();
 
     const [isEmbedDialogOpen, setIsEmbedDialogOpen] = useState(false);
@@ -1117,6 +1122,18 @@ function WorkflowSettingsInner({
         initialWorkflowConfigurations,
         user,
     });
+
+    // Deep link: /workflow/:id/settings?section=variables → scroll to section (WE-01-RIGHT-INSPECTOR)
+    useEffect(() => {
+        const section = searchParams.get("section");
+        if (!section) return;
+        const allowed = NAV_ITEMS.some((n) => n.id === section);
+        if (!allowed) return;
+        setActiveSection(section);
+        requestAnimationFrame(() => {
+            document.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    }, [searchParams]);
 
     // Intersection observer for active sidebar link
     useEffect(() => {

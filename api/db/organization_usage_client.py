@@ -1,14 +1,15 @@
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import datetime, timedelta, timezone
+from typing import Any, Optional
 from zoneinfo import ZoneInfo
 
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import Date, and_, cast, func, select
+from sqlalchemy import Date, and_, cast, func, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import joinedload
 
 from api.db.base_client import BaseDBClient
 from api.db.filters import apply_workflow_run_filters
+from api.utils.usage_rollup_range import trim_rollup_bucket_window
 from api.db.models import (
     OrganizationModel,
     OrganizationUsageCycleModel,
@@ -447,6 +448,150 @@ class OrganizationUsageClient(BaseDBClient):
                 "total_dograh_tokens": round(total_dograh_tokens, 0),
                 "currency": "USD",
             }
+
+    async def get_weekly_usage_rollup(
+        self,
+        organization_id: int,
+        *,
+        weeks: int = 8,
+        workflow_id: Optional[int] = None,
+        range_since: Optional[datetime] = None,
+        range_until_exclusive: Optional[datetime] = None,
+    ) -> list[dict[str, Any]]:
+        """UTC Monday week buckets (PostgreSQL ``date_trunc('week', … AT TIME ZONE 'UTC')``).
+
+        Sums ``cost_info->>'dograh_token_usage'`` per run; ``dograh_tokens`` is omitted when the
+        weekly sum is zero. Scoped to workflows whose owner's ``selected_organization_id`` matches.
+        Optional ``workflow_id`` restricts to a single workflow (caller must authorize).
+
+        When ``range_since`` and ``range_until_exclusive`` are set (UTC), filters runs to
+        ``range_since <= wr.created_at < range_until_exclusive`` (calendar inclusive ``until`` on
+        the caller side). Otherwise uses a rolling window of ``weeks`` from now (no upper bound).
+        """
+        use_fixed_range = range_since is not None and range_until_exclusive is not None
+        if use_fixed_range:
+            since = range_since
+        else:
+            since = datetime.now(timezone.utc) - timedelta(weeks=weeks)
+        sql = """
+SELECT
+  date_trunc('week', wr.created_at AT TIME ZONE 'UTC') AS week_start,
+  COUNT(*)::int AS run_count,
+  COUNT(*) FILTER (WHERE wr.call_type::text = 'inbound')::int AS runs_inbound,
+  COUNT(*) FILTER (WHERE wr.call_type::text = 'outbound')::int AS runs_outbound,
+  COALESCE(SUM(COALESCE((wr.cost_info->>'dograh_token_usage')::float, 0)), 0)::float AS sum_tokens
+FROM workflow_runs wr
+INNER JOIN workflows w ON w.id = wr.workflow_id
+INNER JOIN users u ON u.id = w.user_id
+WHERE u.selected_organization_id = :org_id
+  AND wr.created_at >= :since
+"""
+        params: dict[str, Any] = {"org_id": organization_id, "since": since}
+        if use_fixed_range:
+            sql += "  AND wr.created_at < :until_exclusive\n"
+            params["until_exclusive"] = range_until_exclusive
+        if workflow_id is not None:
+            sql += "  AND wr.workflow_id = :workflow_id\n"
+            params["workflow_id"] = workflow_id
+        sql += """
+GROUP BY 1
+ORDER BY 1 ASC
+"""
+        async with self.async_session() as session:
+            result = await session.execute(text(sql), params)
+            rows = result.mappings().all()
+
+        out: list[dict[str, Any]] = []
+        for row in rows:
+            ws = row["week_start"]
+            if ws is None:
+                continue
+            ymd = ws.date().isoformat() if hasattr(ws, "date") else str(ws)[:10]
+            rc = int(row["run_count"] or 0)
+            ri = int(row["runs_inbound"] or 0)
+            ro = int(row["runs_outbound"] or 0)
+            st = float(row["sum_tokens"] or 0.0)
+            item: dict[str, Any] = {
+                "week_start": ymd,
+                "run_count": rc,
+                "runs_inbound": ri,
+                "runs_outbound": ro,
+            }
+            if st > 0:
+                item["dograh_tokens"] = round(st, 2)
+            out.append(item)
+        if not use_fixed_range and len(out) > weeks:
+            return out[-weeks:]
+        return out
+
+    async def get_daily_usage_rollup(
+        self,
+        organization_id: int,
+        *,
+        days: int = 30,
+        workflow_id: Optional[int] = None,
+        range_since: Optional[datetime] = None,
+        range_until_exclusive: Optional[datetime] = None,
+    ) -> list[dict[str, Any]]:
+        """UTC **calendar day** buckets (``date_trunc('day', … AT TIME ZONE 'UTC')``).
+
+        Same org / optional ``workflow_id`` scope as :meth:`get_weekly_usage_rollup`. Uses
+        ``days`` rolling lookback when no fixed range; optional ``range_since`` /
+        ``range_until_exclusive`` match the weekly rollup semantics.
+        """
+        use_fixed_range = range_since is not None and range_until_exclusive is not None
+        if use_fixed_range:
+            since = range_since
+        else:
+            since = datetime.now(timezone.utc) - timedelta(days=days)
+        sql = """
+SELECT
+  (date_trunc('day', wr.created_at AT TIME ZONE 'UTC'))::date AS day_start,
+  COUNT(*)::int AS run_count,
+  COUNT(*) FILTER (WHERE wr.call_type::text = 'inbound')::int AS runs_inbound,
+  COUNT(*) FILTER (WHERE wr.call_type::text = 'outbound')::int AS runs_outbound,
+  COALESCE(SUM(COALESCE((wr.cost_info->>'dograh_token_usage')::float, 0)), 0)::float AS sum_tokens
+FROM workflow_runs wr
+INNER JOIN workflows w ON w.id = wr.workflow_id
+INNER JOIN users u ON u.id = w.user_id
+WHERE u.selected_organization_id = :org_id
+  AND wr.created_at >= :since
+"""
+        params: dict[str, Any] = {"org_id": organization_id, "since": since}
+        if use_fixed_range:
+            sql += "  AND wr.created_at < :until_exclusive\n"
+            params["until_exclusive"] = range_until_exclusive
+        if workflow_id is not None:
+            sql += "  AND wr.workflow_id = :workflow_id\n"
+            params["workflow_id"] = workflow_id
+        sql += """
+GROUP BY 1
+ORDER BY 1 ASC
+"""
+        async with self.async_session() as session:
+            result = await session.execute(text(sql), params)
+            rows = result.mappings().all()
+
+        out: list[dict[str, Any]] = []
+        for row in rows:
+            ds = row["day_start"]
+            if ds is None:
+                continue
+            ymd = ds.isoformat() if hasattr(ds, "isoformat") else str(ds)[:10]
+            rc = int(row["run_count"] or 0)
+            ri = int(row["runs_inbound"] or 0)
+            ro = int(row["runs_outbound"] or 0)
+            st = float(row["sum_tokens"] or 0.0)
+            item: dict[str, Any] = {
+                "day_start": ymd,
+                "run_count": rc,
+                "runs_inbound": ri,
+                "runs_outbound": ro,
+            }
+            if st > 0:
+                item["dograh_tokens"] = round(st, 2)
+            out.append(item)
+        return trim_rollup_bucket_window(out, days, use_fixed_range)
 
     async def update_organization_quota(
         self,

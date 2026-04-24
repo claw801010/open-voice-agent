@@ -21,6 +21,7 @@ interface Workflow {
     status: string;
     created_at: string;
     total_runs?: number | null;
+    template_context_variables?: Record<string, string> | null;
 }
 
 interface WorkflowTableProps {
@@ -76,6 +77,7 @@ export function WorkflowTable({ workflows, showArchived }: WorkflowTableProps) {
                         <TableHead className="font-semibold">Agent Name</TableHead>
                         <TableHead className="font-semibold">Created At</TableHead>
                         <TableHead className="font-semibold text-center">Total Runs</TableHead>
+                        <TableHead className="font-semibold">Template variables</TableHead>
                         <TableHead className="font-semibold text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -102,6 +104,19 @@ export function WorkflowTable({ workflows, showArchived }: WorkflowTableProps) {
                                 <span className="inline-flex items-center justify-center min-w-[2rem] px-2 py-1 text-sm font-semibold bg-muted rounded-full">
                                     {workflow.total_runs || 0}
                                 </span>
+                            </TableCell>
+                            <TableCell className="max-w-[14rem] text-muted-foreground text-sm">
+                                {workflow.template_context_variables &&
+                                Object.keys(workflow.template_context_variables).length > 0 ? (
+                                    <span className="line-clamp-2" title={Object.entries(workflow.template_context_variables)
+                                        .map(([k, v]) => `${k}: ${v}`)
+                                        .join('\n')}>
+                                        {Object.keys(workflow.template_context_variables).slice(0, 3).join(', ')}
+                                        {Object.keys(workflow.template_context_variables).length > 3 ? '…' : ''}
+                                    </span>
+                                ) : (
+                                    <span className="text-muted-foreground/70">—</span>
+                                )}
                             </TableCell>
                             <TableCell className="text-right">
                                 <div className="flex justify-end gap-2">

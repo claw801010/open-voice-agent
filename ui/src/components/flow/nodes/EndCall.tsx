@@ -1,6 +1,6 @@
 import { NodeProps, NodeToolbar, Position } from "@xyflow/react";
 import { Edit, OctagonX, PlusIcon, Trash2Icon } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import { useWorkflow } from "@/app/workflow/[workflowId]/contexts/WorkflowContext";
 import type { RecordingResponseSchema } from "@/client/types.gen";
@@ -15,6 +15,7 @@ import { CONTEXT_VARIABLES_DOC_URL, NODE_DOCUMENTATION_URLS } from "@/constants/
 
 import { NodeContent } from "./common/NodeContent";
 import { NodeEditDialog } from "./common/NodeEditDialog";
+import { useNodeDialogDirty } from "./common/useNodeDialogDirty";
 import { useNodeHandlers } from "./common/useNodeHandlers";
 
 interface EndCallEditFormProps {
@@ -55,13 +56,29 @@ export const EndCall = memo(({ data, selected, id }: EndCallNodeProps) => {
     const [variables, setVariables] = useState<ExtractionVariable[]>(data.extraction_variables ?? []);
     const [addGlobalPrompt, setAddGlobalPrompt] = useState(data.add_global_prompt ?? true);
 
-    // Compute if form has unsaved changes (simplified: only check prompt, name)
-    const isDirty = useMemo(() => {
-        return (
-            prompt !== (data.prompt ?? "") ||
-            name !== (data.name ?? "")
-        );
-    }, [prompt, name, data]);
+    const getPendingData = useCallback((): FlowNodeData => {
+        return {
+            ...data,
+            prompt,
+            name,
+            allow_interrupt: false,
+            extraction_enabled: extractionEnabled,
+            extraction_prompt: extractionPrompt,
+            extraction_variables: variables,
+            add_global_prompt: addGlobalPrompt,
+        };
+    }, [data, prompt, name, extractionEnabled, extractionPrompt, variables, addGlobalPrompt]);
+
+    const applyData = useCallback((d: FlowNodeData) => {
+        setPrompt(d.prompt ?? "");
+        setName(d.name ?? "");
+        setExtractionEnabled(d.extraction_enabled ?? false);
+        setExtractionPrompt(d.extraction_prompt ?? "");
+        setVariables(d.extraction_variables ?? []);
+        setAddGlobalPrompt(d.add_global_prompt ?? true);
+    }, []);
+
+    const isDirty = useNodeDialogDirty(open, getPendingData);
 
     const handleSave = async () => {
         handleSaveNodeData({
@@ -141,6 +158,7 @@ export const EndCall = memo(({ data, selected, id }: EndCallNodeProps) => {
                 onSave={handleSave}
                 isDirty={isDirty}
                 documentationUrl={NODE_DOCUMENTATION_URLS.endCall}
+                dualMode={{ getPendingData, applyData }}
             >
                 {open && (
                     <EndCallEditForm

@@ -3,6 +3,7 @@
 import { ArrowLeft, Code, ExternalLink, Loader2, Save } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import {
     getToolApiV1ToolsToolUuidGet,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TOOL_DOCUMENTATION_URLS } from "@/constants/documentation";
+import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 import { useAuth } from "@/lib/auth";
 
 import {
@@ -33,6 +35,8 @@ import {
     type ToolCategory,
 } from "../config";
 import { BuiltinToolConfig, EndCallToolConfig, HttpApiToolConfig, TransferCallToolConfig } from "./components";
+import { useToolFormRawTabs } from "./hooks/useToolFormRawTabs";
+import { useToolPageDirty } from "./hooks/useToolPageDirty";
 
 // Extended HttpApiConfig with parameters (until client types are regenerated)
 interface HttpApiConfigWithParams {
@@ -105,34 +109,7 @@ export default function ToolDetailPage() {
         }
     }, [loading, user, redirectToLogin]);
 
-    const fetchTool = useCallback(async () => {
-        if (loading || !user || !toolUuid) return;
-
-        try {
-            setIsLoading(true);
-            setError(null);
-            const accessToken = await getAccessToken();
-
-            const response = await getToolApiV1ToolsToolUuidGet({
-                path: { tool_uuid: toolUuid },
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            });
-
-            if (response.data) {
-                setTool(response.data);
-                populateFormFromTool(response.data);
-            }
-        } catch (err) {
-            setError("Failed to fetch tool");
-            console.error("Error fetching tool:", err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [loading, user, toolUuid, getAccessToken]);
-
-    const populateFormFromTool = (tool: ToolResponse) => {
+    const populateFormFromTool = useCallback((tool: ToolResponse) => {
         setName(tool.name);
         setDescription(tool.description || "");
 
@@ -170,6 +147,8 @@ export default function ToolDetailPage() {
                 setTransferAudioRecordingId("");
                 setTransferTimeout(30);
             }
+        } else if (tool.category === "calculator") {
+            // Name/description only — no definition config fields in the form
         } else {
             // Populate HTTP API specific fields
             const config = tool.definition?.config as HttpApiConfigWithParams | undefined;
@@ -211,7 +190,34 @@ export default function ToolDetailPage() {
                 }
             }
         }
-    };
+    }, []);
+
+    const fetchTool = useCallback(async () => {
+        if (loading || !user || !toolUuid) return;
+
+        try {
+            setIsLoading(true);
+            setError(null);
+            const accessToken = await getAccessToken();
+
+            const response = await getToolApiV1ToolsToolUuidGet({
+                path: { tool_uuid: toolUuid },
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
+
+            if (response.data) {
+                setTool(response.data);
+                populateFormFromTool(response.data);
+            }
+        } catch (err) {
+            setError("Failed to fetch tool");
+            console.error("Error fetching tool:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [loading, user, toolUuid, getAccessToken, populateFormFromTool]);
 
     const fetchRecordings = useCallback(async () => {
         if (loading || !user) return;
@@ -231,6 +237,144 @@ export default function ToolDetailPage() {
         fetchTool();
         fetchRecordings();
     }, [fetchTool, fetchRecordings]);
+
+    const buildPendingPayload = useCallback(() => {
+        if (!tool) return {};
+        if (tool.category === "calculator") {
+            return {
+                name,
+                description: description || undefined,
+                definition: {
+                    schema_version: 1,
+                    type: "calculator" as const,
+                },
+            };
+        }
+        if (tool.category === "end_call") {
+            return {
+                name,
+                description: description || undefined,
+                definition: {
+                    schema_version: 1,
+                    type: "end_call" as const,
+                    config: {
+                        messageType: endCallMessageType,
+                        customMessage: endCallMessageType === "custom" ? customMessage : undefined,
+                        audioRecordingId: endCallMessageType === "audio" ? audioRecordingId || undefined : undefined,
+                        endCallReason,
+                        endCallReasonDescription: endCallReason ? endCallReasonDescription || undefined : undefined,
+                    },
+                },
+            };
+        }
+        if (tool.category === "transfer_call") {
+            return {
+                name,
+                description: description || undefined,
+                definition: {
+                    schema_version: 1,
+                    type: "transfer_call" as const,
+                    config: {
+                        destination: transferDestination,
+                        messageType: transferMessageType,
+                        customMessage: transferMessageType === "custom" ? customMessage : undefined,
+                        audioRecordingId: transferMessageType === "audio" ? transferAudioRecordingId || undefined : undefined,
+                        timeout: transferTimeout,
+                    },
+                },
+            };
+        }
+        const headersObject: Record<string, string> = {};
+        headers.filter((h) => h.key && h.value).forEach((h) => {
+            headersObject[h.key] = h.value;
+        });
+        const validParameters = parameters.filter((p) => p.name.trim());
+        return {
+            name,
+            description: description || undefined,
+            definition: {
+                schema_version: 1,
+                type: "http_api" as const,
+                config: {
+                    method: httpMethod,
+                    url,
+                    credential_uuid: credentialUuid || undefined,
+                    headers: Object.keys(headersObject).length > 0 ? headersObject : undefined,
+                    parameters: validParameters.length > 0 ? validParameters : undefined,
+                    timeout_ms: timeoutMs,
+                    customMessage: customMessageType === "text" ? customMessage || undefined : undefined,
+                    customMessageType,
+                    customMessageRecordingId: customMessageType === "audio" ? customMessageRecordingId || undefined : undefined,
+                },
+            },
+        };
+    }, [
+        tool,
+        name,
+        description,
+        endCallMessageType,
+        customMessage,
+        audioRecordingId,
+        endCallReason,
+        endCallReasonDescription,
+        transferDestination,
+        transferMessageType,
+        transferAudioRecordingId,
+        transferTimeout,
+        headers,
+        parameters,
+        httpMethod,
+        url,
+        credentialUuid,
+        timeoutMs,
+        customMessageType,
+        customMessageRecordingId,
+    ]);
+
+    const applyToolPayload = useCallback(
+        (data: unknown) => {
+            if (!tool) return;
+            const p = data as {
+                name: string;
+                description?: string;
+                definition?: { type?: string };
+            };
+            const expectedDefType =
+                tool.category === "http_api"
+                    ? "http_api"
+                    : tool.category === "end_call"
+                      ? "end_call"
+                      : tool.category === "transfer_call"
+                        ? "transfer_call"
+                        : tool.category === "calculator"
+                          ? "calculator"
+                          : "";
+            if (p.definition?.type && expectedDefType && p.definition.type !== expectedDefType) {
+                toast.error(`definition.type must be "${expectedDefType}" for this tool.`);
+                return;
+            }
+            setName(p.name);
+            setDescription(p.description ?? "");
+            const merged: ToolResponse = {
+                ...tool,
+                name: p.name,
+                description: p.description ?? null,
+                definition: (p.definition ?? tool.definition) as ToolResponse["definition"],
+            };
+            populateFormFromTool(merged);
+        },
+        [tool, populateFormFromTool]
+    );
+
+    const isFormDirty = useToolPageDirty(tool, buildPendingPayload);
+
+    const { wrapSave, renderFormRawTabs, saveBlocked, discardConfirmNeeded } = useToolFormRawTabs({
+        getPendingPayload: buildPendingPayload,
+        applyPayload: applyToolPayload,
+        formDirty: isFormDirty,
+    });
+
+    useUnsavedChanges("tool-detail", discardConfirmNeeded);
 
     const handleSave = async () => {
         if (!tool) return;
@@ -271,85 +415,7 @@ export default function ToolDetailPage() {
             setSaveSuccess(false);
             const accessToken = await getAccessToken();
 
-            let requestBody;
-
-            if (tool.category === "calculator") {
-                // Built-in tool - only name/description, no config
-                requestBody = {
-                    name,
-                    description: description || undefined,
-                    definition: {
-                        schema_version: 1,
-                        type: "calculator",
-                    },
-                };
-            } else if (tool.category === "end_call") {
-                // Build end call request body
-                requestBody = {
-                    name,
-                    description: description || undefined,
-                    definition: {
-                        schema_version: 1,
-                        type: "end_call",
-                        config: {
-                            messageType: endCallMessageType,
-                            customMessage: endCallMessageType === "custom" ? customMessage : undefined,
-                            audioRecordingId: endCallMessageType === "audio" ? audioRecordingId || undefined : undefined,
-                            endCallReason,
-                            endCallReasonDescription: endCallReason ? endCallReasonDescription || undefined : undefined,
-                        },
-                    },
-                };
-            } else if (tool.category === "transfer_call") {
-                // Build transfer call request body
-                requestBody = {
-                    name,
-                    description: description || undefined,
-                    definition: {
-                        schema_version: 1,
-                        type: "transfer_call",
-                        config: {
-                            destination: transferDestination,
-                            messageType: transferMessageType,
-                            customMessage: transferMessageType === "custom" ? customMessage : undefined,
-                            audioRecordingId: transferMessageType === "audio" ? transferAudioRecordingId || undefined : undefined,
-                            timeout: transferTimeout,
-                        },
-                    },
-                };
-            } else {
-                // Build HTTP API request body
-                const headersObject: Record<string, string> = {};
-                headers.filter((h) => h.key && h.value).forEach((h) => {
-                    headersObject[h.key] = h.value;
-                });
-
-                const validParameters = parameters.filter((p) => p.name.trim());
-
-                requestBody = {
-                    name,
-                    description: description || undefined,
-                    definition: {
-                        schema_version: 1,
-                        type: "http_api",
-                        config: {
-                            method: httpMethod,
-                            url,
-                            credential_uuid: credentialUuid || undefined,
-                            headers:
-                                Object.keys(headersObject).length > 0
-                                    ? headersObject
-                                    : undefined,
-                            parameters:
-                                validParameters.length > 0 ? validParameters : undefined,
-                            timeout_ms: timeoutMs,
-                            customMessage: customMessageType === 'text' ? (customMessage || undefined) : undefined,
-                            customMessageType,
-                            customMessageRecordingId: customMessageType === 'audio' ? (customMessageRecordingId || undefined) : undefined,
-                        },
-                    },
-                };
-            }
+            const requestBody = buildPendingPayload();
 
             const response = await updateToolApiV1ToolsToolUuidPut({
                 path: { tool_uuid: toolUuid },
@@ -362,6 +428,7 @@ export default function ToolDetailPage() {
 
             if (response.data) {
                 setTool(response.data);
+                populateFormFromTool(response.data);
                 setSaveSuccess(true);
                 setTimeout(() => setSaveSuccess(false), 3000);
             }
@@ -511,15 +578,18 @@ const data = await response.json();`;
                     </div>
 
                     {isBuiltinTool ? (
-                        <BuiltinToolConfig
-                            name={name}
-                            onNameChange={setName}
-                            description={description}
-                            onDescriptionChange={setDescription}
-                            title="Calculator Configuration"
-                            subtitle="Built-in calculator for arithmetic operations. No additional configuration needed."
-                        />
+                        renderFormRawTabs(
+                            <BuiltinToolConfig
+                                name={name}
+                                onNameChange={setName}
+                                description={description}
+                                onDescriptionChange={setDescription}
+                                title="Calculator Configuration"
+                                subtitle="Built-in calculator for arithmetic operations. No additional configuration needed."
+                            />
+                        )
                     ) : isEndCallTool ? (
+                        renderFormRawTabs(
                         <EndCallToolConfig
                             name={name}
                             onNameChange={setName}
@@ -537,7 +607,9 @@ const data = await response.json();`;
                             endCallReasonDescription={endCallReasonDescription}
                             onEndCallReasonDescriptionChange={setEndCallReasonDescription}
                         />
+                        )
                     ) : isTransferCallTool ? (
+                        renderFormRawTabs(
                         <TransferCallToolConfig
                             name={name}
                             onNameChange={setName}
@@ -555,7 +627,9 @@ const data = await response.json();`;
                             timeout={transferTimeout}
                             onTimeoutChange={setTransferTimeout}
                         />
+                        )
                     ) : (
+                        renderFormRawTabs(
                         <HttpApiToolConfig
                             name={name}
                             onNameChange={setName}
@@ -581,6 +655,7 @@ const data = await response.json();`;
                             onCustomMessageRecordingIdChange={setCustomMessageRecordingId}
                             recordings={recordings}
                         />
+                        )
                     )}
 
                     {error && (
@@ -596,7 +671,7 @@ const data = await response.json();`;
                     )}
 
                     <div className="flex justify-end mt-6">
-                        <Button onClick={handleSave} disabled={isSaving}>
+                        <Button onClick={wrapSave(handleSave)} disabled={isSaving || saveBlocked}>
                             {isSaving ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

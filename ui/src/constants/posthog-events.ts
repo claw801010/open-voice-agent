@@ -10,4 +10,8 @@ export const PostHogEvent = {
   WEB_CALL_INITIATED: "web_call_initiated",
   GITHUB_STAR_CLICKED: "github_star_clicked",
   SLACK_COMMUNITY_CLICKED: "slack_community_clicked",
+  /** WE-01-HEADER: optional `NEXT_PUBLIC_FEEDBACK_URL` link from workflow editor */
+  FEEDBACK_LINK_CLICKED: "feedback_link_clicked",
+  /** WE-01-FEEDBACK: in-app dialog submit to POST /api/v1/feedback */
+  FEEDBACK_IN_APP_SUBMITTED: "feedback_in_app_submitted",
 } as const;

@@ -1,9 +1,9 @@
 import { NodeProps, NodeToolbar, Position } from "@xyflow/react";
 import { ChevronDown, ChevronRight, Circle, ClipboardCheck, Edit, Trash2Icon } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import { useWorkflow } from "@/app/workflow/[workflowId]/contexts/WorkflowContext";
-import { FlowNodeData } from "@/components/flow/types";
+import type { FlowNodeData } from "@/components/flow/types";
 import { LLMConfigSelector } from "@/components/LLMConfigSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { NODE_DOCUMENTATION_URLS } from "@/constants/documentation";
 
 import { NodeContent } from "./common/NodeContent";
 import { NodeEditDialog } from "./common/NodeEditDialog";
+import { useNodeDialogDirty } from "./common/useNodeDialogDirty";
 import { useNodeHandlers } from "./common/useNodeHandlers";
 
 interface QANodeProps extends NodeProps {
@@ -36,20 +37,48 @@ export const QANode = memo(({ data, selected, id }: QANodeProps) => {
     const [qaVoicemailCalls, setQaVoicemailCalls] = useState(data.qa_voicemail_calls ?? false);
     const [qaSampleRate, setQaSampleRate] = useState(data.qa_sample_rate ?? 100);
 
-    const isDirty = useMemo(() => {
-        return (
-            name !== (data.name || "QA Analysis") ||
-            qaEnabled !== (data.qa_enabled ?? true) ||
-            useWorkflowLlm !== (data.qa_use_workflow_llm ?? true) ||
-            qaProvider !== (data.qa_provider || "openai") ||
-            qaModel !== (data.qa_model || "gpt-4.1") ||
-            qaApiKey !== (data.qa_api_key || "") ||
-            qaSystemPrompt !== (data.qa_system_prompt || "") ||
-            minCallDuration !== (data.qa_min_call_duration ?? 15) ||
-            qaVoicemailCalls !== (data.qa_voicemail_calls ?? false) ||
-            qaSampleRate !== (data.qa_sample_rate ?? 100)
-        );
-    }, [name, qaEnabled, useWorkflowLlm, qaProvider, qaModel, qaApiKey, qaSystemPrompt, minCallDuration, qaVoicemailCalls, qaSampleRate, data]);
+    const getPendingData = useCallback((): FlowNodeData => {
+        return {
+            ...data,
+            name,
+            qa_enabled: qaEnabled,
+            qa_use_workflow_llm: useWorkflowLlm,
+            qa_provider: qaProvider,
+            qa_model: qaModel,
+            qa_api_key: qaApiKey,
+            qa_system_prompt: qaSystemPrompt,
+            qa_min_call_duration: minCallDuration,
+            qa_voicemail_calls: qaVoicemailCalls,
+            qa_sample_rate: qaSampleRate,
+        };
+    }, [
+        data,
+        name,
+        qaEnabled,
+        useWorkflowLlm,
+        qaProvider,
+        qaModel,
+        qaApiKey,
+        qaSystemPrompt,
+        minCallDuration,
+        qaVoicemailCalls,
+        qaSampleRate,
+    ]);
+
+    const applyData = useCallback((d: FlowNodeData) => {
+        setName(d.name || "QA Analysis");
+        setQaEnabled(d.qa_enabled ?? true);
+        setUseWorkflowLlm(d.qa_use_workflow_llm ?? true);
+        setQaProvider(d.qa_provider || "openai");
+        setQaModel(d.qa_model || "gpt-4.1");
+        setQaApiKey(d.qa_api_key || "");
+        setQaSystemPrompt(d.qa_system_prompt || "");
+        setMinCallDuration(d.qa_min_call_duration ?? 15);
+        setQaVoicemailCalls(d.qa_voicemail_calls ?? false);
+        setQaSampleRate(d.qa_sample_rate ?? 100);
+    }, []);
+
+    const isDirty = useNodeDialogDirty(open, getPendingData);
 
     const handleSave = async () => {
         handleSaveNodeData({
@@ -147,6 +176,7 @@ export const QANode = memo(({ data, selected, id }: QANodeProps) => {
                 onSave={handleSave}
                 isDirty={isDirty}
                 documentationUrl={NODE_DOCUMENTATION_URLS.qaAnalysis}
+                dualMode={{ getPendingData, applyData }}
             >
                 {open && (
                     <QANodeEditForm

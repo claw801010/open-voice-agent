@@ -18,7 +18,7 @@ import {
     validateWorkflowApiV1WorkflowWorkflowIdValidatePost
 } from "@/client";
 import { WorkflowError } from "@/client/types.gen";
-import { FlowEdge, FlowNode, NodeType } from "@/components/flow/types";
+import { FlowEdge, FlowNode, NodeType, type WorkflowSubflowDefinition } from "@/components/flow/types";
 import { PostHogEvent } from "@/constants/posthog-events";
 import logger from '@/lib/logger';
 import { getNextNodeId, getRandomId } from "@/lib/utils";
@@ -164,6 +164,7 @@ interface UseWorkflowStateProps {
             y: number;
             zoom: number;
         };
+        subflows?: Record<string, WorkflowSubflowDefinition>;
     };
     initialTemplateContextVariables?: Record<string, string>;
     initialWorkflowConfigurations?: WorkflowConfigurations;
@@ -236,9 +237,10 @@ export const useWorkflowState = ({
             initialFlow?.edges ?? [],
             initialTemplateContextVariables,
             initialWorkflowConfigurations,
-            initialWorkflowConfigurations?.dictionary ?? ''
+            initialWorkflowConfigurations?.dictionary ?? '',
+            initialFlow?.subflows ?? {}
         );
-    }, [workflowId, initialWorkflowName, initialFlow?.nodes, initialFlow?.edges, initialTemplateContextVariables, initialWorkflowConfigurations, initializeWorkflow]);
+    }, [workflowId, initialWorkflowName, initialFlow?.nodes, initialFlow?.edges, initialFlow?.subflows, initialTemplateContextVariables, initialWorkflowConfigurations, initializeWorkflow]);
 
     // Set up keyboard shortcuts for undo/redo
     useEffect(() => {
@@ -373,9 +375,50 @@ export const useWorkflowState = ({
         // and viewport from the ReactFlow instance to build the flow object.
         // This avoids a race condition where rfInstance.toObject() may return
         // stale node data if React hasn't re-rendered yet after a store update.
-        const { nodes: currentNodes, edges: currentEdges } = useWorkflowStore.getState();
+        const {
+            nodes: currentNodes,
+            edges: currentEdges,
+            activeFlowScope,
+            mainSnapshot,
+            subflows,
+        } = useWorkflowStore.getState();
         const viewport = rfInstance.current.getViewport();
-        const flow = { nodes: currentNodes, edges: currentEdges, viewport };
+        const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
+
+        if (activeFlowScope !== "main" && !mainSnapshot) {
+            logger.error("saveWorkflow: mainSnapshot missing while active scope is subflow; abort save");
+            return;
+        }
+
+        let flow: {
+            nodes: FlowNode[];
+            edges: FlowEdge[];
+            viewport: { x: number; y: number; zoom: number };
+            subflows: Record<string, WorkflowSubflowDefinition>;
+        };
+
+        if (activeFlowScope === "main") {
+            flow = {
+                nodes: clone(currentNodes),
+                edges: clone(currentEdges),
+                viewport: { x: viewport.x, y: viewport.y, zoom: viewport.zoom },
+                subflows: { ...subflows },
+            };
+        } else {
+            flow = {
+                nodes: clone(mainSnapshot!.nodes),
+                edges: clone(mainSnapshot!.edges),
+                viewport: { ...mainSnapshot!.viewport },
+                subflows: {
+                    ...subflows,
+                    [activeFlowScope]: {
+                        nodes: clone(currentNodes),
+                        edges: clone(currentEdges),
+                        viewport: { x: viewport.x, y: viewport.y, zoom: viewport.zoom },
+                    },
+                },
+            };
+        }
         let result: { versionNumber?: number; versionStatus?: string } | undefined;
         try {
             const response = await updateWorkflowApiV1WorkflowWorkflowIdPut({

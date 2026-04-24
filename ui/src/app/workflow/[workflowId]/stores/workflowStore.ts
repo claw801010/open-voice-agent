@@ -3,7 +3,7 @@ import { EdgeChange,NodeChange } from '@xyflow/system';
 import { create } from 'zustand';
 
 import { WorkflowError } from '@/client/types.gen';
-import { FlowEdge, FlowNode } from '@/components/flow/types';
+import { FlowEdge, FlowNode, type WorkflowSubflowDefinition } from '@/components/flow/types';
 import { DEFAULT_WORKFLOW_CONFIGURATIONS, WorkflowConfigurations } from '@/types/workflow-configurations';
 
 interface HistoryState {
@@ -11,6 +11,12 @@ interface HistoryState {
   edges: FlowEdge[];
   workflowName: string;
 }
+
+export type MainGraphSnapshot = {
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+  viewport: { x: number; y: number; zoom: number };
+};
 
 interface WorkflowState {
   // Workflow identification
@@ -39,6 +45,14 @@ interface WorkflowState {
 
   // ReactFlow instance reference
   rfInstance: ReactFlowInstance<FlowNode, FlowEdge> | null;
+
+  /** WE-01-SUBFLOWS: `'main'` = primary graph; otherwise a key in `subflows` (e.g. `component_1`). */
+  activeFlowScope: 'main' | string;
+  subflows: Record<string, WorkflowSubflowDefinition>;
+  /** Set when editing a component — holds the main graph while `nodes`/`edges` show the component. */
+  mainSnapshot: MainGraphSnapshot | null;
+  /** Applied once in RenderWorkflow after scope switch (`setViewport`). */
+  pendingViewport: { x: number; y: number; zoom: number } | null;
 }
 
 interface WorkflowActions {
@@ -50,7 +64,18 @@ interface WorkflowActions {
     edges: FlowEdge[],
     templateContextVariables?: Record<string, string>,
     workflowConfigurations?: WorkflowConfigurations | null,
-    dictionary?: string
+    dictionary?: string,
+    subflows?: Record<string, WorkflowSubflowDefinition>
+  ) => void;
+
+  /** Switch main ↔ component canvas; flushes current scope and loads the other graph. */
+  setActiveFlowScope: (newScope: 'main' | string, viewport: { x: number; y: number; zoom: number }) => void;
+  clearPendingViewport: () => void;
+  /** Load graph from version history / draft fetch (always resets scope to main). */
+  hydrateVersionGraph: (
+    nodes: FlowNode[],
+    edges: FlowEdge[],
+    subflows?: Record<string, WorkflowSubflowDefinition>
   ) => void;
 
   // History management
@@ -115,9 +140,13 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   workflowConfigurations: null,
   dictionary: '',
   rfInstance: null,
+  activeFlowScope: 'main',
+  subflows: {},
+  mainSnapshot: null,
+  pendingViewport: null,
 
   // Actions
-  initializeWorkflow: (workflowId, workflowName, nodes, edges, templateContextVariables = {}, workflowConfigurations = DEFAULT_WORKFLOW_CONFIGURATIONS, dictionary = '') => {
+  initializeWorkflow: (workflowId, workflowName, nodes, edges, templateContextVariables = {}, workflowConfigurations = DEFAULT_WORKFLOW_CONFIGURATIONS, dictionary = '', subflows = {}) => {
     const initialHistory: HistoryState = { nodes, edges, workflowName };
     set({
       workflowId,
@@ -131,6 +160,84 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       workflowValidationErrors: [],
       history: [initialHistory],
       historyIndex: 0,
+      activeFlowScope: 'main',
+      subflows: { ...subflows },
+      mainSnapshot: null,
+      pendingViewport: null,
+    });
+  },
+
+  setActiveFlowScope: (newScope, viewport) => {
+    const s = get();
+    if (s.activeFlowScope === newScope) return;
+
+    const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
+
+    let subflows = { ...s.subflows };
+    let mainSnapshot = s.mainSnapshot;
+
+    if (s.activeFlowScope === 'main') {
+      mainSnapshot = {
+        nodes: clone(s.nodes),
+        edges: clone(s.edges),
+        viewport: { ...viewport },
+      };
+    } else {
+      subflows[s.activeFlowScope] = {
+        nodes: clone(s.nodes),
+        edges: clone(s.edges),
+        viewport: { ...viewport },
+      };
+    }
+
+    let nextNodes: FlowNode[];
+    let nextEdges: FlowEdge[];
+    let pendingViewport: { x: number; y: number; zoom: number };
+
+    if (newScope === 'main') {
+      if (!mainSnapshot) return;
+      nextNodes = clone(mainSnapshot.nodes);
+      nextEdges = clone(mainSnapshot.edges);
+      pendingViewport = { ...mainSnapshot.viewport };
+      mainSnapshot = null;
+    } else {
+      const chunk = subflows[newScope];
+      nextNodes = chunk?.nodes?.length ? clone(chunk.nodes) : [];
+      nextEdges = chunk?.edges?.length ? clone(chunk.edges) : [];
+      pendingViewport = chunk?.viewport
+        ? { ...chunk.viewport }
+        : { x: 0, y: 0, zoom: 1 };
+    }
+
+    const initialHistory: HistoryState = { nodes: nextNodes, edges: nextEdges, workflowName: s.workflowName };
+    set({
+      activeFlowScope: newScope,
+      subflows,
+      mainSnapshot,
+      nodes: nextNodes,
+      edges: nextEdges,
+      pendingViewport,
+      history: [initialHistory],
+      historyIndex: 0,
+      isDirty: true,
+    });
+  },
+
+  clearPendingViewport: () => set({ pendingViewport: null }),
+
+  hydrateVersionGraph: (nodes, edges, subflows = {}) => {
+    const s = get();
+    const initialHistory: HistoryState = { nodes, edges, workflowName: s.workflowName };
+    set({
+      nodes,
+      edges,
+      subflows: { ...subflows },
+      activeFlowScope: 'main',
+      mainSnapshot: null,
+      pendingViewport: null,
+      history: [initialHistory],
+      historyIndex: 0,
+      isDirty: false,
     });
   },
 
@@ -396,6 +503,10 @@ export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
       workflowConfigurations: null,
       dictionary: '',
       rfInstance: null,
+      activeFlowScope: 'main',
+      subflows: {},
+      mainSnapshot: null,
+      pendingViewport: null,
     });
   },
 }));

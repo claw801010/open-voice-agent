@@ -628,6 +628,15 @@ async def _run_pipeline(
 
     workflow_graph = WorkflowGraph(ReactFlowDTO.model_validate(run_workflow_json))
 
+    if workflow_graph.subflow_graphs:
+        logger.info(
+            "Workflow run %s: loaded %s named subgraph(s). Main flow runs by default; "
+            "edges with enter_subflow run a subgraph before the edge target: %s",
+            workflow_run_id,
+            len(workflow_graph.subflow_graphs),
+            sorted(workflow_graph.subflow_graphs.keys()),
+        )
+
     # Pre-call fetch: fire early so it runs concurrently with remaining setup
     pre_call_fetch_task = None
     start_node = workflow_graph.nodes.get(workflow_graph.start_node_id)

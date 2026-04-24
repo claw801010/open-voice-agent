@@ -1,10 +1,10 @@
 import { NodeProps, NodeToolbar, Position } from "@xyflow/react";
 import { Check, Copy, Edit, Trash2Icon, Webhook } from "lucide-react";
 import Link from "next/link";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import { useWorkflow } from "@/app/workflow/[workflowId]/contexts/WorkflowContext";
-import { FlowNodeData } from "@/components/flow/types";
+import type { FlowNodeData } from "@/components/flow/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { NODE_DOCUMENTATION_URLS } from "@/constants/documentation";
 
 import { NodeContent } from "./common/NodeContent";
 import { NodeEditDialog } from "./common/NodeEditDialog";
+import { useNodeDialogDirty } from "./common/useNodeDialogDirty";
 import { useNodeHandlers } from "./common/useNodeHandlers";
 
 interface TriggerNodeEditFormProps {
@@ -32,7 +33,7 @@ export const TriggerNode = memo(({ data, selected, id }: TriggerNodeProps) => {
     const [name, setName] = useState(data.name || "API Trigger");
 
     // Generate trigger_path if not present (should be done on node creation)
-    const [triggerPath] = useState(() => data.trigger_path ?? crypto.randomUUID());
+    const [triggerPath, setTriggerPath] = useState(() => data.trigger_path ?? crypto.randomUUID());
 
     const backendUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ||
@@ -42,10 +43,22 @@ export const TriggerNode = memo(({ data, selected, id }: TriggerNodeProps) => {
     // Copy state for button feedback
     const [copied, setCopied] = useState(false);
 
-    // Compute if form has unsaved changes (simplified: only check name)
-    const isDirty = useMemo(() => {
-        return name !== (data.name || "API Trigger");
-    }, [name, data.name]);
+    const getPendingData = useCallback((): FlowNodeData => {
+        return {
+            ...data,
+            name,
+            trigger_path: triggerPath,
+        };
+    }, [data, name, triggerPath]);
+
+    const applyData = useCallback((d: FlowNodeData) => {
+        setName(d.name || "API Trigger");
+        if (d.trigger_path) {
+            setTriggerPath(d.trigger_path);
+        }
+    }, []);
+
+    const isDirty = useNodeDialogDirty(open, getPendingData);
 
     const handleCopy = async () => {
         await navigator.clipboard.writeText(endpoint);
@@ -67,6 +80,9 @@ export const TriggerNode = memo(({ data, selected, id }: TriggerNodeProps) => {
     const handleOpenChange = (newOpen: boolean) => {
         if (newOpen) {
             setName(data.name || "API Trigger");
+            if (data.trigger_path) {
+                setTriggerPath(data.trigger_path);
+            }
         }
         setOpen(newOpen);
     };
@@ -143,6 +159,7 @@ export const TriggerNode = memo(({ data, selected, id }: TriggerNodeProps) => {
                 onSave={handleSave}
                 isDirty={isDirty}
                 documentationUrl={NODE_DOCUMENTATION_URLS.apiTrigger}
+                dualMode={{ getPendingData, applyData }}
             >
                 {open && (
                     <TriggerNodeEditForm

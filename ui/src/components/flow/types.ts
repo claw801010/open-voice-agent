@@ -83,6 +83,8 @@ export type FlowEdgeData = {
     transition_speech?: string;
     transition_speech_type?: 'text' | 'audio';
     transition_speech_recording_id?: string;
+    /** WE-01-SUBFLOWS: main graph only — run this named subgraph first, then continue at target */
+    enter_subflow?: string;
     invalid?: boolean;
     validationMessage?: string | null;
 }
@@ -97,6 +99,21 @@ export type FlowEdge = {
     invalid?: boolean;
 };
 
+/** One named subgraph (WE-01-SUBFLOWS); same shape as root graph JSON without nested `subflows`. */
+export type WorkflowSubflowDefinition = {
+    nodes: FlowNode[];
+    edges: FlowEdge[];
+    viewport?: {
+        x: number;
+        y: number;
+        zoom: number;
+    };
+};
+
+/**
+ * Persisted as `workflow_json`. Backend validates via `ReactFlowDTO` (`api/services/workflow/dto.py`).
+ * Optional `subflows` is stored; validated on load. Main-flow edges may set `enter_subflow` to run a subgraph before the edge target (voice Pipecat).
+ */
 export interface WorkflowDefinition {
     nodes: FlowNode[];
     edges: FlowEdge[];
@@ -105,6 +122,7 @@ export interface WorkflowDefinition {
         y: number;
         zoom: number;
     };
+    subflows?: Record<string, WorkflowSubflowDefinition>;
 }
 
 export interface WorkflowData {

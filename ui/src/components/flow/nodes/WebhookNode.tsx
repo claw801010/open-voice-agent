@@ -1,9 +1,9 @@
 import { NodeProps, NodeToolbar, Position } from "@xyflow/react";
 import { Circle, Edit, Link2, Trash2Icon } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import { useWorkflow } from "@/app/workflow/[workflowId]/contexts/WorkflowContext";
-import { FlowNodeData } from "@/components/flow/types";
+import type { FlowNodeData } from "@/components/flow/types";
 import {
     CredentialSelector,
     type HttpMethod,
@@ -23,6 +23,7 @@ import { NODE_DOCUMENTATION_URLS } from "@/constants/documentation";
 
 import { NodeContent } from "./common/NodeContent";
 import { NodeEditDialog } from "./common/NodeEditDialog";
+import { useNodeDialogDirty } from "./common/useNodeDialogDirty";
 import { useNodeHandlers } from "./common/useNodeHandlers";
 
 interface WebhookNodeProps extends NodeProps {
@@ -50,13 +51,47 @@ export const WebhookNode = memo(({ data, selected, id }: WebhookNodeProps) => {
     const [jsonError, setJsonError] = useState<string | null>(null);
     const [endpointError, setEndpointError] = useState<string | null>(null);
 
-    // Compute if form has unsaved changes (simplified: only check name, endpoint)
-    const isDirty = useMemo(() => {
-        return (
-            name !== (data.name || "Webhook") ||
-            endpointUrl !== (data.endpoint_url || "")
+    const getPendingData = useCallback((): FlowNodeData => {
+        const validation = validateJson(payloadTemplate);
+        const payload_template = validation.valid
+            ? (validation.parsed as Record<string, unknown>)
+            : (data.payload_template ?? {});
+        return {
+            ...data,
+            name,
+            enabled,
+            http_method: httpMethod,
+            endpoint_url: endpointUrl,
+            credential_uuid: credentialUuid || undefined,
+            custom_headers: customHeaders.filter((h) => h.key && h.value),
+            payload_template,
+        };
+    }, [
+        data,
+        name,
+        enabled,
+        httpMethod,
+        endpointUrl,
+        credentialUuid,
+        customHeaders,
+        payloadTemplate,
+    ]);
+
+    const applyData = useCallback((d: FlowNodeData) => {
+        setName(d.name || "Webhook");
+        setEnabled(d.enabled ?? true);
+        setHttpMethod(d.http_method || "POST");
+        setEndpointUrl(d.endpoint_url || "");
+        setCredentialUuid(d.credential_uuid || "");
+        setCustomHeaders(d.custom_headers || []);
+        setPayloadTemplate(
+            d.payload_template ? JSON.stringify(d.payload_template, null, 2) : "{}"
         );
-    }, [name, endpointUrl, data]);
+        setJsonError(null);
+        setEndpointError(null);
+    }, []);
+
+    const isDirty = useNodeDialogDirty(open, getPendingData);
 
     const handleSave = async () => {
         // Validate endpoint URL
@@ -180,6 +215,7 @@ export const WebhookNode = memo(({ data, selected, id }: WebhookNodeProps) => {
                 error={endpointError || jsonError}
                 isDirty={isDirty}
                 documentationUrl={NODE_DOCUMENTATION_URLS.webhook}
+                dualMode={{ getPendingData, applyData }}
             >
                 {open && (
                     <WebhookNodeEditForm

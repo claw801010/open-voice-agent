@@ -141,7 +141,21 @@ async def setup_test_database():
     Session-scoped fixture that creates the test database and runs migrations.
 
     This runs once at the start of the test session.
+
+    If ``PYTEST_DATABASE_URL`` is set (asyncpg URL to an **existing** empty or
+    disposable Postgres database), **CREATE DATABASE** is skipped — use when
+    your role lacks ``CREATEDB`` (e.g. ``createdb myapp_test`` manually first).
+    ``DATABASE_URL`` must still be set for ``api.constants`` at import time.
     """
+    explicit_test_url = os.environ.get("PYTEST_DATABASE_URL", "").strip()
+    if explicit_test_url:
+        explicit_name = urlparse(explicit_test_url).path.lstrip("/") or "(see PYTEST_DATABASE_URL)"
+        print(f"\n PYTEST_DATABASE_URL set — skipping CREATE DATABASE; migrating {explicit_name!r}")
+        await run_migrations(explicit_test_url)
+        print(" Migrations complete!")
+        yield explicit_test_url
+        return
+
     test_db_name = get_test_db_name()
     base_url = get_base_database_url()
     test_url = get_test_database_url()

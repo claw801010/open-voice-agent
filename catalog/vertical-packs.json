@@ -1,9 +1,10 @@
 {
-  "catalog_version": 1,
-  "description": "Canonical vertical pack metadata for MK-01 marketplace work. DB-backed WorkflowTemplates may mirror these slugs; see api/db/models.py WorkflowTemplates.",
+  "catalog_version": 2,
+  "description": "Canonical vertical pack metadata for MK-01 marketplace work. Packaged graphs live under catalog/packaged-workflows/; install uses POST /api/v1/workflow/install-from-catalog. Each pack has pack_semver (see catalog/README.md).",
   "packs": [
     {
       "slug": "healthcare-clinic-screening",
+      "pack_semver": "1.0.0",
       "industry": "Healthcare / clinics",
       "display_name": "Patient screening & triage",
       "summary": "After-hours and overflow voice flow for symptom triage, scheduling handoff, and scripted guardrails—designed for PHI minimization in the agent layer.",
@@ -19,13 +20,17 @@
       "cost_latency_estimate_band": "Medium latency (regional LLM + STT/TTS); cost scales with minutes and model tier",
       "runbook_path": "runbooks/healthcare-clinic-screening.md",
       "workflow_template": {
-        "source": "none_yet",
-        "workflow_templates_table_id": null,
-        "packaged_definition_ref": null
+        "source": "packaged_definition",
+        "packaged_definition_ref": "healthcare-clinic-screening.json"
+      },
+      "default_template_variables": {
+        "clinic_name": "Your Clinic Name",
+        "support_phone": "+1-555-0100"
       }
     },
     {
       "slug": "retail-wismo-faq",
+      "pack_semver": "1.0.0",
       "industry": "Retail / e-commerce",
       "display_name": "WISMO & store policy FAQ",
       "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk—reduces tier-1 load while staying policy-safe.",
@@ -41,13 +46,17 @@
       "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live order lookup tools add RTT",
       "runbook_path": "runbooks/retail-wismo-faq.md",
       "workflow_template": {
-        "source": "none_yet",
-        "workflow_templates_table_id": null,
-        "packaged_definition_ref": null
+        "source": "packaged_definition",
+        "packaged_definition_ref": "retail-wismo-faq.json"
+      },
+      "default_template_variables": {
+        "store_name": "Your Store",
+        "support_email": "support@example.com"
       }
     },
     {
       "slug": "b2b-saas-trial-nurture",
+      "pack_semver": "1.0.0",
       "industry": "B2B SaaS",
       "display_name": "Trial nurture & PQL voice qual",
       "summary": "Short qualification and onboarding check-in calls with CRM-friendly variables—pipeline velocity without full SDR staffing.",
@@ -63,9 +72,12 @@
       "cost_latency_estimate_band": "Medium (conversation + optional tool calls to CRM)",
       "runbook_path": "runbooks/b2b-saas-trial-nurture.md",
       "workflow_template": {
-        "source": "none_yet",
-        "workflow_templates_table_id": null,
-        "packaged_definition_ref": null
+        "source": "packaged_definition",
+        "packaged_definition_ref": "b2b-saas-trial-nurture.json"
+      },
+      "default_template_variables": {
+        "product_name": "Your Product",
+        "crm_owner_email": "owner@example.com"
       }
     }
   ]

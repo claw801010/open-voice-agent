@@ -1,6 +1,10 @@
+from __future__ import annotations
+
 import re
 from collections import Counter
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
+
+from pydantic import ValidationError
 
 from api.services.workflow.dto import EdgeDataDTO, NodeDataDTO, NodeType, ReactFlowDTO
 from api.services.workflow.errors import ItemKind, WorkflowError
@@ -97,7 +101,12 @@ class WorkflowGraph:
     The constructor accepts a validated ReactFlowDTO.
     """
 
-    def __init__(self, dto: ReactFlowDTO):
+    def __init__(
+        self,
+        dto: ReactFlowDTO,
+        *,
+        enter_subflow_allowed_keys: Optional[Set[str]] = None,
+    ):
         # build adjacency list
         self.nodes: Dict[str, Node] = {
             n.id: Node(n.id, n.type, n.data) for n in dto.nodes
@@ -134,6 +143,120 @@ class WorkflowGraph:
             ][0]
         except IndexError:
             self.global_node_id = None
+
+        # WE-01-SUBFLOWS: optional explicit allow-list (nested component graphs reference root subgraph keys).
+        self._enter_subflow_allowed_keys: Optional[Set[str]] = enter_subflow_allowed_keys
+        # WE-01-SUBFLOWS: validate each non-empty named subgraph like the main graph.
+        self.subflow_graphs: Dict[str, WorkflowGraph] = self._load_subflows(dto)
+        self._validate_subflow_entry_edges()
+
+    def _validate_subflow_entry_edges(self) -> None:
+        """Edges with ``enter_subflow`` must name an allowed subgraph key (root: loaded graphs; nested: siblings)."""
+        errors: list[WorkflowError] = []
+        allowed: Set[str] = (
+            set(self._enter_subflow_allowed_keys)
+            if self._enter_subflow_allowed_keys is not None
+            else set(self.subflow_graphs.keys())
+        )
+        for edge in self.edges:
+            key = edge.data.enter_subflow
+            if not key:
+                continue
+            if key not in allowed:
+                errors.append(
+                    WorkflowError(
+                        kind=ItemKind.edge,
+                        id=None,
+                        field="data.enter_subflow",
+                        message=(
+                            f"Edge {edge.source}→{edge.target} sets enter_subflow to "
+                            f"'{key}' but that subgraph name is not allowed here (missing or empty subgraph)"
+                        ),
+                    )
+                )
+        if errors:
+            raise ValueError(errors)
+
+    def _load_subflows(self, dto: ReactFlowDTO) -> Dict[str, WorkflowGraph]:
+        result: Dict[str, WorkflowGraph] = {}
+        raw = dto.subflows
+        if not raw:
+            return result
+        if not isinstance(raw, dict):
+            raise ValueError(
+                [
+                    WorkflowError(
+                        kind=ItemKind.workflow,
+                        id=None,
+                        field="subflows",
+                        message="subflows must be an object mapping names to graph definitions",
+                    )
+                ]
+            )
+        sibling_keys: Set[str] = set()
+        for _k, blob in raw.items():
+            if not isinstance(blob, dict):
+                continue
+            _nodes = blob.get("nodes") or []
+            _edges = blob.get("edges") or []
+            if _nodes or _edges:
+                sibling_keys.add(_k)
+
+        for name, blob in raw.items():
+            if not isinstance(blob, dict):
+                raise ValueError(
+                    [
+                        WorkflowError(
+                            kind=ItemKind.workflow,
+                            id=None,
+                            field=f"subflows.{name}",
+                            message="Subflow definition must be an object with nodes and edges",
+                        )
+                    ]
+                )
+            nodes = blob.get("nodes") or []
+            edges = blob.get("edges") or []
+            if not nodes and not edges:
+                continue
+            inner = {k: v for k, v in blob.items() if k != "subflows"}
+            inner.setdefault("nodes", nodes)
+            inner.setdefault("edges", edges)
+            try:
+                sub_dto = ReactFlowDTO.model_validate(inner)
+            except ValidationError as exc:
+                raise ValueError(
+                    [
+                        WorkflowError(
+                            kind=ItemKind.workflow,
+                            id=None,
+                            field=f"subflows.{name}",
+                            message=f"Invalid subflow graph (schema): {exc}",
+                        )
+                    ]
+                ) from exc
+            try:
+                result[name] = WorkflowGraph(
+                    sub_dto,
+                    enter_subflow_allowed_keys=sibling_keys,
+                )
+            except ValueError as exc:
+                errs = exc.args[0] if exc.args else None
+                if isinstance(errs, list):
+                    wrapped: list = []
+                    for err in errs:
+                        if isinstance(err, dict):
+                            fe = dict(err)
+                            prev_field = fe.get("field")
+                            fe["field"] = (
+                                f"subflows.{name}"
+                                if not prev_field
+                                else f"subflows.{name}.{prev_field}"
+                            )
+                            fe["message"] = f"[subflow '{name}'] {fe.get('message', '')}"
+                            wrapped.append(fe)
+                    raise ValueError(wrapped) from exc
+                raise
+        return result
 
     # -----------------------------------------------------------
     # template variable extraction

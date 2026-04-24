@@ -1,7 +1,8 @@
 "use client";
 
 import { ReactFlowInstance } from "@xyflow/react";
-import { AlertCircle, ArrowLeft, ChevronDown, Copy, Download, Eye, History, LoaderCircle, Menu, MoreVertical, Phone, Rocket } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, ChevronDown, Copy, Download, Eye, History, LoaderCircle, Lock, Menu, MessageCircle, MoreVertical, Phone, Rocket, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 import { useState } from "react";
@@ -14,6 +15,7 @@ import {
 import { WorkflowError } from "@/client/types.gen";
 import { FlowEdge, FlowNode } from "@/components/flow/types";
 import { GitHubStarBadge } from "@/components/layout/GitHubStarBadge";
+import { WorkflowFeedbackDialog } from "@/app/workflow/[workflowId]/components/WorkflowFeedbackDialog";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -29,6 +31,9 @@ import {
 import { useSidebar } from "@/components/ui/sidebar";
 import { PostHogEvent } from "@/constants/posthog-events";
 import { WORKFLOW_RUN_MODES } from "@/constants/workflowRunModes";
+import { getPublicFeedbackUrl } from "@/lib/feedbackUrl";
+import { getUtcWeekMondayYmdFromDate } from "@/lib/usageOrgDeepLink";
+import { friendlyValidationCopy, validationLocationLabel } from "@/lib/workflow/friendlyValidation";
 
 interface WorkflowEditorHeaderProps {
     workflowName: string;
@@ -46,6 +51,34 @@ interface WorkflowEditorHeaderProps {
     onBackToDraft: () => void;
     hasDraft: boolean;
     onPublished: () => void;
+    /** Catalog install: graph is read-only until the user customizes */
+    isInstallationLocked?: boolean;
+    onCustomizeInstall?: () => void;
+    /** WE-01-HEADER: template source (catalog / DB template); no PII */
+    templateSourceLabel?: string | null;
+    /** Short band from catalog JSON when available */
+    costLatencyHint?: string | null;
+    /** WE-01-HEADER: latest run with cost_info from GET /workflow/{id}/runs (tokens · duration) */
+    recentRunUsageHint?: string | null;
+    /** WE-01-HEADER: avg Dograh tokens over last N runs with usage (requires ≥2) */
+    recentRunAggregateHint?: string | null;
+    /** WE-01-HEADER: weekly run/token trend from GET /workflow/{id}/runs (aggregated client-side) */
+    usageTrendHint?: string | null;
+    /** WE-01-HEADER: heuristic dry-run from GET /workflow/{id}/estimate-cost */
+    costDryRunHint?: string | null;
+    /** Long tooltip: models + assumptions */
+    costDryRunDetail?: string | null;
+    /** WE-01-HEADER: structural summary of main graph (nodes/edges/agents) — not token estimate */
+    draftGraphStatsHint?: string | null;
+    /** WE-01-SUBFLOWS: non-empty subgraph keys persisted in `subflows` (store snapshot) */
+    subflowInventoryHint?: string | null;
+    /** Edit = inspector rail; Simulation = test-focused rail (WE-01-TEST placeholder) */
+    editorMode?: "edit" | "simulation";
+    onEditorModeChange?: (mode: "edit" | "simulation") => void;
+    /** Hide simulation when viewing historical versions */
+    showEditorModeTabs?: boolean;
+    /** Resolve node ids to display names in validation popover (DX-01-NOCODE) */
+    flowNodes?: FlowNode[];
 }
 
 export const WorkflowEditorHeader = ({
@@ -63,7 +96,24 @@ export const WorkflowEditorHeader = ({
     hasDraft,
     onPublished,
     workflowId,
+    isInstallationLocked = false,
+    onCustomizeInstall,
+    templateSourceLabel = null,
+    costLatencyHint = null,
+    recentRunUsageHint = null,
+    recentRunAggregateHint = null,
+    usageTrendHint = null,
+    costDryRunHint = null,
+    costDryRunDetail = null,
+    draftGraphStatsHint = null,
+    subflowInventoryHint = null,
+    editorMode = "edit",
+    onEditorModeChange,
+    showEditorModeTabs = true,
+    flowNodes,
 }: WorkflowEditorHeaderProps) => {
+    const feedbackUrl = getPublicFeedbackUrl();
+    const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
     const router = useRouter();
     const { toggleSidebar } = useSidebar();
     const [savingWorkflow, setSavingWorkflow] = useState(false);
@@ -72,6 +122,7 @@ export const WorkflowEditorHeader = ({
 
     const hasValidationErrors = workflowValidationErrors.length > 0;
     const isCallDisabled = isDirty || hasValidationErrors;
+    const isEditingLocked = isViewingHistoricalVersion || isInstallationLocked;
 
     const handleSave = async () => {
         setSavingWorkflow(true);
@@ -144,35 +195,145 @@ export const WorkflowEditorHeader = ({
     };
 
     return (
-        <div className="flex items-center justify-between w-full h-14 px-4 bg-[#1a1a1a] border-b border-[#2a2a2a]">
-            {/* Left section: Mobile menu + Back button + Workflow name */}
-            <div className="flex items-center gap-3 mr-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 w-full min-h-14 px-4 py-2 bg-[#1a1a1a] border-b border-[#2a2a2a]">
+            {/* Left section: Mobile menu + Back button + Workflow name + metadata + Edit/Simulation */}
+            <div className="flex items-start gap-3 mr-2 min-w-0 flex-1">
                 <button
                     onClick={toggleSidebar}
-                    className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#2a2a2a] transition-colors md:hidden"
+                    className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#2a2a2a] transition-colors md:hidden shrink-0 mt-0.5"
                     aria-label="Open menu"
                 >
                     <Menu className="w-5 h-5 text-gray-400" />
                 </button>
                 <button
                     onClick={handleBack}
-                    className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#2a2a2a] transition-colors"
+                    className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#2a2a2a] transition-colors shrink-0 mt-0.5"
                 >
                     <ArrowLeft className="w-5 h-5 text-gray-400" />
                 </button>
 
-                <div className="flex items-center gap-2">
-                    <h1 className="text-base font-medium text-white whitespace-nowrap">
+                <div className="flex min-w-0 flex-col gap-1">
+                    <h1 className="text-base font-medium text-white">
                         <span className="md:hidden">
                             {workflowName.length > 8 ? `${workflowName.slice(0, 8)}…` : workflowName}
                         </span>
-                        <span className="hidden md:inline">{workflowName}</span>
+                        <span className="hidden md:inline break-words">{workflowName}</span>
                     </h1>
+                    <div
+                        className="hidden sm:flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-gray-500 leading-snug"
+                        aria-label="Workflow metadata"
+                    >
+                        <span className="font-mono tabular-nums text-gray-500 shrink-0">ID {workflowId}</span>
+                        {templateSourceLabel ? (
+                            <span className="text-amber-200/90 truncate max-w-[min(100%,14rem)]" title={templateSourceLabel}>
+                                {templateSourceLabel}
+                            </span>
+                        ) : null}
+                        {costLatencyHint ? (
+                            <span
+                                className="text-gray-400 truncate max-w-[min(100%,20rem)]"
+                                title={costLatencyHint}
+                            >
+                                Est. cost/latency: {costLatencyHint}
+                            </span>
+                        ) : null}
+                        {recentRunUsageHint ? (
+                            <span
+                                className="text-gray-400 truncate max-w-[min(100%,22rem)]"
+                                title="Most recent workflow run with recorded usage (Dograh tokens and call length)."
+                            >
+                                {recentRunUsageHint}
+                            </span>
+                        ) : null}
+                        {recentRunAggregateHint ? (
+                            <span
+                                className="text-gray-400 truncate max-w-[min(100%,22rem)]"
+                                title="Average Dograh tokens over recent runs that include token usage (up to 10)."
+                            >
+                                {recentRunAggregateHint}
+                            </span>
+                        ) : null}
+                        {usageTrendHint ? (
+                            <Link
+                                href={`/usage?week=${getUtcWeekMondayYmdFromDate()}`}
+                                className="text-gray-400 truncate max-w-[min(100%,26rem)] hover:text-teal-400 hover:underline underline-offset-2"
+                                title="Open organization usage for this UTC week (all workflows). Weekly buckets from the last 100 runs."
+                            >
+                                {usageTrendHint}
+                            </Link>
+                        ) : null}
+                        {costDryRunHint ? (
+                            <span
+                                className="text-gray-400 truncate max-w-[min(100%,24rem)]"
+                                title={costDryRunDetail ?? 'Heuristic token estimate from saved graph and your model settings (no live call).'}
+                            >
+                                {costDryRunHint}
+                            </span>
+                        ) : null}
+                        {draftGraphStatsHint ? (
+                            <span
+                                className="text-gray-400 truncate max-w-[min(100%,24rem)]"
+                                title="Unsaved main-flow graph in the editor (structure only; not a cost estimate)."
+                            >
+                                {draftGraphStatsHint}
+                            </span>
+                        ) : null}
+                        {subflowInventoryHint ? (
+                            <span
+                                className="text-gray-400 truncate max-w-[min(100%,28rem)]"
+                                title="Named subgraphs with content in saved subflows. Main-flow edges can set Run subgraph first (enter_subflow)."
+                            >
+                                {subflowInventoryHint}
+                            </span>
+                        ) : null}
+                    </div>
+                    {showEditorModeTabs && onEditorModeChange && !isViewingHistoricalVersion ? (
+                        <div
+                            className="flex w-fit rounded-md border border-[#3a3a3a] bg-[#141414] p-0.5"
+                            role="tablist"
+                            aria-label="Editor mode"
+                        >
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-label="Edit mode: inspector and workflow graph"
+                                aria-selected={editorMode === "edit"}
+                                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                                    editorMode === "edit"
+                                        ? "bg-teal-600 text-white"
+                                        : "text-gray-400 hover:text-gray-200"
+                                }`}
+                                onClick={() => onEditorModeChange("edit")}
+                            >
+                                Edit
+                            </button>
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-label="Simulation mode: test calls and simulation tools"
+                                aria-selected={editorMode === "simulation"}
+                                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                                    editorMode === "simulation"
+                                        ? "bg-teal-600 text-white"
+                                        : "text-gray-400 hover:text-gray-200"
+                                }`}
+                                onClick={() => onEditorModeChange("simulation")}
+                            >
+                                Simulation
+                            </button>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 
             {/* Right section: Version + Unsaved indicator + Call button + Save button */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap justify-end shrink-0">
+                {!isDirty && !isEditingLocked && !isViewingHistoricalVersion && (
+                    <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md border border-emerald-500/20 bg-emerald-500/5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" aria-hidden />
+                        <span className="text-xs text-emerald-600/90">No unsaved changes</span>
+                    </div>
+                )}
                 {/* Read-only banner when viewing a historical version */}
                 {isViewingHistoricalVersion && (
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-blue-500/30 bg-blue-500/10">
@@ -180,6 +341,24 @@ export const WorkflowEditorHeader = ({
                         <span className="text-sm text-blue-400">
                             Viewing {activeVersionLabel} — Read only
                         </span>
+                    </div>
+                )}
+
+                {isInstallationLocked && !isViewingHistoricalVersion && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-amber-500/30 bg-amber-500/10">
+                        <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span className="text-sm text-amber-200 max-w-[min(28rem,50vw)]">
+                            Installed from catalog — graph is read-only until you customize.
+                        </span>
+                        {onCustomizeInstall && (
+                            <Button
+                                type="button"
+                                onClick={onCustomizeInstall}
+                                className="bg-amber-600 hover:bg-amber-700 text-white px-3 shrink-0"
+                            >
+                                Customize
+                            </Button>
+                        )}
                     </div>
                 )}
 
@@ -205,7 +384,7 @@ export const WorkflowEditorHeader = ({
                 </button>
 
                 {/* Unsaved changes indicator (hidden when viewing history) */}
-                {isDirty && !isViewingHistoricalVersion && (
+                {isDirty && !isEditingLocked && (
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-yellow-500/30 bg-yellow-500/10">
                         <div className="w-2 h-2 rounded-full bg-yellow-500" />
                         <span className="text-sm text-yellow-500">Unsaved changes</span>
@@ -229,30 +408,43 @@ export const WorkflowEditorHeader = ({
                             className="w-80 bg-[#1a1a1a] border-[#3a3a3a] p-0"
                         >
                             <div className="px-4 py-3 border-b border-[#3a3a3a]">
-                                <h3 className="text-sm font-medium text-white">Validation Errors</h3>
+                                <h3 className="text-sm font-medium text-white">Fix these before publish</h3>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Plain-language summary; technical detail below each item.
+                                </p>
                             </div>
                             <div className="max-h-64 overflow-y-auto">
-                                {workflowValidationErrors.map((error, index) => (
-                                    <div
-                                        key={index}
-                                        className="px-4 py-3 border-b border-[#2a2a2a] last:border-b-0"
-                                    >
-                                        <div className="flex items-start gap-2">
-                                            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                                {(error.kind === "node" || error.kind === "edge") && error.id && (
-                                                    <p className="text-xs text-gray-400 mb-1">
-                                                        {error.kind === "node" ? "Node" : "Edge"}: {error.id}
-                                                        {error.field && <span className="text-gray-500"> • {error.field}</span>}
+                                {workflowValidationErrors.map((error, index) => {
+                                    const friendly = friendlyValidationCopy(error);
+                                    const where = validationLocationLabel(error, flowNodes);
+                                    return (
+                                        <div
+                                            key={index}
+                                            className="px-4 py-3 border-b border-[#2a2a2a] last:border-b-0"
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                                <div className="flex-1 min-w-0 space-y-1.5">
+                                                    <p className="text-sm font-medium text-white leading-snug">
+                                                        {friendly.title}
                                                     </p>
-                                                )}
-                                                <p className="text-sm text-white break-words">
-                                                    {error.message}
-                                                </p>
+                                                    {where ? (
+                                                        <p className="text-[11px] text-gray-500">{where}</p>
+                                                    ) : null}
+                                                    {error.field ? (
+                                                        <p className="text-[11px] text-gray-500">Field: {error.field}</p>
+                                                    ) : null}
+                                                    {friendly.hint ? (
+                                                        <p className="text-xs text-gray-400 leading-snug">{friendly.hint}</p>
+                                                    ) : null}
+                                                    <p className="text-xs text-gray-300 break-words border-t border-[#2a2a2a] pt-2 mt-1">
+                                                        {error.message}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </PopoverContent>
                     </Popover>
@@ -303,7 +495,7 @@ export const WorkflowEditorHeader = ({
                 )}
 
                 {/* Save button (only shown when editing the draft) */}
-                {!isViewingHistoricalVersion && (
+                {!isEditingLocked && (
                     <Button
                         onClick={handleSave}
                         disabled={!isDirty || savingWorkflow}
@@ -321,7 +513,7 @@ export const WorkflowEditorHeader = ({
                 )}
 
                 {/* Publish button (only when on draft with no unsaved changes) */}
-                {!isViewingHistoricalVersion && hasDraft && (
+                {!isEditingLocked && hasDraft && (
                     <Button
                         onClick={handlePublish}
                         disabled={isDirty || publishing || hasValidationErrors}
@@ -362,6 +554,22 @@ export const WorkflowEditorHeader = ({
                             View Runs
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                            onClick={() => router.push("/usage")}
+                            className="text-white hover:bg-[#2a2a2a] cursor-pointer"
+                        >
+                            <TrendingUp className="w-4 h-4 mr-2" />
+                            Organization usage
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() =>
+                                router.push(`/usage?week=${getUtcWeekMondayYmdFromDate()}`)
+                            }
+                            className="text-white hover:bg-[#2a2a2a] cursor-pointer"
+                        >
+                            <CalendarDays className="w-4 h-4 mr-2 opacity-90" />
+                            Org usage · this UTC week
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                             onClick={handleDuplicate}
                             disabled={duplicating}
                             className="text-white hover:bg-[#2a2a2a] cursor-pointer"
@@ -380,8 +588,22 @@ export const WorkflowEditorHeader = ({
                             <Download className="w-4 h-4 mr-2" />
                             Download Workflow
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={() => setFeedbackDialogOpen(true)}
+                            className="text-white hover:bg-[#2a2a2a] cursor-pointer"
+                        >
+                            <MessageCircle className="w-4 h-4 mr-2 shrink-0" />
+                            Send feedback
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
+
+                <WorkflowFeedbackDialog
+                    open={feedbackDialogOpen}
+                    onOpenChange={setFeedbackDialogOpen}
+                    workflowId={workflowId}
+                    externalFeedbackUrl={feedbackUrl}
+                />
 
                 {/* GitHub star badge - desktop only */}
                 <div className="hidden md:block">

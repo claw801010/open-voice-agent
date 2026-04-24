@@ -1,4 +1,6 @@
+import json
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import (
@@ -11,7 +13,8 @@ from fastapi import (
 from pydantic import BaseModel, Field
 
 from api.db import db_client
-from api.db.models import UserModel
+from api.db.models import UserModel, WorkflowModel
+from api.routes.workflow import extract_trigger_paths, regenerate_trigger_uuids
 from api.services.auth.depends import get_user
 from api.services.looptalk.orchestrator import LoopTalkTestOrchestrator
 
@@ -23,6 +26,14 @@ class CreateTestSessionRequest(BaseModel):
     name: str
     actor_workflow_id: int
     adversary_workflow_id: int
+    config: Dict[str, Any] = Field(default_factory=dict)
+
+
+class QuickPersonaTryRequest(BaseModel):
+    """Actor = workflow under test; adversary = system simulated caller (MK-01-TRY / WE-01-TEST)."""
+
+    actor_workflow_id: int
+    name: str = "Persona try"
     config: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -91,6 +102,61 @@ def get_orchestrator() -> LoopTalkTestOrchestrator:
     return _orchestrator
 
 
+SYSTEM_PERSONA_WORKFLOW_NAME = "[System] LoopTalk simulated caller"
+LOOPTALK_PERSONA_PACK_FILENAME = "looptalk-simulated-caller.json"
+
+
+def _catalog_repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _load_looptalk_persona_pack() -> dict:
+    path = (
+        _catalog_repo_root()
+        / "catalog"
+        / "packaged-workflows"
+        / LOOPTALK_PERSONA_PACK_FILENAME
+    )
+    if not path.is_file():
+        raise HTTPException(
+            status_code=500,
+            detail="LoopTalk persona pack file missing on server",
+        )
+    with path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+async def _ensure_system_persona_workflow(user: UserModel) -> WorkflowModel:
+    """One shared adversary workflow per org: simulated caller for LoopTalk."""
+    org_id = user.selected_organization_id
+    workflows = await db_client.get_all_workflows(organization_id=org_id)
+    for w in workflows:
+        if w.name == SYSTEM_PERSONA_WORKFLOW_NAME:
+            return w
+    workflow_def = _load_looptalk_persona_pack()
+    workflow_def = regenerate_trigger_uuids(workflow_def)
+    mk01 = {
+        "looptalk_system_persona": True,
+        "installation_locked": False,
+    }
+    wf = await db_client.create_workflow(
+        SYSTEM_PERSONA_WORKFLOW_NAME,
+        workflow_def,
+        user.id,
+        org_id,
+        template_context_variables={},
+        workflow_configurations={"mk01": mk01},
+    )
+    trigger_paths = extract_trigger_paths(workflow_def)
+    if trigger_paths:
+        await db_client.sync_triggers_for_workflow(
+            workflow_id=wf.id,
+            organization_id=org_id,
+            trigger_paths=trigger_paths,
+        )
+    return wf
+
+
 @router.post("/test-sessions", response_model=TestSessionResponse)
 async def create_test_session(
     request: CreateTestSessionRequest, user: UserModel = Depends(get_user)
@@ -115,6 +181,39 @@ async def create_test_session(
         actor_workflow_id=request.actor_workflow_id,
         adversary_workflow_id=request.adversary_workflow_id,
         config=request.config,
+    )
+
+    return test_session
+
+
+@router.post("/test-sessions/quick-persona", response_model=TestSessionResponse)
+async def create_quick_persona_test_session(
+    request: QuickPersonaTryRequest,
+    user: UserModel = Depends(get_user),
+):
+    """
+    Create a LoopTalk test session using the **workflow under test** as actor and a **system-managed**
+    simulated-caller workflow as adversary. Uses internal transport (no PSTN); LLM / speech usage
+    charges still apply for both sides.
+    """
+    actor = await db_client.get_workflow(request.actor_workflow_id, user.id)
+    if not actor:
+        raise HTTPException(status_code=404, detail="Actor workflow not found")
+
+    persona = await _ensure_system_persona_workflow(user)
+    if persona.id == actor.id:
+        raise HTTPException(
+            status_code=400,
+            detail="Actor workflow cannot be the system persona workflow",
+        )
+
+    merged_config = {**request.config, "quick_persona": True}
+    test_session = await db_client.create_test_session(
+        organization_id=user.selected_organization_id,
+        name=request.name,
+        actor_workflow_id=actor.id,
+        adversary_workflow_id=persona.id,
+        config=merged_config,
     )
 
     return test_session

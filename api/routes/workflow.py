@@ -1,7 +1,8 @@
 import json
 import re
 import uuid
-from datetime import datetime
+from datetime import date, datetime
+from pathlib import Path
 from typing import List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -30,7 +31,23 @@ from api.services.storage import storage_fs
 from api.services.workflow.dto import ReactFlowDTO
 from api.services.workflow.duplicate import duplicate_workflow
 from api.services.workflow.errors import ItemKind, WorkflowError
+from api.services.workflow.cost_estimate_dry_run import (
+    WorkflowCostDryRunResult,
+    estimate_workflow_cost_dry_run,
+)
+from api.services.workflow.simulation_text_turn import (
+    SimulationTextTurnRequest,
+    SimulationTextTurnResponse,
+    run_simulation_text_turn,
+)
+from api.schemas.usage_rollup import (
+    DailyRollupBucket,
+    DailyRollupResponse,
+    WeeklyRollupBucket,
+    WeeklyRollupResponse,
+)
 from api.services.workflow.workflow import WorkflowGraph
+from api.utils.usage_rollup_range import parse_utc_inclusive_date_range
 
 
 def extract_trigger_paths(workflow_definition: dict) -> List[str]:
@@ -123,6 +140,7 @@ class WorkflowListResponse(BaseModel):
     status: str
     created_at: datetime
     total_runs: int
+    template_context_variables: dict | None = None
 
 
 class WorkflowCountResponse(BaseModel):
@@ -149,6 +167,14 @@ class CreateWorkflowRequest(BaseModel):
 class DuplicateTemplateRequest(BaseModel):
     template_id: int
     workflow_name: str
+    template_context_variables: dict | None = None
+    catalog_slug: str | None = None
+    lock_until_customize: bool = True
+
+
+class InstallFromCatalogRequest(BaseModel):
+    slug: str = Field(..., min_length=1, max_length=128)
+    workflow_name: str = Field(..., min_length=1, max_length=200)
 
 
 class UpdateWorkflowRequest(BaseModel):
@@ -494,6 +520,7 @@ async def get_workflows(
             status=workflow.status,
             created_at=workflow.created_at,
             total_runs=run_counts.get(workflow.id, 0),
+            template_context_variables=workflow.template_context_variables,
         )
         for workflow in workflows
     ]
@@ -1004,6 +1031,108 @@ async def get_workflow_runs(
     )
 
 
+@router.get("/{workflow_id}/usage/weekly-rollup", response_model=WeeklyRollupResponse)
+async def get_workflow_weekly_usage_rollup(
+    workflow_id: int,
+    weeks: int = Query(8, ge=1, le=52, description="Look back up to this many weeks (ignored if since+until set)"),
+    since: Optional[date] = Query(
+        None,
+        description="UTC start date inclusive (YYYY-MM-DD); requires until",
+    ),
+    until: Optional[date] = Query(
+        None,
+        description="UTC end date inclusive (YYYY-MM-DD); requires since",
+    ),
+    user: UserModel = Depends(get_user),
+):
+    """Server-side UTC week aggregates for a single workflow (org-scoped)."""
+    if not user.selected_organization_id:
+        raise HTTPException(status_code=400, detail="No organization selected")
+    workflow = await db_client.get_workflow(
+        workflow_id, organization_id=user.selected_organization_id
+    )
+    if workflow is None:
+        raise HTTPException(
+            status_code=404, detail=f"Workflow with id {workflow_id} not found"
+        )
+    try:
+        rs, rue, _use_fixed = parse_utc_inclusive_date_range(since, until)
+        raw = await db_client.get_weekly_usage_rollup(
+            user.selected_organization_id,
+            weeks=weeks,
+            workflow_id=workflow_id,
+            range_since=rs,
+            range_until_exclusive=rue,
+        )
+        buckets = [
+            WeeklyRollupBucket(
+                week_start=r["week_start"],
+                run_count=r["run_count"],
+                runs_inbound=int(r.get("runs_inbound") or 0),
+                runs_outbound=int(r.get("runs_outbound") or 0),
+                dograh_tokens=r.get("dograh_tokens"),
+            )
+            for r in raw
+        ]
+        return WeeklyRollupResponse(buckets=buckets)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("get_workflow_weekly_usage_rollup failed: {}", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{workflow_id}/usage/daily-rollup", response_model=DailyRollupResponse)
+async def get_workflow_daily_usage_rollup(
+    workflow_id: int,
+    days: int = Query(30, ge=1, le=90, description="Rolling lookback in days (ignored if since+until set)"),
+    since: Optional[date] = Query(
+        None,
+        description="UTC start date inclusive (YYYY-MM-DD); requires until",
+    ),
+    until: Optional[date] = Query(
+        None,
+        description="UTC end date inclusive (YYYY-MM-DD); requires since",
+    ),
+    user: UserModel = Depends(get_user),
+):
+    """Server-side UTC **day** aggregates for a single workflow (org-scoped)."""
+    if not user.selected_organization_id:
+        raise HTTPException(status_code=400, detail="No organization selected")
+    workflow = await db_client.get_workflow(
+        workflow_id, organization_id=user.selected_organization_id
+    )
+    if workflow is None:
+        raise HTTPException(
+            status_code=404, detail=f"Workflow with id {workflow_id} not found"
+        )
+    try:
+        rs, rue, _use_fixed = parse_utc_inclusive_date_range(since, until)
+        raw = await db_client.get_daily_usage_rollup(
+            user.selected_organization_id,
+            days=days,
+            workflow_id=workflow_id,
+            range_since=rs,
+            range_until_exclusive=rue,
+        )
+        buckets = [
+            DailyRollupBucket(
+                day_start=r["day_start"],
+                run_count=r["run_count"],
+                runs_inbound=int(r.get("runs_inbound") or 0),
+                runs_outbound=int(r.get("runs_outbound") or 0),
+                dograh_tokens=r.get("dograh_tokens"),
+            )
+            for r in raw
+        ]
+        return DailyRollupResponse(buckets=buckets)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("get_workflow_daily_usage_rollup failed: {}", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{workflow_id}/report")
 async def download_workflow_report(
     workflow_id: int,
@@ -1032,6 +1161,157 @@ async def download_workflow_report(
         output,
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def _catalog_repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _load_vertical_packs_dict() -> dict:
+    path = _catalog_repo_root() / "catalog" / "vertical-packs.json"
+    if not path.is_file():
+        raise HTTPException(
+            status_code=500, detail="Catalog file not found on server"
+        )
+    with path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _load_packaged_workflow_json(filename: str) -> dict:
+    safe_name = Path(filename).name
+    path = _catalog_repo_root() / "catalog" / "packaged-workflows" / safe_name
+    if not path.is_file():
+        raise HTTPException(
+            status_code=404, detail=f"Packaged workflow file not found: {safe_name}"
+        )
+    with path.open(encoding="utf-8") as f:
+        return json.load(f)
+
+
+@router.post("/install-from-catalog")
+async def install_workflow_from_catalog(
+    request: InstallFromCatalogRequest,
+    user: UserModel = Depends(get_user),
+) -> WorkflowResponse:
+    """Create a workflow in the caller's org from a catalog pack (packaged graph + defaults)."""
+    catalog = _load_vertical_packs_dict()
+    pack = next(
+        (p for p in catalog.get("packs", []) if p.get("slug") == request.slug),
+        None,
+    )
+    if not pack:
+        raise HTTPException(status_code=404, detail="Unknown catalog slug")
+
+    wt = pack.get("workflow_template") or {}
+    default_vars = pack.get("default_template_variables") or {}
+
+    if wt.get("source") == "packaged_definition" and wt.get("packaged_definition_ref"):
+        workflow_def = _load_packaged_workflow_json(wt["packaged_definition_ref"])
+        workflow_def = regenerate_trigger_uuids(workflow_def)
+        mk01 = {
+            "installation_locked": True,
+            "catalog_slug": pack["slug"],
+            "source": "packaged_definition",
+        }
+        workflow = await db_client.create_workflow(
+            request.workflow_name,
+            workflow_def,
+            user.id,
+            user.selected_organization_id,
+            template_context_variables=default_vars,
+            workflow_configurations={"mk01": mk01},
+        )
+        if workflow_def:
+            trigger_paths = extract_trigger_paths(workflow_def)
+            if trigger_paths:
+                await db_client.sync_triggers_for_workflow(
+                    workflow_id=workflow.id,
+                    organization_id=user.selected_organization_id,
+                    trigger_paths=trigger_paths,
+                )
+        capture_event(
+            distinct_id=str(user.provider_id),
+            event=PostHogEvent.WORKFLOW_CREATED,
+            properties={
+                "workflow_id": workflow.id,
+                "workflow_name": workflow.name,
+                "source": "catalog_pack",
+                "catalog_slug": pack["slug"],
+                "organization_id": user.selected_organization_id,
+            },
+        )
+        return {
+            "id": workflow.id,
+            "name": workflow.name,
+            "status": workflow.status,
+            "created_at": workflow.created_at,
+            "workflow_definition": mask_workflow_definition(workflow_def),
+            "current_definition_id": workflow.current_definition_id,
+            "template_context_variables": workflow.template_context_variables,
+            "call_disposition_codes": workflow.call_disposition_codes,
+            "workflow_configurations": workflow.workflow_configurations,
+        }
+
+    if wt.get("source") == "workflow_templates" and wt.get("template_name"):
+        template_client = WorkflowTemplateClient()
+        template = await template_client.get_workflow_template_by_name(
+            wt["template_name"]
+        )
+        if not template:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Workflow template not found: {wt['template_name']}",
+            )
+        workflow_def = regenerate_trigger_uuids(template.template_json)
+        mk01 = {
+            "installation_locked": True,
+            "catalog_slug": pack["slug"],
+            "source": "workflow_templates",
+            "source_template_id": template.id,
+        }
+        workflow = await db_client.create_workflow(
+            request.workflow_name,
+            workflow_def,
+            user.id,
+            user.selected_organization_id,
+            template_context_variables=default_vars,
+            workflow_configurations={"mk01": mk01},
+        )
+        if workflow_def:
+            trigger_paths = extract_trigger_paths(workflow_def)
+            if trigger_paths:
+                await db_client.sync_triggers_for_workflow(
+                    workflow_id=workflow.id,
+                    organization_id=user.selected_organization_id,
+                    trigger_paths=trigger_paths,
+                )
+        capture_event(
+            distinct_id=str(user.provider_id),
+            event=PostHogEvent.WORKFLOW_CREATED,
+            properties={
+                "workflow_id": workflow.id,
+                "workflow_name": workflow.name,
+                "source": "catalog_pack",
+                "catalog_slug": pack["slug"],
+                "organization_id": user.selected_organization_id,
+            },
+        )
+        return {
+            "id": workflow.id,
+            "name": workflow.name,
+            "status": workflow.status,
+            "created_at": workflow.created_at,
+            "workflow_definition": mask_workflow_definition(workflow_def),
+            "current_definition_id": workflow.current_definition_id,
+            "template_context_variables": workflow.template_context_variables,
+            "call_disposition_codes": workflow.call_disposition_codes,
+            "workflow_configurations": workflow.workflow_configurations,
+        }
+
+    raise HTTPException(
+        status_code=400,
+        detail="This catalog pack is not installable (missing packaged_definition or template_name)",
     )
 
 
@@ -1084,11 +1364,19 @@ async def duplicate_workflow_template(
     # Create a new workflow from the template
     # Regenerate trigger UUIDs to avoid conflicts with existing triggers
     workflow_def = regenerate_trigger_uuids(template.template_json)
+    mk01 = {
+        "installation_locked": request.lock_until_customize,
+        "source_template_id": template.id,
+    }
+    if request.catalog_slug:
+        mk01["catalog_slug"] = request.catalog_slug
     workflow = await db_client.create_workflow(
         request.workflow_name,
         workflow_def,
         user.id,
         user.selected_organization_id,
+        template_context_variables=request.template_context_variables or {},
+        workflow_configurations={"mk01": mk01},
     )
 
     # Sync agent triggers if template contains any
@@ -1112,6 +1400,88 @@ async def duplicate_workflow_template(
         "call_disposition_codes": workflow.call_disposition_codes,
         "workflow_configurations": workflow.workflow_configurations,
     }
+
+
+# ---------------------------------------------------------------------------
+# WE-01-HEADER — cost / token dry-run (no live call)
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/{workflow_id}/estimate-cost",
+    response_model=WorkflowCostDryRunResult,
+    summary="Heuristic cost and Dograh token estimate (dry-run)",
+)
+async def workflow_estimate_cost(
+    workflow_id: int,
+    user: UserModel = Depends(get_user),
+) -> WorkflowCostDryRunResult:
+    """Rough pricing from draft (or released) graph + user model settings; not a live meter reading."""
+    workflow = await db_client.get_workflow(
+        workflow_id, organization_id=user.selected_organization_id
+    )
+    if workflow is None:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+
+    draft = await db_client.get_draft_version(workflow_id)
+    workflow_definition: dict | None = None
+    version_configurations: dict | None = None
+
+    if draft and draft.workflow_json:
+        workflow_definition = draft.workflow_json
+        version_configurations = draft.workflow_configurations
+    elif workflow.released_definition and workflow.released_definition.workflow_json:
+        workflow_definition = workflow.released_definition.workflow_json
+        version_configurations = workflow.released_definition.workflow_configurations
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="No workflow graph found — save the workflow in the editor first.",
+        )
+
+    try:
+        WorkflowGraph(ReactFlowDTO.model_validate(workflow_definition))
+    except ValueError as e:
+        logger.warning(f"estimate-cost: invalid workflow graph: {e}")
+        raise HTTPException(
+            status_code=422,
+            detail="Workflow graph is invalid — fix validation in the editor first.",
+        ) from e
+
+    user_config = await db_client.get_user_configurations(user.id)
+    merged_configurations: dict = dict(workflow.workflow_configurations or {})
+    if version_configurations:
+        merged_configurations = {**merged_configurations, **version_configurations}
+
+    return estimate_workflow_cost_dry_run(
+        workflow_json=workflow_definition,
+        workflow_configurations=merged_configurations,
+        user_config=user_config,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Editor simulation — text turn (WE-01-TEST)
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/{workflow_id}/simulation/text-turn",
+    response_model=SimulationTextTurnResponse,
+    summary="Text-only LLM turn using draft graph (editor simulation)",
+)
+async def workflow_simulation_text_turn(
+    workflow_id: int,
+    body: SimulationTextTurnRequest,
+    user: UserModel = Depends(get_user),
+) -> SimulationTextTurnResponse:
+    """Run one chat turn against the first Agent after Start — uses org LLM keys; no PSTN."""
+    return await run_simulation_text_turn(
+        workflow_id=workflow_id,
+        user_id=user.id,
+        organization_id=user.selected_organization_id,
+        body=body,
+    )
 
 
 # ---------------------------------------------------------------------------

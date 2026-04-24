@@ -71,8 +71,8 @@ flowchart TD
 2. **Sign up** — org and user created ([api/routes/auth.py](api/routes/auth.py)).
 3. **Create a workflow** — name, use case, or start from a template when available ([READMEPLANNING.md](READMEPLANNING.md) §6, epic **MK-01**).
 4. **Connect credentials** in the UI (LLM/STT/TTS/telephony BYOK as needed).
-5. **Open Web Call** from the workflow — confirm two-way audio ([READMELEARNME.md](READMELEARNME.md) §4).
-6. **Fix** any validation messages in the editor until publish is allowed.
+5. **Try voice in the browser** — **Call → Web Call** in the header, or switch to **Simulation** and use **Start Web test** (same path; no JSON). Confirm two-way audio ([READMELEARNME.md](READMELEARNME.md) §4). In **Simulation**, **Manual chat (text)** sends typed turns through your saved draft’s first Agent using your org LLM key (`POST /api/v1/workflow/{id}/simulation/text-turn`) — no PSTN.
+6. **Fix** any validation issues — the header lists errors with **plain-language titles** and hints (technical message still shown); resolve until publish is allowed.
 7. **Publish**, then share **embed** or **phone** flows when ready ([api/routes/workflow_embed.py](api/routes/workflow_embed.py), telephony routes in [READMELEARNME.md](READMELEARNME.md)).
 
 **Roadmap polish:** marketplace browse (**MK-01-BROWSE**), editor shell (**WE-01-SHELL**), dual form/raw mode (**WE-01-DUALMODE**).

@@ -7,9 +7,10 @@ import { useEffect, useMemo, useState } from 'react';
 import RenderWorkflow from '@/app/workflow/[workflowId]/RenderWorkflow';
 import { getWorkflowApiV1WorkflowFetchWorkflowIdGet } from '@/client/sdk.gen';
 import type { WorkflowResponse } from '@/client/types.gen';
-import { FlowEdge, FlowNode } from '@/components/flow/types';
+import { FlowEdge, FlowNode, type WorkflowDefinition } from '@/components/flow/types';
 import SpinLoader from '@/components/SpinLoader';
 import { PostHogEvent } from '@/constants/posthog-events';
+import { UnsavedChangesProvider } from '@/context/UnsavedChangesContext';
 import { useAuth } from '@/lib/auth';
 import logger from '@/lib/logger';
 import { DEFAULT_WORKFLOW_CONFIGURATIONS, WorkflowConfigurations } from '@/types/workflow-configurations';
@@ -60,6 +61,14 @@ export default function WorkflowDetailPage() {
 
     const stableUser = useMemo(() => user, [user]);
 
+    const mergedWorkflowConfigurations = useMemo((): WorkflowConfigurations => {
+        const raw = workflow?.workflow_configurations;
+        if (raw && typeof raw === 'object') {
+            return { ...DEFAULT_WORKFLOW_CONFIGURATIONS, ...raw };
+        }
+        return DEFAULT_WORKFLOW_CONFIGURATIONS;
+    }, [workflow?.workflow_configurations]);
+
     if (loading) {
         return (
             <WorkflowLayout>
@@ -77,21 +86,30 @@ export default function WorkflowDetailPage() {
         );
     }
     else {
+        const wd = workflow.workflow_definition as unknown as WorkflowDefinition;
+        const defaultViewport = { x: 0, y: 0, zoom: 1 };
+        const rawVp = wd.viewport ?? defaultViewport;
+        const viewport =
+            rawVp.zoom === 0 || rawVp.zoom == null ? { ...rawVp, zoom: 1 } : rawVp;
+
         return stableUser ? (
-            <RenderWorkflow
-                initialWorkflowName={workflow.name}
-                workflowId={workflow.id}
-                initialFlow={{
-                    nodes: workflow.workflow_definition.nodes as FlowNode[],
-                    edges: workflow.workflow_definition.edges as FlowEdge[],
-                    viewport: { x: 0, y: 0, zoom: 0 }
-                }}
-                initialTemplateContextVariables={workflow.template_context_variables as Record<string, string> || {}}
-                initialWorkflowConfigurations={(workflow.workflow_configurations as WorkflowConfigurations) || DEFAULT_WORKFLOW_CONFIGURATIONS}
-                initialVersionNumber={workflow.version_number ?? null}
-                initialVersionStatus={workflow.version_status ?? null}
-                user={stableUser}
-            />
+            <UnsavedChangesProvider>
+                <RenderWorkflow
+                    initialWorkflowName={workflow.name}
+                    workflowId={workflow.id}
+                    initialFlow={{
+                        nodes: wd.nodes as FlowNode[],
+                        edges: wd.edges as FlowEdge[],
+                        viewport,
+                        subflows: wd.subflows,
+                    }}
+                    initialTemplateContextVariables={workflow.template_context_variables as Record<string, string> || {}}
+                    initialWorkflowConfigurations={mergedWorkflowConfigurations}
+                    initialVersionNumber={workflow.version_number ?? null}
+                    initialVersionStatus={workflow.version_status ?? null}
+                    user={stableUser}
+                />
+            </UnsavedChangesProvider>
         ) : null;
     }
 }

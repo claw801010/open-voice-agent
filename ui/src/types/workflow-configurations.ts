@@ -61,6 +61,15 @@ export interface ModelOverrides {
     is_realtime?: boolean;
 }
 
+/** MK-01 marketplace install metadata (stored under workflow_configurations.mk01). */
+export interface Mk01InstallMetadata {
+    installation_locked?: boolean;
+    catalog_slug?: string;
+    /** e.g. `packaged_definition` | `workflow_templates` */
+    source?: string;
+    source_template_id?: number;
+}
+
 export interface WorkflowConfigurations {
     vad_configuration?: VADConfiguration;
     ambient_noise_configuration: AmbientNoiseConfiguration;
@@ -72,6 +81,7 @@ export interface WorkflowConfigurations {
     voicemail_detection?: VoicemailDetectionConfiguration;
     context_compaction_enabled?: boolean;  // Summarize context on node transitions to remove stale tool calls
     model_overrides?: ModelOverrides;  // Per-workflow model configuration overrides
+    mk01?: Mk01InstallMetadata;
     [key: string]: unknown;  // Allow additional properties for future configurations
 }
 

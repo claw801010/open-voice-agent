@@ -1,6 +1,6 @@
 import { BaseEdge, type Edge, EdgeLabelRenderer, type EdgeProps, getSmoothStepPath, useReactFlow } from '@xyflow/react';
 import { AlertCircle, Pencil } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useWorkflow, useWorkflowOptional } from "@/app/workflow/[workflowId]/contexts/WorkflowContext";
 import { useWorkflowStore } from "@/app/workflow/[workflowId]/stores/workflowStore";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from "@/lib/utils";
 
@@ -23,14 +24,26 @@ interface EdgeDetailsDialogProps {
     onSave: (value: FlowEdgeData) => void;
 }
 
+const SUBFLOW_SELECT_NONE = '__none__';
+
 const EdgeDetailsDialog = ({ open, onOpenChange, data, onSave }: EdgeDetailsDialogProps) => {
     const readOnly = useWorkflowOptional()?.readOnly ?? false;
     const { recordings } = useWorkflow();
+    const activeFlowScope = useWorkflowStore((s) => s.activeFlowScope);
+    const subflows = useWorkflowStore((s) => s.subflows);
+    const subflowKeyOptions = useMemo(() => {
+        const keys = Object.keys(subflows).filter((k) => (subflows[k]?.nodes?.length ?? 0) > 0);
+        if (activeFlowScope === 'main') return keys;
+        return keys.filter((k) => k !== activeFlowScope);
+    }, [subflows, activeFlowScope]);
+    /** Main flow or a component tab: run another named subgraph before this edge's target (voice Pipecat). */
+    const showSubflowPicker = subflowKeyOptions.length > 0;
     const [condition, setCondition] = useState(data?.condition ?? '');
     const [label, setLabel] = useState(data?.label ?? '');
     const [transitionSpeech, setTransitionSpeech] = useState(data?.transition_speech ?? '');
     const [transitionSpeechType, setTransitionSpeechType] = useState<'text' | 'audio'>(data?.transition_speech_type ?? 'text');
     const [transitionSpeechRecordingId, setTransitionSpeechRecordingId] = useState(data?.transition_speech_recording_id ?? '');
+    const [enterSubflow, setEnterSubflow] = useState(data?.enter_subflow ?? '');
 
     // Update form state when data changes (e.g., from undo/redo)
     useEffect(() => {
@@ -40,6 +53,7 @@ const EdgeDetailsDialog = ({ open, onOpenChange, data, onSave }: EdgeDetailsDial
             setTransitionSpeech(data?.transition_speech ?? '');
             setTransitionSpeechType(data?.transition_speech_type ?? 'text');
             setTransitionSpeechRecordingId(data?.transition_speech_recording_id ?? '');
+            setEnterSubflow(data?.enter_subflow ?? '');
         }
     }, [data, open]);
 
@@ -50,9 +64,10 @@ const EdgeDetailsDialog = ({ open, onOpenChange, data, onSave }: EdgeDetailsDial
             transition_speech: transitionSpeechType === 'text' ? (transitionSpeech || undefined) : undefined,
             transition_speech_type: transitionSpeechType,
             transition_speech_recording_id: transitionSpeechType === 'audio' ? (transitionSpeechRecordingId || undefined) : undefined,
+            enter_subflow: enterSubflow.trim() || undefined,
         });
         onOpenChange(false);
-    }, [condition, label, transitionSpeech, transitionSpeechType, transitionSpeechRecordingId, onSave, onOpenChange]);
+    }, [condition, label, transitionSpeech, transitionSpeechType, transitionSpeechRecordingId, enterSubflow, onSave, onOpenChange]);
 
     // Handle Cmd+S / Ctrl+S keyboard shortcut to save
     useEffect(() => {
@@ -108,6 +123,31 @@ const EdgeDetailsDialog = ({ open, onOpenChange, data, onSave }: EdgeDetailsDial
                             onChange={(e) => setCondition(e.target.value)}
                         />
                     </div>
+                    {showSubflowPicker && (
+                        <div className="grid gap-2">
+                            <Label>Run subgraph first</Label>
+                            <Label className="text-xs text-muted-foreground">
+                                Optional: execute another saved component graph before continuing to this edge&apos;s target.
+                                On <span className="font-medium">Main flow</span>, runs the subgraph then resumes on the main graph; on a{' '}
+                                <span className="font-medium">component</span> tab, runs the sibling subgraph then resumes in this component.
+                            </Label>
+                            <Select
+                                disabled={readOnly}
+                                value={enterSubflow.trim() ? enterSubflow.trim() : SUBFLOW_SELECT_NONE}
+                                onValueChange={(v) => setEnterSubflow(v === SUBFLOW_SELECT_NONE ? '' : v)}
+                            >
+                                <SelectTrigger className="w-full max-w-md">
+                                    <SelectValue placeholder="None" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={SUBFLOW_SELECT_NONE}>None</SelectItem>
+                                    {subflowKeyOptions.map((k) => (
+                                        <SelectItem key={k} value={k}>{k}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
                     <div className="grid gap-2">
                         <Label>Transition Speech</Label>
                         <Label className="text-xs text-muted-foreground">
@@ -334,6 +374,11 @@ export default function CustomEdge(props: CustomEdgeProps) {
                             <div className="px-3 pb-3">
                                 <div className="text-sm font-medium text-card-foreground break-words">
                                     {data?.label || data?.condition || 'Click to set condition'}
+                                    {data?.enter_subflow ? (
+                                        <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                                            Subgraph: {data.enter_subflow}
+                                        </span>
+                                    ) : null}
                                 </div>
                             </div>
                         </div>
@@ -346,7 +391,12 @@ export default function CustomEdge(props: CustomEdgeProps) {
                                 ? "bg-destructive text-destructive-foreground"
                                 : "bg-amber-500 text-amber-950"
                         )}>
-                            {data?.label || data?.condition || 'No condition'}
+                            <span className="flex flex-col items-center gap-0.5">
+                                <span>{data?.label || data?.condition || 'No condition'}</span>
+                                {data?.enter_subflow ? (
+                                    <span className="text-[10px] font-normal opacity-90">→ {data.enter_subflow}</span>
+                                ) : null}
+                            </span>
                         </div>
                     )}
                 </div>

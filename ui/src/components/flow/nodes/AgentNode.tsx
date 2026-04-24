@@ -19,6 +19,7 @@ import { CONTEXT_VARIABLES_DOC_URL, NODE_DOCUMENTATION_URLS } from "@/constants/
 
 import { NodeContent } from "./common/NodeContent";
 import { NodeEditDialog } from "./common/NodeEditDialog";
+import { useNodeDialogDirty } from "./common/useNodeDialogDirty";
 import { useNodeHandlers } from "./common/useNodeHandlers";
 
 interface AgentNodeEditFormProps {
@@ -67,13 +68,45 @@ export const AgentNode = memo(({ data, selected, id }: AgentNodeProps) => {
     const [toolUuids, setToolUuids] = useState<string[]>(data.tool_uuids ?? []);
     const [documentUuids, setDocumentUuids] = useState<string[]>(data.document_uuids ?? []);
 
-    // Compute if form has unsaved changes (only check prompt, name)
-    const isDirty = useMemo(() => {
-        return (
-            prompt !== (data.prompt ?? "") ||
-            name !== (data.name ?? "")
-        );
-    }, [prompt, name, data]);
+    const getPendingData = useCallback((): FlowNodeData => {
+        return {
+            ...data,
+            prompt,
+            name,
+            allow_interrupt: allowInterrupt,
+            extraction_enabled: extractionEnabled,
+            extraction_prompt: extractionPrompt,
+            extraction_variables: variables,
+            add_global_prompt: addGlobalPrompt,
+            tool_uuids: toolUuids.length > 0 ? toolUuids : undefined,
+            document_uuids: documentUuids.length > 0 ? documentUuids : undefined,
+        };
+    }, [
+        data,
+        prompt,
+        name,
+        allowInterrupt,
+        extractionEnabled,
+        extractionPrompt,
+        variables,
+        addGlobalPrompt,
+        toolUuids,
+        documentUuids,
+    ]);
+
+    const applyData = useCallback((d: FlowNodeData) => {
+        setPrompt(d.prompt ?? "");
+        setName(d.name ?? "");
+        setAllowInterrupt(d.allow_interrupt ?? true);
+        setExtractionEnabled(d.extraction_enabled ?? false);
+        setExtractionPrompt(d.extraction_prompt ?? "");
+        setVariables(d.extraction_variables ?? []);
+        setAddGlobalPrompt(d.add_global_prompt ?? true);
+        setToolUuids(d.tool_uuids ?? []);
+        setDocumentUuids(d.document_uuids ?? []);
+    }, []);
+
+    const isDirty = useNodeDialogDirty(open, getPendingData);
 
     const handleSave = async () => {
         handleSaveNodeData({
@@ -200,6 +233,7 @@ export const AgentNode = memo(({ data, selected, id }: AgentNodeProps) => {
                 onSave={handleSave}
                 isDirty={isDirty}
                 documentationUrl={NODE_DOCUMENTATION_URLS.agent}
+                dualMode={{ getPendingData, applyData }}
             >
                 {open && (
                     <AgentNodeEditForm

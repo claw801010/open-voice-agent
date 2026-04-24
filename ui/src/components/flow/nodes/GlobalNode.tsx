@@ -1,6 +1,6 @@
 import { NodeProps, NodeToolbar, Position } from "@xyflow/react";
 import { Edit, Headset, Trash2Icon } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import { useWorkflow } from "@/app/workflow/[workflowId]/contexts/WorkflowContext";
 import type { RecordingResponseSchema } from "@/client/types.gen";
@@ -13,6 +13,7 @@ import { CONTEXT_VARIABLES_DOC_URL, NODE_DOCUMENTATION_URLS } from "@/constants/
 
 import { NodeContent } from "./common/NodeContent";
 import { NodeEditDialog } from "./common/NodeEditDialog";
+import { useNodeDialogDirty } from "./common/useNodeDialogDirty";
 import { useNodeHandlers } from "./common/useNodeHandlers";
 
 interface GlobalNodeEditFormProps {
@@ -36,13 +37,21 @@ export const GlobalNode = memo(({ data, selected, id }: GlobalNodeProps) => {
     const [prompt, setPrompt] = useState(data.prompt);
     const [name, setName] = useState(data.name);
 
-    // Compute if form has unsaved changes (simplified: only check prompt, name)
-    const isDirty = useMemo(() => {
-        return (
-            prompt !== (data.prompt ?? "") ||
-            name !== (data.name ?? "")
-        );
-    }, [prompt, name, data]);
+    const getPendingData = useCallback((): FlowNodeData => {
+        return {
+            ...data,
+            prompt,
+            name,
+            is_static: false,
+        };
+    }, [data, prompt, name]);
+
+    const applyData = useCallback((d: FlowNodeData) => {
+        setPrompt(d.prompt ?? "");
+        setName(d.name ?? "");
+    }, []);
+
+    const isDirty = useNodeDialogDirty(open, getPendingData);
 
     const handleSave = async () => {
         handleSaveNodeData({
@@ -109,6 +118,7 @@ export const GlobalNode = memo(({ data, selected, id }: GlobalNodeProps) => {
                 onSave={handleSave}
                 isDirty={isDirty}
                 documentationUrl={NODE_DOCUMENTATION_URLS.global}
+                dualMode={{ getPendingData, applyData }}
             >
                 {open && (
                     <GlobalNodeEditForm

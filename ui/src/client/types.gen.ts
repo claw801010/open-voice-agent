@@ -916,6 +916,26 @@ export type CreateTestSessionRequest = {
 };
 
 /**
+ * QuickPersonaTryRequest — actor = workflow under test; adversary = system simulated caller.
+ */
+export type QuickPersonaTryRequest = {
+    /**
+     * Actor Workflow Id
+     */
+    actor_workflow_id: number;
+    /**
+     * Name
+     */
+    name?: string;
+    /**
+     * Config
+     */
+    config?: {
+        [key: string]: unknown;
+    };
+};
+
+/**
  * CreateToolRequest
  *
  * Request schema for creating a tool.
@@ -1139,6 +1159,43 @@ export type CurrentUsageResponse = {
      * Price Per Second Usd
      */
     price_per_second_usd?: number | null;
+};
+
+/**
+ * WeeklyRollupBucket
+ */
+export type WeeklyRollupBucket = {
+    week_start: string;
+    run_count: number;
+    /** Inbound runs in this UTC week (``call_type``); with ``runs_outbound`` sums to ``run_count``. */
+    runs_inbound?: number;
+    runs_outbound?: number;
+    dograh_tokens?: number | null;
+};
+
+/**
+ * WeeklyRollupResponse
+ */
+export type WeeklyRollupResponse = {
+    buckets: Array<WeeklyRollupBucket>;
+};
+
+/**
+ * DailyRollupBucket
+ */
+export type DailyRollupBucket = {
+    day_start: string;
+    run_count: number;
+    runs_inbound?: number;
+    runs_outbound?: number;
+    dograh_tokens?: number | null;
+};
+
+/**
+ * DailyRollupResponse
+ */
+export type DailyRollupResponse = {
+    buckets: Array<DailyRollupBucket>;
 };
 
 /**
@@ -1455,6 +1512,65 @@ export type DuplicateTemplateRequest = {
      * Workflow Name
      */
     workflow_name: string;
+    template_context_variables?: {
+        [key: string]: string;
+    } | null;
+    catalog_slug?: string | null;
+    lock_until_customize?: boolean;
+};
+
+/**
+ * InstallFromCatalogRequest
+ */
+export type InstallFromCatalogRequest = {
+    slug: string;
+    workflow_name: string;
+};
+
+export type GetVerticalPacksCatalogApiV1CatalogVerticalPacksGetData = {
+    body?: never;
+    headers?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/catalog/vertical-packs';
+};
+
+export type GetVerticalPacksCatalogApiV1CatalogVerticalPacksGetErrors = {
+    500: unknown;
+};
+
+export type GetVerticalPacksCatalogApiV1CatalogVerticalPacksGetError = GetVerticalPacksCatalogApiV1CatalogVerticalPacksGetErrors[keyof GetVerticalPacksCatalogApiV1CatalogVerticalPacksGetErrors];
+
+export type GetVerticalPacksCatalogApiV1CatalogVerticalPacksGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type InstallWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPostData = {
+    body: InstallFromCatalogRequest;
+    headers?: {
+        authorization?: string | null;
+        'X-API-Key'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/workflow/install-from-catalog';
+};
+
+export type InstallWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPostErrors = {
+    404: unknown;
+    422: HttpValidationError;
+};
+
+export type InstallWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPostError = InstallWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPostErrors[keyof InstallWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPostErrors];
+
+export type InstallWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: WorkflowResponse;
 };
 
 /**
@@ -3604,6 +3720,12 @@ export type WorkflowListResponse = {
      * Total Runs
      */
     total_runs: number;
+    /**
+     * Template context variables (for operator-friendly editing)
+     */
+    template_context_variables?: {
+        [key: string]: string;
+    } | null;
 };
 
 /**
@@ -5161,6 +5283,128 @@ export type GetWorkflowRunsApiV1WorkflowWorkflowIdRunsGetResponses = {
 };
 
 export type GetWorkflowRunsApiV1WorkflowWorkflowIdRunsGetResponse = GetWorkflowRunsApiV1WorkflowWorkflowIdRunsGetResponses[keyof GetWorkflowRunsApiV1WorkflowWorkflowIdRunsGetResponses];
+
+export type GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Authorization
+         */
+        authorization?: string | null;
+        /**
+         * X-Api-Key
+         */
+        'X-API-Key'?: string | null;
+    };
+    path: {
+        /**
+         * Workflow Id
+         */
+        workflow_id: number;
+    };
+    query?: {
+        /**
+         * Look back up to this many weeks (ignored if since+until set)
+         */
+        weeks?: number;
+        /**
+         * UTC start date inclusive (YYYY-MM-DD); requires until
+         */
+        since?: string | null;
+        /**
+         * UTC end date inclusive (YYYY-MM-DD); requires since
+         */
+        until?: string | null;
+    };
+    url: '/api/v1/workflow/{workflow_id}/usage/weekly-rollup';
+};
+
+export type GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetError = GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetErrors[keyof GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetErrors];
+
+export type GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: WeeklyRollupResponse;
+};
+
+export type GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetResponse = GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetResponses[keyof GetWorkflowWeeklyUsageRollupApiV1WorkflowWorkflowIdUsageWeeklyRollupGetResponses];
+
+export type GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Authorization
+         */
+        authorization?: string | null;
+        /**
+         * X-Api-Key
+         */
+        'X-API-Key'?: string | null;
+    };
+    path: {
+        /**
+         * Workflow Id
+         */
+        workflow_id: number;
+    };
+    query?: {
+        /**
+         * Rolling lookback in days (ignored if since+until set)
+         */
+        days?: number;
+        /**
+         * UTC start date inclusive (YYYY-MM-DD); requires until
+         */
+        since?: string | null;
+        /**
+         * UTC end date inclusive (YYYY-MM-DD); requires since
+         */
+        until?: string | null;
+    };
+    url: '/api/v1/workflow/{workflow_id}/usage/daily-rollup';
+};
+
+export type GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetError = GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetErrors[keyof GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetErrors];
+
+export type GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: DailyRollupResponse;
+};
+
+export type GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetResponse = GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetResponses[keyof GetWorkflowDailyUsageRollupApiV1WorkflowWorkflowIdUsageDailyRollupGetResponses];
 
 export type CreateWorkflowRunApiV1WorkflowWorkflowIdRunsPostData = {
     body: CreateWorkflowRunRequest;
@@ -7681,6 +7925,47 @@ export type CreateTestSessionApiV1LooptalkTestSessionsPostResponses = {
 
 export type CreateTestSessionApiV1LooptalkTestSessionsPostResponse = CreateTestSessionApiV1LooptalkTestSessionsPostResponses[keyof CreateTestSessionApiV1LooptalkTestSessionsPostResponses];
 
+export type CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostData = {
+    body: QuickPersonaTryRequest;
+    headers?: {
+        /**
+         * Authorization
+         */
+        authorization?: string | null;
+        /**
+         * X-Api-Key
+         */
+        'X-API-Key'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/looptalk/test-sessions/quick-persona';
+};
+
+export type CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostErrors = {
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostError =
+    CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostErrors[keyof CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostErrors];
+
+export type CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: TestSessionResponse;
+};
+
+export type CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostResponse =
+    CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostResponses[keyof CreateQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPostResponses];
+
 export type GetTestSessionApiV1LooptalkTestSessionsTestSessionIdGetData = {
     body?: never;
     headers?: {
@@ -8013,6 +8298,118 @@ export type GetCurrentPeriodUsageApiV1OrganizationsUsageCurrentPeriodGetResponse
 };
 
 export type GetCurrentPeriodUsageApiV1OrganizationsUsageCurrentPeriodGetResponse = GetCurrentPeriodUsageApiV1OrganizationsUsageCurrentPeriodGetResponses[keyof GetCurrentPeriodUsageApiV1OrganizationsUsageCurrentPeriodGetResponses];
+
+export type GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Authorization
+         */
+        authorization?: string | null;
+        /**
+         * X-Api-Key
+         */
+        'X-API-Key'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Look back up to this many weeks (ignored if since+until set)
+         */
+        weeks?: number;
+        /**
+         * UTC start date inclusive (YYYY-MM-DD); requires until
+         */
+        since?: string | null;
+        /**
+         * UTC end date inclusive (YYYY-MM-DD); requires since
+         */
+        until?: string | null;
+    };
+    url: '/api/v1/organizations/usage/weekly-rollup';
+};
+
+export type GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetError = GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetErrors[keyof GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetErrors];
+
+export type GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: WeeklyRollupResponse;
+};
+
+export type GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetResponse = GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetResponses[keyof GetOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGetResponses];
+
+export type GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetData = {
+    body?: never;
+    headers?: {
+        /**
+         * Authorization
+         */
+        authorization?: string | null;
+        /**
+         * X-Api-Key
+         */
+        'X-API-Key'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Rolling lookback in days (ignored if since+until set)
+         */
+        days?: number;
+        /**
+         * UTC start date inclusive (YYYY-MM-DD); requires until
+         */
+        since?: string | null;
+        /**
+         * UTC end date inclusive (YYYY-MM-DD); requires since
+         */
+        until?: string | null;
+    };
+    url: '/api/v1/organizations/usage/daily-rollup';
+};
+
+export type GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * Not found
+     */
+    404: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetError = GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetErrors[keyof GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetErrors];
+
+export type GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: DailyRollupResponse;
+};
+
+export type GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetResponse = GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetResponses[keyof GetOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGetResponses];
 
 export type GetMpsCreditsApiV1OrganizationsUsageMpsCreditsGetData = {
     body?: never;

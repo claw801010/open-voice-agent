@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 
 class NodeType(str, Enum):
@@ -106,6 +106,13 @@ class EdgeDataDTO(BaseModel):
     transition_speech: Optional[str] = None
     transition_speech_type: Optional[str] = None  # 'text' or 'audio'
     transition_speech_recording_id: Optional[str] = None
+    # WE-01-SUBFLOWS: when set on a **main** graph edge, taking this transition runs the
+    # named subgraph first, then resumes at this edge's target node on the main graph.
+    enter_subflow: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        description="Named subgraph key (must exist in workflow_json.subflows).",
+    )
 
 
 class RFEdgeDTO(BaseModel):
@@ -116,8 +123,24 @@ class RFEdgeDTO(BaseModel):
 
 
 class ReactFlowDTO(BaseModel):
+    """
+    Primary graph plus optional UI / WE-01-SUBFLOWS fields.
+    ``extra='allow'`` preserves unknown top-level keys on round-trip where code uses ``model_dump``.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
     nodes: List[RFNodeDTO]
     edges: List[RFEdgeDTO]
+    viewport: Optional[Dict[str, Any]] = None
+    subflows: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description=(
+            "Optional named subgraphs (typically same shape as root graph JSON without nested "
+            "`subflows`). Each non-empty subgraph is validated like the main graph on load; "
+            "Pipecat voice execution still traverses the primary graph until branching is implemented."
+        ),
+    )
 
     @model_validator(mode="after")
     def _referential_integrity(self):

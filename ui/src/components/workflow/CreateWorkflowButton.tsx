@@ -1,6 +1,6 @@
 'use client';
 
-import { Bot, ChevronDown, LayoutTemplate, PlusIcon } from 'lucide-react';
+import { Bot, ChevronDown, LayoutTemplate, PlusIcon, Store } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -56,6 +56,10 @@ export function CreateWorkflowButton() {
         router.push('/workflow/create');
     };
 
+    const handleCatalog = () => {
+        router.push('/workflow/catalog');
+    };
+
     const handleBlankCanvas = async () => {
         if (isCreating || !user) return;
         setIsCreating(true);
@@ -94,6 +98,13 @@ export function CreateWorkflowButton() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleCatalog} className="cursor-pointer">
+                    <Store className="w-4 h-4 mr-2" />
+                    <div>
+                        <div className="font-medium">Template catalog</div>
+                        <div className="text-xs text-muted-foreground">Install a vertical pack into your organization</div>
+                    </div>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleAgentBuilder} className="cursor-pointer">
                     <Bot className="w-4 h-4 mr-2" />
                     <div>

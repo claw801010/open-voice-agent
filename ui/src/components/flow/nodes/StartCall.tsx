@@ -1,6 +1,6 @@
 import { NodeProps, NodeToolbar, Position } from "@xyflow/react";
 import { ChevronRight, Edit, FileText, Play, PlusIcon, Settings, Trash2Icon, Wrench } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 import { useWorkflow } from "@/app/workflow/[workflowId]/contexts/WorkflowContext";
 import type { DocumentResponseSchema, ToolResponse } from "@/client/types.gen";
@@ -23,6 +23,7 @@ import { CONTEXT_VARIABLES_DOC_URL, NODE_DOCUMENTATION_URLS, PRE_CALL_DATA_FETCH
 
 import { NodeContent } from "./common/NodeContent";
 import { NodeEditDialog } from "./common/NodeEditDialog";
+import { useNodeDialogDirty } from "./common/useNodeDialogDirty";
 import { useNodeHandlers } from "./common/useNodeHandlers";
 
 interface StartCallEditFormProps {
@@ -96,14 +97,72 @@ export const StartCall = memo(({ data, selected, id }: StartCallNodeProps) => {
     const [preCallFetchUrl, setPreCallFetchUrl] = useState(data.pre_call_fetch_url ?? "");
     const [preCallFetchCredentialUuid, setPreCallFetchCredentialUuid] = useState(data.pre_call_fetch_credential_uuid ?? "");
 
-    // Compute if form has unsaved changes (only check prompt, name, greeting)
-    const isDirty = useMemo(() => {
-        return (
-            greeting !== (data.greeting ?? "") ||
-            prompt !== (data.prompt ?? "") ||
-            name !== (data.name ?? "")
-        );
-    }, [greeting, prompt, name, data]);
+    const getPendingData = useCallback((): FlowNodeData => {
+        return {
+            ...data,
+            greeting_type: greetingType,
+            greeting: greetingType === "text" ? greeting || undefined : undefined,
+            greeting_recording_id: greetingType === "audio" ? greetingRecordingId || undefined : undefined,
+            prompt,
+            name,
+            allow_interrupt: allowInterrupt,
+            add_global_prompt: addGlobalPrompt,
+            delayed_start: delayedStart,
+            delayed_start_duration: delayedStart ? delayedStartDuration : undefined,
+            extraction_enabled: extractionEnabled,
+            extraction_prompt: extractionPrompt,
+            extraction_variables: variables,
+            tool_uuids: toolUuids.length > 0 ? toolUuids : undefined,
+            document_uuids: documentUuids.length > 0 ? documentUuids : undefined,
+            pre_call_fetch_enabled: preCallFetchEnabled,
+            pre_call_fetch_url: preCallFetchEnabled ? preCallFetchUrl || undefined : undefined,
+            pre_call_fetch_credential_uuid:
+                preCallFetchEnabled && preCallFetchCredentialUuid
+                    ? preCallFetchCredentialUuid
+                    : undefined,
+        };
+    }, [
+        data,
+        greetingType,
+        greeting,
+        greetingRecordingId,
+        prompt,
+        name,
+        allowInterrupt,
+        addGlobalPrompt,
+        delayedStart,
+        delayedStartDuration,
+        extractionEnabled,
+        extractionPrompt,
+        variables,
+        toolUuids,
+        documentUuids,
+        preCallFetchEnabled,
+        preCallFetchUrl,
+        preCallFetchCredentialUuid,
+    ]);
+
+    const applyData = useCallback((d: FlowNodeData) => {
+        setGreetingType(d.greeting_type ?? "text");
+        setGreeting(d.greeting ?? "");
+        setGreetingRecordingId(d.greeting_recording_id ?? "");
+        setPrompt(d.prompt ?? "");
+        setName(d.name);
+        setAllowInterrupt(d.allow_interrupt ?? true);
+        setAddGlobalPrompt(d.add_global_prompt ?? true);
+        setDelayedStart(d.delayed_start ?? false);
+        setDelayedStartDuration(d.delayed_start_duration ?? 3);
+        setExtractionEnabled(d.extraction_enabled ?? false);
+        setExtractionPrompt(d.extraction_prompt ?? "");
+        setVariables(d.extraction_variables ?? []);
+        setToolUuids(d.tool_uuids ?? []);
+        setDocumentUuids(d.document_uuids ?? []);
+        setPreCallFetchEnabled(d.pre_call_fetch_enabled ?? false);
+        setPreCallFetchUrl(d.pre_call_fetch_url ?? "");
+        setPreCallFetchCredentialUuid(d.pre_call_fetch_credential_uuid ?? "");
+    }, []);
+
+    const isDirty = useNodeDialogDirty(open, getPendingData);
 
     const handleSave = async () => {
         // Validate pre-call fetch URL if enabled
@@ -256,6 +315,7 @@ export const StartCall = memo(({ data, selected, id }: StartCallNodeProps) => {
                 onSave={handleSave}
                 isDirty={isDirty}
                 documentationUrl={NODE_DOCUMENTATION_URLS.startCall}
+                dualMode={{ getPendingData, applyData }}
             >
                 {open && (
                     <StartCallEditForm

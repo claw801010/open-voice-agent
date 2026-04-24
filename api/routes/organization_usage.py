@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -9,7 +9,14 @@ from pydantic import BaseModel
 from api.constants import DEPLOYMENT_MODE
 from api.db import db_client
 from api.db.models import UserModel
+from api.schemas.usage_rollup import (
+    DailyRollupBucket,
+    DailyRollupResponse,
+    WeeklyRollupBucket,
+    WeeklyRollupResponse,
+)
 from api.services.auth.depends import get_user
+from api.utils.usage_rollup_range import parse_utc_inclusive_date_range
 from api.services.mps_service_key_client import mps_service_key_client
 
 router = APIRouter(prefix="/organizations")
@@ -80,6 +87,92 @@ class DailyUsageBreakdownResponse(BaseModel):
     total_cost_usd: Optional[float] = None
     total_dograh_tokens: float
     currency: Optional[str] = None
+
+
+@router.get("/usage/weekly-rollup", response_model=WeeklyRollupResponse)
+async def get_org_weekly_usage_rollup(
+    weeks: int = Query(8, ge=1, le=52, description="Look back up to this many weeks (ignored if since+until set)"),
+    since: Optional[date] = Query(
+        None,
+        description="UTC start date inclusive (YYYY-MM-DD); requires until",
+    ),
+    until: Optional[date] = Query(
+        None,
+        description="UTC end date inclusive (YYYY-MM-DD); requires since",
+    ),
+    user: UserModel = Depends(get_user),
+):
+    """Server-side UTC week aggregates for all workflows in the selected organization."""
+    if not user.selected_organization_id:
+        raise HTTPException(status_code=400, detail="No organization selected")
+    try:
+        rs, rue, _use_fixed = parse_utc_inclusive_date_range(since, until)
+        raw = await db_client.get_weekly_usage_rollup(
+            user.selected_organization_id,
+            weeks=weeks,
+            workflow_id=None,
+            range_since=rs,
+            range_until_exclusive=rue,
+        )
+        buckets = [
+            WeeklyRollupBucket(
+                week_start=r["week_start"],
+                run_count=r["run_count"],
+                runs_inbound=int(r.get("runs_inbound") or 0),
+                runs_outbound=int(r.get("runs_outbound") or 0),
+                dograh_tokens=r.get("dograh_tokens"),
+            )
+            for r in raw
+        ]
+        return WeeklyRollupResponse(buckets=buckets)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("get_weekly_usage_rollup failed: {}", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/usage/daily-rollup", response_model=DailyRollupResponse)
+async def get_org_daily_usage_rollup(
+    days: int = Query(30, ge=1, le=90, description="Rolling lookback in days (ignored if since+until set)"),
+    since: Optional[date] = Query(
+        None,
+        description="UTC start date inclusive (YYYY-MM-DD); requires until",
+    ),
+    until: Optional[date] = Query(
+        None,
+        description="UTC end date inclusive (YYYY-MM-DD); requires since",
+    ),
+    user: UserModel = Depends(get_user),
+):
+    """Server-side UTC **day** aggregates for all workflows in the selected organization."""
+    if not user.selected_organization_id:
+        raise HTTPException(status_code=400, detail="No organization selected")
+    try:
+        rs, rue, _use_fixed = parse_utc_inclusive_date_range(since, until)
+        raw = await db_client.get_daily_usage_rollup(
+            user.selected_organization_id,
+            days=days,
+            workflow_id=None,
+            range_since=rs,
+            range_until_exclusive=rue,
+        )
+        buckets = [
+            DailyRollupBucket(
+                day_start=r["day_start"],
+                run_count=r["run_count"],
+                runs_inbound=int(r.get("runs_inbound") or 0),
+                runs_outbound=int(r.get("runs_outbound") or 0),
+                dograh_tokens=r.get("dograh_tokens"),
+            )
+            for r in raw
+        ]
+        return DailyRollupResponse(buckets=buckets)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("get_daily_usage_rollup failed: {}", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/usage/current-period", response_model=CurrentUsageResponse)

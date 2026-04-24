@@ -1160,3 +1160,28 @@ class KnowledgeBaseChunkModel(Base):
             postgresql_ops={"embedding": "vector_cosine_ops"},
         ),
     )
+
+
+class ProductFeedbackModel(Base):
+    """In-app product feedback submitted from the UI (WE-01-FEEDBACK / DX-01)."""
+
+    __tablename__ = "product_feedback"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(
+        Integer, ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    workflow_id = Column(
+        Integer, ForeignKey("workflows.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    message = Column(Text, nullable=False)
+    source = Column(String(64), nullable=False, server_default=text("'workflow_editor'"))
+    user_agent = Column(String(512), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
+
+    user = relationship("UserModel")
+    organization = relationship("OrganizationModel")
+    workflow = relationship("WorkflowModel")
+
+    __table_args__ = (Index("ix_product_feedback_org_created", "organization_id", "created_at"),)
