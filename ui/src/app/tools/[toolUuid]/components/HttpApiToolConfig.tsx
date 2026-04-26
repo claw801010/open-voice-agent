@@ -112,6 +112,12 @@ export interface HttpApiToolConfigProps {
     /** Same as test payload seeding, for optional body template JSON. */
     onSeedBodyTemplateFromParameters?: () => void;
     templatePreviewWarnings: string[];
+    /** Loaded from GET /api/v1/organizations/http-integration-cache-policy (HTTP tools only). */
+    httpIntegrationCachePolicy?: {
+        deferralNotBefore: string;
+        cacheEnabled: boolean;
+        implementationStatus: string;
+    } | null;
 }
 
 export function HttpApiToolConfig({
@@ -166,6 +172,7 @@ export function HttpApiToolConfig({
     onSeedTestPayloadFromParameters,
     onSeedBodyTemplateFromParameters,
     templatePreviewWarnings,
+    httpIntegrationCachePolicy,
 }: HttpApiToolConfigProps) {
     const [variableInsertMode, setVariableInsertMode] = useState<"replace" | "append">(
         "replace"
@@ -216,6 +223,28 @@ export function HttpApiToolConfig({
                         </a>
                     </div>
                 </div>
+                {httpIntegrationCachePolicy ? (
+                    <div className="mb-4 rounded-md border border-blue-200/50 bg-blue-500/[0.06] px-3 py-2 text-[11px] text-muted-foreground">
+                        <span className="font-medium text-foreground/85">Integration response cache</span> for this org
+                        is <span className="font-medium text-foreground/80">{httpIntegrationCachePolicy.cacheEnabled ? "on" : "off"}</span>
+                        {" "}
+                        (<code className="text-[10px]">{httpIntegrationCachePolicy.implementationStatus}</code>
+                        ). Runtime cache is not planned{" "}
+                        <span className="font-medium text-foreground/80">
+                            before {httpIntegrationCachePolicy.deferralNotBefore}
+                        </span>{" "}
+                        unless product policy changes — see{" "}
+                        <a
+                            href={`${TOOL_DOCUMENTATION_URLS.http_api}#storage-model`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-foreground/90 underline-offset-2 hover:underline"
+                        >
+                            Storage model
+                        </a>
+                        .
+                    </div>
+                ) : null}
                 <div className="mb-4 rounded-md border border-border p-3">
                     <Label className="text-xs">Custom flow variable</Label>
                     <div className="mt-2 flex items-center gap-2">

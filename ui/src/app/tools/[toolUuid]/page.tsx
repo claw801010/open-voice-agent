@@ -120,6 +120,15 @@ export default function ToolDetailPage() {
     const [customVariableDraft, setCustomVariableDraft] = useState("");
     const [callContextTestJson, setCallContextTestJson] = useState(DEFAULT_CALL_CONTEXT_TEST_JSON);
     const [templatePreviewWarnings, setTemplatePreviewWarnings] = useState<string[]>([]);
+    const [httpIntegrationCachePolicy, setHttpIntegrationCachePolicy] = useState<
+        | {
+              deferralNotBefore: string;
+              cacheEnabled: boolean;
+              implementationStatus: string;
+          }
+        | null
+        | undefined
+    >(undefined);
 
     // End Call form state
     const [endCallMessageType, setEndCallMessageType] = useState<EndCallMessageType>("none");
@@ -308,6 +317,42 @@ export default function ToolDetailPage() {
         fetchTool();
         fetchRecordings();
     }, [fetchTool, fetchRecordings]);
+
+    useEffect(() => {
+        if (!user || !tool || tool.category !== "http_api") {
+            setHttpIntegrationCachePolicy(undefined);
+            return;
+        }
+        let cancelled = false;
+        void (async () => {
+            try {
+                const token = await getAccessToken();
+                const res = await fetch("/api/v1/organizations/http-integration-cache-policy", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (cancelled) return;
+                if (!res.ok) {
+                    setHttpIntegrationCachePolicy(null);
+                    return;
+                }
+                const data = (await res.json()) as {
+                    deferral_not_before?: string;
+                    cache_enabled?: boolean;
+                    implementation_status?: string;
+                };
+                setHttpIntegrationCachePolicy({
+                    deferralNotBefore: String(data.deferral_not_before ?? ""),
+                    cacheEnabled: Boolean(data.cache_enabled),
+                    implementationStatus: String(data.implementation_status ?? ""),
+                });
+            } catch {
+                if (!cancelled) setHttpIntegrationCachePolicy(null);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [user, tool, getAccessToken]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -1255,6 +1300,9 @@ const data = await response.json();`;
                             onSeedTestPayloadFromParameters={seedTestPayloadFromParameters}
                             onSeedBodyTemplateFromParameters={seedBodyTemplateFromParameters}
                             templatePreviewWarnings={templatePreviewWarnings}
+                            httpIntegrationCachePolicy={
+                                tool?.category === "http_api" ? httpIntegrationCachePolicy : undefined
+                            }
                         />
                     )}
 

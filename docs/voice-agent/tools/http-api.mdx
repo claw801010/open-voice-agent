@@ -174,7 +174,7 @@ This section clarifies **what is stored where today** versus a **future** option
 
 - **Tool definition** (URL, method, headers, parameters, body template, response mapping, credentials reference, and so on) is saved with your **organization** through the product APIs and backing database—this is the **source of truth** for how the agent should call the HTTP endpoint.
 - **Live `{{…}}` resolution** uses the **merged tool arguments + body defaults** and the **current call and conversation context** from the active voice/session pipeline (system fields, `conversation.*`, `initial_context.*`, and workflow template variables as documented in [Context and variables](/core-concepts/context-and-variables)). That context is **runtime data**, not something you edit as a separate “datastore” row in this HTTP tool screen.
-- **Test API Call** → **Call / conversation context** sample JSON and related **browser-only** conveniences (including **Add missing sample values** / **Reset sample context** and the **Form** tab presets) are stored **in this browser** so you can iterate on tests without changing the saved tool. They are **not** a substitute for production call context and are **not** written to the org database as call logs.
+- **Test API Call** → **Call / conversation context** sample JSON and related **browser-only** conveniences (including **Add missing sample values** / **Reset sample context**, the **Form** tab presets, and **Add missing sample keys (JSON)** on the **JSON** tab) are stored **in this browser** so you can iterate on tests without changing the saved tool. They are **not** a substitute for production call context and are **not** written to the org database as call logs.
 
 ### Integration-backed cache (roadmap, not shipped)
 

@@ -18,6 +18,7 @@ import {
     type CallContextFormRow,
     collectPresetDotPaths,
     flattenCallContextSample,
+    mergeCallContextJsonWithDefaults,
     mergePresetPathPick,
     pathValueMapFromSampleJson,
     safeParseCallContextObject,
@@ -370,7 +371,25 @@ export function CallContextSampleEditor({
                     values on the tool card).
                 </p>
             </TabsContent>
-            <TabsContent value="json" className="mt-3">
+            <TabsContent value="json" className="mt-3 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-fit"
+                        onClick={() =>
+                            onChange(mergeCallContextJsonWithDefaults(value, DEFAULT_CALL_CONTEXT_TEST_JSON))
+                        }
+                    >
+                        Add missing sample keys (JSON)
+                    </Button>
+                    <p className="text-[11px] text-muted-foreground max-w-xl">
+                        Same merge as <span className="font-medium text-foreground/80">Add missing sample values</span>{" "}
+                        on the tool card: fills standard system, conversation, and initial_context keys you have not set
+                        yet; keeps your existing JSON. Then use the picker below to insert {"{{…}}"} templates.
+                    </p>
+                </div>
                 <JsonTemplateTextarea
                     value={value}
                     onChange={onChange}
