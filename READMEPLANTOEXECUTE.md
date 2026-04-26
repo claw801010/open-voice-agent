@@ -81,14 +81,14 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _(none)_ | | **WE-01-DUALMODE** — Searchable **GroupedStringOptionPicker** on HTTP tool variable + preset path inserts ([grouped-string-option-picker.tsx](ui/src/components/http/grouped-string-option-picker.tsx)). *Suggested next:* **WE-01-DATASTORE-INTEG** (doc spike or first admin toggle); **MK-01** catalog slice; **http-api** screenshots. |
+| _(none)_ | | **WE-01-DATASTORE-INTEG** — **Storage model** doc in [http-api.mdx](docs/voice-agent/tools/http-api.mdx) (org-local vs browser test vs roadmap cache). *Suggested next:* **WE-01-DATASTORE-INTEG** runtime/admin UI or **MK-01**; **http-api** screenshots; **Windows**/WSL bootstrap note. |
 
 #### Rolling pass notes (keep short; update when you ship a slice)
 
 | | |
 |--|--|
-| **This pass (shipped in repo now)** | **Searchable variable pickers** — [GroupedStringOptionPicker](ui/src/components/http/grouped-string-option-picker.tsx) + [filter tests](ui/src/components/http/grouped-string-option-picker.test.ts); URL, headers, params, JSON inserts, call-context Form **Preset path** + value ([url-input](ui/src/components/http/url-input.tsx), [key-value-editor](ui/src/components/http/key-value-editor.tsx), [parameter-editor](ui/src/components/http/parameter-editor.tsx), [jsonTemplateTextarea](ui/src/app/tools/[toolUuid]/components/jsonTemplateTextarea.tsx), [CallContextSampleEditor](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx)); [HttpApiToolConfig](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) + [http-api.mdx](docs/voice-agent/tools/http-api.mdx). |
-| **Next pass (suggested)** | **WE-01-DATASTORE-INTEG** — first **docs-only** slice (default-local vs future integration cache in [http-api.mdx](docs/voice-agent/tools/http-api.mdx) + package notes) or **MK-01**; **Windows** / WSL bootstrap note; **http-api** screenshots. |
+| **This pass (shipped in repo now)** | **WE-01-DATASTORE-INTEG (docs phase 1)** — [Storage model](docs/voice-agent/tools/http-api.mdx#storage-model) in [http-api.mdx](docs/voice-agent/tools/http-api.mdx): org-local tool definition, runtime context vs browser-only test sample, roadmap integration cache; package status + criteria in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md); in-app link in [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx). |
+| **Next pass (suggested)** | **WE-01-DATASTORE-INTEG** — authoring + admin toggles + runtime (or continue **MK-01**); **http-api** screenshots; **Windows**/WSL bootstrap note in [READMEBUILDME.md](READMEBUILDME.md). |
 
 ### Strategic review (major bets)
 
@@ -557,19 +557,20 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ### WE-01-DATASTORE-INTEG — Org datastore default vs integration-backed HTTP (stub)
 
-**Status:** `NotStarted`  
+**Status:** `InProgress` (documentation **phase 1** shipped in repo; authoring / admin / runtime not started)  
 **Strategy anchor:** [READMEPLANNING.md](READMEPLANNING.md) Pillar 1 (customer-complete) and **Integrations** row; [READMEPLANNING.md](READMEPLANNING.md) §6 marketplace + [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md) for GTM sequencing.
 
 **Goal:** Keep **HTTP API tools** as the primary **plug-in** for external systems (`{{…}}` + credentials today). Default workflow data paths use **org-local persistence** (Postgres / existing models). When a node or tool is **wired to an integration** and an **org admin** enables **read-through / cache** for that integration (and optionally per-integration retention), allow **storing or caching** normalized slices of tool or webhook responses for faster repeat lookups and offline-friendly UX—without silently replacing the org DB as source of truth unless explicitly modeled.
 
-**Acceptance criteria (future; not started):**
+**Acceptance criteria:**
 
 - [ ] **Authoring** — Clear UI contract: “Use local store” vs “Also persist via integration X (admin: cache on/off, TTL)” on HTTP tool or adjacent workflow storage node; no ambiguous dual-writes.
 - [ ] **Admin** — Org-level toggles per integration for **cache enabled**, **max retention**, and **PII class** (block vs allow with redaction policy); audit log of policy changes.
 - [ ] **Runtime** — HTTP tool execution path respects policy: write-through only when enabled; failures fall back to live API only (documented); metrics on cache hit rate (optional).
-- [ ] **Docs** — [http-api.mdx](docs/voice-agent/tools/http-api.mdx) + integration docs describe default-local vs integration-backed storage and compliance expectations.
+- [x] **Docs (phase 1)** — [http-api.mdx](docs/voice-agent/tools/http-api.mdx) **Storage model**: org-local tool definition, runtime call context vs **browser-only** test sample JSON, and explicit “roadmap / not shipped” integration cache (**WE-01-DATASTORE-INTEG**).
+- [ ] **Docs (phase 2)** — Integration / compliance doc (per-connector policy, retention, audit) when admin UI and runtime ship; cross-link from HTTP tool UI.
 
-**Key files (when staffed):** [custom_tool.py](api/services/workflow/tools/custom_tool.py), integration services under [api/services/integrations/](api/services/integrations/), workflow tool attach models, org settings routes, HTTP tool editor ([HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx)).
+**Key files (when staffed):** [custom_tool.py](api/services/workflow/tools/custom_tool.py), integration services under [api/services/integrations/](api/services/integrations/), workflow tool attach models, org settings routes, HTTP tool editor ([HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx)). **Docs shipped:** [http-api.mdx](docs/voice-agent/tools/http-api.mdx), [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) (link to **Storage model**).
 
 ---
 
@@ -668,7 +669,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | WE-01 | Workflow editor parity (reference UI) | §2 Pillar 1, §1 Authoring row |
 | WE-01-VISUAL-DEPTH | Bento / glass / tactile UI (under **WE-01**) | UX polish; org dashboard row |
 | WE-01-HYPER-DENSITY | High-density SaaS extension (`Done` — slices 1–3) | [Brief](#we-01-hyper-density-saas-ui-extension-brief) · [Package](#we-01-hyper-density--high-density-shell-and-operator-chrome) |
-| WE-01-DATASTORE-INTEG | Org datastore default vs integration-backed HTTP cache | Pillar 1; Integrations row |
+| WE-01-DATASTORE-INTEG | Org datastore default vs integration-backed HTTP cache (**InProgress** — [docs phase 1](docs/voice-agent/tools/http-api.mdx#storage-model)) | Pillar 1; Integrations row |
 | DX-01 | Three-tier experience (no-code, builder, ADK) | §8 Experience tiers |
 | _TBD_ | (next epic) | … |
 
@@ -755,6 +756,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | 2026-04-25 | **WE-01-DUALMODE** — [sortDistinctTemplates](ui/src/lib/httpToolVariablePickers.ts) for merged + custom + live `{{…}}` lists; help copy + Raw tab picker cross-tab hint ([page.tsx](ui/src/app/tools/[toolUuid]/page.tsx), [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx)). |
 | 2026-04-25 | **WE-01-DUALMODE** — Call-context **Form** **Add missing preset rows** + [collectPresetDotPaths](ui/src/lib/callContextSampleForm.ts) / [pathValueMapFromSampleJson](ui/src/lib/callContextSampleForm.ts) ([CallContextSampleEditor.tsx](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx), [callContextSampleForm.test.ts](ui/src/lib/callContextSampleForm.test.ts)). |
 | 2026-04-25 | **WE-01-DUALMODE / Tool API UX** — **Searchable** grouped variable + **Preset path** pickers ([grouped-string-option-picker.tsx](ui/src/components/http/grouped-string-option-picker.tsx), [grouped-string-option-picker.test.ts](ui/src/components/http/grouped-string-option-picker.test.ts); [url-input](ui/src/components/http/url-input.tsx), [key-value-editor](ui/src/components/http/key-value-editor.tsx), [parameter-editor](ui/src/components/http/parameter-editor.tsx), [jsonTemplateTextarea](ui/src/app/tools/[toolUuid]/components/jsonTemplateTextarea.tsx), [CallContextSampleEditor](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx), [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx), [http-api.mdx](docs/voice-agent/tools/http-api.mdx)). |
+| 2026-04-26 | **WE-01-DATASTORE-INTEG** (docs phase 1) — **Storage model** in [http-api.mdx](docs/voice-agent/tools/http-api.mdx) (`#storage-model`); package **InProgress** + docs criteria; [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) **Storage model (docs)** link by call-context sample. |
 | 2026-04-25 | **WE-01-VISUAL-DEPTH** — Authenticated **`/usage`** + **`/workflow/catalog`** Lighthouse lines in [READMENEWRELEASES.md](READMENEWRELEASES.md); [api/alembic/env.py](api/alembic/env.py) **`transaction_per_migration=True`**; local compose Postgres host **5433** ([docker-compose-local.yaml](docker-compose-local.yaml), [api/.env.example](api/.env.example)); [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh) **`WE01_POSTGRES_PORT`**, **`.env`** before **wait_port**. |
 | 2026-04-25 | **WE-01-VISUAL-DEPTH** — OSS public **`/templates`**: [LocalProviderWrapper](ui/src/lib/auth/providers/LocalProviderWrapper.tsx) + [middleware](ui/src/middleware.ts); catalog **Lighthouse** line in [READMENEWRELEASES.md](READMENEWRELEASES.md); **`npm run perf:lighthouse:summary`** / **`--latest-auth`**; [lighthouse-summarize.mjs](ui/scripts/lighthouse-summarize.mjs); **`npm run perf:lighthouse:oss-headers`** + **`LIGHTHOUSE_OSS_AUTO_SIGNUP`** ([lighthouse-oss-session-headers.mjs](ui/scripts/lighthouse-oss-session-headers.mjs)); **`npm run perf:lighthouse:auth:full`** ([lighthouse-auth-full.sh](ui/scripts/lighthouse-auth-full.sh)). |
 | 2026-05-06 | **WE-01-VISUAL-DEPTH** — E2E [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh): **Compose** v2/v1, **`--help`**, **`import api.app`** preflight, **Docker** [docker-compose-local.yaml](docker-compose-local.yaml) + **alembic** + **API :8000** + **Next** + **`auth:full`**; **`WE01_UI_PORT`**; [READMEBUILDME.md](READMEBUILDME.md) §4 step **6**. |

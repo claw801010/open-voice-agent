@@ -30,7 +30,7 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md) | Marketplace: curated packs + import/skills research |
 | [READMENEWRELEASES.md](READMENEWRELEASES.md) | What shipped (tie to execution IDs) |
 | [catalog/README.md](catalog/README.md) | Vertical pack JSON (`MK-01-CATALOG`) |
-| [docs/voice-agent/tools/http-api.mdx](docs/voice-agent/tools/http-api.mdx) | HTTP tool user doc (templated URL, headers, **Template resolution order**) — publish at [docs.dograh.com](https://docs.dograh.com) with site sync |
+| [docs/voice-agent/tools/http-api.mdx](docs/voice-agent/tools/http-api.mdx) | HTTP tool user doc (templated URL, headers, **Template resolution order**, **Storage model** / **WE-01-DATASTORE-INTEG** phase-1) — publish at [docs.dograh.com](https://docs.dograh.com) with site sync |
 | [runbooks/README.md](runbooks/README.md) | Per-vertical operational runbooks |
 
 ## Epics (execution IDs)
