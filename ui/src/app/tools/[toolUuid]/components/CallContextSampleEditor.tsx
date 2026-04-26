@@ -18,6 +18,7 @@ import {
     type CallContextFormRow,
     collectPresetDotPaths,
     flattenCallContextSample,
+    mergePresetPathPick,
     pathValueMapFromSampleJson,
     safeParseCallContextObject,
     stringifyCallContextObject,
@@ -220,9 +221,14 @@ export function CallContextSampleEditor({
         [pathPresetGroups, variableSuggestions]
     );
 
+    const defaultSamplePathValues = useMemo(
+        () => pathValueMapFromSampleJson(DEFAULT_CALL_CONTEXT_TEST_JSON),
+        []
+    );
+
     const addMissingPresetRows = useCallback(() => {
         const paths = collectPresetDotPaths(pathPresetGroupsMerged);
-        const defaultMap = pathValueMapFromSampleJson(DEFAULT_CALL_CONTEXT_TEST_JSON);
+        const defaultMap = defaultSamplePathValues;
         setRows((prev) => {
             const existing = new Set(prev.map((r) => r.path.trim()).filter(Boolean));
             const additions: CallContextFormRow[] = [];
@@ -241,7 +247,7 @@ export function CallContextSampleEditor({
             if (additions.length === 0) return prev;
             return commitRows([...prev, ...additions]);
         });
-    }, [pathPresetGroupsMerged, commitRows]);
+    }, [pathPresetGroupsMerged, commitRows, defaultSamplePathValues]);
 
     return (
         <Tabs value={tab} onValueChange={(v) => setTab(v as "form" | "json")} className="w-full">
@@ -254,8 +260,9 @@ export function CallContextSampleEditor({
                     Edit sample values per dot path (matches {"{{path}}"} in your HTTP templates). Preset path
                     includes system and conversation keys plus any paths from your custom variables and tool
                     parameters (add custom {"{{…}}"} keys in the Custom flow variable field at the top of this
-                    card so they appear here and in other pickers). Add rows for anything else; JSON tab stays in
-                    sync.
+                    card so they appear here and in other pickers). Choosing a preset while the value is empty fills
+                    the app default sample for that path when available (hover group headers for hints). Add rows for
+                    anything else; JSON tab stays in sync.
                 </p>
                 {duplicatePaths.length > 0 ? (
                     <p className="text-[11px] text-amber-800">
@@ -285,7 +292,14 @@ export function CallContextSampleEditor({
                                             triggerClassName="w-[210px] shrink-0"
                                             placeholder="Preset path"
                                             ariaLabel="Choose a preset dot path (system, conversation, initial context, flow, or custom)"
-                                            onPick={(path) => updateRow(row.id, { path })}
+                                            onPick={(path) => {
+                                                const patch = mergePresetPathPick(
+                                                    path,
+                                                    row.value,
+                                                    defaultSamplePathValues
+                                                );
+                                                updateRow(row.id, patch);
+                                            }}
                                         />
                                     </div>
                                 </div>

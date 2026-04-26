@@ -36,8 +36,29 @@ export const HTTP_VARIABLE_GROUP_LABELS = {
     live: "Tool parameters & mapping keys",
 } as const;
 
+/** Native `title` on grouped variable picker headers (`{{…}}` inserts — URL, headers, JSON, etc.). */
+export const HTTP_VARIABLE_GROUP_PICKER_TOOLTIPS: Record<string, string> = {
+    [HTTP_VARIABLE_GROUP_LABELS.system]:
+        "Per-call metadata: phone numbers, call_id, workflow_id, organization_id, timestamp, timezone, locale.",
+    [HTTP_VARIABLE_GROUP_LABELS.conversation]:
+        "Session fields: initial_context.* and conversation.* (intent, summary, last user message, sentiment).",
+    [HTTP_VARIABLE_GROUP_LABELS.custom]:
+        "Paths you added under Custom flow variable (stored as {{path}} in this browser).",
+    [HTTP_VARIABLE_GROUP_LABELS.live]:
+        "Parameter names and response-mapping keys from this tool — same names the model may send.",
+};
+
 /** Extra “Preset path” group in call-context Form (merged from `variableSuggestions`). */
 export const CALL_CONTEXT_FLOW_PATH_GROUP_LABEL = "From your flow (custom & tool keys)";
+
+/** Native `title` on call-context Form Preset path groups (dot paths, not {{…}}). */
+export const CALL_CONTEXT_PRESET_GROUP_TOOLTIPS: Record<string, string> = {
+    System: "Top-level runtime keys: caller/called numbers, call_id, workflow_id, organization_id, time, locale.",
+    Conversation: "Nested conversation.* — intent, summary, last_user_message, sentiment.",
+    "Initial context": "Nested initial_context.* — e.g. customer_name, customer_id from your workflow.",
+    [CALL_CONTEXT_FLOW_PATH_GROUP_LABEL]:
+        "Dot paths derived from your custom {{…}} keys plus tool parameter and response-mapping names.",
+};
 
 /**
  * Plain dot paths for **response mapping** value fields (paths into the HTTP response JSON). These are not
@@ -49,6 +70,19 @@ export const HTTP_RESPONSE_PATH_PRESET_GROUPS: VariableSuggestionGroup[] = [
         options: ["id", "data", "data.id", "data.items.0", "data.items.0.id", "result", "message", "error"],
     },
 ];
+
+/** Native `title` on response-mapping value preset group. */
+export const HTTP_RESPONSE_PATH_GROUP_TOOLTIPS: Record<string, string> = {
+    "Common response shapes":
+        "Typical REST JSON response paths — insert then edit to match your API body shape.",
+};
+
+/** Merged default native `title` strings for grouped string option pickers (HTTP tool + call context). */
+export const GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS: Record<string, string> = {
+    ...HTTP_VARIABLE_GROUP_PICKER_TOOLTIPS,
+    ...CALL_CONTEXT_PRESET_GROUP_TOOLTIPS,
+    ...HTTP_RESPONSE_PATH_GROUP_TOOLTIPS,
+};
 
 /** Dot paths for test call-context sample editor (match runtime `{{path}}` keys). */
 export const CALL_CONTEXT_PATH_PRESET_GROUPS: VariableSuggestionGroup[] = [

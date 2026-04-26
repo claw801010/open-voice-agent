@@ -6,6 +6,7 @@ import {
     collectPresetDotPaths,
     mergeCallContextJsonWithDefaults,
     mergeMissingKeysFromDefault,
+    mergePresetPathPick,
     pathValueMapFromSampleJson,
 } from "./callContextSampleForm";
 
@@ -48,6 +49,31 @@ describe("pathValueMapFromSampleJson", () => {
 
     it("handles invalid JSON as empty map", () => {
         expect(pathValueMapFromSampleJson("not json").size).toBe(0);
+    });
+});
+
+describe("mergePresetPathPick", () => {
+    it("fills value from default map when previous value is empty", () => {
+        const m = pathValueMapFromSampleJson(DEFAULT_CALL_CONTEXT_TEST_JSON);
+        expect(mergePresetPathPick("caller_number", "", m)).toEqual({
+            path: "caller_number",
+            value: m.get("caller_number"),
+        });
+    });
+
+    it("does not overwrite a non-empty value", () => {
+        const m = pathValueMapFromSampleJson(DEFAULT_CALL_CONTEXT_TEST_JSON);
+        expect(mergePresetPathPick("caller_number", "keep-me", m)).toEqual({ path: "caller_number" });
+    });
+
+    it("returns path only when default map has no entry", () => {
+        const m = new Map<string, string>();
+        expect(mergePresetPathPick("custom.path", "", m)).toEqual({ path: "custom.path" });
+    });
+
+    it("returns path only when suggested value is empty string", () => {
+        const m = new Map([["x", ""]]);
+        expect(mergePresetPathPick("x", "", m)).toEqual({ path: "x" });
     });
 });
 

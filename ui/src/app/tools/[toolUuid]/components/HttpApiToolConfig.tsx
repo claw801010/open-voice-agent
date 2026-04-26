@@ -358,8 +358,10 @@ export function HttpApiToolConfig({
                                 </div>
                             </div>
                             <Label className="text-xs text-muted-foreground">
-                                Edit sample values for system and conversation variables; saved in this browser only. The
-                                Add missing sample values button copies in any standard paths you have not set yet; your
+                                Edit sample values for system and conversation variables; saved in this browser only. On
+                                the Form tab, choosing a preset path while the value is empty fills the app default
+                                sample for that path when available (hover picker group headers for hints). The Add
+                                missing sample values button copies in any standard paths you have not set yet; your
                                 values are kept.{" "}
                                 <a
                                     href={`${TOOL_DOCUMENTATION_URLS.http_api}#storage-model`}
@@ -659,9 +661,11 @@ export function HttpApiToolConfig({
                                             </div>
                                         </div>
                                         <Label className="text-xs text-muted-foreground">
-                                            Add missing sample values copies standard system, conversation, and
-                                            initial_context keys that are not present yet. Reset sample context
-                                            replaces the entire sample. Values are not saved to the tool.{" "}
+                                            On the Form tab, choosing a preset path while the value is empty fills the
+                                            default sample when defined (hover group headers). Add missing sample values
+                                            copies standard system, conversation, and initial_context keys that are not
+                                            present yet. Reset sample context replaces the entire sample. Values are not
+                                            saved to the tool.{" "}
                                             <a
                                                 href={`${TOOL_DOCUMENTATION_URLS.http_api}#storage-model`}
                                                 target="_blank"

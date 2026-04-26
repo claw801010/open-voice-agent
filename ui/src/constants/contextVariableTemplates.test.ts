@@ -3,9 +3,24 @@ import { describe, expect, it } from "vitest";
 import {
     CALL_CONTEXT_FLOW_PATH_GROUP_LABEL,
     CALL_CONTEXT_PATH_PRESET_GROUPS,
+    GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS,
+    HTTP_VARIABLE_GROUP_LABELS,
     mergePathPresetGroupsWithFlowTemplates,
     templateTokenToDotPath,
 } from "./contextVariableTemplates";
+
+describe("GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS", () => {
+    it("includes HTTP variable groups and call-context preset groups", () => {
+        expect(GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS[HTTP_VARIABLE_GROUP_LABELS.system]?.length).toBeGreaterThan(
+            10
+        );
+        expect(GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS.System?.length).toBeGreaterThan(10);
+        expect(GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS[CALL_CONTEXT_FLOW_PATH_GROUP_LABEL]?.length).toBeGreaterThan(
+            10
+        );
+        expect(GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS["Common response shapes"]?.length).toBeGreaterThan(10);
+    });
+});
 
 describe("templateTokenToDotPath", () => {
     it("strips a single {{…}} template to dot path", () => {

@@ -10,8 +10,8 @@ Evaluate **Make**, **n8n**, **Zapier**, and **agent skills** (Claude, Cursor, Co
 
 | Field | Value |
 |-------|--------|
-| Owner | _TBD_ |
-| First target (pick **one** to start) | ☐ Native packaged JSON hardening · ☐ n8n webhook-only subset · ☐ Skill bundle → draft prompts |
+| Owner | _TBD_ (assign in sprint planning) |
+| First target (pick **one** to start) | **Suggested default:** native packaged JSON + graph validation hardening (extends [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py) / rubric). · ☐ n8n webhook-only subset · ☐ Skill bundle → draft prompts |
 | Target completion | _date_ |
 
 ## First target — scope notes

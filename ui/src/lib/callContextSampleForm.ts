@@ -116,6 +116,23 @@ export function pathValueMapFromSampleJson(json: string): Map<string, string> {
 }
 
 /**
+ * When the user picks a preset dot path in the call-context Form: if the value cell was empty and the
+ * default sample JSON defines that path, fill the value (same source as Add missing preset rows).
+ */
+export function mergePresetPathPick(
+    path: string,
+    previousValue: string,
+    defaultSampleMap: ReadonlyMap<string, string>
+): { path: string; value?: string } {
+    const suggested = defaultSampleMap.get(path);
+    const empty = !previousValue.trim();
+    if (empty && suggested !== undefined && suggested !== "") {
+        return { path, value: suggested };
+    }
+    return { path };
+}
+
+/**
  * For each key in `defaults`, copy into the result if missing; if the key exists in both and both
  * values are plain objects, merge recursively. Does not remove keys. Arrays and other values: only
  * filled when the key is missing in `current`.

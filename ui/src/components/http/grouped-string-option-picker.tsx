@@ -6,7 +6,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
+import {
+    GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS,
+    type VariableSuggestionGroup,
+} from "@/constants/contextVariableTemplates";
 import { cn } from "@/lib/utils";
 
 /** Filter grouped or flat string lists for the HTTP tool variable / path pickers (case-insensitive substring). */
@@ -41,6 +44,8 @@ export interface GroupedStringOptionPickerProps {
     onTriggerPointerDown?: () => void;
     align?: "start" | "center" | "end";
     searchPlaceholder?: string;
+    /** Optional `title` on group headers; defaults merge with built-in tooltips for known labels. */
+    groupHeaderTooltips?: Record<string, string>;
 }
 
 export function GroupedStringOptionPicker({
@@ -54,6 +59,7 @@ export function GroupedStringOptionPicker({
     onTriggerPointerDown,
     align = "start",
     searchPlaceholder = "Filter…",
+    groupHeaderTooltips,
 }: GroupedStringOptionPickerProps) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -123,7 +129,13 @@ export function GroupedStringOptionPicker({
                         filtered.map((group) => (
                             <div key={group.label || "__flat__"}>
                                 {group.label ? (
-                                    <div className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                    <div
+                                        className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                                        title={
+                                            groupHeaderTooltips?.[group.label] ??
+                                            GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS[group.label]
+                                        }
+                                    >
                                         {group.label}
                                     </div>
                                 ) : null}
