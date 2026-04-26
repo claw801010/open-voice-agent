@@ -81,14 +81,14 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _(none)_ | | **WE-01-DUALMODE** — URL field variable picker (caret insert). **WE-01-DATASTORE-INTEG** stub for org store vs integration cache. *Suggested next:* spike **DATASTORE-INTEG** admin + HTTP write-through; Windows bootstrap doc. |
+| _(none)_ | | **WE-01-DUALMODE** — Sorted flat + custom picker lists; Raw-tab picker hint; [sortDistinctTemplates](ui/src/lib/httpToolVariablePickers.ts). *Suggested next:* **WE-01-DATASTORE-INTEG** spike or **MK-01**; Windows bootstrap. |
 
 #### Rolling pass notes (keep short; update when you ship a slice)
 
 | | |
 |--|--|
-| **This pass (shipped in repo now)** | **HTTP URL picker** — [UrlInput](ui/src/components/http/url-input.tsx) optional grouped variable insert (same as headers/body); [HttpApiToolConfig](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx). **Planning** — [WE-01-DATASTORE-INTEG](#we-01-datastore-integr--org-datastore-default-vs-integration-backed-http-stub) stub (org default vs integration cache). |
-| **Next pass (suggested)** | Spike **WE-01-DATASTORE-INTEG** (admin toggles + HTTP cache path) or **MK-01**; **Windows** / WSL for [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh); **http-api** screenshots. |
+| **This pass (shipped in repo now)** | **HTTP pickers** — [sortDistinctTemplates](ui/src/lib/httpToolVariablePickers.ts) + [httpToolVariablePickers.test.ts](ui/src/lib/httpToolVariablePickers.test.ts) for flat + custom + live lists; [page.tsx](ui/src/app/tools/[toolUuid]/page.tsx); [HttpApiToolConfig](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) copy (URL in custom-var list, insert-mode for single-line fields, Raw tab picker hint). |
+| **Next pass (suggested)** | **WE-01-DATASTORE-INTEG** spike (admin + cache) or **MK-01**; **Windows** / WSL for [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh); **http-api** screenshots; optional Combobox search for long variable lists. |
 
 ### Strategic review (major bets)
 
@@ -752,6 +752,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | 2026-04-25 | **DX-01 (dev experience)** — [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh) + [READMEBUILDME.md](READMEBUILDME.md#one-command-local-bootstrap) / [AGENTS.md](AGENTS.md) / **After a fresh pull**; optional Pipecat via [setup_pipecat.sh](scripts/setup_pipecat.sh). |
 | 2026-04-25 | **WE-01-DUALMODE** — HTTP variable pickers: sorted live group, ARIA labels, scrollable `SelectContent` ([page.tsx](ui/src/app/tools/[toolUuid]/page.tsx), [jsonTemplateTextarea.tsx](ui/src/app/tools/[toolUuid]/components/jsonTemplateTextarea.tsx), [key-value-editor](ui/src/components/http/key-value-editor.tsx), [parameter-editor](ui/src/components/http/parameter-editor.tsx), [CallContextSampleEditor](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx)). |
 | 2026-04-25 | **WE-01-DUALMODE** — [UrlInput](ui/src/components/http/url-input.tsx) grouped variable insert on endpoint URL; **WE-01-DATASTORE-INTEG** stub in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md). |
+| 2026-04-25 | **WE-01-DUALMODE** — [sortDistinctTemplates](ui/src/lib/httpToolVariablePickers.ts) for merged + custom + live `{{…}}` lists; help copy + Raw tab picker cross-tab hint ([page.tsx](ui/src/app/tools/[toolUuid]/page.tsx), [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx)). |
 | 2026-04-25 | **WE-01-VISUAL-DEPTH** — Authenticated **`/usage`** + **`/workflow/catalog`** Lighthouse lines in [READMENEWRELEASES.md](READMENEWRELEASES.md); [api/alembic/env.py](api/alembic/env.py) **`transaction_per_migration=True`**; local compose Postgres host **5433** ([docker-compose-local.yaml](docker-compose-local.yaml), [api/.env.example](api/.env.example)); [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh) **`WE01_POSTGRES_PORT`**, **`.env`** before **wait_port**. |
 | 2026-04-25 | **WE-01-VISUAL-DEPTH** — OSS public **`/templates`**: [LocalProviderWrapper](ui/src/lib/auth/providers/LocalProviderWrapper.tsx) + [middleware](ui/src/middleware.ts); catalog **Lighthouse** line in [READMENEWRELEASES.md](READMENEWRELEASES.md); **`npm run perf:lighthouse:summary`** / **`--latest-auth`**; [lighthouse-summarize.mjs](ui/scripts/lighthouse-summarize.mjs); **`npm run perf:lighthouse:oss-headers`** + **`LIGHTHOUSE_OSS_AUTO_SIGNUP`** ([lighthouse-oss-session-headers.mjs](ui/scripts/lighthouse-oss-session-headers.mjs)); **`npm run perf:lighthouse:auth:full`** ([lighthouse-auth-full.sh](ui/scripts/lighthouse-auth-full.sh)). |
 | 2026-05-06 | **WE-01-VISUAL-DEPTH** — E2E [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh): **Compose** v2/v1, **`--help`**, **`import api.app`** preflight, **Docker** [docker-compose-local.yaml](docker-compose-local.yaml) + **alembic** + **API :8000** + **Next** + **`auth:full`**; **`WE01_UI_PORT`**; [READMEBUILDME.md](READMEBUILDME.md) §4 step **6**. |

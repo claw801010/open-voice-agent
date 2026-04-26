@@ -222,8 +222,8 @@ export function HttpApiToolConfig({
                         <code className="text-[11px]">{"{{customer.segment}}"}</code> in pickers. Suggestions are saved in this browser only.
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">
-                        Added variables appear in picker dropdowns for parameters, headers, body template, test JSON,
-                        and call context (Form and JSON tabs).
+                        Added variables appear in picker dropdowns for parameters, headers, body template, endpoint
+                        URL, test JSON, and call context (Form and JSON tabs).
                     </p>
                     <div className="mt-3 flex flex-wrap items-end gap-2">
                         <div className="grid gap-1">
@@ -245,7 +245,8 @@ export function HttpApiToolConfig({
                         </div>
                         <p className="text-[11px] text-muted-foreground max-w-md pb-0.5">
                             JSON areas (test payload, call context, body template): Replace overwrites the whole field,
-                            or only the highlighted range; Append inserts at the text cursor.
+                            or only the highlighted range; Append inserts at the text cursor. Single-line fields (URL,
+                            headers, parameter value template) use the same mode; place the caret before inserting.
                         </p>
                     </div>
                 </div>
@@ -713,8 +714,10 @@ export function HttpApiToolConfig({
                         <div className="rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground space-y-1.5">
                             <p>
                                 Form and Test API Call resolve {"{{path}}"} the same as production (tool arguments
-                                + call / conversation context). In raw code you build the request yourself; use the
-                                same path strings the pickers insert, and see{" "}
+                                + call / conversation context). Switch to Simple or Advanced to use grouped pickers
+                                (system, conversation, custom, tool keys), then return here if you edit raw code. In
+                                raw code you build the request yourself; use the same path strings the pickers insert,
+                                and see{" "}
                                 <a
                                     href={CONTEXT_VARIABLES_DOC_URL}
                                     target="_blank"

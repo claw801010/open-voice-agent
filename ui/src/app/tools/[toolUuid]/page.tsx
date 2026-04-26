@@ -33,6 +33,7 @@ import { TOOL_DOCUMENTATION_URLS } from "@/constants/documentation";
 import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 import { useAuth } from "@/lib/auth";
 import { mergeCallContextJsonWithDefaults } from "@/lib/callContextSampleForm";
+import { sortDistinctTemplates } from "@/lib/httpToolVariablePickers";
 
 import {
     DEFAULT_END_CALL_REASON_DESCRIPTION,
@@ -386,33 +387,30 @@ export default function ToolDetailPage() {
             .map((m) => m.key.trim())
             .filter(Boolean)
             .map((key) => `{{${key}}}`);
-        return Array.from(
-            new Set([
-                ...DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS,
-                ...customVariableSuggestions,
-                ...fromParameters,
-                ...fromMappings,
-            ])
-        );
+        return sortDistinctTemplates([
+            ...DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS,
+            ...customVariableSuggestions,
+            ...fromParameters,
+            ...fromMappings,
+        ]);
     }, [customVariableSuggestions, parameters, responseMappings]);
 
     const variableSuggestionGroups = useMemo(() => {
-        const liveParameterAndMapping = Array.from(
-            new Set([
-                ...parameters
-                    .map((p) => p.name.trim())
-                    .filter(Boolean)
-                    .map((key) => `{{${key}}}`),
-                ...responseMappings
-                    .map((m) => m.key.trim())
-                    .filter(Boolean)
-                    .map((key) => `{{${key}}}`),
-            ])
-        ).sort((a, b) => a.localeCompare(b));
+        const liveParameterAndMapping = sortDistinctTemplates([
+            ...parameters
+                .map((p) => p.name.trim())
+                .filter(Boolean)
+                .map((key) => `{{${key}}}`),
+            ...responseMappings
+                .map((m) => m.key.trim())
+                .filter(Boolean)
+                .map((key) => `{{${key}}}`),
+        ]);
+        const customSorted = sortDistinctTemplates(customVariableSuggestions);
         return [
             { label: HTTP_VARIABLE_GROUP_LABELS.system, options: SYSTEM_CONTEXT_VARIABLE_TEMPLATES },
             { label: HTTP_VARIABLE_GROUP_LABELS.conversation, options: CONVERSATION_CONTEXT_VARIABLE_TEMPLATES },
-            { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: customVariableSuggestions },
+            { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: customSorted },
             { label: HTTP_VARIABLE_GROUP_LABELS.live, options: liveParameterAndMapping },
         ].filter((group) => group.options.length > 0);
     }, [customVariableSuggestions, parameters, responseMappings]);
