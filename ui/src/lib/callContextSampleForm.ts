@@ -1,3 +1,5 @@
+import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
+
 export type CallContextFormRow = { id: string; path: string; value: string };
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
@@ -89,6 +91,28 @@ export function unflattenCallContextRows(rows: CallContextFormRow[]): Record<str
 
 export function stringifyCallContextObject(obj: Record<string, unknown>): string {
     return JSON.stringify(obj, null, 2);
+}
+
+/** Unique sorted dot paths from call-context preset groups (Form Preset path dropdown). */
+export function collectPresetDotPaths(groups: VariableSuggestionGroup[]): string[] {
+    const seen = new Set<string>();
+    for (const g of groups) {
+        for (const o of g.options) {
+            const t = o.trim();
+            if (t) seen.add(t);
+        }
+    }
+    return [...seen].sort((a, b) => a.localeCompare(b));
+}
+
+/** Map dot path → value cell string from sample JSON (same flattening as the Form tab). */
+export function pathValueMapFromSampleJson(json: string): Map<string, string> {
+    const obj = safeParseCallContextObject(json);
+    const m = new Map<string, string>();
+    for (const row of flattenCallContextSample(obj)) {
+        m.set(row.path, row.value);
+    }
+    return m;
 }
 
 /**

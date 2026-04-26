@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import {
-    DEFAULT_CALL_CONTEXT_TEST_JSON,
-} from "@/constants/contextVariableTemplates";
+import { DEFAULT_CALL_CONTEXT_TEST_JSON } from "@/constants/contextVariableTemplates";
 
-import { mergeCallContextJsonWithDefaults, mergeMissingKeysFromDefault } from "./callContextSampleForm";
+import {
+    collectPresetDotPaths,
+    mergeCallContextJsonWithDefaults,
+    mergeMissingKeysFromDefault,
+    pathValueMapFromSampleJson,
+} from "./callContextSampleForm";
 
 describe("mergeMissingKeysFromDefault", () => {
     it("adds only missing top-level keys from defaults", () => {
@@ -23,6 +26,28 @@ describe("mergeMissingKeysFromDefault", () => {
             conversation: { intent: "a", summary: "s" },
             initial_context: { customer_id: "x" },
         });
+    });
+});
+
+describe("collectPresetDotPaths", () => {
+    it("returns sorted unique paths", () => {
+        const paths = collectPresetDotPaths([
+            { label: "A", options: ["z", "a"] },
+            { label: "B", options: ["a", "b"] },
+        ]);
+        expect(paths).toEqual(["a", "b", "z"]);
+    });
+});
+
+describe("pathValueMapFromSampleJson", () => {
+    it("maps flattened paths from default sample", () => {
+        const m = pathValueMapFromSampleJson(DEFAULT_CALL_CONTEXT_TEST_JSON);
+        expect(m.get("caller_number")).toBeDefined();
+        expect(m.get("conversation.intent")).toBeDefined();
+    });
+
+    it("handles invalid JSON as empty map", () => {
+        expect(pathValueMapFromSampleJson("not json").size).toBe(0);
     });
 });
 

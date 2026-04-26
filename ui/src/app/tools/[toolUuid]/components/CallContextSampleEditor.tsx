@@ -18,12 +18,15 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     CALL_CONTEXT_PATH_PRESET_GROUPS,
+    DEFAULT_CALL_CONTEXT_TEST_JSON,
     mergePathPresetGroupsWithFlowTemplates,
     type VariableSuggestionGroup,
 } from "@/constants/contextVariableTemplates";
 import {
     type CallContextFormRow,
+    collectPresetDotPaths,
     flattenCallContextSample,
+    pathValueMapFromSampleJson,
     safeParseCallContextObject,
     stringifyCallContextObject,
     unflattenCallContextRows,
@@ -246,6 +249,29 @@ export function CallContextSampleEditor({
         [pathPresetGroups, variableSuggestions]
     );
 
+    const addMissingPresetRows = useCallback(() => {
+        const paths = collectPresetDotPaths(pathPresetGroupsMerged);
+        const defaultMap = pathValueMapFromSampleJson(DEFAULT_CALL_CONTEXT_TEST_JSON);
+        setRows((prev) => {
+            const existing = new Set(prev.map((r) => r.path.trim()).filter(Boolean));
+            const additions: CallContextFormRow[] = [];
+            for (const path of paths) {
+                if (existing.has(path)) continue;
+                existing.add(path);
+                additions.push({
+                    id:
+                        typeof crypto !== "undefined" && "randomUUID" in crypto
+                            ? crypto.randomUUID()
+                            : `preset-${path}-${Math.random().toString(36).slice(2)}`,
+                    path,
+                    value: defaultMap.get(path) ?? "",
+                });
+            }
+            if (additions.length === 0) return prev;
+            return commitRows([...prev, ...additions]);
+        });
+    }, [pathPresetGroupsMerged, commitRows]);
+
     return (
         <Tabs value={tab} onValueChange={(v) => setTab(v as "form" | "json")} className="w-full">
             <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -333,10 +359,21 @@ export function CallContextSampleEditor({
                         </div>
                     ))}
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={addRow} className="w-fit">
-                    <PlusIcon className="h-4 w-4 mr-1" />
-                    Add path
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={addMissingPresetRows} className="w-fit">
+                        Add missing preset rows
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={addRow} className="w-fit">
+                        <PlusIcon className="h-4 w-4 mr-1" />
+                        Add path
+                    </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                    Add missing preset rows appends one row per path from the Preset path lists (system,
+                    conversation, initial context, and From your flow) that is not already in the form. Values are
+                    filled from the app default sample when that path exists there (same source as Add missing sample
+                    values on the tool card).
+                </p>
             </TabsContent>
             <TabsContent value="json" className="mt-3">
                 <JsonTemplateTextarea
