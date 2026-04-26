@@ -177,10 +177,13 @@ export function ParameterEditor({
                                     }
                                     disabled={disabled}
                                 >
-                                    <SelectTrigger className="w-[220px]">
+                                    <SelectTrigger
+                                        className="w-[220px]"
+                                        aria-label="Insert system, conversation, custom, or tool variable for value template"
+                                    >
                                         <SelectValue placeholder="Insert variable" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="max-h-72 overflow-y-auto">
                                         {variableSuggestionGroups.length > 0
                                             ? variableSuggestionGroups.map((group) => (
                                                   <SelectGroup key={group.label}>

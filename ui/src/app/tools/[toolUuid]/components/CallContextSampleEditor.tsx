@@ -118,10 +118,11 @@ function InputTemplateVariable({
                     <SelectTrigger
                         className="w-[200px] shrink-0"
                         onPointerDownCapture={syncSelection}
+                        aria-label="Insert call context or tool variable into sample value"
                     >
                         <SelectValue placeholder={selectPlaceholder ?? "Insert variable"} />
                     </SelectTrigger>
-                    <SelectContent className="max-h-72">
+                    <SelectContent className="max-h-72 overflow-y-auto">
                         {variableSuggestionGroups.length > 0
                             ? variableSuggestionGroups.map((group) => (
                                   <SelectGroup key={`ctx-inp-${group.label}`}>
@@ -285,10 +286,13 @@ export function CallContextSampleEditor({
                                             value=""
                                             onValueChange={(path) => updateRow(row.id, { path })}
                                         >
-                                            <SelectTrigger className="w-[210px] shrink-0">
+                                            <SelectTrigger
+                                                className="w-[210px] shrink-0"
+                                                aria-label="Choose a preset dot path (system, conversation, flow, or custom)"
+                                            >
                                                 <SelectValue placeholder="Preset path" />
                                             </SelectTrigger>
-                                            <SelectContent className="max-h-72">
+                                            <SelectContent className="max-h-72 overflow-y-auto">
                                                 {pathPresetGroupsMerged.map((group) => (
                                                     <SelectGroup key={`path-${group.label}`}>
                                                         <SelectLabel>{group.label}</SelectLabel>

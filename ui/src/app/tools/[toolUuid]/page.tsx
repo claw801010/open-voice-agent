@@ -408,7 +408,7 @@ export default function ToolDetailPage() {
                     .filter(Boolean)
                     .map((key) => `{{${key}}}`),
             ])
-        );
+        ).sort((a, b) => a.localeCompare(b));
         return [
             { label: HTTP_VARIABLE_GROUP_LABELS.system, options: SYSTEM_CONTEXT_VARIABLE_TEMPLATES },
             { label: HTTP_VARIABLE_GROUP_LABELS.conversation, options: CONVERSATION_CONTEXT_VARIABLE_TEMPLATES },

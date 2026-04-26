@@ -104,10 +104,11 @@ export function JsonTemplateTextarea({
                     <SelectTrigger
                         className="w-[260px]"
                         onPointerDownCapture={syncSelection}
+                        aria-label="Insert system, conversation, custom, or tool variable template"
                     >
                         <SelectValue placeholder={selectPlaceholder} />
                     </SelectTrigger>
-                    <SelectContent className="max-h-72">
+                    <SelectContent className="max-h-72 overflow-y-auto">
                         {variableSuggestionGroups.length > 0
                             ? variableSuggestionGroups.map((group) => (
                                   <SelectGroup key={`json-var-${group.label}`}>

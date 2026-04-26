@@ -101,10 +101,13 @@ export function KeyValueEditor({
                                 }
                                 disabled={disabled}
                             >
-                                <SelectTrigger className="w-[190px]">
+                                <SelectTrigger
+                                    className="w-[190px]"
+                                    aria-label="Insert system, conversation, custom, or tool variable into value"
+                                >
                                     <SelectValue placeholder="Insert var" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="max-h-72 overflow-y-auto">
                                     {variableSuggestionGroups.length > 0
                                         ? variableSuggestionGroups.map((group) => (
                                               <SelectGroup key={group.label}>
