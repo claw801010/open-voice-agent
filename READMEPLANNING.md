@@ -75,6 +75,7 @@ Mature conversational AI stacks (exemplars: **Vapi**-class voice APIs, **PolyAI*
 - **Industry × modality matrix** (e.g. retail × voice FAQ, insurance × outbound campaign). Seed templates with copy, variables, and test scenarios. **Canonical catalog:** [§6 Marketplace and GTM](#6-marketplace-and-gtm--ready-to-bake-business-voice) (industry rows, buyer outcomes, integrations).
 - **Storage anchor (current):** `WorkflowDefinitionModel`, `WorkflowTemplates` ([api/db/models.py](api/db/models.py)); template client usage in [api/routes/workflow.py](api/routes/workflow.py).
 - **Gap:** import from other authoring tools (Claude projects, etc.), semver, changelog per template, and a **review pipeline** before publishing to marketplace. **Execution:** epic **MK-01** in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md).
+- **Reality check (imports):** today’s **installable** units are **native** workflow graphs (`catalog/packaged-workflows/*.json`) plus `vertical-packs.json` metadata — not n8n/Make/Zapier/Claude-Skills bundles. Each external format implies a **dedicated adapter** (schema mapping, unsupported-node policy, credentials model). A “marketplace built from scraping MIT repos” is viable only as **curated** ports + legal review per asset, not lossless auto-import at scale. **Focused marketplace + import plan:** [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md).
 
 ### Non-technical UX
 

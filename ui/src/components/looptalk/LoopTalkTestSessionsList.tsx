@@ -62,7 +62,7 @@ export function LoopTalkTestSessionsList({ status }: LoopTalkTestSessionsListPro
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 3 }, (_, i) => (
-                    <div key={i} className="bg-gray-200 rounded-lg h-40 animate-pulse"></div>
+                    <div key={i} className="bg-muted rounded-lg h-40 animate-pulse"></div>
                 ))}
             </div>
         );
@@ -79,11 +79,11 @@ export function LoopTalkTestSessionsList({ status }: LoopTalkTestSessionsListPro
     if (sessions.length === 0) {
         return (
             <div className="text-center py-12 px-4">
-                <div className="text-gray-500 mb-2">
+                <div className="text-muted-foreground mb-2">
                     No {status ? `${status} ` : ''}test sessions found
                 </div>
                 {!status && (
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                         Create a new test session to start testing agent conversations
                     </p>
                 )}

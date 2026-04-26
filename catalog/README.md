@@ -1,6 +1,6 @@
 # Catalog — vertical packs (MK-01)
 
-**Purpose:** machine-readable **vertical pack** metadata aligned with [READMEPLANNING.md](../READMEPLANNING.md) §6 and epic **MK-01-CATALOG** in [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md).
+**Purpose:** machine-readable **vertical pack** metadata aligned with [READMEPLANNING.md](../READMEPLANNING.md) §6 and epic **MK-01-CATALOG** in [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md). **Marketplace + import strategy:** [READMEMARKETPLACEPLANNING.md](../READMEMARKETPLACEPLANNING.md).
 
 | File | Role |
 |------|------|
@@ -11,6 +11,8 @@
 **Relationship to the API:** production templates may live in `workflow_templates` ([api/db/models.py](../api/db/models.py) `WorkflowTemplates`). This repo catalog is the **source of truth for marketing and packaging** until each pack is bound to a `template_id` (see `workflow_template` on each pack).
 
 **Execution ID:** **MK-01-CATALOG**.
+
+**Template quality rubric:** see **MK-01-RUBRIC** in [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md). **Reviewer worksheet:** [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md) (copy into PRs); complements [PARTNER_REVIEW.md](PARTNER_REVIEW.md). **CI:** [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py) guards `vertical-packs.json` shape, on-disk refs, and **parses every** `catalog/packaged-workflows/*.json` as a minimal **nodes/edges** graph. PRs touching the catalog: see [.github/pull_request_template.md](../.github/pull_request_template.md).
 
 ## Pack versioning (semver)
 

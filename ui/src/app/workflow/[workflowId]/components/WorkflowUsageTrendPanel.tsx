@@ -2,7 +2,6 @@
 
 import { Download, ImageDown } from 'lucide-react';
 import { useCallback, useId, useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import {
     Bar,
     CartesianGrid,
@@ -14,6 +13,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -81,7 +81,7 @@ function TrendTooltip({
     if (!active || !payload?.[0]) return null;
     const p = payload[0].payload;
     return (
-        <div className="rounded-md border border-border bg-popover px-2.5 py-2 text-xs text-popover-foreground shadow-md">
+        <div className="ovo-surface-popover rounded-md px-2.5 py-2 text-xs text-popover-foreground shadow-md">
             <p className="font-medium">{p.name}</p>
             <p className="text-muted-foreground">Inbound: {p.runsInbound}</p>
             <p className="text-muted-foreground">Outbound: {p.runsOutbound}</p>
@@ -120,6 +120,10 @@ export function WorkflowUsageTrendPanel({
 }: WorkflowUsageTrendPanelProps) {
     const chartCaptureRef = useRef<HTMLDivElement>(null);
     const chartDescriptionId = useId();
+    const uid = useId().replace(/:/g, '');
+    const tokenLineGradientId = `ovo-tok-${uid}`;
+    const barInboundFillId = `ovo-in-${uid}`;
+    const barOutboundFillId = `ovo-out-${uid}`;
     const [pngExporting, setPngExporting] = useState(false);
 
     const handleExportPng = useCallback(async () => {
@@ -319,6 +323,42 @@ export function WorkflowUsageTrendPanel({
             >
                 <ResponsiveContainer width="100%" height={chartHeight}>
                     <ComposedChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                        <defs>
+                            <linearGradient
+                                id={tokenLineGradientId}
+                                x1="0"
+                                y1="0"
+                                x2="1"
+                                y2="0"
+                                gradientUnits="objectBoundingBox"
+                            >
+                                <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.95} />
+                                <stop offset="55%" stopColor="var(--chart-4)" stopOpacity={0.9} />
+                                <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.85} />
+                            </linearGradient>
+                            <linearGradient
+                                id={barInboundFillId}
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                                gradientUnits="objectBoundingBox"
+                            >
+                                <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.95} />
+                                <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.55} />
+                            </linearGradient>
+                            <linearGradient
+                                id={barOutboundFillId}
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                                gradientUnits="objectBoundingBox"
+                            >
+                                <stop offset="0%" stopColor="var(--chart-3)" stopOpacity={0.92} />
+                                <stop offset="100%" stopColor="var(--chart-3)" stopOpacity={0.5} />
+                            </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-border/60" vertical={false} />
                         <XAxis
                             dataKey="name"
@@ -386,7 +426,7 @@ export function WorkflowUsageTrendPanel({
                             dataKey="runsInbound"
                             name="runsInbound"
                             stackId="runsStack"
-                            fill="var(--chart-1)"
+                            fill={`url(#${barInboundFillId})`}
                             maxBarSize={variant === 'compact' ? 28 : 40}
                             cursor={onWeekClick ? 'pointer' : 'default'}
                             onClick={(_data, index) => {
@@ -399,7 +439,7 @@ export function WorkflowUsageTrendPanel({
                             dataKey="runsOutbound"
                             name="runsOutbound"
                             stackId="runsStack"
-                            fill="var(--chart-3)"
+                            fill={`url(#${barOutboundFillId})`}
                             radius={[3, 3, 0, 0]}
                             maxBarSize={variant === 'compact' ? 28 : 40}
                             cursor={onWeekClick ? 'pointer' : 'default'}
@@ -414,10 +454,15 @@ export function WorkflowUsageTrendPanel({
                                 type="monotone"
                                 dataKey="tokens"
                                 name="tokens"
-                                stroke="var(--chart-2)"
-                                strokeWidth={2}
-                                dot={{ r: variant === 'compact' ? 2 : 3, fill: 'var(--chart-2)' }}
-                                activeDot={{ r: 4 }}
+                                stroke={`url(#${tokenLineGradientId})`}
+                                strokeWidth={2.25}
+                                dot={{
+                                    r: variant === 'compact' ? 2 : 3,
+                                    fill: 'var(--chart-2)',
+                                    stroke: 'var(--background)',
+                                    strokeWidth: 1,
+                                }}
+                                activeDot={{ r: 5, fill: 'var(--chart-4)', stroke: 'var(--background)', strokeWidth: 1 }}
                                 connectNulls={false}
                             />
                         ) : null}

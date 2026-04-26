@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { cn } from '@/lib/utils';
 
 const PANEL_IDS = ['workflow-palette', 'workflow-canvas', 'workflow-rail'] as const;
 
@@ -60,7 +61,10 @@ export function WorkflowEditorShell({ workflowId, left, center, right }: Workflo
                                 type="button"
                                 variant="secondary"
                                 size="icon"
-                                className="absolute left-2 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full border border-border bg-background/95 shadow-md"
+                                className={cn(
+                                    'absolute left-2 top-1/2 z-20 h-10 w-10 -translate-y-1/2 shadow-md',
+                                    'border-0 bg-transparent hover:bg-transparent ovo-glass-fab',
+                                )}
                                 onClick={() => setLeftOpen(true)}
                                 aria-label="Open node palette"
                             >
@@ -75,7 +79,10 @@ export function WorkflowEditorShell({ workflowId, left, center, right }: Workflo
                                 type="button"
                                 variant="secondary"
                                 size="icon"
-                                className="absolute right-2 top-1/2 z-20 h-10 w-10 -translate-y-1/2 rounded-full border border-border bg-background/95 shadow-md"
+                                className={cn(
+                                    'absolute right-2 top-1/2 z-20 h-10 w-10 -translate-y-1/2 shadow-md',
+                                    'border-0 bg-transparent hover:bg-transparent ovo-glass-fab',
+                                )}
                                 onClick={() => setRightOpen(true)}
                                 aria-label="Open inspector and simulation"
                             >
@@ -89,7 +96,10 @@ export function WorkflowEditorShell({ workflowId, left, center, right }: Workflo
                 <Sheet open={leftOpen} onOpenChange={setLeftOpen}>
                     <SheetContent
                         side="left"
-                        className="flex w-[min(100vw,280px)] flex-col gap-0 p-0 sm:max-w-[280px]"
+                        className={cn(
+                            'flex w-[min(100vw,280px)] flex-col gap-0 p-0 sm:max-w-[280px]',
+                            'border-border/50 bg-transparent ovo-editor-sheet',
+                        )}
                     >
                         <SheetHeader className="sr-only">
                             <SheetTitle>Node palette</SheetTitle>
@@ -101,7 +111,10 @@ export function WorkflowEditorShell({ workflowId, left, center, right }: Workflo
                 <Sheet open={rightOpen} onOpenChange={setRightOpen}>
                     <SheetContent
                         side="right"
-                        className="flex w-[min(100vw,420px)] flex-col gap-0 p-0 sm:max-w-[420px]"
+                        className={cn(
+                            'flex w-[min(100vw,420px)] flex-col gap-0 p-0 sm:max-w-[420px]',
+                            'border-border/50 bg-transparent ovo-editor-sheet',
+                        )}
                     >
                         <SheetHeader className="sr-only">
                             <SheetTitle>Inspector and simulation</SheetTitle>
@@ -123,12 +136,12 @@ export function WorkflowEditorShell({ workflowId, left, center, right }: Workflo
             >
                 <Panel
                     id={PANEL_IDS[0]}
-                    className="min-h-0 min-w-0"
+                    className="min-h-0 min-w-0 border-r border-border/50"
                     defaultSize="22%"
                     minSize="12%"
                     maxSize="38%"
                 >
-                    {left}
+                    <div className="ovo-editor-rail flex h-full min-h-0 flex-col">{left}</div>
                 </Panel>
                 <Separator className="w-1.5 shrink-0 bg-border hover:bg-primary/35 data-[separator=active]:bg-primary/50" />
                 <Panel id={PANEL_IDS[1]} className="min-h-0 min-w-0" defaultSize="56%" minSize="32%">
@@ -137,12 +150,12 @@ export function WorkflowEditorShell({ workflowId, left, center, right }: Workflo
                 <Separator className="w-1.5 shrink-0 bg-border hover:bg-primary/35 data-[separator=active]:bg-primary/50" />
                 <Panel
                     id={PANEL_IDS[2]}
-                    className="min-h-0 min-w-0"
+                    className="min-h-0 min-w-0 border-l border-border/50"
                     defaultSize="22%"
                     minSize="14%"
                     maxSize="42%"
                 >
-                    {right}
+                    <div className="ovo-editor-rail flex h-full min-h-0 flex-col">{right}</div>
                 </Panel>
             </Group>
         </section>

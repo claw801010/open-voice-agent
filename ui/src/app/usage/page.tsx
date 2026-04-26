@@ -4,23 +4,21 @@ import { ChevronLeft, ChevronRight, Globe, Sparkles } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import TimezoneSelect, { type ITimezoneOption } from 'react-timezone-select';
+import { toast } from 'sonner';
 
+import { WorkflowUsageTrendPanel } from '@/app/workflow/[workflowId]/components/WorkflowUsageTrendPanel';
 import { getCurrentPeriodUsageApiV1OrganizationsUsageCurrentPeriodGet, getDailyUsageBreakdownApiV1OrganizationsUsageDailyBreakdownGet, getMpsCreditsApiV1OrganizationsUsageMpsCreditsGet, getOrgDailyUsageRollupApiV1OrganizationsUsageDailyRollupGet, getOrgWeeklyUsageRollupApiV1OrganizationsUsageWeeklyRollupGet, getUsageHistoryApiV1OrganizationsUsageRunsGet } from '@/client/sdk.gen';
 import type { CurrentUsageResponse, DailyUsageBreakdownResponse, MpsCreditsResponse, UsageHistoryResponse, WorkflowRunUsageResponse } from '@/client/types.gen';
-import { WorkflowUsageTrendPanel } from '@/app/workflow/[workflowId]/components/WorkflowUsageTrendPanel';
-import type { UsageTrendBucket } from '@/lib/workflow/workflowRunTrends';
-import { dailyRollupApiToUsageTrendBuckets, weeklyRollupApiToUsageTrendBuckets } from '@/lib/workflow/workflowRunTrends';
-import { UsageTrendGranularityTabs } from '@/components/usage/UsageTrendGranularityTabs';
 import { DailyUsageTable } from '@/components/DailyUsageTable';
 import { FilterBuilder } from '@/components/filters/FilterBuilder';
 import { MediaPreviewButton, MediaPreviewDialog } from '@/components/MediaPreviewDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Sparkline } from '@/components/ui/sparkline';
 import {
     Table,
     TableBody,
@@ -29,6 +27,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { UsageTrendGranularityTabs } from '@/components/usage/UsageTrendGranularityTabs';
 import { useUserConfig } from '@/context/UserConfigContext';
 import { useAuth } from '@/lib/auth';
 import { usageFilterAttributes } from '@/lib/filterAttributes';
@@ -49,6 +48,8 @@ import {
     utcWeekRangeFromMonday,
     validateUtcInclusiveTrendRange,
 } from '@/lib/usageOrgDeepLink';
+import type { UsageTrendBucket } from '@/lib/workflow/workflowRunTrends';
+import { dailyRollupApiToUsageTrendBuckets, weeklyRollupApiToUsageTrendBuckets } from '@/lib/workflow/workflowRunTrends';
 import { ActiveFilter, DateRangeValue } from '@/types/filters';
 
 // Get local timezone
@@ -139,6 +140,12 @@ export default function UsagePage() {
     const [savingTimezone, setSavingTimezone] = useState(false);
     const timezoneSelectId = useId(); // Stable ID for react-select to prevent hydration mismatch
     const orgActivityTrendGranularityLabelId = useId();
+
+    /** Last buckets’ token sums for a compact real-data sparkline (WE-01-HYPER-DENSITY). */
+    const orgTrendTokenSparklineSeries = useMemo(() => {
+        if (orgTrendBuckets.length < 2) return null;
+        return orgTrendBuckets.slice(-12).map((b) => (b.tokensSum != null ? b.tokensSum : 0));
+    }, [orgTrendBuckets]);
 
     const fetchCurrentPeriodUsage = useCallback(async () => {
         if (!auth.isAuthenticated) return;
@@ -738,9 +745,10 @@ export default function UsagePage() {
 
                 {/* Org-wide usage trend (UTC week or calendar-day rollups) */}
                 <Card className="ovo-glass-panel mb-6 border-0 bg-transparent shadow-none ring-1 ring-border/30">
-                    <CardHeader>
-                        <CardTitle>Activity</CardTitle>
-                        <CardDescription>
+                    <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                            <CardTitle>Activity</CardTitle>
+                            <CardDescription>
                             Runs and token totals across all voice agents. Choose <strong className="font-medium text-foreground">Week</strong> for ISO
                             Monday buckets (<code className="rounded bg-muted px-1 py-0.5 text-xs">trendWeeks</code>) or{' '}
                             <strong className="font-medium text-foreground">Day</strong> for UTC calendar days (
@@ -751,7 +759,21 @@ export default function UsagePage() {
                             <span className="whitespace-nowrap">YYYY-MM-DD</span>, inclusive) for a fixed range. Use{' '}
                             <strong className="font-medium text-foreground">CSV</strong> or{' '}
                             <strong className="font-medium text-foreground">PNG</strong> to export the chart.
-                        </CardDescription>
+                            </CardDescription>
+                        </div>
+                        {orgTrendTokenSparklineSeries ? (
+                            <div className="flex shrink-0 flex-col items-end gap-1 sm:pt-0.5">
+                                <Sparkline
+                                    values={orgTrendTokenSparklineSeries}
+                                    decorative={false}
+                                    aria-label="Approximate Dograh token totals for the most recent Activity chart buckets"
+                                    className="opacity-95"
+                                />
+                                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    Tokens trend
+                                </span>
+                            </div>
+                        ) : null}
                     </CardHeader>
                     <CardContent className="pt-0 space-y-4">
                         <UsageTrendGranularityTabs

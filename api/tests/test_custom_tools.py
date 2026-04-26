@@ -256,6 +256,82 @@ class TestExecuteHttpTool:
             assert result["data"]["id"] == 123
 
     @pytest.mark.asyncio
+    async def test_post_request_resolves_templates_in_url(self):
+        """URL may include {{param}} placeholders resolved from arguments + body defaults."""
+        tool = MockToolModel(
+            tool_uuid="test-uuid",
+            name="Fetch Order",
+            description="GET order by id",
+            category="http_api",
+            definition={
+                "schema_version": 1,
+                "type": "http_api",
+                "config": {
+                    "method": "GET",
+                    "url": "https://api.example.com/orders/{{order_id}}",
+                    "timeout_ms": 5000,
+                },
+            },
+        )
+
+        arguments = {"order_id": "42"}
+
+        with patch(
+            "api.services.workflow.tools.custom_tool.httpx.AsyncClient"
+        ) as mock_client_class:
+            mock_client = AsyncMock()
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {"id": "42"}
+            mock_client.request.return_value = mock_response
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            result = await execute_http_tool(tool, arguments)
+
+            mock_client.request.assert_called_once()
+            call_kwargs = mock_client.request.call_args.kwargs
+            assert call_kwargs["url"] == "https://api.example.com/orders/42"
+            assert result["status"] == "success"
+
+    @pytest.mark.asyncio
+    async def test_header_templates_resolve_from_body_template_defaults(self):
+        """header_fields {{…}} use final merged payload (e.g. keys only from body_template)."""
+        tool = MockToolModel(
+            tool_uuid="test-uuid",
+            name="Submit",
+            description="Submit",
+            category="http_api",
+            definition={
+                "schema_version": 1,
+                "type": "http_api",
+                "config": {
+                    "method": "POST",
+                    "url": "https://api.example.com/submit",
+                    "timeout_ms": 5000,
+                    "body_template": '{"customer_id": "body-only"}',
+                    "header_fields": [{"key": "X-Customer", "value": "{{customer_id}}"}],
+                },
+            },
+        )
+
+        with patch(
+            "api.services.workflow.tools.custom_tool.httpx.AsyncClient"
+        ) as mock_client_class:
+            mock_client = AsyncMock()
+            mock_response = Mock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {"ok": True}
+            mock_client.request.return_value = mock_response
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            result = await execute_http_tool(tool, {})
+
+            mock_client.request.assert_called_once()
+            call_kwargs = mock_client.request.call_args.kwargs
+            assert call_kwargs["headers"]["X-Customer"] == "body-only"
+            assert result["status"] == "success"
+
+    @pytest.mark.asyncio
     async def test_get_request_sends_query_params(self):
         """Test that GET requests send arguments as query parameters."""
         tool = MockToolModel(

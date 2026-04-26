@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 
 const OSS_TOKEN_COOKIE = 'dograh_auth_token';
 
-// Paths that don't require authentication in OSS mode
-const PUBLIC_PATHS = ['/auth/login', '/auth/signup'];
+// Paths that don't require authentication in OSS mode (e.g. public SEO / MK-01-BROWSE catalog browse)
+const PUBLIC_PATHS = ['/auth/login', '/auth/signup', '/templates'];
 
 let cachedAuthProvider: string | null = null;
 

@@ -18,7 +18,7 @@ Sections labeled **Current codebase** describe what exists in this repository. S
 1. [What you are running](#1-what-you-are-running-current-codebase)
 2. [Fastest path: Docker and API keys](#2-fastest-path-docker-and-api-keys-current-codebase)
 3. [Environment and secrets checklist](#3-environment-and-secrets-checklist-current-codebase)
-4. [Local development (split stack)](#4-local-development-split-stack-current-codebase)
+4. [Local development (split stack)](#4-local-development-split-stack-current-codebase) · [One-command bootstrap](#one-command-local-bootstrap) · [After a fresh git pull](#after-a-fresh-git-pull-rebuild-migrate-smoke)
 5. [Safe customization boundaries](#5-safe-customization-boundaries-current-codebase)
 6. [Fork and upstream sync playbook](#6-fork-and-upstream-sync-playbook)
 7. [Extension map: agent, UI, call reporting](#7-extension-map-agent-ui-call-reporting)
@@ -170,12 +170,45 @@ Compose reference for UI: [docker-compose.yaml](docker-compose.yaml) (`BACKEND_U
 
 ## 4. Local development (split stack) (current codebase)
 
-1. **Infra**: [docker-compose-local.yaml](docker-compose-local.yaml) via [scripts/start_services_dev.sh](scripts/start_services_dev.sh) (or `.ps1` on Windows). See [AGENTS.md](AGENTS.md).
+### One-command local bootstrap
+
+From a **git clone** of the repo, after `git pull` (or on a new machine), run this **once** to install dependencies, start local Docker infra, migrate the DB, and run UI unit tests—then you only start the API and UI by hand in two terminals:
+
+```bash
+bash scripts/bootstrap_fresh_dev.sh
+```
+
+- **Prerequisites:** [Python 3](https://www.python.org/) (`python3`), [Node + npm](https://nodejs.org/), and **Docker** with Compose (for Postgres on **5433**, Redis, Minio) unless you set **`SKIP_DOCKER=1`** and already run matching services.
+- **Creates** `venv/` (override with `VENV_DIR`), **copies** [api/.env.example](api/.env.example) → `api/.env` if missing, **runs** [scripts/migrate.sh](scripts/migrate.sh), **`npm ci`** + **`npm test`** in [ui/](ui/).
+- **Does not** start long-running API/UI processes (avoids port conflicts and matches how developers run hot-reload). **Optional voice/Pipecat:** after bootstrap, run [scripts/setup_pipecat.sh](scripts/setup_pipecat.sh) for full real-time audio stacks (not required to smoke-test the dashboard or HTTP tool editor).
+- **Skips** (environment variables): `SKIP_SUBMODULE=1`, `SKIP_DOCKER=1`, `SKIP_UI_TEST=1`, `SKIP_PIP=1` — see the script header.
+
+1. **Infra (manual alternative)**: [docker-compose-local.yaml](docker-compose-local.yaml) via [scripts/start_services_dev.sh](scripts/start_services_dev.sh) (or `.ps1` on Windows). See [AGENTS.md](AGENTS.md). Postgres is published on host **5433** (avoids colliding with a local Postgres on **5432**); set **`DATABASE_URL`** in **`api/.env`** to match [api/.env.example](api/.env.example).
 2. **Migrations**: [scripts/migrate.sh](scripts/migrate.sh); new revisions: [scripts/makemigrate.sh](scripts/makemigrate.sh).
 3. **Pipecat submodule**: [scripts/setup_pipecat.sh](scripts/setup_pipecat.sh) — `git submodule update --init` and `pip install -e ./pipecat[...]` plus `api/requirements.txt`.
 4. **API**: from repo root, `uvicorn api.app:app --reload --port 8000` (see [api/AGENTS.md](api/AGENTS.md)).
 5. **UI**: `cd ui && npm install && npm run dev` — default dev server port per [ui/AGENTS.md](ui/AGENTS.md).
-6. **OpenAPI client**: after adding backend routes, run `npm run generate-client` in [ui/](ui/) ([ui/package.json](ui/package.json)).
+6. **Optional — WE-01 authenticated Lighthouse (headless):** from repo root, with Docker (**Compose v2** `docker compose` or **v1** `docker-compose`) + Python (alembic/uvicorn) and `LIGHTHOUSE_OSS_PASSWORD` set, run [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh) (`./scripts/we01-lighthouse-auth-e2e.sh --help`) — brings up [docker-compose-local.yaml](docker-compose-local.yaml), verifies `import api.app`, migrates, starts API + Next, then `npm run perf:lighthouse:auth:full` in `ui/`. Details: [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) (**WE-01-VISUAL-DEPTH**).
+7. **OpenAPI client**: after adding backend routes, run `npm run generate-client` in [ui/](ui/) ([ui/package.json](ui/package.json)).
+
+### After a fresh git pull (rebuild, migrate, smoke)
+
+When you have pulled the latest `main` (or merged a long-lived branch) and want to **re-verify the full split stack** (Postgres/Redis in Docker, API + UI on the host), the fastest path is the automated one:
+
+- **`bash scripts/bootstrap_fresh_dev.sh`** — [One-command local bootstrap](#one-command-local-bootstrap) (submodule, venv + pip, `api/.env` copy if missing, Docker infra, `migrate.sh`, `ui` `npm ci` + `npm test`). Use **`SKIP_DOCKER=1`** if you already have Postgres/Redis/Minio running.
+
+Then start **API** and **UI** in two terminals and smoke-test as in step 5–6 below.
+
+**Manual** sequence (if you do not use the script):
+
+1. **Worktree** — Stash or commit local edits. Pull with your team’s default (`git pull --rebase` or `git pull` on the tracking branch, or `git fetch` + merge a release branch).
+2. **Git submodule** — If `pipecat` or [.gitmodules](.gitmodules) changed: `git submodule update --init --recursive`, then re-run [scripts/setup_pipecat.sh](scripts/setup_pipecat.sh) when the submodule **commit** moved (per [api/AGENTS.md](api/AGENTS.md)).
+3. **Python / API** — Activate your venv, then if [api/requirements.txt](api/requirements.txt) changed, reinstall (`pip install -r api/requirements.txt` or your usual workflow). Apply DB migrations: from repo root `bash scripts/migrate.sh` or `cd api && alembic upgrade head` (see [api/AGENTS.md](api/AGENTS.md)).
+4. **UI** — `cd ui && npm ci` (clean) **or** `npm install` when lockfile changed. Then `npm test` (Vitest) and optionally `npm run lint`.
+5. **Local infra** — (Re)start [docker-compose-local.yaml](docker-compose-local.yaml) with [scripts/start_services_dev.sh](scripts/start_services_dev.sh) (or your `.ps1` on Windows). Confirm `api/.env` still matches [api/.env.example](api/.env.example) — especially **`DATABASE_URL`** to Postgres on host **5433** for this compose file.
+6. **Run processes** — **API:** from repo root, `uvicorn api.app:app --reload --port 8000` ([api/AGENTS.md](api/AGENTS.md)). **UI:** `cd ui && npm run dev` (default **:3000**, [ui/AGENTS.md](ui/AGENTS.md)). If the backend **OpenAPI** changed and the UI should match, run `npm run generate-client` in `ui/` after the API is up.
+7. **Smoke** — `curl -sS http://127.0.0.1:8000/api/v1/health` (or your API port) should succeed. In the browser, sign in, open an **HTTP API tool** under `/tools/...`, and confirm **Test API Call**, call-context **Form** / **JSON**, **Add missing sample values**, and grouped variable pickers (system, conversation, custom, tool keys) behave as expected.
+8. **All-in-Docker (optional)** — If you use root [docker-compose.yaml](docker-compose.yaml) instead: `docker compose up --build` (or your `REGISTRY` flow per [§2](#2-fastest-path-docker-and-api-keys-current-codebase)) and hit the same `/api/v1/health` on the published API port and the UI port from the compose file.
 
 ---
 

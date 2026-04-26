@@ -14,6 +14,9 @@ import { cn } from "@/lib/utils";
 const URL_REGEX =
     /^https?:\/\/(?:[\w-]+(?::[\w-]+)?@)?(?:[\w-]+\.)*[\w-]+(?::\d{1,5})?(?:\/[^\s]*)?$/i;
 
+/** URLs that include `{{…}}` are validated loosely (runtime resolves to a real URL). */
+const TEMPLATED_URL_PREFIX = /^https?:\/\//i;
+
 export interface UrlValidationResult {
     valid: boolean;
     error?: string;
@@ -24,6 +27,16 @@ export function validateUrl(url: string): UrlValidationResult {
 
     if (!trimmedUrl) {
         return { valid: false, error: "URL is required" };
+    }
+
+    if (trimmedUrl.includes("{{")) {
+        if (!TEMPLATED_URL_PREFIX.test(trimmedUrl)) {
+            return {
+                valid: false,
+                error: "Templated URL must start with http:// or https://",
+            };
+        }
+        return { valid: true };
     }
 
     if (!URL_REGEX.test(trimmedUrl)) {

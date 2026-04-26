@@ -48,9 +48,18 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
             <CardHeader>
                 <div className="flex justify-between items-start">
                     <CardTitle className="text-lg">{session.name}</CardTitle>
-                    <Badge variant={getStatusBadgeVariant(session.status)}>
-                        {session.status}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                        {session.status === "active" && (
+                            <span
+                                className="size-1.5 shrink-0 rounded-full bg-emerald-500 ovo-status-breathe"
+                                aria-hidden
+                                title="Session active"
+                            />
+                        )}
+                        <Badge variant={getStatusBadgeVariant(session.status)}>
+                            {session.status}
+                        </Badge>
+                    </div>
                 </div>
                 {session.description && (
                     <CardDescription>{session.description}</CardDescription>
@@ -58,15 +67,15 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         {getTestTypeIcon(session.test_type)}
                         <span className="capitalize">{session.test_type.replace('_', ' ')}</span>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                         Created: {format(new Date(session.created_at), 'MMM d, yyyy h:mm a')}
                     </div>
                     {session.test_metadata?.concurrent_pairs && (
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-muted-foreground">
                             Concurrent pairs: {session.test_metadata.concurrent_pairs}
                         </div>
                     )}

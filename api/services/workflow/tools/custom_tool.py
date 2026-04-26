@@ -1,5 +1,6 @@
 """Custom tool execution for user-defined HTTP API tools."""
 
+import json
 import re
 from typing import Any, Dict, Optional
 
@@ -104,14 +105,165 @@ async def execute_http_tool(
     definition = tool.definition or {}
     config = definition.get("config", {})
 
-    # Get HTTP method and URL
+    logger.info(
+        f"Executing custom tool '{tool.name}' ({tool.tool_uuid}): "
+        f"{config.get('method', 'POST').upper()} {config.get('url', '')}"
+    )
+    return await execute_http_request(
+        config=config,
+        arguments=arguments,
+        call_context_vars=call_context_vars,
+        organization_id=organization_id,
+    )
+
+
+def _extract_path_value(payload: Any, path: str) -> Any:
+    """Read a nested value from payload using dot-separated path."""
+    if not path:
+        return None
+
+    current = payload
+    for segment in path.split("."):
+        if current is None:
+            return None
+        if isinstance(current, dict):
+            current = current.get(segment)
+            continue
+        if isinstance(current, list):
+            try:
+                current = current[int(segment)]
+            except (ValueError, IndexError):
+                return None
+            continue
+        return None
+    return current
+
+
+def _apply_response_mapping(
+    response_data: Any, response_mapping: Optional[Dict[str, str]]
+) -> Dict[str, Any]:
+    """Apply output_field -> response.path mapping to response payload."""
+    if not response_mapping:
+        return {}
+
+    mapped: Dict[str, Any] = {}
+    for output_key, path in response_mapping.items():
+        if not output_key or not isinstance(path, str):
+            continue
+        mapped[output_key] = _extract_path_value(response_data, path.strip())
+    return mapped
+
+
+def _resolve_template_value(
+    template: str,
+    arguments: Dict[str, Any],
+    call_context_vars: Optional[Dict[str, Any]] = None,
+) -> Any:
+    """Resolve {{path.to.value}} placeholders against arguments/context vars."""
+    sources = [arguments, call_context_vars or {}]
+    full_match = re.fullmatch(r"\s*\{\{([^{}]+)\}\}\s*", template)
+    if full_match:
+        path = full_match.group(1).strip()
+        for source in sources:
+            value = _extract_path_value(source, path)
+            if value is not None:
+                return value
+        return None
+
+    def replace(match: re.Match[str]) -> str:
+        path = match.group(1).strip()
+        for source in sources:
+            value = _extract_path_value(source, path)
+            if value is not None:
+                return str(value)
+        return ""
+
+    return re.sub(r"\{\{([^{}]+)\}\}", replace, template)
+
+
+def _resolve_templates_recursive(
+    value: Any,
+    arguments: Dict[str, Any],
+    call_context_vars: Optional[Dict[str, Any]] = None,
+) -> Any:
+    if isinstance(value, str):
+        return _resolve_template_value(value, arguments, call_context_vars)
+    if isinstance(value, list):
+        return [
+            _resolve_templates_recursive(item, arguments, call_context_vars)
+            for item in value
+        ]
+    if isinstance(value, dict):
+        return {
+            key: _resolve_templates_recursive(item, arguments, call_context_vars)
+            for key, item in value.items()
+        }
+    return value
+
+
+async def execute_http_request(
+    *,
+    config: Dict[str, Any],
+    arguments: Dict[str, Any],
+    call_context_vars: Optional[Dict[str, Any]] = None,
+    organization_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Execute an HTTP request with optional credential and response mapping."""
     method = config.get("method", "POST").upper()
-    url = config.get("url", "")
+    url_raw = str(config.get("url", "") or "").strip()
+    response_mapping = config.get("response_mapping") or {}
 
-    # Get headers from config
-    headers = dict(config.get("headers", {}) or {})
+    timeout_ms = config.get("timeout_ms", 5000)
+    timeout_seconds = timeout_ms / 1000
 
-    # Add auth header if credential is configured
+    parameters = config.get("parameters", []) or []
+    merged_arguments = dict(arguments or {})
+    for param in parameters:
+        if not isinstance(param, dict):
+            continue
+        name = (param.get("name") or "").strip()
+        value_template = (param.get("value_template") or "").strip()
+        if name and name not in merged_arguments and value_template:
+            merged_arguments[name] = _resolve_templates_recursive(
+                value_template, arguments, call_context_vars
+            )
+
+    body_template = (config.get("body_template") or "").strip()
+    template_payload = None
+    if body_template:
+        try:
+            template_json = json.loads(body_template)
+            if isinstance(template_json, dict):
+                template_payload = _resolve_templates_recursive(
+                    template_json, merged_arguments, call_context_vars
+                )
+        except Exception:
+            logger.warning("Invalid body_template JSON, skipping template defaults.")
+
+    final_payload = dict(template_payload or {})
+    final_payload.update(merged_arguments)
+
+    headers: Dict[str, str] = {}
+    raw_flat_headers = dict(config.get("headers", {}) or {})
+    for key, value in raw_flat_headers.items():
+        k = str(key or "").strip()
+        if not k or value is None:
+            continue
+        headers[k] = str(
+            _resolve_templates_recursive(value, final_payload, call_context_vars)
+        )
+    for field in config.get("header_fields", []) or []:
+        if not isinstance(field, dict):
+            continue
+        key = (field.get("key") or "").strip()
+        value = field.get("value")
+        if key and value is not None:
+            headers[key] = str(
+                _resolve_templates_recursive(
+                    value, final_payload, call_context_vars
+                )
+            )
+
     credential_uuid = config.get("credential_uuid")
     if credential_uuid and organization_id:
         try:
@@ -121,30 +273,24 @@ async def execute_http_tool(
             if credential:
                 auth_header = build_auth_header(credential)
                 headers.update(auth_header)
-                logger.debug(f"Applied credential '{credential.name}' to tool request")
-            else:
-                logger.warning(
-                    f"Credential {credential_uuid} not found for tool '{tool.name}'"
-                )
         except Exception as e:
-            logger.error(f"Failed to fetch credential for tool '{tool.name}': {e}")
+            logger.error(f"Failed to fetch credential for HTTP request: {e}")
 
-    # Get timeout
-    timeout_ms = config.get("timeout_ms", 5000)
-    timeout_seconds = timeout_ms / 1000
+    url = str(
+        _resolve_templates_recursive(url_raw, final_payload, call_context_vars)
+    ).strip()
+    if not url:
+        return {
+            "status": "error",
+            "error": "URL is empty after resolving {{…}} templates",
+        }
 
-    # Build request: JSON body for POST/PUT/PATCH, query params for GET/DELETE
     body = None
     params = None
     if method in ("POST", "PUT", "PATCH"):
-        body = arguments
-    elif method in ("GET", "DELETE") and arguments:
-        params = arguments
-
-    logger.info(
-        f"Executing custom tool '{tool.name}' ({tool.tool_uuid}): {method} {url}"
-    )
-    logger.debug(f"Request body: {body}, params: {params}")
+        body = final_payload
+    elif method in ("GET", "DELETE") and final_payload:
+        params = final_payload
 
     try:
         async with httpx.AsyncClient(timeout=timeout_seconds) as client:
@@ -156,37 +302,31 @@ async def execute_http_tool(
                 params=params,
             )
 
-            # Try to parse JSON response
             try:
                 response_data = response.json()
             except Exception:
                 response_data = {"raw_response": response.text}
 
-            result = {
+            mapped_data = _apply_response_mapping(response_data, response_mapping)
+
+            return {
                 "status": "success",
                 "status_code": response.status_code,
                 "data": response_data,
+                "mapped_data": mapped_data if mapped_data else None,
             }
 
-            logger.debug(
-                f"Custom tool '{tool.name}' completed with status {response.status_code}"
-            )
-            return result
-
     except httpx.TimeoutException:
-        logger.error(f"Custom tool '{tool.name}' timed out after {timeout_seconds}s")
         return {
             "status": "error",
             "error": f"Request timed out after {timeout_seconds} seconds",
         }
     except httpx.RequestError as e:
-        logger.error(f"Custom tool '{tool.name}' request failed: {e}")
         return {
             "status": "error",
             "error": f"Request failed: {str(e)}",
         }
     except Exception as e:
-        logger.error(f"Custom tool '{tool.name}' execution failed: {e}")
         return {
             "status": "error",
             "error": f"Tool execution failed: {str(e)}",

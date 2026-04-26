@@ -29,6 +29,8 @@ dograh/
 
 ## Local Development
 
+**First-time setup (venv, install, Docker infra, migrate, UI tests) from a git clone or after a big pull:** run **`bash scripts/bootstrap_fresh_dev.sh`** — see [READMEBUILDME.md](READMEBUILDME.md#one-command-local-bootstrap) §4 (then start API + UI in two terminals; optional **Pipecat:** `bash scripts/setup_pipecat.sh` for voice features).
+
 ### Starting Services
 
 ```bash

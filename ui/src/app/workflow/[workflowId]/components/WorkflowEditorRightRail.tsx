@@ -1,6 +1,18 @@
 'use client';
 
-import { ChevronDown, ExternalLink, FlaskConical, Mic, Settings } from 'lucide-react';
+import {
+    BookA,
+    Brain,
+    ChevronDown,
+    ExternalLink,
+    FileDown,
+    FlaskConical,
+    Mic,
+    PhoneOff,
+    Rocket,
+    Settings,
+    Variable,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
@@ -9,18 +21,22 @@ import { toast } from 'sonner';
 import { createQuickPersonaTestSessionApiV1LooptalkTestSessionsQuickPersonaPost } from '@/client/sdk.gen';
 import type { FlowNode } from '@/components/flow/types';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { UsageTrendGranularityTabs } from '@/components/usage/UsageTrendGranularityTabs';
 import { useAuth } from '@/lib/auth';
 import logger from '@/lib/logger';
-
 import type { TrendGranularity } from '@/lib/usageOrgDeepLink';
 import type { UsageTrendBucket } from '@/lib/workflow/workflowRunTrends';
-
-import { UsageTrendGranularityTabs } from '@/components/usage/UsageTrendGranularityTabs';
 
 import { SimulationManualChatPanel } from './SimulationManualChatPanel';
 import { TemplateVariablesRailPanel } from './TemplateVariablesRailPanel';
@@ -165,7 +181,7 @@ export function WorkflowEditorRightRail({
 
     if (mode === 'simulation') {
         return (
-            <div className="flex h-full min-h-0 flex-col border-l border-border bg-muted/15">
+            <div className="flex h-full min-h-0 flex-col bg-transparent">
                 <div className="shrink-0 border-b border-border px-3 py-2">
                     <div className="flex items-center gap-2">
                         <FlaskConical className="h-4 w-4 text-teal-500 shrink-0" />
@@ -423,7 +439,7 @@ export function WorkflowEditorRightRail({
     }
 
     return (
-        <div className="flex h-full min-h-0 flex-col border-l border-border bg-muted/15">
+        <div className="flex h-full min-h-0 flex-col bg-transparent">
             <div className="shrink-0 border-b border-border px-3 py-2">
                 <h2 className="text-sm font-semibold">Right rail</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -475,6 +491,86 @@ export function WorkflowEditorRightRail({
                     value="global"
                     className="min-h-0 flex-1 overflow-y-auto mt-0 data-[state=inactive]:hidden px-3 pb-3 pt-3"
                 >
+                    <div className="mb-3 space-y-1.5">
+                        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Open in settings
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                            <Button variant="secondary" size="sm" className="h-7 gap-1 px-2 text-[11px]" asChild>
+                                <Link href={`/workflow/${workflowId}/settings?section=general`}>
+                                    <Settings className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                    General
+                                </Link>
+                            </Button>
+                            <Button variant="secondary" size="sm" className="h-7 gap-1 px-2 text-[11px]" asChild>
+                                <Link href={`/workflow/${workflowId}/settings?section=models`}>
+                                    <Brain className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                    Models
+                                </Link>
+                            </Button>
+                            <Button variant="secondary" size="sm" className="h-7 gap-1 px-2 text-[11px]" asChild>
+                                <Link href={`/workflow/${workflowId}/settings?section=dictionary`}>
+                                    <BookA className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                    Dictionary
+                                </Link>
+                            </Button>
+                            <Button variant="secondary" size="sm" className="h-7 gap-1 px-2 text-[11px]" asChild>
+                                <Link href={`/workflow/${workflowId}/settings?section=voicemail`}>
+                                    <PhoneOff className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                    Voicemail
+                                </Link>
+                            </Button>
+                            <Button variant="secondary" size="sm" className="h-7 gap-1 px-2 text-[11px]" asChild>
+                                <Link href={`/workflow/${workflowId}/settings?section=variables`}>
+                                    <Variable className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                    Variables
+                                </Link>
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        size="sm"
+                                        className="h-7 gap-1 px-2 text-[11px]"
+                                        aria-label="More workflow settings sections"
+                                    >
+                                        More
+                                        <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="min-w-[10.5rem]">
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href={`/workflow/${workflowId}/settings?section=recordings`}
+                                            className="cursor-pointer"
+                                        >
+                                            <Mic className="size-3.5 shrink-0" aria-hidden />
+                                            Recordings
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href={`/workflow/${workflowId}/settings?section=deployment`}
+                                            className="cursor-pointer"
+                                        >
+                                            <Rocket className="size-3.5 shrink-0" aria-hidden />
+                                            Deployment
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link
+                                            href={`/workflow/${workflowId}/settings?section=report`}
+                                            className="cursor-pointer"
+                                        >
+                                            <FileDown className="size-3.5 shrink-0" aria-hidden />
+                                            Report
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    </div>
                     {saveTemplateContextVariables ? (
                         <TemplateVariablesRailPanel
                             templateContextVariables={templateContextVariables}
@@ -485,9 +581,9 @@ export function WorkflowEditorRightRail({
                         <p className="text-xs text-muted-foreground">Template variables unavailable.</p>
                     )}
                     <Button variant="outline" size="sm" className="w-full justify-start gap-2 mt-4" asChild>
-                        <Link href={`/workflow/${workflowId}/settings?section=variables`}>
+                        <Link href={`/workflow/${workflowId}/settings`}>
                             <Settings className="h-4 w-4 shrink-0" />
-                            Open full settings (variables)
+                            Open full workflow settings
                         </Link>
                     </Button>
                 </TabsContent>

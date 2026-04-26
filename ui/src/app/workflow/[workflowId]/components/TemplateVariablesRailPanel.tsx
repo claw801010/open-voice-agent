@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2Icon, Variable } from 'lucide-react';
+import { CheckIcon, PencilIcon, Trash2Icon, Variable, XIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,10 @@ export function TemplateVariablesRailPanel({
     const [newKey, setNewKey] = useState('');
     const [newValue, setNewValue] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [editingKey, setEditingKey] = useState<string | null>(null);
+    const [editingDraftKey, setEditingDraftKey] = useState('');
+    const [editingDraftValue, setEditingDraftValue] = useState('');
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     useEffect(() => {
         setContextVars(templateContextVariables);
@@ -38,19 +42,71 @@ export function TemplateVariablesRailPanel({
     }, [contextVars, newKey, newValue, templateContextVariables]);
 
     const handleAdd = () => {
-        if (newKey && newValue) {
-            setContextVars((prev) => ({ ...prev, [newKey]: newValue }));
+        const trimmedKey = newKey.trim();
+        if (!trimmedKey || !newValue) {
+            return;
         }
+        if (contextVars[trimmedKey] !== undefined) {
+            setErrorMessage(`Variable "${trimmedKey}" already exists.`);
+            return;
+        }
+        setErrorMessage(null);
+        setContextVars((prev) => ({ ...prev, [trimmedKey]: newValue }));
         setNewKey('');
         setNewValue('');
     };
 
     const handleRemove = (key: string) => {
+        setErrorMessage(null);
         setContextVars((prev) => {
             const next = { ...prev };
             delete next[key];
             return next;
         });
+        if (editingKey === key) {
+            setEditingKey(null);
+            setEditingDraftKey('');
+            setEditingDraftValue('');
+        }
+    };
+
+    const handleStartEdit = (key: string, value: string) => {
+        setErrorMessage(null);
+        setEditingKey(key);
+        setEditingDraftKey(key);
+        setEditingDraftValue(value);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingKey(null);
+        setEditingDraftKey('');
+        setEditingDraftValue('');
+        setErrorMessage(null);
+    };
+
+    const handleApplyEdit = () => {
+        if (!editingKey) {
+            return;
+        }
+        const nextKey = editingDraftKey.trim();
+        if (!nextKey) {
+            setErrorMessage('Variable key cannot be empty.');
+            return;
+        }
+        if (nextKey !== editingKey && contextVars[nextKey] !== undefined) {
+            setErrorMessage(`Variable "${nextKey}" already exists.`);
+            return;
+        }
+        setErrorMessage(null);
+        setContextVars((prev) => {
+            const next = { ...prev };
+            delete next[editingKey];
+            next[nextKey] = editingDraftValue;
+            return next;
+        });
+        setEditingKey(null);
+        setEditingDraftKey('');
+        setEditingDraftValue('');
     };
 
     const handleSave = async () => {
@@ -95,21 +151,76 @@ export function TemplateVariablesRailPanel({
                             key={key}
                             className="flex items-start gap-1 rounded border border-border bg-background/80 px-2 py-1.5 text-[11px]"
                         >
-                            <div className="min-w-0 flex-1">
-                                <div className="font-medium truncate">{key}</div>
-                                <div className="text-muted-foreground break-all line-clamp-2">{value}</div>
-                            </div>
-                            {!readOnly && (
-                                <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-7 w-7 shrink-0"
-                                    onClick={() => handleRemove(key)}
-                                    aria-label={`Remove ${key}`}
-                                >
-                                    <Trash2Icon className="h-3.5 w-3.5" />
-                                </Button>
+                            {editingKey === key && !readOnly ? (
+                                <>
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <Input
+                                            value={editingDraftKey}
+                                            onChange={(e) => setEditingDraftKey(e.target.value)}
+                                            className="h-7 text-[11px]"
+                                            placeholder="Key"
+                                        />
+                                        <Input
+                                            value={editingDraftValue}
+                                            onChange={(e) => setEditingDraftValue(e.target.value)}
+                                            className="h-7 text-[11px]"
+                                            placeholder="Value"
+                                        />
+                                    </div>
+                                    <div className="flex shrink-0 gap-0.5">
+                                        <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-7 w-7"
+                                            onClick={handleApplyEdit}
+                                            aria-label={`Save ${key}`}
+                                        >
+                                            <CheckIcon className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-7 w-7"
+                                            onClick={handleCancelEdit}
+                                            aria-label={`Cancel editing ${key}`}
+                                        >
+                                            <XIcon className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="font-medium truncate">{key}</div>
+                                        <div className="text-muted-foreground break-all line-clamp-2">{value}</div>
+                                    </div>
+                                    {!readOnly && (
+                                        <div className="flex shrink-0 gap-0.5">
+                                            <Button
+                                                type="button"
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-7 w-7"
+                                                onClick={() => handleStartEdit(key, value)}
+                                                aria-label={`Edit ${key}`}
+                                            >
+                                                <PencilIcon className="h-3.5 w-3.5" />
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-7 w-7"
+                                                onClick={() => handleRemove(key)}
+                                                aria-label={`Remove ${key}`}
+                                            >
+                                                <Trash2Icon className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </li>
                     ))}
@@ -141,6 +252,11 @@ export function TemplateVariablesRailPanel({
                     >
                         Add
                     </Button>
+                    {errorMessage ? (
+                        <p className="text-[11px] text-destructive" role="status">
+                            {errorMessage}
+                        </p>
+                    ) : null}
                     <Button
                         type="button"
                         size="sm"

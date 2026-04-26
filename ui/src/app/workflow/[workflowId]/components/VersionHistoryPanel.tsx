@@ -35,7 +35,7 @@ const statusLabel: Record<string, string> = {
 const statusColor: Record<string, string> = {
     draft: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
     published: "bg-green-500/20 text-green-400 border-green-500/30",
-    archived: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+    archived: "bg-zinc-600/25 text-zinc-200 border-zinc-500/35",
 };
 
 export const VersionHistoryPanel = ({
@@ -71,7 +71,7 @@ export const VersionHistoryPanel = ({
                         variant="ghost"
                         size="icon"
                         onClick={onClose}
-                        className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+                        className="text-white/70 hover:text-white hover:bg-[#2a2a2a]"
                     >
                         <X className="w-5 h-5" />
                     </Button>
@@ -79,10 +79,10 @@ export const VersionHistoryPanel = ({
 
                 {loading ? (
                     <div className="flex items-center justify-center py-12">
-                        <LoaderCircle className="w-6 h-6 text-gray-400 animate-spin" />
+                        <LoaderCircle className="w-6 h-6 text-white/70 animate-spin" />
                     </div>
                 ) : versions.length === 0 ? (
-                    <p className="text-sm text-gray-500 text-center py-8">
+                    <p className="text-sm text-white/72 text-center py-8">
                         No versions found.
                     </p>
                 ) : (
@@ -102,7 +102,7 @@ export const VersionHistoryPanel = ({
                                 >
                                     <div className="flex items-center justify-between mb-1.5">
                                         <div className="flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-gray-400" />
+                                            <FileText className="w-4 h-4 text-white/70" />
                                             <span className="text-sm font-medium text-white">
                                                 v{version.version_number}
                                             </span>
@@ -117,7 +117,7 @@ export const VersionHistoryPanel = ({
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-white/75">
                                         {formatDistanceToNow(new Date(date), {
                                             addSuffix: true,
                                         })}

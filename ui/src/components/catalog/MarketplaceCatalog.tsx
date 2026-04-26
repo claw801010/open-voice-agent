@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { type ReactNode, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -10,7 +10,6 @@ import {
     createWorkflowRunApiV1WorkflowWorkflowIdRunsPost,
     installWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPost,
 } from '@/client/sdk.gen';
-import { WORKFLOW_RUN_MODES } from '@/constants/workflowRunModes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -31,17 +30,19 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Sparkline, sparklineValuesFromSeed } from '@/components/ui/sparkline';
+import { WORKFLOW_RUN_MODES } from '@/constants/workflowRunModes';
 import { useAuth } from '@/lib/auth';
 import {
     catalogFacets,
-    defaultCatalogFilters,
-    filterVerticalPacks,
     type CatalogFilters,
     type CatalogJson,
+    defaultCatalogFilters,
+    filterVerticalPacks,
     type VerticalPack,
 } from '@/lib/catalog/filterVerticalPacks';
-import { getRandomId } from '@/lib/utils';
 import logger from '@/lib/logger';
+import { cn, getRandomId } from '@/lib/utils';
 
 type MarketplaceCatalogProps = {
     catalog: CatalogJson | null;
@@ -207,10 +208,10 @@ export function MarketplaceCatalog({
         filters.complianceTags.length > 0;
 
     return (
-        <div className="container mx-auto max-w-5xl px-4 py-8">
+        <div className="container mx-auto max-w-6xl px-4 py-8">
             <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold">{title}</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
                     <p className="text-muted-foreground max-w-2xl">{subtitle}</p>
                     {!installable && (
                         <p className="mt-2 text-sm text-muted-foreground">
@@ -232,7 +233,7 @@ export function MarketplaceCatalog({
 
             {packs.length > 0 && (
                 <section
-                    className="mb-8 rounded-lg border bg-card p-4 shadow-sm"
+                    className="ovo-glass-panel mb-8 p-4 sm:p-5"
                     aria-label="Filter templates"
                 >
                     <div className="grid gap-4 md:grid-cols-2">
@@ -344,13 +345,36 @@ export function MarketplaceCatalog({
                 </section>
             )}
 
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid auto-rows-fr gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {filtered.map((pack) => (
                     <article key={pack.slug}>
-                        <Card className="flex h-full flex-col">
-                            <CardHeader>
-                                <CardTitle className="text-lg">{pack.display_name}</CardTitle>
-                                <CardDescription>{pack.industry}</CardDescription>
+                        <Card
+                            className={cn(
+                                'flex h-full flex-col overflow-hidden',
+                                'ovo-bento-cell border-0 bg-transparent shadow-none',
+                            )}
+                        >
+                            <CardHeader className="pb-3">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                        <CardTitle className="text-lg tracking-tight">
+                                            {pack.display_name}
+                                        </CardTitle>
+                                        <CardDescription>{pack.industry}</CardDescription>
+                                    </div>
+                                    <Sparkline
+                                        values={sparklineValuesFromSeed(pack.slug)}
+                                        decorative
+                                        className="mt-0.5 opacity-90"
+                                    />
+                                </div>
+                                <p className="mt-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                    <span
+                                        className="size-1.5 shrink-0 rounded-full bg-emerald-500 ovo-status-breathe"
+                                        aria-hidden
+                                    />
+                                    <span>Active in registry</span>
+                                </p>
                             </CardHeader>
                             <CardContent className="flex-1 space-y-2 text-sm text-muted-foreground">
                                 <p>{pack.summary}</p>

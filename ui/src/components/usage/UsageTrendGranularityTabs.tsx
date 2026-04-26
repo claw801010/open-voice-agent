@@ -44,16 +44,16 @@ export function UsageTrendGranularityTabs({
                 <TabsList
                     aria-labelledby={labelId}
                     className={cn(
-                        'inline-flex w-fit items-center justify-center gap-0 shadow-none',
-                        variant === 'compact'
-                            ? 'h-8 rounded-md border border-border bg-background/80 p-0.5'
-                            : 'h-9 rounded-md border border-border bg-muted/40 p-0.5',
+                        'ovo-segmented-track inline-flex w-fit items-center justify-center gap-0.5 p-0.5 shadow-none',
+                        variant === 'compact' ? 'h-8' : 'h-9',
                     )}
                 >
                     <TabsTrigger
                         value="week"
                         className={cn(
-                            'rounded-md px-3 text-xs data-[state=active]:shadow-sm',
+                            'rounded-full border border-transparent px-3 text-xs font-medium text-muted-foreground ease-ovo-spring',
+                            'transition-[color,background-color,border-color,box-shadow,transform] duration-200',
+                            'data-[state=active]:border-border/50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm',
                             variant === 'compact' && 'h-7 px-2.5 text-[11px]',
                         )}
                     >
@@ -62,7 +62,9 @@ export function UsageTrendGranularityTabs({
                     <TabsTrigger
                         value="day"
                         className={cn(
-                            'rounded-md px-3 text-xs data-[state=active]:shadow-sm',
+                            'rounded-full border border-transparent px-3 text-xs font-medium text-muted-foreground ease-ovo-spring',
+                            'transition-[color,background-color,border-color,box-shadow,transform] duration-200',
+                            'data-[state=active]:border-border/50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm',
                             variant === 'compact' && 'h-7 px-2.5 text-[11px]',
                         )}
                     >

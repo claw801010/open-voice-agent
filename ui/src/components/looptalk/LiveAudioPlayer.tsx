@@ -268,7 +268,7 @@ export function LiveAudioPlayer({
             case 'connected': return 'bg-green-500';
             case 'connecting': return 'bg-yellow-500';
             case 'error': return 'bg-red-500';
-            default: return 'bg-gray-500';
+            default: return 'bg-muted-foreground';
         }
     };
 
@@ -281,7 +281,11 @@ export function LiveAudioPlayer({
                         Live Audio Stream
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${getStatusColor()}`} />
+                        <div
+                            className={`size-2 shrink-0 rounded-full ${getStatusColor()} ${connectionStatus === 'connected' ? 'ovo-status-breathe' : ''}`}
+                            aria-hidden
+                            title={connectionStatus === 'connected' ? 'Streaming' : connectionStatus}
+                        />
                         <Badge variant={connectionStatus === 'connected' ? 'default' : 'secondary'}>
                             {connectionStatus}
                         </Badge>
@@ -328,7 +332,7 @@ export function LiveAudioPlayer({
 
                 {/* Volume Control */}
                 <div className="flex items-center gap-4">
-                    <VolumeX className="h-4 w-4 text-gray-500" />
+                    <VolumeX className="h-4 w-4 text-muted-foreground" />
                     <input
                         type="range"
                         value={volume}
@@ -336,15 +340,15 @@ export function LiveAudioPlayer({
                         min="0"
                         max="1"
                         step="0.01"
-                        className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                     />
-                    <Volume2 className="h-4 w-4 text-gray-500" />
+                    <Volume2 className="h-4 w-4 text-muted-foreground" />
                 </div>
 
                 {/* Audio Level Meter */}
                 <div className="space-y-2">
-                    <div className="text-sm text-gray-500">Audio Level</div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="text-sm text-muted-foreground">Audio Level</div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
                         <div
                             className="h-full bg-green-500 transition-all duration-100"
                             style={{ width: `${audioLevel * 100}%` }}
@@ -353,7 +357,7 @@ export function LiveAudioPlayer({
                 </div>
 
                 {/* Status Info */}
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                     {connectionStatus === 'connected' && (
                         <>Streaming... (buffered: {bufferedDuration.toFixed(1)}s)</>
                     )}

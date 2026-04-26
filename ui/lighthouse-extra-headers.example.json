@@ -1,0 +1,3 @@
+{
+  "Cookie": "dograh_auth_token=…; dograh_auth_user=… — paste from DevTools (Network → authenticated document request), or generate locally: LIGHTHOUSE_OSS_EMAIL=… LIGHTHOUSE_OSS_PASSWORD=… (≥8 chars) npm run perf:lighthouse:oss-headers; optional LIGHTHOUSE_OSS_AUTO_SIGNUP=1 with password only uses a disposable lighthouse-e2e-*@example.com (see READMEPLANTOEXECUTE WE-01-VISUAL-DEPTH)."
+}

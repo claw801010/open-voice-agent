@@ -9,7 +9,9 @@ import React, { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { PostHogEvent } from "@/constants/posthog-events";
+import { cn } from "@/lib/utils";
 
+import { AppCommandPalette, COMMAND_PALETTE_OPEN_EVENT } from "./AppCommandPalette";
 import { AppSidebar } from "./AppSidebar";
 import { GitHubStarBadge } from "./GitHubStarBadge";
 
@@ -23,6 +25,20 @@ function AppHeader() {
           <Menu className="h-5 w-5" />
         </Button>
         <Link href="/" className="text-lg font-bold md:hidden">Dograh</Link>
+      </div>
+      <div className="hidden min-w-0 flex-1 px-2 md:block">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 w-full max-w-md justify-start gap-2 border-border/60 bg-muted/30 text-left text-muted-foreground shadow-none backdrop-blur-sm hover:bg-muted/50"
+          onClick={() => window.dispatchEvent(new Event(COMMAND_PALETTE_OPEN_EVENT))}
+        >
+          <span className="truncate text-xs font-normal">Search pages or actions…</span>
+          <kbd className="ovo-command-kbd ml-auto hidden shrink-0 rounded border border-border/50 bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground lg:inline">
+            ⌘K
+          </kbd>
+        </Button>
       </div>
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" asChild>
@@ -71,10 +87,16 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   // across route changes (avoids React hooks ordering violations during navigation).
   return (
     <SidebarProvider defaultOpen={!isWorkflowEditor && !isSuperadmin}>
+      <AppCommandPalette />
       {shouldShowSidebar ? (
         <div className="flex min-h-screen w-full">
           <AppSidebar />
-          <SidebarInset className="flex-1">
+          <SidebarInset
+            className={cn(
+              "flex-1",
+              "[font-family:var(--font-inter-ui),var(--font-geist-sans),ui-sans-serif,system-ui,sans-serif]",
+            )}
+          >
             {!isWorkflowEditor && <AppHeader />}
             {/* Optional header area for specific pages */}
             {headerActions && (
@@ -89,7 +111,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 
             {/* Optional sticky tabs */}
             {stickyTabs && (
-              <div className="sticky top-0 z-40 bg-[#2a2e39] border-b border-gray-700">
+              <div className="sticky top-0 z-40 bg-[#2a2e39] border-b border-white/15">
                 <div className="container mx-auto px-4">
                   <div className="flex items-center justify-center py-2">
                     {stickyTabs}

@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Code, ExternalLink, Loader2, Save } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -22,9 +22,17 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+    CONVERSATION_CONTEXT_VARIABLE_TEMPLATES,
+    DEFAULT_CALL_CONTEXT_TEST_JSON,
+    DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS,
+    HTTP_VARIABLE_GROUP_LABELS,
+    SYSTEM_CONTEXT_VARIABLE_TEMPLATES,
+} from "@/constants/contextVariableTemplates";
 import { TOOL_DOCUMENTATION_URLS } from "@/constants/documentation";
 import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 import { useAuth } from "@/lib/auth";
+import { mergeCallContextJsonWithDefaults } from "@/lib/callContextSampleForm";
 
 import {
     DEFAULT_END_CALL_REASON_DESCRIPTION,
@@ -38,15 +46,35 @@ import { BuiltinToolConfig, EndCallToolConfig, HttpApiToolConfig, TransferCallTo
 import { useToolFormRawTabs } from "./hooks/useToolFormRawTabs";
 import { useToolPageDirty } from "./hooks/useToolPageDirty";
 
+function collectTemplatePathsFromStrings(strings: string[]): string[] {
+    const re = /\{\{\s*([^}]+?)\s*\}\}/g;
+    const out = new Set<string>();
+    for (const str of strings) {
+        if (!str) continue;
+        const r = new RegExp(re.source, "g");
+        let m: RegExpExecArray | null;
+        while ((m = r.exec(str)) !== null) {
+            const p = m[1].trim();
+            if (p) out.add(p);
+        }
+    }
+    return [...out];
+}
+
 // Extended HttpApiConfig with parameters (until client types are regenerated)
 interface HttpApiConfigWithParams {
     method?: string;
     url?: string;
     headers?: Record<string, string>;
+    header_fields?: Array<{ key: string; value: string; description?: string }>;
     credential_uuid?: string;
     parameters?: ToolParameter[];
     timeout_ms?: number;
     customMessage?: string;
+    response_mapping?: Record<string, string>;
+    body_template?: string;
+    raw_code?: string;
+    raw_language?: 'python' | 'bash';
 }
 
 export default function ToolDetailPage() {
@@ -75,6 +103,18 @@ export default function ToolDetailPage() {
     const [headers, setHeaders] = useState<KeyValueItem[]>([]);
     const [parameters, setParameters] = useState<ToolParameter[]>([]);
     const [timeoutMs, setTimeoutMs] = useState(5000);
+    const [responseMappings, setResponseMappings] = useState<KeyValueItem[]>([]);
+    const [testPayload, setTestPayload] = useState("{}");
+    const [isTestingCall, setIsTestingCall] = useState(false);
+    const [testResult, setTestResult] = useState<string>("");
+    const [lastResponseData, setLastResponseData] = useState<unknown>(null);
+    const [rawCode, setRawCode] = useState("");
+    const [rawLanguage, setRawLanguage] = useState<'python' | 'bash'>("python");
+    const [bodyTemplate, setBodyTemplate] = useState("");
+    const [customVariableSuggestions, setCustomVariableSuggestions] = useState<string[]>([]);
+    const [customVariableDraft, setCustomVariableDraft] = useState("");
+    const [callContextTestJson, setCallContextTestJson] = useState(DEFAULT_CALL_CONTEXT_TEST_JSON);
+    const [templatePreviewWarnings, setTemplatePreviewWarnings] = useState<string[]>([]);
 
     // End Call form state
     const [endCallMessageType, setEndCallMessageType] = useState<EndCallMessageType>("none");
@@ -164,11 +204,20 @@ export default function ToolDetailPage() {
                 setCustomMessageRecordingId((config as any).customMessageRecordingId || "");
 
                 // Convert headers object to array
-                if (config.headers) {
+                if (config.header_fields && config.header_fields.length > 0) {
+                    setHeaders(
+                        config.header_fields.map((row) => ({
+                            key: row.key || "",
+                            value: row.value || "",
+                            description: row.description || "",
+                        }))
+                    );
+                } else if (config.headers) {
                     setHeaders(
                         Object.entries(config.headers).map(([key, value]) => ({
                             key,
                             value: value as string,
+                            description: "",
                         }))
                     );
                 } else {
@@ -183,11 +232,28 @@ export default function ToolDetailPage() {
                             type: p.type || "string",
                             description: p.description || "",
                             required: p.required ?? true,
+                            valueTemplate:
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                (p as any).value_template || p.valueTemplate || "",
                         }))
                     );
                 } else {
                     setParameters([]);
                 }
+
+                if (config.response_mapping) {
+                    setResponseMappings(
+                        Object.entries(config.response_mapping).map(([key, value]) => ({
+                            key,
+                            value,
+                        }))
+                    );
+                } else {
+                    setResponseMappings([]);
+                }
+                setRawLanguage(config.raw_language || "python");
+                setRawCode(config.raw_code || "");
+                setBodyTemplate(config.body_template || "");
             }
         }
     }, []);
@@ -237,6 +303,119 @@ export default function ToolDetailPage() {
         fetchTool();
         fetchRecordings();
     }, [fetchTool, fetchRecordings]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            const raw = window.localStorage.getItem("tool-http-call-context-json");
+            if (raw?.trim()) {
+                setCallContextTestJson(raw);
+            }
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const timer = window.setTimeout(() => {
+            try {
+                window.localStorage.setItem("tool-http-call-context-json", callContextTestJson);
+            } catch {
+                // ignore quota / private mode
+            }
+        }, 500);
+        return () => window.clearTimeout(timer);
+    }, [callContextTestJson]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        try {
+            const raw = window.localStorage.getItem("tool-custom-variable-suggestions");
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                const normalized = parsed
+                    .filter((v) => typeof v === "string")
+                    .map((v) => v.trim())
+                    .filter(Boolean);
+                setCustomVariableSuggestions(normalized);
+            }
+        } catch {
+            // ignore invalid local storage payload
+        }
+    }, []);
+
+    const addCustomVariableSuggestion = useCallback(() => {
+        const cleaned = customVariableDraft.trim().replace(/^\{\{|\}\}$/g, "");
+        if (!cleaned) return;
+        const template = `{{${cleaned}}}`;
+        setCustomVariableSuggestions((prev) => {
+            if (prev.includes(template)) return prev;
+            const next = [...prev, template].slice(-30);
+            if (typeof window !== "undefined") {
+                window.localStorage.setItem(
+                    "tool-custom-variable-suggestions",
+                    JSON.stringify(next)
+                );
+            }
+            return next;
+        });
+        setCustomVariableDraft("");
+        toast.success("Custom variable added to pickers.");
+    }, [customVariableDraft]);
+
+    const resetCallContextSample = useCallback(() => {
+        setCallContextTestJson(DEFAULT_CALL_CONTEXT_TEST_JSON);
+        toast.success("Restored default sample call context.");
+    }, []);
+
+    const mergeCallContextDefaults = useCallback(() => {
+        setCallContextTestJson((prev) =>
+            mergeCallContextJsonWithDefaults(prev, DEFAULT_CALL_CONTEXT_TEST_JSON)
+        );
+        toast.success("Added missing default sample paths. Your values were kept.");
+    }, []);
+
+    const variableSuggestions = useMemo(() => {
+        const fromParameters = parameters
+            .map((p) => p.name.trim())
+            .filter(Boolean)
+            .map((key) => `{{${key}}}`);
+        const fromMappings = responseMappings
+            .map((m) => m.key.trim())
+            .filter(Boolean)
+            .map((key) => `{{${key}}}`);
+        return Array.from(
+            new Set([
+                ...DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS,
+                ...customVariableSuggestions,
+                ...fromParameters,
+                ...fromMappings,
+            ])
+        );
+    }, [customVariableSuggestions, parameters, responseMappings]);
+
+    const variableSuggestionGroups = useMemo(() => {
+        const liveParameterAndMapping = Array.from(
+            new Set([
+                ...parameters
+                    .map((p) => p.name.trim())
+                    .filter(Boolean)
+                    .map((key) => `{{${key}}}`),
+                ...responseMappings
+                    .map((m) => m.key.trim())
+                    .filter(Boolean)
+                    .map((key) => `{{${key}}}`),
+            ])
+        );
+        return [
+            { label: HTTP_VARIABLE_GROUP_LABELS.system, options: SYSTEM_CONTEXT_VARIABLE_TEMPLATES },
+            { label: HTTP_VARIABLE_GROUP_LABELS.conversation, options: CONVERSATION_CONTEXT_VARIABLE_TEMPLATES },
+            { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: customVariableSuggestions },
+            { label: HTTP_VARIABLE_GROUP_LABELS.live, options: liveParameterAndMapping },
+        ].filter((group) => group.options.length > 0);
+    }, [customVariableSuggestions, parameters, responseMappings]);
 
     const buildPendingPayload = useCallback(() => {
         if (!tool) return {};
@@ -288,7 +467,28 @@ export default function ToolDetailPage() {
         headers.filter((h) => h.key && h.value).forEach((h) => {
             headersObject[h.key] = h.value;
         });
-        const validParameters = parameters.filter((p) => p.name.trim());
+        const headerFields = headers
+            .filter((h) => h.key.trim() && h.value.trim())
+            .map((h) => ({
+                key: h.key.trim(),
+                value: h.value.trim(),
+                description: (h.description || "").trim() || undefined,
+            }));
+        const validParameters = parameters
+            .filter((p) => p.name.trim())
+            .map((p) => ({
+                name: p.name.trim(),
+                type: p.type,
+                description: p.description || "",
+                required: p.required ?? true,
+                value_template: (p.valueTemplate || "").trim() || undefined,
+            }));
+        const responseMappingObject: Record<string, string> = {};
+        responseMappings
+            .filter((m) => m.key.trim() && m.value.trim())
+            .forEach((m) => {
+                responseMappingObject[m.key.trim()] = m.value.trim();
+            });
         return {
             name,
             description: description || undefined,
@@ -300,11 +500,19 @@ export default function ToolDetailPage() {
                     url,
                     credential_uuid: credentialUuid || undefined,
                     headers: Object.keys(headersObject).length > 0 ? headersObject : undefined,
+                    header_fields: headerFields.length > 0 ? headerFields : undefined,
                     parameters: validParameters.length > 0 ? validParameters : undefined,
                     timeout_ms: timeoutMs,
                     customMessage: customMessageType === "text" ? customMessage || undefined : undefined,
                     customMessageType,
                     customMessageRecordingId: customMessageType === "audio" ? customMessageRecordingId || undefined : undefined,
+                    response_mapping:
+                        Object.keys(responseMappingObject).length > 0
+                            ? responseMappingObject
+                            : undefined,
+                    raw_code: rawCode || undefined,
+                    raw_language: rawLanguage || undefined,
+                    body_template: bodyTemplate.trim() || undefined,
                 },
             },
         };
@@ -329,6 +537,334 @@ export default function ToolDetailPage() {
         timeoutMs,
         customMessageType,
         customMessageRecordingId,
+        responseMappings,
+        rawCode,
+        rawLanguage,
+        bodyTemplate,
+    ]);
+
+    const buildHeadersObject = useCallback(() => {
+        const headersObject: Record<string, string> = {};
+        headers.filter((h) => h.key && h.value).forEach((h) => {
+            headersObject[h.key] = h.value;
+        });
+        return headersObject;
+    }, [headers]);
+
+    const generateRawCodeFromForm = useCallback(
+        (language: 'python' | 'bash') => {
+            const headersObject = buildHeadersObject();
+            headersObject["Content-Type"] = headersObject["Content-Type"] || "application/json";
+            const payload = testPayload.trim() ? testPayload : "{}";
+            if (language === "bash") {
+                const curlHeaders = Object.entries(headersObject)
+                    .map(([k, v]) => `-H '${k}: ${v}'`)
+                    .join(" \\\n  ");
+                const dataFlag = httpMethod === "GET" || httpMethod === "DELETE"
+                    ? ""
+                    : ` \\\n  --data '${payload.replace(/'/g, "'\"'\"'")}'`;
+                return `curl -X ${httpMethod} '${url}' \\\n  ${curlHeaders}${dataFlag}`;
+            }
+            return `import requests\n\nurl = "${url}"\nheaders = ${JSON.stringify(headersObject, null, 4)}\npayload = ${payload}\n\nresponse = requests.request(\n    method="${httpMethod}",\n    url=url,\n    headers=headers,\n    ${httpMethod === "GET" || httpMethod === "DELETE" ? "params=payload" : "json=payload"},\n    timeout=${Math.max(1, Math.floor(timeoutMs / 1000))},\n)\n\nprint(response.status_code)\ntry:\n    print(response.json())\nexcept Exception:\n    print(response.text)\n`;
+        },
+        [buildHeadersObject, httpMethod, testPayload, timeoutMs, url]
+    );
+
+    const handleRegenerateRawCode = useCallback(() => {
+        setRawCode(generateRawCodeFromForm(rawLanguage));
+    }, [generateRawCodeFromForm, rawLanguage]);
+
+    useEffect(() => {
+        if (!rawCode.trim()) {
+            setRawCode(generateRawCodeFromForm(rawLanguage));
+        }
+    }, [generateRawCodeFromForm, rawCode, rawLanguage]);
+
+    const collectPrimitivePaths = useCallback(
+        (value: unknown, prefix = "", depth = 0): string[] => {
+            if (depth > 4) return [];
+            if (value === null || value === undefined) return [];
+            if (typeof value !== "object") return prefix ? [prefix] : [];
+            if (Array.isArray(value)) {
+                const paths: string[] = [];
+                value.forEach((item, idx) => {
+                    const childPrefix = prefix ? `${prefix}.${idx}` : String(idx);
+                    paths.push(...collectPrimitivePaths(item, childPrefix, depth + 1));
+                });
+                return paths;
+            }
+            const obj = value as Record<string, unknown>;
+            return Object.entries(obj).flatMap(([k, v]) => {
+                const childPrefix = prefix ? `${prefix}.${k}` : k;
+                if (v !== null && typeof v === "object") {
+                    return collectPrimitivePaths(v, childPrefix, depth + 1);
+                }
+                return [childPrefix];
+            });
+        },
+        []
+    );
+
+    const handleAutoMapResponse = useCallback(() => {
+        if (!lastResponseData) {
+            toast.error("Run a test call first to auto-map response fields.");
+            return;
+        }
+        const source =
+            typeof lastResponseData === "object" &&
+            lastResponseData !== null &&
+            "data" in (lastResponseData as Record<string, unknown>)
+                ? (lastResponseData as { data: unknown }).data
+                : lastResponseData;
+        const paths = collectPrimitivePaths(source).slice(0, 30);
+        if (paths.length === 0) {
+            toast.error("No mappable response fields found.");
+            return;
+        }
+        const nextMappings = paths.map((path) => {
+            const leaf = path.split(".").pop() || "value";
+            const key = leaf.replace(/[^a-zA-Z0-9_]/g, "_");
+            return { key, value: path };
+        });
+        setResponseMappings(nextMappings);
+        toast.success(`Mapped ${nextMappings.length} response fields.`);
+    }, [collectPrimitivePaths, lastResponseData]);
+
+    const extractPathValue = useCallback((source: unknown, path: string): unknown => {
+        if (!path.trim()) return undefined;
+        const segments = path.split(".");
+        let current: unknown = source;
+        for (const segment of segments) {
+            if (current === null || current === undefined) return undefined;
+            if (Array.isArray(current)) {
+                const idx = Number.parseInt(segment, 10);
+                if (Number.isNaN(idx)) return undefined;
+                current = current[idx];
+                continue;
+            }
+            if (typeof current === "object") {
+                current = (current as Record<string, unknown>)[segment];
+                continue;
+            }
+            return undefined;
+        }
+        return current;
+    }, []);
+
+    const inferParameterType = useCallback((value: unknown): ToolParameter["type"] => {
+        if (typeof value === "number") return "number";
+        if (typeof value === "boolean") return "boolean";
+        return "string";
+    }, []);
+
+    const handleApplyMappingsToParameters = useCallback(() => {
+        const validMappings = responseMappings
+            .filter((m) => m.key.trim() && m.value.trim())
+            .map((m) => ({ key: m.key.trim(), value: m.value.trim() }));
+        if (validMappings.length === 0) {
+            toast.error("Add response mappings first.");
+            return;
+        }
+
+        const existingByName = new Map(parameters.map((p) => [p.name.trim(), p]));
+        const source =
+            typeof lastResponseData === "object" &&
+            lastResponseData !== null &&
+            "data" in (lastResponseData as Record<string, unknown>)
+                ? (lastResponseData as { data: unknown }).data
+                : lastResponseData;
+
+        const merged = validMappings.map(({ key, value }) => {
+            const existing = existingByName.get(key);
+            const sampleValue = extractPathValue(source, value);
+            const inferred = inferParameterType(sampleValue);
+            const template = `{{${key}}}`;
+
+            if (existing) {
+                return {
+                    ...existing,
+                    name: key,
+                    description:
+                        existing.description?.trim() ||
+                        `Derived from mapped response path "${value}".`,
+                    type: existing.type || inferred,
+                    valueTemplate: existing.valueTemplate || template,
+                };
+            }
+
+            return {
+                name: key,
+                type: inferred,
+                description: `Derived from mapped response path "${value}".`,
+                required: false,
+                valueTemplate: template,
+            } as ToolParameter;
+        });
+
+        // Keep existing parameters that are not touched by mapping keys.
+        const untouched = parameters.filter(
+            (p) => !validMappings.some((m) => m.key === p.name.trim())
+        );
+        setParameters([...untouched, ...merged]);
+        toast.success(`Applied ${merged.length} mapped fields to parameters.`);
+    }, [responseMappings, parameters, lastResponseData, extractPathValue, inferParameterType]);
+
+    const handleTestHttpCall = useCallback(async () => {
+        const urlValidation = validateUrl(url);
+        if (!urlValidation.valid) {
+            setError(urlValidation.error || "Invalid URL");
+            return;
+        }
+
+        let parsedPayload: Record<string, unknown> = {};
+        const trimmed = testPayload.trim();
+        if (trimmed) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                    parsedPayload = parsed as Record<string, unknown>;
+                } else {
+                    setError("Test payload must be a JSON object.");
+                    return;
+                }
+            } catch {
+                setError("Test payload must be valid JSON.");
+                return;
+            }
+        }
+
+        const trimmedTemplate = bodyTemplate.trim();
+        if (trimmedTemplate) {
+            try {
+                const parsedTemplate = JSON.parse(trimmedTemplate);
+                if (!parsedTemplate || typeof parsedTemplate !== "object" || Array.isArray(parsedTemplate)) {
+                    setError("Body template must be a JSON object.");
+                    return;
+                }
+            } catch {
+                setError("Body template must be valid JSON.");
+                return;
+            }
+        }
+
+        let parsedCallContext: Record<string, unknown> = {};
+        const ctxTrim = callContextTestJson.trim();
+        if (ctxTrim) {
+            try {
+                const parsed = JSON.parse(ctxTrim);
+                if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+                    setError("Call context must be a JSON object.");
+                    return;
+                }
+                parsedCallContext = parsed as Record<string, unknown>;
+            } catch {
+                setError("Call context must be valid JSON.");
+                return;
+            }
+        }
+
+        try {
+            setIsTestingCall(true);
+            setError(null);
+            setTemplatePreviewWarnings([]);
+            const accessToken = await getAccessToken();
+            const headersObject = buildHeadersObject();
+            const headerFields = headers
+                .filter((h) => h.key.trim() && h.value.trim())
+                .map((h) => ({
+                    key: h.key.trim(),
+                    value: h.value.trim(),
+                    description: (h.description || "").trim() || undefined,
+                }));
+            const responseMappingObject: Record<string, string> = {};
+            responseMappings
+                .filter((m) => m.key.trim() && m.value.trim())
+                .forEach((m) => {
+                    responseMappingObject[m.key.trim()] = m.value.trim();
+                });
+
+            const response = await fetch("/api/v1/tools/test-http-call", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    config: {
+                        method: httpMethod,
+                        url,
+                        credential_uuid: credentialUuid || undefined,
+                        headers: Object.keys(headersObject).length ? headersObject : undefined,
+                        header_fields: headerFields.length > 0 ? headerFields : undefined,
+                        timeout_ms: timeoutMs,
+                        response_mapping:
+                            Object.keys(responseMappingObject).length > 0
+                                ? responseMappingObject
+                                : undefined,
+                        parameters:
+                            parameters.length > 0
+                                ? parameters
+                                      .filter((p) => p.name.trim())
+                                      .map((p) => ({
+                                          name: p.name.trim(),
+                                          type: p.type,
+                                          description: p.description || "",
+                                          required: p.required ?? true,
+                                          value_template: (p.valueTemplate || "").trim() || undefined,
+                                      }))
+                                : undefined,
+                        body_template: bodyTemplate.trim() || undefined,
+                    },
+                    arguments: parsedPayload,
+                    call_context_vars:
+                        Object.keys(parsedCallContext).length > 0 ? parsedCallContext : undefined,
+                }),
+            });
+
+            const result = await response.json();
+            setLastResponseData(result);
+            setTestResult(JSON.stringify(result, null, 2));
+            if (!response.ok || result?.status === "error") {
+                throw new Error(result?.error || "Test call failed");
+            }
+            const stringsToScan = [
+                url,
+                bodyTemplate,
+                ...headers.map((h) => h.value),
+                ...headers.map((h) => (h.description || "").trim()).filter(Boolean),
+                ...parameters.map((p) => p.valueTemplate || ""),
+            ];
+            const paths = collectTemplatePathsFromStrings(stringsToScan);
+            setTemplatePreviewWarnings(
+                paths.filter(
+                    (path) =>
+                        extractPathValue(parsedPayload, path) === undefined &&
+                        extractPathValue(parsedCallContext, path) === undefined
+                )
+            );
+            toast.success("Test API call succeeded.");
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Test call failed";
+            setError(message);
+            setTemplatePreviewWarnings([]);
+            toast.error(message);
+        } finally {
+            setIsTestingCall(false);
+        }
+    }, [
+        credentialUuid,
+        getAccessToken,
+        buildHeadersObject,
+        httpMethod,
+        responseMappings,
+        parameters,
+        headers,
+        testPayload,
+        bodyTemplate,
+        callContextTestJson,
+        timeoutMs,
+        url,
+        extractPathValue,
     ]);
 
     const applyToolPayload = useCallback(
@@ -406,6 +942,20 @@ export default function ToolDetailPage() {
             if (invalidParams.length > 0) {
                 setError("All parameters must have a name");
                 return;
+            }
+
+            const trimmedTemplate = bodyTemplate.trim();
+            if (trimmedTemplate) {
+                try {
+                    const parsedTemplate = JSON.parse(trimmedTemplate);
+                    if (!parsedTemplate || typeof parsedTemplate !== "object" || Array.isArray(parsedTemplate)) {
+                        setError("Body template must be a JSON object.");
+                        return;
+                    }
+                } catch {
+                    setError("Body template must be valid JSON.");
+                    return;
+                }
             }
         }
 
@@ -629,7 +1179,6 @@ const data = await response.json();`;
                         />
                         )
                     ) : (
-                        renderFormRawTabs(
                         <HttpApiToolConfig
                             name={name}
                             onNameChange={setName}
@@ -654,8 +1203,33 @@ const data = await response.json();`;
                             customMessageRecordingId={customMessageRecordingId}
                             onCustomMessageRecordingIdChange={setCustomMessageRecordingId}
                             recordings={recordings}
+                            responseMappings={responseMappings}
+                            onResponseMappingsChange={setResponseMappings}
+                            testPayload={testPayload}
+                            onTestPayloadChange={setTestPayload}
+                            onTestCall={handleTestHttpCall}
+                            isTestingCall={isTestingCall}
+                            testResult={testResult}
+                            onAutoMapResponse={handleAutoMapResponse}
+                            onApplyMappingsToParameters={handleApplyMappingsToParameters}
+                            rawCode={rawCode}
+                            onRawCodeChange={setRawCode}
+                            rawLanguage={rawLanguage}
+                            onRawLanguageChange={setRawLanguage}
+                            onRegenerateRawCode={handleRegenerateRawCode}
+                            bodyTemplate={bodyTemplate}
+                            onBodyTemplateChange={setBodyTemplate}
+                            variableSuggestions={variableSuggestions}
+                            variableSuggestionGroups={variableSuggestionGroups}
+                            customVariableDraft={customVariableDraft}
+                            onCustomVariableDraftChange={setCustomVariableDraft}
+                            onAddCustomVariable={addCustomVariableSuggestion}
+                            callContextTestJson={callContextTestJson}
+                            onCallContextTestJsonChange={setCallContextTestJson}
+                            onResetCallContextSample={resetCallContextSample}
+                            onMergeCallContextDefaults={mergeCallContextDefaults}
+                            templatePreviewWarnings={templatePreviewWarnings}
                         />
-                        )
                     )}
 
                     {error && (

@@ -12,6 +12,7 @@ from api.db.models import UserModel
 from api.enums import PostHogEvent, ToolCategory, ToolStatus
 from api.services.auth.depends import get_user
 from api.services.posthog_client import capture_event
+from api.services.workflow.tools.custom_tool import execute_http_request
 
 router = APIRouter(prefix="/tools")
 
@@ -26,6 +27,20 @@ class ToolParameter(BaseModel):
     required: bool = Field(
         default=True, description="Whether this parameter is required"
     )
+    value_template: Optional[str] = Field(
+        default=None,
+        description="Optional fallback template (e.g. {{customer.id}}) resolved from context variables",
+    )
+
+
+class HttpHeaderField(BaseModel):
+    """Extended header field with optional description."""
+
+    key: str = Field(description="Header key")
+    value: str = Field(description="Header value")
+    description: Optional[str] = Field(
+        default=None, description="Optional header description"
+    )
 
 
 class HttpApiConfig(BaseModel):
@@ -35,6 +50,9 @@ class HttpApiConfig(BaseModel):
     url: str = Field(description="Target URL")
     headers: Optional[Dict[str, str]] = Field(
         default=None, description="Static headers to include"
+    )
+    header_fields: Optional[List[HttpHeaderField]] = Field(
+        default=None, description="Header rows including optional descriptions"
     )
     credential_uuid: Optional[str] = Field(
         default=None, description="Reference to ExternalCredentialModel for auth"
@@ -53,6 +71,35 @@ class HttpApiConfig(BaseModel):
     )
     customMessageRecordingId: Optional[str] = Field(
         default=None, description="Recording ID for audio custom message"
+    )
+    response_mapping: Optional[Dict[str, str]] = Field(
+        default=None,
+        description="Optional output-field -> response.path mapping for tool responses",
+    )
+    body_template: Optional[str] = Field(
+        default=None,
+        description="Optional JSON template string for request body/query defaults",
+    )
+    raw_code: Optional[str] = Field(
+        default=None,
+        description="Optional raw snippet for operator reference (not executed server-side)",
+    )
+    raw_language: Optional[Literal["python", "bash"]] = Field(
+        default=None,
+        description="Language label for raw_code (UI / export)",
+    )
+
+
+class TestHttpToolRequest(BaseModel):
+    """Request schema to test an HTTP API tool configuration."""
+
+    config: HttpApiConfig
+    arguments: Optional[Dict[str, Any]] = Field(
+        default=None, description="Sample arguments/body/query payload for test request"
+    )
+    call_context_vars: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional call/conversation context used only to resolve {{...}} templates during test",
     )
 
 
@@ -451,6 +498,27 @@ async def delete_tool(
         raise HTTPException(status_code=404, detail="Tool not found")
 
     return {"status": "archived", "tool_uuid": tool_uuid}
+
+
+@router.post("/test-http-call")
+async def test_http_call(
+    request: TestHttpToolRequest,
+    user: UserModel = Depends(get_user),
+) -> Dict[str, Any]:
+    """Test an HTTP API call with current tool config and sample arguments."""
+    if not user.selected_organization_id:
+        raise HTTPException(
+            status_code=400, detail="No organization selected for the user"
+        )
+
+    config = request.config.model_dump(exclude_none=True)
+    arguments = request.arguments or {}
+    return await execute_http_request(
+        config=config,
+        arguments=arguments,
+        call_context_vars=request.call_context_vars,
+        organization_id=user.selected_organization_id,
+    )
 
 
 @router.post("/{tool_uuid}/unarchive")

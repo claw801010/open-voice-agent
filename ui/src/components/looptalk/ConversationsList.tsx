@@ -58,7 +58,7 @@ export function ConversationsList({ testSessionId }: ConversationsListProps) {
         return (
             <div className="space-y-4">
                 {Array.from({ length: 3 }, (_, i) => (
-                    <Card key={i} className="h-24 bg-gray-200 animate-pulse" />
+                    <Card key={i} className="h-24 bg-muted animate-pulse" />
                 ))}
             </div>
         );
@@ -76,10 +76,10 @@ export function ConversationsList({ testSessionId }: ConversationsListProps) {
         return (
             <Card>
                 <CardContent className="text-center py-8">
-                    <div className="text-gray-500 mb-2">
+                    <div className="text-muted-foreground mb-2">
                         No conversations started yet
                     </div>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                         Start the test session to begin agent conversations
                     </p>
                 </CardContent>

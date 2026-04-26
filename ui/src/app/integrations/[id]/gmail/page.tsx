@@ -285,7 +285,7 @@ export default function GmailSearchPage() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && searchEmails()}
                         placeholder="Search emails (e.g., from:user@example.com, subject:meeting)"
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 px-4 py-2 border border-border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                         disabled={!accessToken || loading}
                     />
                     <button

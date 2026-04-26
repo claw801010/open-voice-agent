@@ -39,6 +39,7 @@ def run_migrations_offline():
         render_item=render_item,
         compare_type=True,
         compare_server_default=True,
+        transaction_per_migration=True,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -87,6 +88,9 @@ def do_run_migrations(connection):
         render_item=render_item,
         compare_type=True,
         compare_server_default=True,
+        # Each revision commits separately so PostgreSQL can use new enum values
+        # (e.g. campaign_state 'syncing') in later migrations — see fec0fb9a8db7.
+        transaction_per_migration=True,
     )
     with context.begin_transaction():
         context.run_migrations()

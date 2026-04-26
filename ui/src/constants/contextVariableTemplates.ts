@@ -1,0 +1,151 @@
+export const SYSTEM_CONTEXT_VARIABLE_TEMPLATES = [
+    "{{caller_number}}",
+    "{{called_number}}",
+    "{{call_id}}",
+    "{{workflow_id}}",
+    "{{organization_id}}",
+    "{{timestamp}}",
+    "{{timezone}}",
+    "{{locale}}",
+];
+
+export const CONVERSATION_CONTEXT_VARIABLE_TEMPLATES = [
+    "{{initial_context.customer_name}}",
+    "{{initial_context.customer_id}}",
+    "{{conversation.intent}}",
+    "{{conversation.summary}}",
+    "{{conversation.last_user_message}}",
+    "{{conversation.sentiment}}",
+];
+
+export const DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS = [
+    ...SYSTEM_CONTEXT_VARIABLE_TEMPLATES,
+    ...CONVERSATION_CONTEXT_VARIABLE_TEMPLATES,
+];
+
+export interface VariableSuggestionGroup {
+    label: string;
+    options: string[];
+}
+
+/** Labels for HTTP tool variable pickers (Simple + Advanced + JSON insert controls). */
+export const HTTP_VARIABLE_GROUP_LABELS = {
+    system: "System defaults",
+    conversation: "Conversation state",
+    custom: "Custom flow variables",
+    live: "Tool parameters & mapping keys",
+} as const;
+
+/** Extra “Preset path” group in call-context Form (merged from `variableSuggestions`). */
+export const CALL_CONTEXT_FLOW_PATH_GROUP_LABEL = "From your flow (custom & tool keys)";
+
+/**
+ * Plain dot paths for **response mapping** value fields (paths into the HTTP response JSON). These are not
+ * `{{…}}` call-context templates; use the insert control to avoid typos in common API shapes.
+ */
+export const HTTP_RESPONSE_PATH_PRESET_GROUPS: VariableSuggestionGroup[] = [
+    {
+        label: "Common response shapes",
+        options: ["id", "data", "data.id", "data.items.0", "data.items.0.id", "result", "message", "error"],
+    },
+];
+
+/** Dot paths for test call-context sample editor (match runtime `{{path}}` keys). */
+export const CALL_CONTEXT_PATH_PRESET_GROUPS: VariableSuggestionGroup[] = [
+    {
+        label: "System",
+        options: [
+            "caller_number",
+            "called_number",
+            "call_id",
+            "workflow_id",
+            "organization_id",
+            "timestamp",
+            "timezone",
+            "locale",
+        ],
+    },
+    {
+        label: "Conversation",
+        options: [
+            "conversation.intent",
+            "conversation.summary",
+            "conversation.last_user_message",
+            "conversation.sentiment",
+        ],
+    },
+    {
+        label: "Initial context",
+        options: ["initial_context.customer_name", "initial_context.customer_id"],
+    },
+];
+
+/** `{{a.b.c}}` → `a.b.c` for call-context path fields (matches template resolution keys). */
+export function templateTokenToDotPath(template: string): string | null {
+    const t = template.trim();
+    const m = t.match(/^\{\{([^}]+)\}\}$/);
+    if (!m) return null;
+    const inner = m[1].trim();
+    return inner.length > 0 ? inner : null;
+}
+
+/**
+ * Append dot paths from `{{…}}` strings (custom variables, live parameter/mapping keys) not already covered by
+ * static groups so the call-context Form "Preset path" list matches other pickers.
+ */
+export function mergePathPresetGroupsWithFlowTemplates(
+    base: VariableSuggestionGroup[],
+    flatTemplateStrings: string[],
+): VariableSuggestionGroup[] {
+    const seen = new Set<string>();
+    for (const g of base) {
+        for (const o of g.options) {
+            seen.add(o);
+        }
+    }
+    const extra: string[] = [];
+    for (const tmpl of flatTemplateStrings) {
+        const p = templateTokenToDotPath(tmpl);
+        if (p && !seen.has(p)) {
+            seen.add(p);
+            extra.push(p);
+        }
+    }
+    extra.sort((a, b) => a.localeCompare(b));
+    if (extra.length === 0) {
+        return base;
+    }
+    return [
+        ...base,
+        {
+            label: CALL_CONTEXT_FLOW_PATH_GROUP_LABEL,
+            options: extra,
+        },
+    ];
+}
+
+/** Sample JSON for test calls — resolves common {{...}} paths (merge/edit as needed). */
+export const DEFAULT_CALL_CONTEXT_TEST_JSON = JSON.stringify(
+    {
+        caller_number: "+15551234567",
+        called_number: "+18005551212",
+        call_id: "test-call-example",
+        workflow_id: 0,
+        organization_id: 0,
+        timestamp: "2026-04-25T12:00:00Z",
+        timezone: "America/Los_Angeles",
+        locale: "en-US",
+        conversation: {
+            intent: "support",
+            summary: "Test conversation summary",
+            last_user_message: "Hello",
+            sentiment: "neutral",
+        },
+        initial_context: {
+            customer_name: "Test Customer",
+            customer_id: "cust_test_123",
+        },
+    },
+    null,
+    2
+);

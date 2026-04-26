@@ -8,11 +8,14 @@ import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
+    SelectGroup,
     SelectItem,
+    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
 
 export type ParameterType = "string" | "number" | "boolean";
 
@@ -21,23 +24,30 @@ export interface ToolParameter {
     type: ParameterType;
     description: string;
     required: boolean;
+    valueTemplate?: string;
 }
 
 interface ParameterEditorProps {
     parameters: ToolParameter[];
     onChange: (parameters: ToolParameter[]) => void;
     disabled?: boolean;
+    variableSuggestions?: string[];
+    variableInsertMode?: "replace" | "append";
+    variableSuggestionGroups?: VariableSuggestionGroup[];
 }
 
 export function ParameterEditor({
     parameters,
     onChange,
     disabled = false,
+    variableSuggestions = [],
+    variableInsertMode = "replace",
+    variableSuggestionGroups = [],
 }: ParameterEditorProps) {
     const addParameter = () => {
         onChange([
             ...parameters,
-            { name: "", type: "string", description: "", required: true },
+            { name: "", type: "string", description: "", required: true, valueTemplate: "" },
         ]);
     };
 
@@ -135,6 +145,62 @@ export function ParameterEditor({
                             }
                             disabled={disabled}
                         />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label className="text-xs">Value Template (optional)</Label>
+                        <Label className="text-xs text-muted-foreground">
+                            Use conversation variables like {"{{customer.name}}"} as fallback when LLM omits this parameter.
+                        </Label>
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder='e.g., {{customer.id}}'
+                                value={param.valueTemplate || ""}
+                                onChange={(e) =>
+                                    updateParameter(index, "valueTemplate", e.target.value)
+                                }
+                                disabled={disabled}
+                            />
+                            {variableSuggestions.length > 0 ||
+                            variableSuggestionGroups.length > 0 ? (
+                                <Select
+                                    value=""
+                                    onValueChange={(value) =>
+                                        updateParameter(
+                                            index,
+                                            "valueTemplate",
+                                            variableInsertMode === "append" &&
+                                                (param.valueTemplate || "").trim()
+                                                ? `${param.valueTemplate} ${value}`
+                                                : value
+                                        )
+                                    }
+                                    disabled={disabled}
+                                >
+                                    <SelectTrigger className="w-[220px]">
+                                        <SelectValue placeholder="Insert variable" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {variableSuggestionGroups.length > 0
+                                            ? variableSuggestionGroups.map((group) => (
+                                                  <SelectGroup key={group.label}>
+                                                      <SelectLabel>{group.label}</SelectLabel>
+                                                      {group.options.map((template) => (
+                                                          <SelectItem key={template} value={template}>
+                                                              {template}
+                                                          </SelectItem>
+                                                      ))}
+                                                  </SelectGroup>
+                                              ))
+                                            : variableSuggestions.map((template) => (
+                                                  <SelectItem key={template} value={template}>
+                                                      {template}
+                                                  </SelectItem>
+                                              ))}
+                                    </SelectContent>
+                                </Select>
+                            ) : null}
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2">

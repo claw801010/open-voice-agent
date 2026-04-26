@@ -7,8 +7,17 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "fix-lint": "npx eslint --fix . --ignore-pattern '.next/*' --ignore-pattern 'node_modules/*' --ignore-pattern 'next-env.d.ts'",
-    "generate-client": "openapi-ts"
+    "generate-client": "openapi-ts",
+    "perf:lighthouse": "bash scripts/lighthouse-we01-visual-depth.sh",
+    "perf:lighthouse:mobile": "cross-env LIGHTHOUSE_FORM_FACTOR=mobile bash scripts/lighthouse-we01-visual-depth.sh",
+    "perf:lighthouse:auth": "cross-env LIGHTHOUSE_AUTH_EXAMPLE=1 bash scripts/lighthouse-we01-visual-depth.sh",
+    "perf:lighthouse:auth:full": "bash scripts/lighthouse-auth-full.sh",
+    "perf:lighthouse:summary": "node scripts/lighthouse-summarize.mjs",
+    "perf:lighthouse:summary:latest-auth": "node scripts/lighthouse-summarize.mjs --latest-auth",
+    "perf:lighthouse:oss-headers": "node scripts/lighthouse-oss-session-headers.mjs"
   },
   "dependencies": {
     "@dagrejs/dagre": "^1.1.4",
@@ -73,6 +82,7 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "source-map-support": "^0.5.21",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

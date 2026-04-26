@@ -35,32 +35,41 @@ export function TestSessionDetails({ session }: TestSessionDetailsProps) {
                             <CardDescription className="mt-2">{session.description}</CardDescription>
                         )}
                     </div>
-                    <Badge variant={getStatusBadgeVariant(session.status)} className="text-lg px-3 py-1">
-                        {session.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                        {session.status === "active" && (
+                            <span
+                                className="size-2 shrink-0 rounded-full bg-emerald-500 ovo-status-breathe"
+                                aria-hidden
+                                title="Session active"
+                            />
+                        )}
+                        <Badge variant={getStatusBadgeVariant(session.status)} className="text-lg px-3 py-1">
+                            {session.status}
+                        </Badge>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <h3 className="font-semibold text-sm text-gray-600 mb-1">Test Type</h3>
+                        <h3 className="font-semibold text-sm text-muted-foreground mb-1">Test Type</h3>
                         <p className="capitalize">{session.test_type.replace('_', ' ')}</p>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-sm text-gray-600 mb-1">Created</h3>
+                        <h3 className="font-semibold text-sm text-muted-foreground mb-1">Created</h3>
                         <p>{format(new Date(session.created_at), 'MMM d, yyyy h:mm a')}</p>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-sm text-gray-600 mb-1">Actor Workflow</h3>
+                        <h3 className="font-semibold text-sm text-muted-foreground mb-1">Actor Workflow</h3>
                         <p>{session.actor_workflow_name}</p>
                     </div>
                     <div>
-                        <h3 className="font-semibold text-sm text-gray-600 mb-1">Adversary Workflow</h3>
+                        <h3 className="font-semibold text-sm text-muted-foreground mb-1">Adversary Workflow</h3>
                         <p>{session.adversary_workflow_name}</p>
                     </div>
                     {session.test_metadata?.concurrent_pairs && (
                         <div>
-                            <h3 className="font-semibold text-sm text-gray-600 mb-1">Concurrent Pairs</h3>
+                            <h3 className="font-semibold text-sm text-muted-foreground mb-1">Concurrent Pairs</h3>
                             <p>{session.test_metadata.concurrent_pairs}</p>
                         </div>
                     )}

@@ -186,7 +186,7 @@ export const WebhookNode = memo(({ data, selected, id }: WebhookNodeProps) => {
                     </div>
                     <div className="flex items-center gap-1.5">
                         <Circle
-                            className={`h-2 w-2 ${data.enabled !== false ? "fill-green-500 text-green-500" : "fill-gray-400 text-gray-400"}`}
+                            className={`h-2 w-2 ${data.enabled !== false ? "fill-green-500 text-green-500" : "fill-muted-foreground text-muted-foreground"}`}
                         />
                         <span className="text-xs text-muted-foreground">
                             {data.enabled !== false ? "Enabled" : "Disabled"}

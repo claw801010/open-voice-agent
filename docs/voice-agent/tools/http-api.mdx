@@ -3,7 +3,7 @@ title: "HTTP API"
 description: "Create REST API tools that your AI agent can invoke during conversations to integrate with external systems."
 ---
 
-HTTP API tools allow you to attach extrernal REST API calls directly to workflow nodes, enabling your voice agents to call any internal or external system during live conversations based on LLM judgment and your prompts. This works similar to function calling on any agentic platform and is 100% open source and fully customizable.
+HTTP API tools allow you to attach external REST API calls directly to workflow nodes, enabling your voice agents to call any internal or external system during live conversations based on LLM judgment and your prompts. This works similar to function calling on any agentic platform and is 100% open source and fully customizable.
 
 ## Video Tutorial
 
@@ -70,8 +70,9 @@ An HTTP API Tool is a REST API definition that the LLM can invoke at runtime.
 
 - Full URL (**must include `http://` or `https://`**)
 - Supports **REST** methods
+- **Templated URLs:** you may include `{{path.to.value}}` in the path or query, for example `https://api.example.com/orders/{{order_id}}`. The editor accepts these while you are authoring; the URL is resolved at runtime. See [Template resolution order](#template-resolution-order) below.
 
-<Note>Common mistake: forgetting https:// in the URL.</Note>
+<Note>Common mistake: forgetting https:// in the URL. Templated URLs must still start with `http://` or `https://`.</Note>
 
 <br/>
 <div style={{ borderBottom: '2px solid #e5e5e5', margin: '20px 0' }}></div>
@@ -79,7 +80,7 @@ An HTTP API Tool is a REST API definition that the LLM can invoke at runtime.
 ### 4. Authentication & Headers
 
 - Add custom authentication
-- Add custom headers
+- Add custom headers (values support the same `{{…}}` paths as the URL and body; see [Template resolution order](#template-resolution-order))
 - Works with internal services and third-party APIs
 
 <br/>
@@ -121,8 +122,6 @@ Inside the node, guide the LLM using **simple English instructions**.
 Example:
 
 "If the user shows interest in speaking to sales or wants a callback, immediately call the capture_lead_interest tool and set interest to true."
-This instruction is often the deciding factor for correct tool usage.
-
 This instruction is often the **deciding factor** for correct tool usage.
 
 ![Parameter Example](/images/tool%20attachment.png)
@@ -147,11 +146,27 @@ Poor naming or vague descriptions lead to:
 <br/>
 <div style={{ borderBottom: '2px solid #e5e5e5', margin: '20px 0' }}></div>
 
+## Template resolution order
+
+`{{…}}` placeholders in the **body template** (default JSON), **LLM tool parameters**, **endpoint URL**, and **header values** (including structured header rows) are resolved in a consistent way:
+
+1. The tool starts from **LLM arguments** and fills in **parameter `value_template` defaults** where the model did not supply a value.
+2. The **body template** is merged in as defaults and combined with those arguments to form the final JSON payload (for methods that send a body or query string).
+3. The **URL** and all **header** values are then resolved using that **merged** data **plus** the current **call and conversation context** (system fields, `conversation.*`, your workflow template variables, and similar paths described in [Context and variables](/core-concepts/context-and-variables) and [Template variables](/voice-agent/template-variables)).
+
+So a key that exists only in the **body template** can still be used in a **header** (for example a trace or customer id) as long as the path matches.
+
+In the dashboard, use **Test API Call** with a sample **test payload** and optional **call / conversation context** JSON. In the **Form** view, **Preset path** includes system and conversation paths plus a merged group (for example **“From your flow (custom & tool keys)”**) built from this tool’s custom template keys, parameter names, and response-mapping key names, so you can build sample context without retyping every dot path. After a successful test, the UI can highlight any `{{…}}` paths that were not found in those samples, including paths used in the **URL** or **headers**.
+
+**Response mapping** (Simple and Advanced) uses **plain dot paths** into the **HTTP response body** (for example `data.id` or `data.items.0.id`). This is different from the `{{…}}` system used for the URL, parameters, and call context. The insert control lists common response shapes; **Auto-map from latest response** (after a successful test) is still the fastest way to build mappings.
+
+In **Test API Call** → **Call / conversation context (test only)**, use **Add missing sample values** to merge the standard app default shape (system, `conversation`, `initial_context`) into your sample without overwriting fields you already set. **Reset sample context** replaces the full JSON with the default. Browser only (not stored on the tool).
+
 ## Key Best Practices
 - Name tools clearly
 - Write detailed, action-based descriptions
 - Keep parameters simple at first
-- Always include http/https in URLs
+- Always include http/https in URLs; templated paths still need a valid `https://` prefix in the editor
 - Use plain English in node instructions
 - Attach only relevant tools to each node
 

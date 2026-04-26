@@ -11,7 +11,7 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | **Operating / self-hosting** | [READMEBUILDME.md](READMEBUILDME.md) | [READMELEARNME.md](READMELEARNME.md) |
 | **API, MCP, IDE, agents** | [READMEADK.md](READMEADK.md) | [READMELEARNME.md](READMELEARNME.md) §3–10 |
 | **Minimal-code integrations** | [recipes/README.md](recipes/README.md) | Per-recipe files in [recipes/](recipes/) |
-| **Marketplace vertical packs (catalog + runbooks)** | [catalog/README.md](catalog/README.md) | [runbooks/README.md](runbooks/README.md) |
+| **Marketplace vertical packs (catalog + runbooks)** | [catalog/README.md](catalog/README.md) | [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md), [runbooks/README.md](runbooks/README.md) |
 | **Strategy & roadmap** | [READMEPLANNING.md](READMEPLANNING.md) | [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) |
 | **Shipping & changelog** | [READMENEWRELEASES.md](READMENEWRELEASES.md) | Execution IDs in READMEPLANTOEXECUTE |
 
@@ -27,8 +27,10 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | [READMEBUILDME.md](READMEBUILDME.md) | Env, Docker, fork sync, extension boundaries |
 | [READMEPLANNING.md](READMEPLANNING.md) | Strategy, pillars, marketplace §6, experience §8 |
 | [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) | Epics MK-01, WE-01, DX-01 — actionable backlog |
+| [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md) | Marketplace: curated packs + import/skills research |
 | [READMENEWRELEASES.md](READMENEWRELEASES.md) | What shipped (tie to execution IDs) |
 | [catalog/README.md](catalog/README.md) | Vertical pack JSON (`MK-01-CATALOG`) |
+| [docs/voice-agent/tools/http-api.mdx](docs/voice-agent/tools/http-api.mdx) | HTTP tool user doc (templated URL, headers, **Template resolution order**) — publish at [docs.dograh.com](https://docs.dograh.com) with site sync |
 | [runbooks/README.md](runbooks/README.md) | Per-vertical operational runbooks |
 
 ## Epics (execution IDs)

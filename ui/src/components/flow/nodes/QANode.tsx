@@ -148,7 +148,7 @@ export const QANode = memo(({ data, selected, id }: QANodeProps) => {
                     </div>
                     <div className="flex items-center gap-1.5">
                         <Circle
-                            className={`h-2 w-2 ${data.qa_enabled !== false ? "fill-green-500 text-green-500" : "fill-gray-400 text-gray-400"}`}
+                            className={`h-2 w-2 ${data.qa_enabled !== false ? "fill-green-500 text-green-500" : "fill-muted-foreground text-muted-foreground"}`}
                         />
                         <span className="text-xs text-muted-foreground">
                             {data.qa_enabled !== false ? "Enabled" : "Disabled"}

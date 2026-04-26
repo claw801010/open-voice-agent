@@ -8,6 +8,7 @@ import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { WorkflowFeedbackDialog } from "@/app/workflow/[workflowId]/components/WorkflowFeedbackDialog";
 import {
     duplicateWorkflowEndpointApiV1WorkflowWorkflowIdDuplicatePost,
     publishWorkflowApiV1WorkflowWorkflowIdPublishPost,
@@ -15,7 +16,6 @@ import {
 import { WorkflowError } from "@/client/types.gen";
 import { FlowEdge, FlowNode } from "@/components/flow/types";
 import { GitHubStarBadge } from "@/components/layout/GitHubStarBadge";
-import { WorkflowFeedbackDialog } from "@/app/workflow/[workflowId]/components/WorkflowFeedbackDialog";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -33,6 +33,7 @@ import { PostHogEvent } from "@/constants/posthog-events";
 import { WORKFLOW_RUN_MODES } from "@/constants/workflowRunModes";
 import { getPublicFeedbackUrl } from "@/lib/feedbackUrl";
 import { getUtcWeekMondayYmdFromDate } from "@/lib/usageOrgDeepLink";
+import { cn } from "@/lib/utils";
 import { friendlyValidationCopy, validationLocationLabel } from "@/lib/workflow/friendlyValidation";
 
 interface WorkflowEditorHeaderProps {
@@ -203,13 +204,13 @@ export const WorkflowEditorHeader = ({
                     className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#2a2a2a] transition-colors md:hidden shrink-0 mt-0.5"
                     aria-label="Open menu"
                 >
-                    <Menu className="w-5 h-5 text-gray-400" />
+                    <Menu className="w-5 h-5 text-white/70" />
                 </button>
                 <button
                     onClick={handleBack}
                     className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-[#2a2a2a] transition-colors shrink-0 mt-0.5"
                 >
-                    <ArrowLeft className="w-5 h-5 text-gray-400" />
+                    <ArrowLeft className="w-5 h-5 text-white/70" />
                 </button>
 
                 <div className="flex min-w-0 flex-col gap-1">
@@ -220,10 +221,10 @@ export const WorkflowEditorHeader = ({
                         <span className="hidden md:inline break-words">{workflowName}</span>
                     </h1>
                     <div
-                        className="hidden sm:flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-gray-500 leading-snug"
+                        className="hidden sm:flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-white/80 leading-snug"
                         aria-label="Workflow metadata"
                     >
-                        <span className="font-mono tabular-nums text-gray-500 shrink-0">ID {workflowId}</span>
+                        <span className="font-mono tabular-nums text-white/80 shrink-0">ID {workflowId}</span>
                         {templateSourceLabel ? (
                             <span className="text-amber-200/90 truncate max-w-[min(100%,14rem)]" title={templateSourceLabel}>
                                 {templateSourceLabel}
@@ -231,7 +232,7 @@ export const WorkflowEditorHeader = ({
                         ) : null}
                         {costLatencyHint ? (
                             <span
-                                className="text-gray-400 truncate max-w-[min(100%,20rem)]"
+                                className="text-white/72 truncate max-w-[min(100%,20rem)]"
                                 title={costLatencyHint}
                             >
                                 Est. cost/latency: {costLatencyHint}
@@ -239,7 +240,7 @@ export const WorkflowEditorHeader = ({
                         ) : null}
                         {recentRunUsageHint ? (
                             <span
-                                className="text-gray-400 truncate max-w-[min(100%,22rem)]"
+                                className="text-white/72 truncate max-w-[min(100%,22rem)]"
                                 title="Most recent workflow run with recorded usage (Dograh tokens and call length)."
                             >
                                 {recentRunUsageHint}
@@ -247,7 +248,7 @@ export const WorkflowEditorHeader = ({
                         ) : null}
                         {recentRunAggregateHint ? (
                             <span
-                                className="text-gray-400 truncate max-w-[min(100%,22rem)]"
+                                className="text-white/72 truncate max-w-[min(100%,22rem)]"
                                 title="Average Dograh tokens over recent runs that include token usage (up to 10)."
                             >
                                 {recentRunAggregateHint}
@@ -256,7 +257,7 @@ export const WorkflowEditorHeader = ({
                         {usageTrendHint ? (
                             <Link
                                 href={`/usage?week=${getUtcWeekMondayYmdFromDate()}`}
-                                className="text-gray-400 truncate max-w-[min(100%,26rem)] hover:text-teal-400 hover:underline underline-offset-2"
+                                className="text-teal-300/90 truncate max-w-[min(100%,26rem)] hover:text-teal-200 hover:underline underline-offset-2"
                                 title="Open organization usage for this UTC week (all workflows). Weekly buckets from the last 100 runs."
                             >
                                 {usageTrendHint}
@@ -264,7 +265,7 @@ export const WorkflowEditorHeader = ({
                         ) : null}
                         {costDryRunHint ? (
                             <span
-                                className="text-gray-400 truncate max-w-[min(100%,24rem)]"
+                                className="text-white/72 truncate max-w-[min(100%,24rem)]"
                                 title={costDryRunDetail ?? 'Heuristic token estimate from saved graph and your model settings (no live call).'}
                             >
                                 {costDryRunHint}
@@ -272,7 +273,7 @@ export const WorkflowEditorHeader = ({
                         ) : null}
                         {draftGraphStatsHint ? (
                             <span
-                                className="text-gray-400 truncate max-w-[min(100%,24rem)]"
+                                className="text-white/72 truncate max-w-[min(100%,24rem)]"
                                 title="Unsaved main-flow graph in the editor (structure only; not a cost estimate)."
                             >
                                 {draftGraphStatsHint}
@@ -280,7 +281,7 @@ export const WorkflowEditorHeader = ({
                         ) : null}
                         {subflowInventoryHint ? (
                             <span
-                                className="text-gray-400 truncate max-w-[min(100%,28rem)]"
+                                className="text-white/72 truncate max-w-[min(100%,28rem)]"
                                 title="Named subgraphs with content in saved subflows. Main-flow edges can set Run subgraph first (enter_subflow)."
                             >
                                 {subflowInventoryHint}
@@ -289,7 +290,7 @@ export const WorkflowEditorHeader = ({
                     </div>
                     {showEditorModeTabs && onEditorModeChange && !isViewingHistoricalVersion ? (
                         <div
-                            className="flex w-fit rounded-md border border-[#3a3a3a] bg-[#141414] p-0.5"
+                            className="ovo-segmented-track flex w-fit gap-0.5 p-0.5"
                             role="tablist"
                             aria-label="Editor mode"
                         >
@@ -298,12 +299,14 @@ export const WorkflowEditorHeader = ({
                                 role="tab"
                                 aria-label="Edit mode: inspector and workflow graph"
                                 aria-selected={editorMode === "edit"}
-                                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-                                    editorMode === "edit"
-                                        ? "bg-teal-600 text-white"
-                                        : "text-gray-400 hover:text-gray-200"
-                                }`}
-                                onClick={() => onEditorModeChange("edit")}
+                                className={cn(
+                                    'rounded-full border border-transparent px-3 py-1 text-xs font-medium ease-ovo-spring duration-200',
+                                    'transition-[color,background-color,border-color,box-shadow,transform]',
+                                    editorMode === 'edit'
+                                        ? 'border-teal-500/40 bg-teal-600 text-white shadow-md shadow-teal-900/30'
+                                        : 'text-muted-foreground hover:text-foreground',
+                                )}
+                                onClick={() => onEditorModeChange('edit')}
                             >
                                 Edit
                             </button>
@@ -311,13 +314,15 @@ export const WorkflowEditorHeader = ({
                                 type="button"
                                 role="tab"
                                 aria-label="Simulation mode: test calls and simulation tools"
-                                aria-selected={editorMode === "simulation"}
-                                className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
-                                    editorMode === "simulation"
-                                        ? "bg-teal-600 text-white"
-                                        : "text-gray-400 hover:text-gray-200"
-                                }`}
-                                onClick={() => onEditorModeChange("simulation")}
+                                aria-selected={editorMode === 'simulation'}
+                                className={cn(
+                                    'rounded-full border border-transparent px-3 py-1 text-xs font-medium ease-ovo-spring duration-200',
+                                    'transition-[color,background-color,border-color,box-shadow,transform]',
+                                    editorMode === 'simulation'
+                                        ? 'border-teal-500/40 bg-teal-600 text-white shadow-md shadow-teal-900/30'
+                                        : 'text-muted-foreground hover:text-foreground',
+                                )}
+                                onClick={() => onEditorModeChange('simulation')}
                             >
                                 Simulation
                             </button>
@@ -377,9 +382,9 @@ export const WorkflowEditorHeader = ({
                     onClick={onHistoryClick}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-[#3a3a3a] hover:bg-[#2a2a2a] transition-colors cursor-pointer"
                 >
-                    <History className="w-4 h-4 text-gray-400" />
+                    <History className="w-4 h-4 text-white/70" />
                     {activeVersionLabel && !isViewingHistoricalVersion && (
-                        <span className="text-sm text-gray-300">{activeVersionLabel}</span>
+                        <span className="text-sm text-white/88">{activeVersionLabel}</span>
                     )}
                 </button>
 
@@ -409,7 +414,7 @@ export const WorkflowEditorHeader = ({
                         >
                             <div className="px-4 py-3 border-b border-[#3a3a3a]">
                                 <h3 className="text-sm font-medium text-white">Fix these before publish</h3>
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-white/72 mt-1">
                                     Plain-language summary; technical detail below each item.
                                 </p>
                             </div>
@@ -429,15 +434,15 @@ export const WorkflowEditorHeader = ({
                                                         {friendly.title}
                                                     </p>
                                                     {where ? (
-                                                        <p className="text-[11px] text-gray-500">{where}</p>
+                                                        <p className="text-[11px] text-white/78">{where}</p>
                                                     ) : null}
                                                     {error.field ? (
-                                                        <p className="text-[11px] text-gray-500">Field: {error.field}</p>
+                                                        <p className="text-[11px] text-white/78">Field: {error.field}</p>
                                                     ) : null}
                                                     {friendly.hint ? (
-                                                        <p className="text-xs text-gray-400 leading-snug">{friendly.hint}</p>
+                                                        <p className="text-xs text-white/75 leading-snug">{friendly.hint}</p>
                                                     ) : null}
-                                                    <p className="text-xs text-gray-300 break-words border-t border-[#2a2a2a] pt-2 mt-1">
+                                                    <p className="text-xs text-white/90 break-words border-t border-[#2a2a2a] pt-2 mt-1">
                                                         {error.message}
                                                     </p>
                                                 </div>
@@ -540,7 +545,7 @@ export const WorkflowEditorHeader = ({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+                            className="text-white/70 hover:text-white hover:bg-[#2a2a2a]"
                         >
                             <MoreVertical className="w-5 h-5" />
                         </Button>

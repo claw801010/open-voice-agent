@@ -24,8 +24,10 @@ export function LocalProviderWrapper({ children }: { children: React.ReactNode }
           setUser(data.user);
           logger.info('OSS auth initialized', { user: data.user });
         } else if (response.status === 401) {
-          // No token - redirect to login (but not if already on auth pages)
-          if (!window.location.pathname.startsWith('/auth/')) {
+          // No token — redirect to login except on public OSS routes (keep in sync with middleware.ts PUBLIC_PATHS)
+          const path = window.location.pathname;
+          const allowUnauthenticated = path.startsWith('/auth/') || path.startsWith('/templates');
+          if (!allowUnauthenticated) {
             window.location.href = '/auth/login';
             return;
           }

@@ -183,9 +183,18 @@ export function WorkflowRunsTable({
                                         >
                                             <TableCell className="font-mono text-sm">#{run.id}</TableCell>
                                             <TableCell>
-                                                <Badge variant={run.is_completed ? "default" : "secondary"}>
-                                                    {run.is_completed ? "Completed" : "In Progress"}
-                                                </Badge>
+                                                <div className="flex items-center gap-1.5">
+                                                    {!run.is_completed && (
+                                                        <span
+                                                            className="size-1.5 shrink-0 rounded-full bg-emerald-500 ovo-status-breathe"
+                                                            aria-hidden
+                                                            title="Run in progress"
+                                                        />
+                                                    )}
+                                                    <Badge variant={run.is_completed ? "default" : "secondary"}>
+                                                        {run.is_completed ? "Completed" : "In Progress"}
+                                                    </Badge>
+                                                </div>
                                             </TableCell>
                                             <TableCell className="text-sm">{formatDate(run.created_at)}</TableCell>
                                             <TableCell>

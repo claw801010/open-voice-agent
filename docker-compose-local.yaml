@@ -11,7 +11,8 @@ services:
         max-size: "10m"
         max-file: "3"
     ports:
-      - "5432:5432"
+      # Host 5433 avoids collision with a local Homebrew/other Postgres on localhost:5432
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

@@ -146,7 +146,7 @@ export function SimpleAudioPlayer({ testSessionId }: SimpleAudioPlayerProps) {
             <CardContent className="pt-4">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                        <Volume2 className="h-5 w-5 text-gray-600" />
+                        <Volume2 className="h-5 w-5 text-muted-foreground" />
                         <span className="font-medium">Live Audio Stream</span>
                     </div>
                     <Badge variant={connectionStatus === 'connected' ? 'default' : connectionStatus === 'error' ? 'destructive' : 'secondary'}>
@@ -156,26 +156,26 @@ export function SimpleAudioPlayer({ testSessionId }: SimpleAudioPlayerProps) {
 
                 <div className="flex gap-2 mb-4">
                     <button
-                        className={`px-3 py-1 rounded text-sm ${audioRole === 'mixed' ? 'bg-primary text-white' : 'bg-gray-200'}`}
+                        className={`px-3 py-1 rounded text-sm ${audioRole === 'mixed' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                         onClick={() => setAudioRole('mixed')}
                     >
                         Mixed
                     </button>
                     <button
-                        className={`px-3 py-1 rounded text-sm ${audioRole === 'actor' ? 'bg-primary text-white' : 'bg-gray-200'}`}
+                        className={`px-3 py-1 rounded text-sm ${audioRole === 'actor' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                         onClick={() => setAudioRole('actor')}
                     >
                         Actor Only
                     </button>
                     <button
-                        className={`px-3 py-1 rounded text-sm ${audioRole === 'adversary' ? 'bg-primary text-white' : 'bg-gray-200'}`}
+                        className={`px-3 py-1 rounded text-sm ${audioRole === 'adversary' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                         onClick={() => setAudioRole('adversary')}
                     >
                         Adversary Only
                     </button>
                 </div>
 
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                     {connectionStatus === 'connected' && (
                         <>Audio streaming... (buffered: {bufferedDuration.toFixed(1)}s)</>
                     )}

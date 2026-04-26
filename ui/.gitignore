@@ -41,3 +41,13 @@ next-env.d.ts
 .env.sentry-build-plugin
 
 .env.local
+
+# Local scratch (perf runs, ad-hoc exports)
+/.tmp/
+
+# Lighthouse output (WE-01-VISUAL-DEPTH perf script)
+/.lighthouse/
+
+# Never commit real session cookies (use lighthouse-extra-headers.example.json as a template)
+lighthouse-extra-headers.local.json
+*.lighthouse-secrets.json

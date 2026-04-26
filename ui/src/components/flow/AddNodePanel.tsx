@@ -182,7 +182,7 @@ export default function AddNodePanel({
 
     if (variant === 'inline') {
         return (
-            <div className="flex h-full min-h-0 flex-col bg-background">
+            <div className="flex h-full min-h-0 flex-col bg-transparent">
                 <div className="shrink-0 border-b border-border px-3 py-2">
                     <div className="flex flex-col gap-1">
                         <h2 className="text-sm font-semibold">Palette</h2>
