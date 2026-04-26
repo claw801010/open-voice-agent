@@ -109,6 +109,8 @@ export interface HttpApiToolConfigProps {
     onMergeCallContextDefaults: () => void;
     /** Add missing top-level keys to test JSON from tool parameter names (value templates when set). */
     onSeedTestPayloadFromParameters?: () => void;
+    /** Same as test payload seeding, for optional body template JSON. */
+    onSeedBodyTemplateFromParameters?: () => void;
     templatePreviewWarnings: string[];
 }
 
@@ -162,6 +164,7 @@ export function HttpApiToolConfig({
     onResetCallContextSample,
     onMergeCallContextDefaults,
     onSeedTestPayloadFromParameters,
+    onSeedBodyTemplateFromParameters,
     templatePreviewWarnings,
 }: HttpApiToolConfigProps) {
     const [variableInsertMode, setVariableInsertMode] = useState<"replace" | "append">(
@@ -443,7 +446,25 @@ export function HttpApiToolConfig({
                             />
                         </div>
                         <div className="grid gap-2 pt-4 border-t">
-                            <Label>Quick Body Template (Simple mode)</Label>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <Label>Quick Body Template (Simple mode)</Label>
+                                {onSeedBodyTemplateFromParameters ? (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-fit"
+                                        onClick={onSeedBodyTemplateFromParameters}
+                                    >
+                                        Add missing parameter keys
+                                    </Button>
+                                ) : null}
+                            </div>
+                            <Label className="text-xs text-muted-foreground font-normal">
+                                Merges with runtime arguments for the request body.{" "}
+                                <span className="font-medium text-foreground/80">Add missing parameter keys</span> adds
+                                top-level keys from tool parameters (same rules as test payload).
+                            </Label>
                             <JsonTemplateTextarea
                                 value={bodyTemplate}
                                 onChange={onBodyTemplateChange}
@@ -614,21 +635,36 @@ export function HttpApiToolConfig({
                                     />
                                 </div>
                                 <div className="grid gap-2 pt-4 border-t">
-                                    <div className="flex items-center gap-1">
-                                        <Label>Optional Body Template (JSON)</Label>
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <button type="button" className="text-muted-foreground hover:text-foreground">
-                                                    <CircleHelp className="h-3.5 w-3.5" />
-                                                </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent sideOffset={6}>
-                                                Body template defaults merge with runtime arguments for every method.
-                                            </TooltipContent>
-                                        </Tooltip>
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <div className="flex items-center gap-1">
+                                            <Label>Optional Body Template (JSON)</Label>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <button type="button" className="text-muted-foreground hover:text-foreground">
+                                                        <CircleHelp className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent sideOffset={6}>
+                                                    Body template defaults merge with runtime arguments for every method.
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </div>
+                                        {onSeedBodyTemplateFromParameters ? (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-fit"
+                                                onClick={onSeedBodyTemplateFromParameters}
+                                            >
+                                                Add missing parameter keys
+                                            </Button>
+                                        ) : null}
                                     </div>
                                     <Label className="text-xs text-muted-foreground">
-                                        Add JSON defaults and templates such as {"{{conversation.user.email}}"}.
+                                        Add JSON defaults and templates such as {"{{conversation.user.email}}"}.{" "}
+                                        <span className="font-medium text-foreground/80">Add missing parameter keys</span>{" "}
+                                        fills top-level parameter names not yet in this object.
                                     </Label>
                                     <JsonTemplateTextarea
                                         value={bodyTemplate}

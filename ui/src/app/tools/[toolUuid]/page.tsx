@@ -32,7 +32,11 @@ import {
 import { TOOL_DOCUMENTATION_URLS } from "@/constants/documentation";
 import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 import { useAuth } from "@/lib/auth";
-import { mergeCallContextJsonWithDefaults, seedTestPayloadJsonFromParameters } from "@/lib/callContextSampleForm";
+import {
+    mergeCallContextJsonWithDefaults,
+    seedBodyTemplateJsonFromParameters,
+    seedTestPayloadJsonFromParameters,
+} from "@/lib/callContextSampleForm";
 import { sortDistinctTemplates } from "@/lib/httpToolVariablePickers";
 
 import {
@@ -387,6 +391,18 @@ export default function ToolDetailPage() {
         setTestPayload(json);
         toast.success(`Added ${addedKeys.length} test key(s): ${addedKeys.join(", ")}`);
     }, [testPayload, parameters]);
+
+    const seedBodyTemplateFromParameters = useCallback(() => {
+        const { json, addedKeys } = seedBodyTemplateJsonFromParameters(bodyTemplate, parameters);
+        if (addedKeys.length === 0) {
+            toast.info(
+                "Every tool parameter name is already in the body template JSON (or there are no parameters)."
+            );
+            return;
+        }
+        setBodyTemplate(json);
+        toast.success(`Added ${addedKeys.length} body template key(s): ${addedKeys.join(", ")}`);
+    }, [bodyTemplate, parameters]);
 
     const variableSuggestions = useMemo(() => {
         const fromParameters = parameters
@@ -1237,6 +1253,7 @@ const data = await response.json();`;
                             onResetCallContextSample={resetCallContextSample}
                             onMergeCallContextDefaults={mergeCallContextDefaults}
                             onSeedTestPayloadFromParameters={seedTestPayloadFromParameters}
+                            onSeedBodyTemplateFromParameters={seedBodyTemplateFromParameters}
                             templatePreviewWarnings={templatePreviewWarnings}
                         />
                     )}

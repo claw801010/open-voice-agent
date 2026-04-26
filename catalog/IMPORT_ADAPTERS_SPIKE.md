@@ -31,5 +31,5 @@ When you choose one line above, fill in:
 
 - Execution package: [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md) → **MK-01-IMPORT-OPTIONS**
 - Native JSON import playbook: [import-packaged-workflow-json.md](import-packaged-workflow-json.md)
-- n8n manual mapping spike: [import-adapter-n8n-spike.md](import-adapter-n8n-spike.md); structural check: `node catalog/scripts/validate-n8n-workflow-export.mjs <export.json>`
+- n8n manual mapping spike: [import-adapter-n8n-spike.md](import-adapter-n8n-spike.md); structural check + optional HTTP hints: `node catalog/scripts/validate-n8n-workflow-export.mjs [--http-hints] <export.json>`
 - Catalog quality gate: [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md), [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py)

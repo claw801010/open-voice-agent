@@ -203,3 +203,6 @@ export function seedTestPayloadJsonFromParameters(
         addedKeys,
     };
 }
+
+/** Same merge rules as {@link seedTestPayloadJsonFromParameters} for optional HTTP `body_template` JSON. */
+export const seedBodyTemplateJsonFromParameters = seedTestPayloadJsonFromParameters;

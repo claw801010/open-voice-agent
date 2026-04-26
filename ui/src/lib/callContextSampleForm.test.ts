@@ -8,6 +8,7 @@ import {
     mergeMissingKeysFromDefault,
     mergePresetPathPick,
     pathValueMapFromSampleJson,
+    seedBodyTemplateJsonFromParameters,
     seedTestPayloadJsonFromParameters,
 } from "./callContextSampleForm";
 
@@ -100,6 +101,12 @@ describe("mergeCallContextJsonWithDefaults", () => {
         expect(p.caller_number).toBe("+1custom");
         expect(p.conversation.intent).toBe("custom");
         expect(p.conversation.summary).toBeDefined();
+    });
+});
+
+describe("seedBodyTemplateJsonFromParameters", () => {
+    it("is the same implementation as seedTestPayloadJsonFromParameters", () => {
+        expect(seedBodyTemplateJsonFromParameters).toBe(seedTestPayloadJsonFromParameters);
     });
 });
 
