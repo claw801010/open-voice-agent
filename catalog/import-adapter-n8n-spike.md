@@ -17,6 +17,7 @@
 
 ## Practical spike (half day)
 
+0. Optional: **`node catalog/scripts/validate-n8n-workflow-export.mjs path/to/export.json`** — confirms `nodes[]` exists (structural pre-check only).
 1. Export a **small** n8n workflow: one **Webhook** or **Manual** trigger + one **HTTP Request** node + optional **Set** node.
 2. Open `catalog/packaged-workflows/*.json` and [import-packaged-workflow-json.md](import-packaged-workflow-json.md).
 3. **Manually** create a minimal packaged graph: **Agent** + **HTTP tool** whose URL/method/body match the HTTP Request node; map **Set** fields to **template variables** or **call context** paths documented in [http-api.mdx](../docs/voice-agent/tools/http-api.mdx).

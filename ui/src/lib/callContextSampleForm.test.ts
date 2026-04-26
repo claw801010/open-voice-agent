@@ -8,6 +8,7 @@ import {
     mergeMissingKeysFromDefault,
     mergePresetPathPick,
     pathValueMapFromSampleJson,
+    seedTestPayloadJsonFromParameters,
 } from "./callContextSampleForm";
 
 describe("mergeMissingKeysFromDefault", () => {
@@ -99,5 +100,43 @@ describe("mergeCallContextJsonWithDefaults", () => {
         expect(p.caller_number).toBe("+1custom");
         expect(p.conversation.intent).toBe("custom");
         expect(p.conversation.summary).toBeDefined();
+    });
+});
+
+describe("seedTestPayloadJsonFromParameters", () => {
+    it("adds missing parameter keys with empty string when no value template", () => {
+        const { json, addedKeys } = seedTestPayloadJsonFromParameters("{}", [
+            { name: "order_id" },
+            { name: "channel" },
+        ]);
+        expect(addedKeys).toEqual(["order_id", "channel"]);
+        expect(JSON.parse(json)).toEqual({ order_id: "", channel: "" });
+    });
+
+    it("does not overwrite existing keys", () => {
+        const { json, addedKeys } = seedTestPayloadJsonFromParameters(
+            JSON.stringify({ order_id: "99" }, null, 2),
+            [{ name: "order_id" }, { name: "extra" }]
+        );
+        expect(addedKeys).toEqual(["extra"]);
+        expect(JSON.parse(json)).toEqual({ order_id: "99", extra: "" });
+    });
+
+    it("uses valueTemplate JSON literals and single {{path}} tokens", () => {
+        const { json } = seedTestPayloadJsonFromParameters("{}", [
+            { name: "n", valueTemplate: "42" },
+            { name: "flag", valueTemplate: "true" },
+            { name: "ref", valueTemplate: "{{conversation.intent}}" },
+        ]);
+        expect(JSON.parse(json)).toEqual({
+            n: 42,
+            flag: true,
+            ref: "{{conversation.intent}}",
+        });
+    });
+
+    it("uses raw string when valueTemplate is not JSON and not a lone template", () => {
+        const { json } = seedTestPayloadJsonFromParameters("{}", [{ name: "q", valueTemplate: "hello" }]);
+        expect(JSON.parse(json)).toEqual({ q: "hello" });
     });
 });

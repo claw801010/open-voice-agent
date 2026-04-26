@@ -107,6 +107,8 @@ export interface HttpApiToolConfigProps {
     onCallContextTestJsonChange: (value: string) => void;
     onResetCallContextSample: () => void;
     onMergeCallContextDefaults: () => void;
+    /** Add missing top-level keys to test JSON from tool parameter names (value templates when set). */
+    onSeedTestPayloadFromParameters?: () => void;
     templatePreviewWarnings: string[];
 }
 
@@ -159,6 +161,7 @@ export function HttpApiToolConfig({
     onCallContextTestJsonChange,
     onResetCallContextSample,
     onMergeCallContextDefaults,
+    onSeedTestPayloadFromParameters,
     templatePreviewWarnings,
 }: HttpApiToolConfigProps) {
     const [variableInsertMode, setVariableInsertMode] = useState<"replace" | "append">(
@@ -321,10 +324,26 @@ export function HttpApiToolConfig({
                             </p>
                         </div>
                         <div className="grid gap-2 pt-2 border-t">
-                            <Label>Test payload (JSON object)</Label>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <Label>Test payload (JSON object)</Label>
+                                {onSeedTestPayloadFromParameters ? (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-fit"
+                                        onClick={onSeedTestPayloadFromParameters}
+                                    >
+                                        Add missing parameter keys
+                                    </Button>
+                                ) : null}
+                            </div>
                             <Label className="text-xs text-muted-foreground font-normal">
                                 Use {"{{path}}"} in string values; pick variables below. Custom paths live in the Custom
-                                flow variable section at the top of this card.
+                                flow variable section at the top of this card.{" "}
+                                <span className="font-medium text-foreground/80">Add missing parameter keys</span> fills
+                                top-level keys for each tool parameter name that is not yet in this JSON (from defaults
+                                / value templates when set; otherwise empty string).
                             </Label>
                             <JsonTemplateTextarea
                                 value={testPayload}
@@ -626,9 +645,24 @@ export function HttpApiToolConfig({
 
                             <TabsContent value="response" className="space-y-4 mt-4">
                                 <div className="grid gap-2">
-                                    <Label>Test API Call</Label>
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <Label>Test API Call</Label>
+                                        {onSeedTestPayloadFromParameters ? (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-fit"
+                                                onClick={onSeedTestPayloadFromParameters}
+                                            >
+                                                Add missing parameter keys
+                                            </Button>
+                                        ) : null}
+                                    </div>
                                     <Label className="text-xs text-muted-foreground font-normal">
-                                        Test payload JSON — insert variables with the picker (cursor-aware).
+                                        Test payload JSON — insert variables with the picker (cursor-aware).{" "}
+                                        <span className="font-medium text-foreground/80">Add missing parameter keys</span>{" "}
+                                        merges parameter names into the object without overwriting existing keys.
                                     </Label>
                                     <JsonTemplateTextarea
                                         value={testPayload}

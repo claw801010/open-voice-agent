@@ -163,3 +163,43 @@ export function mergeCallContextJsonWithDefaults(
     const d = safeParseCallContextObject(defaultJson);
     return stringifyCallContextObject(mergeMissingKeysFromDefault(d, c));
 }
+
+function defaultValueForParameterValueTemplate(trimmedTemplate: string): unknown {
+    if (!trimmedTemplate) return "";
+    if (/^\{\{[^}]+\}\}$/.test(trimmedTemplate)) return trimmedTemplate;
+    try {
+        return JSON.parse(trimmedTemplate) as unknown;
+    } catch {
+        return trimmedTemplate;
+    }
+}
+
+export type TestPayloadParameterSeed = { name: string; valueTemplate?: string };
+
+/**
+ * Merge **missing** top-level keys into the test payload JSON from tool parameter names.
+ * Uses each parameter's `value_template` when set (JSON literal, plain string, or single `{{path}}` token);
+ * otherwise seeds `""` so authors can fill or insert variables.
+ */
+export function seedTestPayloadJsonFromParameters(
+    currentJson: string,
+    parameters: readonly TestPayloadParameterSeed[]
+): { json: string; addedKeys: string[] } {
+    const current = safeParseCallContextObject(currentJson);
+    const defaults: Record<string, unknown> = {};
+    const addedKeys: string[] = [];
+    for (const p of parameters) {
+        const n = p.name.trim();
+        if (!n) continue;
+        if (Object.prototype.hasOwnProperty.call(current, n)) continue;
+        defaults[n] = defaultValueForParameterValueTemplate((p.valueTemplate ?? "").trim());
+        addedKeys.push(n);
+    }
+    if (addedKeys.length === 0) {
+        return { json: stringifyCallContextObject(current), addedKeys: [] };
+    }
+    return {
+        json: stringifyCallContextObject(mergeMissingKeysFromDefault(defaults, current)),
+        addedKeys,
+    };
+}

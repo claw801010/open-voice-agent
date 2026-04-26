@@ -32,7 +32,7 @@ import {
 import { TOOL_DOCUMENTATION_URLS } from "@/constants/documentation";
 import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 import { useAuth } from "@/lib/auth";
-import { mergeCallContextJsonWithDefaults } from "@/lib/callContextSampleForm";
+import { mergeCallContextJsonWithDefaults, seedTestPayloadJsonFromParameters } from "@/lib/callContextSampleForm";
 import { sortDistinctTemplates } from "@/lib/httpToolVariablePickers";
 
 import {
@@ -377,6 +377,16 @@ export default function ToolDetailPage() {
         );
         toast.success("Added missing default sample paths. Your values were kept.");
     }, []);
+
+    const seedTestPayloadFromParameters = useCallback(() => {
+        const { json, addedKeys } = seedTestPayloadJsonFromParameters(testPayload, parameters);
+        if (addedKeys.length === 0) {
+            toast.info("Every tool parameter name is already in the test payload (or there are no parameters).");
+            return;
+        }
+        setTestPayload(json);
+        toast.success(`Added ${addedKeys.length} test key(s): ${addedKeys.join(", ")}`);
+    }, [testPayload, parameters]);
 
     const variableSuggestions = useMemo(() => {
         const fromParameters = parameters
@@ -1226,6 +1236,7 @@ const data = await response.json();`;
                             onCallContextTestJsonChange={setCallContextTestJson}
                             onResetCallContextSample={resetCallContextSample}
                             onMergeCallContextDefaults={mergeCallContextDefaults}
+                            onSeedTestPayloadFromParameters={seedTestPayloadFromParameters}
                             templatePreviewWarnings={templatePreviewWarnings}
                         />
                     )}
