@@ -185,6 +185,20 @@ A future package may add an **explicit**, **org-admin–controlled** option to *
 
 When **WE-01-DATASTORE-INTEG** is implemented, product docs and the HTTP tool UI will describe the **authoring contract** (“local only” vs “also cache via integration X”) and **admin policy** in one place so authors never get ambiguous dual-writes.
 
+Operator-focused policy summary (integrations hub): [HTTP tools — org data and cache policy](/integrations/http-tool-data-policy).
+
+## Screenshots (doc site assets)
+
+Use these slots when publishing screenshots to your docs CDN or `/public/images` mirror. Captions describe what GTM or solutions engineers should capture from the dashboard (**HTTP API tool** editor, authenticated).
+
+| Asset path (suggested) | Capture |
+|------------------------|---------|
+| `/images/http-api-variable-picker-url.png` | **Endpoint URL** with the grouped **Insert** control open — show **System defaults**, **Conversation state**, and **Custom flow variables** with the filter field visible. |
+| `/images/http-api-call-context-form.png` | **Call / conversation context** → **Form** tab: **Preset path** + value row, **Add missing preset rows**, and **Insert variable** on a value cell. |
+| `/images/http-api-test-call-result.png` | After **Test API Call**: response preview and any **unresolved `{{…}}`** hint strip. |
+
+_If images are missing, the site may show broken icons until assets are added — keep filenames stable so PRs can add PNGs without re-editing copy._
+
 ## Key Best Practices
 - Name tools clearly
 - Write detailed, action-based descriptions

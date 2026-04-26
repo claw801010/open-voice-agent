@@ -18,7 +18,7 @@ Sections labeled **Current codebase** describe what exists in this repository. S
 1. [What you are running](#1-what-you-are-running-current-codebase)
 2. [Fastest path: Docker and API keys](#2-fastest-path-docker-and-api-keys-current-codebase)
 3. [Environment and secrets checklist](#3-environment-and-secrets-checklist-current-codebase)
-4. [Local development (split stack)](#4-local-development-split-stack-current-codebase) · [One-command bootstrap](#one-command-local-bootstrap) · [After a fresh git pull](#after-a-fresh-git-pull-rebuild-migrate-smoke)
+4. [Local development (split stack)](#4-local-development-split-stack-current-codebase) · [One-command bootstrap](#one-command-local-bootstrap) · [Windows and WSL](#windows-and-wsl-local-dev) · [After a fresh git pull](#after-a-fresh-git-pull-rebuild-migrate-smoke)
 5. [Safe customization boundaries](#5-safe-customization-boundaries-current-codebase)
 6. [Fork and upstream sync playbook](#6-fork-and-upstream-sync-playbook)
 7. [Extension map: agent, UI, call reporting](#7-extension-map-agent-ui-call-reporting)
@@ -182,6 +182,13 @@ bash scripts/bootstrap_fresh_dev.sh
 - **Creates** `venv/` (override with `VENV_DIR`), **copies** [api/.env.example](api/.env.example) → `api/.env` if missing, **runs** [scripts/migrate.sh](scripts/migrate.sh), **`npm ci`** + **`npm test`** in [ui/](ui/).
 - **Does not** start long-running API/UI processes (avoids port conflicts and matches how developers run hot-reload). **Optional voice/Pipecat:** after bootstrap, run [scripts/setup_pipecat.sh](scripts/setup_pipecat.sh) for full real-time audio stacks (not required to smoke-test the dashboard or HTTP tool editor).
 - **Skips** (environment variables): `SKIP_SUBMODULE=1`, `SKIP_DOCKER=1`, `SKIP_UI_TEST=1`, `SKIP_PIP=1` — see the script header.
+
+### Windows and WSL (local dev)
+
+- **Recommended:** [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) with an Ubuntu distro, clone the repo on the **Linux filesystem** (for example `~/src/open-voice-agent`), and run **`bash scripts/bootstrap_fresh_dev.sh`** from that shell. File watching and Docker bind mounts are much more reliable than under `/mnt/c/...`.
+- **Docker Desktop for Windows:** enable the **WSL2 backend** and allocate enough RAM/CPU for Postgres + Redis + MinIO from [docker-compose-local.yaml](docker-compose-local.yaml). First run may trigger **Windows Firewall** prompts for published ports (API **8000**, UI **3000**, Postgres **5433**, etc.).
+- **Without WSL:** use **Docker Desktop** plus manual steps from §4 (PowerShell alternatives are referenced on [scripts/start_services_dev.sh](scripts/start_services_dev.sh) where `.ps1` helpers exist). Expect to run **`python`** / **`npm`** on Windows paths; keep **`DATABASE_URL`** aligned with [api/.env.example](api/.env.example) (**host `localhost`**, Postgres **5433** for this compose file).
+- **Line endings:** shell scripts must stay **LF**. If Git warns about CRLF, set `core.autocrlf` per your team policy or rely on `.gitattributes` when present.
 
 1. **Infra (manual alternative)**: [docker-compose-local.yaml](docker-compose-local.yaml) via [scripts/start_services_dev.sh](scripts/start_services_dev.sh) (or `.ps1` on Windows). See [AGENTS.md](AGENTS.md). Postgres is published on host **5433** (avoids colliding with a local Postgres on **5432**); set **`DATABASE_URL`** in **`api/.env`** to match [api/.env.example](api/.env.example).
 2. **Migrations**: [scripts/migrate.sh](scripts/migrate.sh); new revisions: [scripts/makemigrate.sh](scripts/makemigrate.sh).

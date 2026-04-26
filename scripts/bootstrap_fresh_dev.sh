@@ -20,6 +20,7 @@ info() { echo "==> $*"; }
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   echo "One-command local dev bootstrap (see READMEBUILDME.md §4)."
   echo "Run from repository root: bash scripts/bootstrap_fresh_dev.sh"
+  echo "Windows: use WSL2 (Ubuntu) on the Linux filesystem, or see READMEBUILDME.md §4 · Windows and WSL."
   echo "Env: SKIP_SUBMODULE=1 SKIP_DOCKER=1 SKIP_UI_TEST=1 SKIP_PIP=1 VENV_DIR=..."
   exit 0
 fi

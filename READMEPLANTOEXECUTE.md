@@ -81,14 +81,14 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _(none)_ | | **WE-01-DATASTORE-INTEG** — **Storage model** doc in [http-api.mdx](docs/voice-agent/tools/http-api.mdx) (org-local vs browser test vs roadmap cache). *Suggested next:* **WE-01-DATASTORE-INTEG** runtime/admin UI or **MK-01**; **http-api** screenshots; **Windows**/WSL bootstrap note. |
+| _(none)_ | | **WE-01-DATASTORE-INTEG** — env stub + integrations policy doc + **http-api** screenshot table; **MK-01-IMPORT-OPTIONS** worksheet. *Suggested next:* DATASTORE **full runtime** / admin UI or **MK-01** import spike owner + target; add PNGs for screenshot slots. |
 
 #### Rolling pass notes (keep short; update when you ship a slice)
 
 | | |
 |--|--|
-| **This pass (shipped in repo now)** | **WE-01-DATASTORE-INTEG (docs phase 1)** — [Storage model](docs/voice-agent/tools/http-api.mdx#storage-model) in [http-api.mdx](docs/voice-agent/tools/http-api.mdx): org-local tool definition, runtime context vs browser-only test sample, roadmap integration cache; package status + criteria in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md); in-app link in [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx). |
-| **Next pass (suggested)** | **WE-01-DATASTORE-INTEG** — authoring + admin toggles + runtime (or continue **MK-01**); **http-api** screenshots; **Windows**/WSL bootstrap note in [READMEBUILDME.md](READMEBUILDME.md). |
+| **This pass (shipped in repo now)** | **Tracks 1–3:** **WE-01-DATASTORE-INTEG** — [http_tool_cache_policy.py](api/services/workflow/tools/http_tool_cache_policy.py) env stub + [test_http_tool_cache_policy.py](api/tests/test_http_tool_cache_policy.py); [http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx) + [overview.mdx](docs/integrations/overview.mdx); [http-api.mdx](docs/voice-agent/tools/http-api.mdx) **Screenshots** table + policy link. **MK-01-IMPORT-OPTIONS** — [IMPORT_ADAPTERS_SPIKE.md](catalog/IMPORT_ADAPTERS_SPIKE.md) (package **InProgress**). **READMEBUILDME** — [Windows and WSL](READMEBUILDME.md#windows-and-wsl-local-dev); [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh) `--help` line. |
+| **Next pass (suggested)** | **WE-01-DATASTORE-INTEG** — cache read/write + org policy model + admin UI; **MK-01-IMPORT** — assign owner + first target in spike sheet then code or close to **NotStarted**; **Screenshots** — drop PNGs into docs site `/public/images` for the three **http-api** slots. |
 
 ### Strategic review (major bets)
 
@@ -135,14 +135,14 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ### MK-01-IMPORT-OPTIONS — External flows & agent skills (research package)
 
-**Status:** `NotStarted` (narrative + sequencing live in [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md); no importer code until this package moves to `InProgress`.)
+**Status:** `InProgress` (worksheet + checklist in repo; **no importer code** until an owner picks the first target and spikes.)
 
 **Goal:** evaluate **Make**, **n8n**, **Zapier**, and **agent skills** (Claude, Cursor, Codex) as **accelerators** or future adapters — without blocking curated-pack GTM.
 
 **Acceptance criteria (to start work):**
 
-- [ ] One **spike owner** and **one** chosen first target (e.g. native upload hardening *or* n8n webhook-only subset *or* skill bundle → draft prompts).
-- [ ] Spike doc: supported nodes / fields, **failure modes**, security notes (credentials, PII).
+- [ ] One **spike owner** and **one** chosen first target (e.g. native upload hardening *or* n8n webhook-only subset *or* skill bundle → draft prompts) — fill [catalog/IMPORT_ADAPTERS_SPIKE.md](catalog/IMPORT_ADAPTERS_SPIKE.md).
+- [x] **Spike doc (v0)** — [catalog/IMPORT_ADAPTERS_SPIKE.md](catalog/IMPORT_ADAPTERS_SPIKE.md): owner/first-target table, supported nodes / fields (when chosen), **failure modes**, security notes (credentials, PII).
 - [ ] If code ships: tests + update READMEMARKETPLACEPLANNING §5 “Shipped experiments”.
 
 ### MK-01-CATALOG — Template catalog schema and seed data
@@ -557,7 +557,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ### WE-01-DATASTORE-INTEG — Org datastore default vs integration-backed HTTP (stub)
 
-**Status:** `InProgress` (documentation **phase 1** shipped in repo; authoring / admin / runtime not started)  
+**Status:** `InProgress` (documentation **phase 1** + **runtime env stub** in repo; authoring / admin / full runtime cache not started)  
 **Strategy anchor:** [READMEPLANNING.md](READMEPLANNING.md) Pillar 1 (customer-complete) and **Integrations** row; [READMEPLANNING.md](READMEPLANNING.md) §6 marketplace + [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md) for GTM sequencing.
 
 **Goal:** Keep **HTTP API tools** as the primary **plug-in** for external systems (`{{…}}` + credentials today). Default workflow data paths use **org-local persistence** (Postgres / existing models). When a node or tool is **wired to an integration** and an **org admin** enables **read-through / cache** for that integration (and optionally per-integration retention), allow **storing or caching** normalized slices of tool or webhook responses for faster repeat lookups and offline-friendly UX—without silently replacing the org DB as source of truth unless explicitly modeled.
@@ -566,11 +566,13 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 - [ ] **Authoring** — Clear UI contract: “Use local store” vs “Also persist via integration X (admin: cache on/off, TTL)” on HTTP tool or adjacent workflow storage node; no ambiguous dual-writes.
 - [ ] **Admin** — Org-level toggles per integration for **cache enabled**, **max retention**, and **PII class** (block vs allow with redaction policy); audit log of policy changes.
-- [ ] **Runtime** — HTTP tool execution path respects policy: write-through only when enabled; failures fall back to live API only (documented); metrics on cache hit rate (optional).
+- [x] **Runtime (stub)** — Reserved env `HTTP_TOOL_INTEGRATION_CACHE_ENABLED`; if set truthy before the feature exists, API logs a **one-time warning** and continues **live HTTP** only ([http_tool_cache_policy.py](api/services/workflow/tools/http_tool_cache_policy.py), [custom_tool.py](api/services/workflow/tools/custom_tool.py), [test_http_tool_cache_policy.py](api/tests/test_http_tool_cache_policy.py)).
+- [ ] **Runtime (full)** — HTTP tool execution path respects policy: write-through only when enabled; failures fall back to live API only (documented); metrics on cache hit rate (optional).
 - [x] **Docs (phase 1)** — [http-api.mdx](docs/voice-agent/tools/http-api.mdx) **Storage model**: org-local tool definition, runtime call context vs **browser-only** test sample JSON, and explicit “roadmap / not shipped” integration cache (**WE-01-DATASTORE-INTEG**).
-- [ ] **Docs (phase 2)** — Integration / compliance doc (per-connector policy, retention, audit) when admin UI and runtime ship; cross-link from HTTP tool UI.
+- [x] **Docs (phase 2 — policy hub)** — [http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx) on integrations overview; [http-api.mdx](docs/voice-agent/tools/http-api.mdx) **Screenshots** table + policy link; admin UI still future.
+- [ ] **Docs (phase 3)** — Per-connector compliance deep-dives when admin toggles ship; audit log copy.
 
-**Key files (when staffed):** [custom_tool.py](api/services/workflow/tools/custom_tool.py), integration services under [api/services/integrations/](api/services/integrations/), workflow tool attach models, org settings routes, HTTP tool editor ([HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx)). **Docs shipped:** [http-api.mdx](docs/voice-agent/tools/http-api.mdx), [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) (link to **Storage model**).
+**Key files (when staffed):** [custom_tool.py](api/services/workflow/tools/custom_tool.py), [http_tool_cache_policy.py](api/services/workflow/tools/http_tool_cache_policy.py), integration services under [api/services/integrations/](api/services/integrations/), workflow tool attach models, org settings routes, HTTP tool editor ([HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx)). **Shipped so far:** [http-api.mdx](docs/voice-agent/tools/http-api.mdx), [http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx), [integrations/overview.mdx](docs/integrations/overview.mdx), [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx), [api/.env.example](api/.env.example).
 
 ---
 
@@ -669,7 +671,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | WE-01 | Workflow editor parity (reference UI) | §2 Pillar 1, §1 Authoring row |
 | WE-01-VISUAL-DEPTH | Bento / glass / tactile UI (under **WE-01**) | UX polish; org dashboard row |
 | WE-01-HYPER-DENSITY | High-density SaaS extension (`Done` — slices 1–3) | [Brief](#we-01-hyper-density-saas-ui-extension-brief) · [Package](#we-01-hyper-density--high-density-shell-and-operator-chrome) |
-| WE-01-DATASTORE-INTEG | Org datastore default vs integration-backed HTTP cache (**InProgress** — [docs phase 1](docs/voice-agent/tools/http-api.mdx#storage-model)) | Pillar 1; Integrations row |
+| WE-01-DATASTORE-INTEG | Org datastore default vs integration-backed HTTP cache (**InProgress** — [docs + env stub](docs/voice-agent/tools/http-api.mdx#storage-model), [policy doc](docs/integrations/http-tool-data-policy.mdx)) | Pillar 1; Integrations row |
 | DX-01 | Three-tier experience (no-code, builder, ADK) | §8 Experience tiers |
 | _TBD_ | (next epic) | … |
 
@@ -756,7 +758,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | 2026-04-25 | **WE-01-DUALMODE** — [sortDistinctTemplates](ui/src/lib/httpToolVariablePickers.ts) for merged + custom + live `{{…}}` lists; help copy + Raw tab picker cross-tab hint ([page.tsx](ui/src/app/tools/[toolUuid]/page.tsx), [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx)). |
 | 2026-04-25 | **WE-01-DUALMODE** — Call-context **Form** **Add missing preset rows** + [collectPresetDotPaths](ui/src/lib/callContextSampleForm.ts) / [pathValueMapFromSampleJson](ui/src/lib/callContextSampleForm.ts) ([CallContextSampleEditor.tsx](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx), [callContextSampleForm.test.ts](ui/src/lib/callContextSampleForm.test.ts)). |
 | 2026-04-25 | **WE-01-DUALMODE / Tool API UX** — **Searchable** grouped variable + **Preset path** pickers ([grouped-string-option-picker.tsx](ui/src/components/http/grouped-string-option-picker.tsx), [grouped-string-option-picker.test.ts](ui/src/components/http/grouped-string-option-picker.test.ts); [url-input](ui/src/components/http/url-input.tsx), [key-value-editor](ui/src/components/http/key-value-editor.tsx), [parameter-editor](ui/src/components/http/parameter-editor.tsx), [jsonTemplateTextarea](ui/src/app/tools/[toolUuid]/components/jsonTemplateTextarea.tsx), [CallContextSampleEditor](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx), [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx), [http-api.mdx](docs/voice-agent/tools/http-api.mdx)). |
-| 2026-04-26 | **WE-01-DATASTORE-INTEG** (docs phase 1) — **Storage model** in [http-api.mdx](docs/voice-agent/tools/http-api.mdx) (`#storage-model`); package **InProgress** + docs criteria; [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) **Storage model (docs)** link by call-context sample. |
+| 2026-04-26 | **WE-01-DATASTORE-INTEG** — **Storage model** + [HttpApiToolConfig](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) doc link; runtime env stub [http_tool_cache_policy.py](api/services/workflow/tools/http_tool_cache_policy.py) / [test_http_tool_cache_policy.py](api/tests/test_http_tool_cache_policy.py); [http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx); [http-api.mdx](docs/voice-agent/tools/http-api.mdx) **Screenshots** table. **MK-01-IMPORT-OPTIONS** — [IMPORT_ADAPTERS_SPIKE.md](catalog/IMPORT_ADAPTERS_SPIKE.md) (**InProgress**). **READMEBUILDME** [Windows and WSL](READMEBUILDME.md#windows-and-wsl-local-dev); [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh) `--help`. |
 | 2026-04-25 | **WE-01-VISUAL-DEPTH** — Authenticated **`/usage`** + **`/workflow/catalog`** Lighthouse lines in [READMENEWRELEASES.md](READMENEWRELEASES.md); [api/alembic/env.py](api/alembic/env.py) **`transaction_per_migration=True`**; local compose Postgres host **5433** ([docker-compose-local.yaml](docker-compose-local.yaml), [api/.env.example](api/.env.example)); [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh) **`WE01_POSTGRES_PORT`**, **`.env`** before **wait_port**. |
 | 2026-04-25 | **WE-01-VISUAL-DEPTH** — OSS public **`/templates`**: [LocalProviderWrapper](ui/src/lib/auth/providers/LocalProviderWrapper.tsx) + [middleware](ui/src/middleware.ts); catalog **Lighthouse** line in [READMENEWRELEASES.md](READMENEWRELEASES.md); **`npm run perf:lighthouse:summary`** / **`--latest-auth`**; [lighthouse-summarize.mjs](ui/scripts/lighthouse-summarize.mjs); **`npm run perf:lighthouse:oss-headers`** + **`LIGHTHOUSE_OSS_AUTO_SIGNUP`** ([lighthouse-oss-session-headers.mjs](ui/scripts/lighthouse-oss-session-headers.mjs)); **`npm run perf:lighthouse:auth:full`** ([lighthouse-auth-full.sh](ui/scripts/lighthouse-auth-full.sh)). |
 | 2026-05-06 | **WE-01-VISUAL-DEPTH** — E2E [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh): **Compose** v2/v1, **`--help`**, **`import api.app`** preflight, **Docker** [docker-compose-local.yaml](docker-compose-local.yaml) + **alembic** + **API :8000** + **Next** + **`auth:full`**; **`WE01_UI_PORT`**; [READMEBUILDME.md](READMEBUILDME.md) §4 step **6**. |

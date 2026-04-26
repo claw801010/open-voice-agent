@@ -1,0 +1,32 @@
+---
+title: "HTTP tools — org data and cache policy"
+description: "How HTTP API tools use org-local configuration, runtime call context, and future optional integration caching (WE-01-DATASTORE-INTEG)."
+---
+
+## Summary
+
+HTTP tools combine **saved tool definitions** (your organization’s database) with **live call context** at runtime. Optional **integration-backed response caching** is a **roadmap** item; it is **not** enabled in the product today except for a **no-op environment flag** reserved for future implementation.
+
+Read the full authoring story in the [HTTP API tool guide](/voice-agent/tools/http-api) — especially **Storage model** and **Template resolution order**.
+
+## Today (operators)
+
+| Surface | Where it lives |
+|---------|----------------|
+| Tool URL, headers, parameters, body template, response mapping, credentials | **Org database** (saved with the tool) |
+| `{{…}}` values during a live call | **Runtime** — merged arguments + call / conversation context from the session |
+| **Test API Call** sample JSON and call-context editor | **Browser only** — not written to the org DB |
+
+## Environment (future hook)
+
+`HTTP_TOOL_INTEGRATION_CACHE_ENABLED` is documented in the repo’s **`api/.env.example`** as a **reserved** flag. If set to a truthy value **before** the feature ships, the API logs a **warning** and continues to perform **live HTTP** only (stub module `api/services/workflow/tools/http_tool_cache_policy.py`, work package **WE-01-DATASTORE-INTEG**).
+
+## Roadmap (WE-01-DATASTORE-INTEG)
+
+When implemented, expect:
+
+- **Org-admin** toggles per integration: cache on/off, TTL, PII class, audit of policy changes.
+- **Authoring** UI: explicit “local only” vs “also persist/cache via integration X” — no silent dual-writes.
+- **Runtime**: read-through or short-lived cache only when policy allows; fallback to live API on failure.
+
+Track delivery in **READMEPLANTOEXECUTE.md** (repo root) under **WE-01-DATASTORE-INTEG**.
