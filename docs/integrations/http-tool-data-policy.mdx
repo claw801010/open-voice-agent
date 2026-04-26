@@ -21,6 +21,8 @@ Read the full authoring story in the [HTTP API tool guide](/voice-agent/tools/ht
 
 There is **no** environment variable or toggle for HTTP response caching in this repo today. A small **`http_tool_cache_policy.py`** module exists only as a **documentation anchor** for future **WE-01-DATASTORE-INTEG** work (org policy + persistence first — do not add silent caches).
 
+**Read stub:** `GET /api/v1/organizations/http-integration-cache-policy` (authenticated, org-scoped) returns `cache_enabled: false` and the documented deferral date — see [org datastore design](/integrations/http-tool-org-datastore-design).
+
 ## Roadmap (WE-01-DATASTORE-INTEG)
 
 When implemented, expect:

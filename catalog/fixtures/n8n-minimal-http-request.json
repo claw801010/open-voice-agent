@@ -1,0 +1,20 @@
+{
+  "name": "Fixture — minimal HTTP Request (MK-01 import spike)",
+  "meta": { "instanceId": "fixture-catalog" },
+  "nodes": [
+    {
+      "id": "http-node-1",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [420, 300],
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://httpbin.org/post",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {},
+  "pinData": {}
+}

@@ -1,4 +1,4 @@
-# WE-01-ORG-USAGE — integration tests for org/workflow daily + weekly usage rollups.
+# WE-01-ORG-USAGE — usage rollups; WE-01-DATASTORE-INTEG — HTTP integration cache policy read stub.
 name: API — usage rollup tests
 
 on:
@@ -61,9 +61,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements.dev.txt
 
-      - name: Run usage rollup tests
+      - name: Run usage rollup + HTTP cache policy stub tests
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
           REDIS_URL: redis://127.0.0.1:6379/0
           LOG_LEVEL: WARNING
-        run: python -m pytest tests/test_usage_daily_rollup_routes.py -q --tb=short
+        run: |
+          python -m pytest \
+            tests/test_usage_daily_rollup_routes.py \
+            tests/test_http_integration_cache_policy_route.py \
+            -q --tb=short

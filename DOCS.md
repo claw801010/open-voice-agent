@@ -31,7 +31,7 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | [READMENEWRELEASES.md](READMENEWRELEASES.md) | What shipped (tie to execution IDs) |
 | [catalog/README.md](catalog/README.md) | Vertical pack JSON (`MK-01-CATALOG`) |
 | [docs/voice-agent/tools/http-api.mdx](docs/voice-agent/tools/http-api.mdx) | HTTP tool user doc (templated URL, headers, **Template resolution order**, **Storage model**, **Screenshots** / **WE-01-DATASTORE-INTEG**) — publish at [docs.dograh.com](https://docs.dograh.com) with site sync |
-| [docs/images/](docs/images/) | **http-api-*.png** placeholder assets (1×1 PNGs; replace for GTM); see [docs/images/README.md](docs/images/README.md) |
+| [docs/images/](docs/images/) | **http-api-*.png** doc figures (1280×720 placeholders via [scripts/gen_http_api_doc_pngs.py](scripts/gen_http_api_doc_pngs.py); replace with product shots for GTM); [docs/images/README.md](docs/images/README.md) |
 | [docs/integrations/http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx) | HTTP tools — org data, browser-only test samples, roadmap cache (**WE-01-DATASTORE-INTEG**); linked from [integrations/overview.mdx](docs/integrations/overview.mdx) |
 | [docs/integrations/http-tool-org-datastore-design.mdx](docs/integrations/http-tool-org-datastore-design.mdx) | **Design** — org policy fields, persistence boundaries, rollout gates for optional HTTP integration cache |
 | [runbooks/README.md](runbooks/README.md) | Per-vertical operational runbooks |

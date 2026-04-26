@@ -57,3 +57,5 @@ Related: [HTTP tools — org data and cache policy](/integrations/http-tool-data
 Until **admin policy CRUD** and **explicit authoring opt-in** are staffed, treat integration response cache as **not shipped**: org-local tools + runtime context remain the supported path.
 
 **Calendar boundary (this fork):** no **runtime** integration response cache implementation is planned **before 2026-07-01** unless **READMEPLANTOEXECUTE.md** and this doc are explicitly revised (dates are planning signals, not contractual SLAs). Update both when you start build or change the boundary.
+
+**Read API (stub):** authenticated `GET /api/v1/organizations/http-integration-cache-policy` returns `cache_enabled: false`, `deferral_not_before`, and `implementation_status` for the **selected** org (`api/routes/organization.py`). Clients can treat this as the single source of truth until admin policy CRUD ships.

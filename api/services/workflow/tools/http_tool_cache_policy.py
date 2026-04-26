@@ -14,3 +14,6 @@ from __future__ import annotations
 
 # Explicit status for operators and future code paths.
 INTEGRATION_RESPONSE_CACHE_STATUS: str = "not_implemented"
+
+# Planning signal for API + docs (WE-01-DATASTORE-INTEG); revise when shipping or changing boundary.
+INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE: str = "2026-07-01"

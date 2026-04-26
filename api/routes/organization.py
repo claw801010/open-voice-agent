@@ -23,12 +23,44 @@ from api.schemas.telephony_config import (
     VonageConfigurationResponse,
 )
 from api.services.auth.depends import get_user
+from api.services.workflow.tools.http_tool_cache_policy import (
+    INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE,
+    INTEGRATION_RESPONSE_CACHE_STATUS,
+)
 from api.services.configuration.masking import is_mask_of, mask_key
 from api.services.posthog_client import capture_event
 from api.services.worker_sync.manager import get_worker_sync_manager
 from api.services.worker_sync.protocol import WorkerSyncEventType
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
+
+
+class HttpIntegrationCachePolicyResponse(BaseModel):
+    """WE-01-DATASTORE-INTEG — org-scoped read model until admin policy + persistence ship."""
+
+    organization_id: int
+    cache_enabled: bool = False
+    deferral_not_before: str
+    implementation_status: str
+
+
+@router.get("/http-integration-cache-policy", response_model=HttpIntegrationCachePolicyResponse)
+async def get_http_integration_cache_policy(user: UserModel = Depends(get_user)):
+    """
+    Integration-backed HTTP **response** cache policy for the selected org.
+
+    Today: always `cache_enabled=false` with a documented deferral date; see
+    `http_tool_cache_policy` and docs/integrations/http-tool-org-datastore-design.mdx.
+    """
+    if not user.selected_organization_id:
+        raise HTTPException(status_code=400, detail="No organization selected")
+
+    return HttpIntegrationCachePolicyResponse(
+        organization_id=user.selected_organization_id,
+        cache_enabled=False,
+        deferral_not_before=INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE,
+        implementation_status=INTEGRATION_RESPONSE_CACHE_STATUS,
+    )
 
 # Provider configuration constants
 PROVIDER_MASKED_FIELDS = {
