@@ -3,17 +3,10 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
 import { cn } from "@/lib/utils";
+
+import { GroupedStringOptionPicker } from "./grouped-string-option-picker";
 
 // URL regex pattern that validates:
 // - http:// or https:// protocol (required)
@@ -196,36 +189,15 @@ export function UrlInput({
                     )}
                 />
                 {hasVariablePicker && !disabled ? (
-                    <Select value="" onValueChange={applyVariable}>
-                        <SelectTrigger
-                            className="w-[240px] shrink-0"
-                            onPointerDownCapture={syncSelection}
-                            aria-label="Insert system, conversation, custom, or tool variable into URL"
-                        >
-                            <SelectValue placeholder={selectPlaceholder} />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-72 overflow-y-auto">
-                            {variableSuggestionGroups.length > 0
-                                ? variableSuggestionGroups.map((group) => (
-                                      <SelectGroup key={`url-var-${group.label}`}>
-                                          <SelectLabel>{group.label}</SelectLabel>
-                                          {group.options.map((template) => (
-                                              <SelectItem
-                                                  key={`url-var-${group.label}-${template}`}
-                                                  value={template}
-                                              >
-                                                  {template}
-                                              </SelectItem>
-                                          ))}
-                                      </SelectGroup>
-                                  ))
-                                : variableSuggestions.map((template) => (
-                                      <SelectItem key={`url-var-${template}`} value={template}>
-                                          {template}
-                                      </SelectItem>
-                                  ))}
-                        </SelectContent>
-                    </Select>
+                    <GroupedStringOptionPicker
+                        variableSuggestionGroups={variableSuggestionGroups}
+                        variableSuggestions={variableSuggestions}
+                        triggerClassName="w-[240px] shrink-0"
+                        placeholder={selectPlaceholder}
+                        ariaLabel="Insert system, conversation, custom, or tool variable into URL"
+                        onTriggerPointerDown={syncSelection}
+                        onPick={applyVariable}
+                    />
                 ) : null}
             </div>
             {showError && <p className="text-xs text-destructive">{validation.error}</p>}

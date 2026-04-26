@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
+
+import { GroupedStringOptionPicker } from "./grouped-string-option-picker";
 
 export type ParameterType = "string" | "number" | "boolean";
 
@@ -163,9 +163,14 @@ export function ParameterEditor({
                             />
                             {variableSuggestions.length > 0 ||
                             variableSuggestionGroups.length > 0 ? (
-                                <Select
-                                    value=""
-                                    onValueChange={(value) =>
+                                <GroupedStringOptionPicker
+                                    variableSuggestionGroups={variableSuggestionGroups}
+                                    variableSuggestions={variableSuggestions}
+                                    disabled={disabled}
+                                    triggerClassName="w-[220px] shrink-0"
+                                    placeholder="Insert variable"
+                                    ariaLabel="Insert system, conversation, custom, or tool variable for value template"
+                                    onPick={(value) =>
                                         updateParameter(
                                             index,
                                             "valueTemplate",
@@ -175,33 +180,7 @@ export function ParameterEditor({
                                                 : value
                                         )
                                     }
-                                    disabled={disabled}
-                                >
-                                    <SelectTrigger
-                                        className="w-[220px]"
-                                        aria-label="Insert system, conversation, custom, or tool variable for value template"
-                                    >
-                                        <SelectValue placeholder="Insert variable" />
-                                    </SelectTrigger>
-                                    <SelectContent className="max-h-72 overflow-y-auto">
-                                        {variableSuggestionGroups.length > 0
-                                            ? variableSuggestionGroups.map((group) => (
-                                                  <SelectGroup key={group.label}>
-                                                      <SelectLabel>{group.label}</SelectLabel>
-                                                      {group.options.map((template) => (
-                                                          <SelectItem key={template} value={template}>
-                                                              {template}
-                                                          </SelectItem>
-                                                      ))}
-                                                  </SelectGroup>
-                                              ))
-                                            : variableSuggestions.map((template) => (
-                                                  <SelectItem key={template} value={template}>
-                                                      {template}
-                                                  </SelectItem>
-                                              ))}
-                                    </SelectContent>
-                                </Select>
+                                />
                             ) : null}
                         </div>
                     </div>

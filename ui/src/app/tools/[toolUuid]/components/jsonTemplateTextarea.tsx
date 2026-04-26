@@ -2,15 +2,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { GroupedStringOptionPicker } from "@/components/http/grouped-string-option-picker";
 import { Textarea } from "@/components/ui/textarea";
 import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
 
@@ -30,7 +22,7 @@ export interface JsonTemplateTextareaProps {
     selectPlaceholder?: string;
 }
 
-/** JSON-ish textarea with grouped variable insert at cursor / selection (survives Select focus loss). */
+/** JSON-ish textarea with grouped variable insert at cursor / selection (popover preserves saved caret). */
 export function JsonTemplateTextarea({
     value,
     onChange,
@@ -100,36 +92,15 @@ export function JsonTemplateTextarea({
                 placeholder={placeholder}
             />
             {variableSuggestionGroups.length > 0 || variableSuggestions.length > 0 ? (
-                <Select value="" onValueChange={applyVariable}>
-                    <SelectTrigger
-                        className="w-[260px]"
-                        onPointerDownCapture={syncSelection}
-                        aria-label="Insert system, conversation, custom, or tool variable template"
-                    >
-                        <SelectValue placeholder={selectPlaceholder} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72 overflow-y-auto">
-                        {variableSuggestionGroups.length > 0
-                            ? variableSuggestionGroups.map((group) => (
-                                  <SelectGroup key={`json-var-${group.label}`}>
-                                      <SelectLabel>{group.label}</SelectLabel>
-                                      {group.options.map((template) => (
-                                          <SelectItem
-                                              key={`json-var-${group.label}-${template}`}
-                                              value={template}
-                                          >
-                                              {template}
-                                          </SelectItem>
-                                      ))}
-                                  </SelectGroup>
-                              ))
-                            : variableSuggestions.map((template) => (
-                                  <SelectItem key={`json-var-${template}`} value={template}>
-                                      {template}
-                                  </SelectItem>
-                              ))}
-                    </SelectContent>
-                </Select>
+                <GroupedStringOptionPicker
+                    variableSuggestionGroups={variableSuggestionGroups}
+                    variableSuggestions={variableSuggestions}
+                    triggerClassName="w-[260px]"
+                    placeholder={selectPlaceholder}
+                    ariaLabel="Insert system, conversation, custom, or tool variable template"
+                    onTriggerPointerDown={syncSelection}
+                    onPick={applyVariable}
+                />
             ) : null}
         </div>
     );

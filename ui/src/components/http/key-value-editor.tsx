@@ -4,16 +4,9 @@ import { PlusIcon, Trash2Icon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
+
+import { GroupedStringOptionPicker } from "./grouped-string-option-picker";
 
 export interface KeyValueItem {
     key: string;
@@ -88,9 +81,14 @@ export function KeyValueEditor({
                         />
                         {variableSuggestions.length > 0 ||
                         variableSuggestionGroups.length > 0 ? (
-                            <Select
-                                value=""
-                                onValueChange={(value) =>
+                            <GroupedStringOptionPicker
+                                variableSuggestionGroups={variableSuggestionGroups}
+                                variableSuggestions={variableSuggestions}
+                                disabled={disabled}
+                                triggerClassName="w-[190px] shrink-0"
+                                placeholder="Insert var"
+                                ariaLabel="Insert system, conversation, custom, or tool variable into value"
+                                onPick={(value) =>
                                     updateItem(
                                         index,
                                         "value",
@@ -99,33 +97,7 @@ export function KeyValueEditor({
                                             : value
                                     )
                                 }
-                                disabled={disabled}
-                            >
-                                <SelectTrigger
-                                    className="w-[190px]"
-                                    aria-label="Insert system, conversation, custom, or tool variable into value"
-                                >
-                                    <SelectValue placeholder="Insert var" />
-                                </SelectTrigger>
-                                <SelectContent className="max-h-72 overflow-y-auto">
-                                    {variableSuggestionGroups.length > 0
-                                        ? variableSuggestionGroups.map((group) => (
-                                              <SelectGroup key={group.label}>
-                                                  <SelectLabel>{group.label}</SelectLabel>
-                                                  {group.options.map((template) => (
-                                                      <SelectItem key={template} value={template}>
-                                                          {template}
-                                                      </SelectItem>
-                                                  ))}
-                                              </SelectGroup>
-                                          ))
-                                        : variableSuggestions.map((template) => (
-                                              <SelectItem key={template} value={template}>
-                                                  {template}
-                                              </SelectItem>
-                                          ))}
-                                </SelectContent>
-                            </Select>
+                            />
                         ) : null}
                         <Button
                             variant="outline"

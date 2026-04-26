@@ -70,7 +70,7 @@ An HTTP API Tool is a REST API definition that the LLM can invoke at runtime.
 
 - Full URL (**must include `http://` or `https://`**)
 - Supports **REST** methods
-- **Templated URLs:** you may include `{{path.to.value}}` in the path or query, for example `https://api.example.com/orders/{{order_id}}`. The editor accepts these while you are authoring; the URL is resolved at runtime. See [Template resolution order](#template-resolution-order) below. In the dashboard, the **Endpoint URL** field includes the same **grouped variable picker** as parameters and headers so you can insert system, conversation, custom, and tool keys at the caret without retyping.
+- **Templated URLs:** you may include `{{path.to.value}}` in the path or query, for example `https://api.example.com/orders/{{order_id}}`. The editor accepts these while you are authoring; the URL is resolved at runtime. See [Template resolution order](#template-resolution-order) below. In the dashboard, the **Endpoint URL** field includes the same **grouped variable picker** as parameters and headers so you can insert system, conversation, custom, and tool keys at the caret without retyping. Each picker opens a searchable list (filter by substring) so long variable sets stay easy to navigate.
 
 <Note>Common mistake: forgetting https:// in the URL. Templated URLs must still start with `http://` or `https://`.</Note>
 
@@ -156,7 +156,7 @@ Poor naming or vague descriptions lead to:
 
 So a key that exists only in the **body template** can still be used in a **header** (for example a trace or customer id) as long as the path matches.
 
-In the dashboard, use **Test API Call** with a sample **test payload** and optional **call / conversation context** JSON. In the **Form** view, **Preset path** includes system and conversation paths plus a merged group (for example **“From your flow (custom & tool keys)”**) built from this tool’s custom template keys, parameter names, and response-mapping key names, so you can build sample context without retyping every dot path. After a successful test, the UI can highlight any `{{…}}` paths that were not found in those samples, including paths used in the **URL** or **headers**.
+In the dashboard, use **Test API Call** with a sample **test payload** and optional **call / conversation context** JSON. In the **Form** view, **Preset path** includes system and conversation paths plus a merged group (for example **“From your flow (custom & tool keys)”**) built from this tool’s custom template keys, parameter names, and response-mapping key names, so you can build sample context without retyping every dot path; the preset and template pickers are **searchable** (type to filter). After a successful test, the UI can highlight any `{{…}}` paths that were not found in those samples, including paths used in the **URL** or **headers**.
 
 **Response mapping** (Simple and Advanced) uses **plain dot paths** into the **HTTP response body** (for example `data.id` or `data.items.0.id`). This is different from the `{{…}}` system used for the URL, parameters, and call context. The insert control lists common response shapes; **Auto-map from latest response** (after a successful test) is still the fastest way to build mappings.
 

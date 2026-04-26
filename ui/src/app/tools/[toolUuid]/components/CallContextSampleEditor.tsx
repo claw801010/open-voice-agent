@@ -3,18 +3,10 @@
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import { GroupedStringOptionPicker } from "@/components/http/grouped-string-option-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     CALL_CONTEXT_PATH_PRESET_GROUPS,
@@ -117,36 +109,15 @@ function InputTemplateVariable({
                 className="min-w-[100px] flex-1 font-mono text-xs"
             />
             {variableSuggestionGroups.length > 0 || variableSuggestions.length > 0 ? (
-                <Select value="" onValueChange={applyVariable}>
-                    <SelectTrigger
-                        className="w-[200px] shrink-0"
-                        onPointerDownCapture={syncSelection}
-                        aria-label="Insert call context or tool variable into sample value"
-                    >
-                        <SelectValue placeholder={selectPlaceholder ?? "Insert variable"} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72 overflow-y-auto">
-                        {variableSuggestionGroups.length > 0
-                            ? variableSuggestionGroups.map((group) => (
-                                  <SelectGroup key={`ctx-inp-${group.label}`}>
-                                      <SelectLabel>{group.label}</SelectLabel>
-                                      {group.options.map((template) => (
-                                          <SelectItem
-                                              key={`ctx-inp-${group.label}-${template}`}
-                                              value={template}
-                                          >
-                                              {template}
-                                          </SelectItem>
-                                      ))}
-                                  </SelectGroup>
-                              ))
-                            : variableSuggestions.map((template) => (
-                                  <SelectItem key={`ctx-inp-${template}`} value={template}>
-                                      {template}
-                                  </SelectItem>
-                              ))}
-                    </SelectContent>
-                </Select>
+                <GroupedStringOptionPicker
+                    variableSuggestionGroups={variableSuggestionGroups}
+                    variableSuggestions={variableSuggestions}
+                    triggerClassName="w-[200px] shrink-0"
+                    placeholder={selectPlaceholder ?? "Insert variable"}
+                    ariaLabel="Insert call context or tool variable into sample value"
+                    onTriggerPointerDown={syncSelection}
+                    onPick={applyVariable}
+                />
             ) : null}
         </div>
     );
@@ -308,29 +279,14 @@ export function CallContextSampleEditor({
                                             placeholder="e.g. conversation.intent"
                                             className="min-w-[120px] flex-1 font-mono text-xs"
                                         />
-                                        <Select
-                                            value=""
-                                            onValueChange={(path) => updateRow(row.id, { path })}
-                                        >
-                                            <SelectTrigger
-                                                className="w-[210px] shrink-0"
-                                                aria-label="Choose a preset dot path (system, conversation, flow, or custom)"
-                                            >
-                                                <SelectValue placeholder="Preset path" />
-                                            </SelectTrigger>
-                                            <SelectContent className="max-h-72 overflow-y-auto">
-                                                {pathPresetGroupsMerged.map((group) => (
-                                                    <SelectGroup key={`path-${group.label}`}>
-                                                        <SelectLabel>{group.label}</SelectLabel>
-                                                        {group.options.map((opt) => (
-                                                            <SelectItem key={`path-${group.label}-${opt}`} value={opt}>
-                                                                {opt}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectGroup>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <GroupedStringOptionPicker
+                                            variableSuggestionGroups={pathPresetGroupsMerged}
+                                            variableSuggestions={[]}
+                                            triggerClassName="w-[210px] shrink-0"
+                                            placeholder="Preset path"
+                                            ariaLabel="Choose a preset dot path (system, conversation, initial context, flow, or custom)"
+                                            onPick={(path) => updateRow(row.id, { path })}
+                                        />
                                     </div>
                                 </div>
                                 <Button

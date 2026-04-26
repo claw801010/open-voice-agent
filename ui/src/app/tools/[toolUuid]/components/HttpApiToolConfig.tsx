@@ -177,7 +177,7 @@ export function HttpApiToolConfig({
                 <div className="mb-4 rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
                     Use templates like <code>{"{{conversation.customer.id}}"}</code> or <code>{"{{customer.id}}"}</code> in parameter defaults, header values, body template JSON, and the endpoint URL. Headers and URL resolve {"{{…}}"} after body defaults merge with arguments (same as live calls and Test API Call). Variable pickers are grouped: {HTTP_VARIABLE_GROUP_LABELS.system},{" "}
                     {HTTP_VARIABLE_GROUP_LABELS.conversation}, {HTTP_VARIABLE_GROUP_LABELS.custom}, and{" "}
-                    {HTTP_VARIABLE_GROUP_LABELS.live} (from parameters and response mapping key names when present).
+                    {HTTP_VARIABLE_GROUP_LABELS.live} (from parameters and response mapping key names when present). Open a picker and type in the filter box to jump to a path or template quickly.
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                         <a
                             href={CONTEXT_VARIABLES_DOC_URL}
