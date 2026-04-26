@@ -17,9 +17,9 @@ Read the full authoring story in the [HTTP API tool guide](/voice-agent/tools/ht
 | `{{…}}` values during a live call | **Runtime** — merged arguments + call / conversation context from the session |
 | **Test API Call** sample JSON and call-context editor | **Browser only** — not written to the org DB |
 
-## Environment (future hook)
+## Runtime extension point (no env flags yet)
 
-`HTTP_TOOL_INTEGRATION_CACHE_ENABLED` is documented in the repo’s **`api/.env.example`** as a **reserved** flag. If set to a truthy value **before** the feature ships, the API logs a **warning** and continues to perform **live HTTP** only (stub module `api/services/workflow/tools/http_tool_cache_policy.py`, work package **WE-01-DATASTORE-INTEG**).
+There is **no** environment variable or toggle for HTTP response caching in this repo today. A small **`http_tool_cache_policy.py`** module exists only as a **documentation anchor** for future **WE-01-DATASTORE-INTEG** work (org policy + persistence first — do not add silent caches).
 
 ## Roadmap (WE-01-DATASTORE-INTEG)
 

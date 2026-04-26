@@ -10,7 +10,7 @@ Evaluate **Make**, **n8n**, **Zapier**, and **agent skills** (Claude, Cursor, Co
 
 | Field | Value |
 |-------|--------|
-| Owner | _TBD_ (assign in sprint planning) |
+| Owner | **Open-source / fork maintainers** (assign a named owner per PR or sprint) |
 | First target (pick **one** to start) | **Suggested default:** native packaged JSON + graph validation hardening (extends [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py) / rubric). · ☐ n8n webhook-only subset · ☐ Skill bundle → draft prompts |
 | Target completion | _date_ |
 
@@ -30,4 +30,5 @@ When you choose one line above, fill in:
 ## References
 
 - Execution package: [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md) → **MK-01-IMPORT-OPTIONS**
+- Native JSON import playbook: [import-packaged-workflow-json.md](import-packaged-workflow-json.md)
 - Catalog quality gate: [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md), [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py)

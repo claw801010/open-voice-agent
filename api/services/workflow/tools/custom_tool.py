@@ -8,7 +8,6 @@ import httpx
 from loguru import logger
 
 from api.db import db_client
-from api.services.workflow.tools.http_tool_cache_policy import warn_if_cache_env_misconfigured
 from api.utils.credential_auth import build_auth_header
 
 # Map tool parameter types to JSON schema types
@@ -210,8 +209,6 @@ async def execute_http_request(
     organization_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Execute an HTTP request with optional credential and response mapping."""
-    warn_if_cache_env_misconfigured()
-
     method = config.get("method", "POST").upper()
     url_raw = str(config.get("url", "") or "").strip()
     response_mapping = config.get("response_mapping") or {}

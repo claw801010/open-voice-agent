@@ -187,17 +187,27 @@ When **WE-01-DATASTORE-INTEG** is implemented, product docs and the HTTP tool UI
 
 Operator-focused policy summary (integrations hub): [HTTP tools — org data and cache policy](/integrations/http-tool-data-policy).
 
-## Screenshots (doc site assets)
+## Screenshots
 
-Use these slots when publishing screenshots to your docs CDN or `/public/images` mirror. Captions describe what GTM or solutions engineers should capture from the dashboard (**HTTP API tool** editor, authenticated).
+Repo ships **1×1 PNG placeholders** under [`docs/images/`](../../images/) (see [`README.md`](../../images/README.md)) so relative paths resolve in forks; replace with real dashboard captures for GTM (keep filenames).
 
-| Asset path (suggested) | Capture |
-|------------------------|---------|
-| `/images/http-api-variable-picker-url.png` | **Endpoint URL** with the grouped **Insert** control open — show **System defaults**, **Conversation state**, and **Custom flow variables** with the filter field visible. |
-| `/images/http-api-call-context-form.png` | **Call / conversation context** → **Form** tab: **Preset path** + value row, **Add missing preset rows**, and **Insert variable** on a value cell. |
-| `/images/http-api-test-call-result.png` | After **Test API Call**: response preview and any **unresolved `{{…}}`** hint strip. |
+### Variable picker (URL field)
 
-_If images are missing, the site may show broken icons until assets are added — keep filenames stable so PRs can add PNGs without re-editing copy._
+![Endpoint URL — grouped insert control with filter](../../images/http-api-variable-picker-url.png)
+
+_Replace with: URL field and **Insert** popover open — **System defaults**, **Conversation state**, **Custom flow variables**, filter box visible._
+
+### Call context Form tab
+
+![Call context — Form tab presets and values](../../images/http-api-call-context-form.png)
+
+_Replace with: **Form** tab — **Preset path**, value row, **Add missing preset rows**, **Insert variable** on a value._
+
+### Test API Call result
+
+![Test API Call — response and unresolved template hints](../../images/http-api-test-call-result.png)
+
+_Replace with: response preview and any **unresolved `{{…}}`** hints after a successful test._
 
 ## Key Best Practices
 - Name tools clearly
