@@ -276,13 +276,18 @@ export function HttpApiToolConfig({
                             <Label className="text-xs text-muted-foreground font-normal">
                                 Literal URL or templates such as{" "}
                                 <code className="text-[11px]">https://api.example.com/orders/{"{{order_id}}"}</code>{" "}
-                                (resolved at runtime like headers and body).
+                                (resolved at runtime like headers and body). Use the picker to insert at the caret;
+                                same groups as below.
                             </Label>
                             <UrlInput
                                 value={url}
                                 onChange={onUrlChange}
                                 placeholder="https://api.example.com/v1/orders/{{order_id}}"
                                 showValidation
+                                variableSuggestionGroups={variableSuggestionGroups}
+                                variableSuggestions={variableSuggestions}
+                                variableInsertMode={variableInsertMode}
+                                selectPlaceholder="Insert variable in URL"
                             />
                         </div>
                         <div className="flex flex-wrap items-end gap-2 rounded-md border border-border bg-muted/15 px-3 py-2">
@@ -481,13 +486,18 @@ export function HttpApiToolConfig({
                                 <div className="grid gap-2">
                                     <Label>Endpoint URL</Label>
                                     <Label className="text-xs text-muted-foreground font-normal">
-                                        Templates in the path/query are resolved at runtime (same as test call).
+                                        Templates in the path/query are resolved at runtime (same as test call). Picker
+                                        inserts at the caret using the same variable groups as parameters and headers.
                                     </Label>
                                     <UrlInput
                                         value={url}
                                         onChange={onUrlChange}
                                         placeholder="https://api.example.com/v1/orders/{{order_id}}"
                                         showValidation
+                                        variableSuggestionGroups={variableSuggestionGroups}
+                                        variableSuggestions={variableSuggestions}
+                                        variableInsertMode={variableInsertMode}
+                                        selectPlaceholder="Insert variable in URL"
                                     />
                                 </div>
                                 <div className="grid gap-2 pt-4 border-t">

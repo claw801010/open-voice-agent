@@ -81,14 +81,14 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _(none)_ | | **WE-01-DUALMODE** — Variable pickers: sorted live keys, scrollable lists, `aria-label` on insert controls. *Suggested next:* Windows bootstrap note; **MK-01** / **MK-01-IMPORT** when staffed. |
+| _(none)_ | | **WE-01-DUALMODE** — URL field variable picker (caret insert). **WE-01-DATASTORE-INTEG** stub for org store vs integration cache. *Suggested next:* spike **DATASTORE-INTEG** admin + HTTP write-through; Windows bootstrap doc. |
 
 #### Rolling pass notes (keep short; update when you ship a slice)
 
 | | |
 |--|--|
-| **This pass (shipped in repo now)** | **HTTP tool a11y / UX** — [page.tsx](ui/src/app/tools/[toolUuid]/page.tsx) sorts **Tool parameters & mapping keys**; [jsonTemplateTextarea](ui/src/app/tools/[toolUuid]/components/jsonTemplateTextarea.tsx), [key-value-editor](ui/src/components/http/key-value-editor.tsx), [parameter-editor](ui/src/components/http/parameter-editor.tsx), [CallContextSampleEditor](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx): `aria-label` on variable inserts + `max-h-72` scroll. |
-| **Next pass (suggested)** | **Windows** / WSL note for [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh); `mergeMissingKeysFromDefault` array-edge Vitest; refresh **http-api** screenshots; **MK-01** / **MK-01-IMPORT** when staffed. |
+| **This pass (shipped in repo now)** | **HTTP URL picker** — [UrlInput](ui/src/components/http/url-input.tsx) optional grouped variable insert (same as headers/body); [HttpApiToolConfig](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx). **Planning** — [WE-01-DATASTORE-INTEG](#we-01-datastore-integr--org-datastore-default-vs-integration-backed-http-stub) stub (org default vs integration cache). |
+| **Next pass (suggested)** | Spike **WE-01-DATASTORE-INTEG** (admin toggles + HTTP cache path) or **MK-01**; **Windows** / WSL for [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh); **http-api** screenshots. |
 
 ### Strategic review (major bets)
 
@@ -555,6 +555,24 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ---
 
+### WE-01-DATASTORE-INTEG — Org datastore default vs integration-backed HTTP (stub)
+
+**Status:** `NotStarted`  
+**Strategy anchor:** [READMEPLANNING.md](READMEPLANNING.md) Pillar 1 (customer-complete) and **Integrations** row; [READMEPLANNING.md](READMEPLANNING.md) §6 marketplace + [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md) for GTM sequencing.
+
+**Goal:** Keep **HTTP API tools** as the primary **plug-in** for external systems (`{{…}}` + credentials today). Default workflow data paths use **org-local persistence** (Postgres / existing models). When a node or tool is **wired to an integration** and an **org admin** enables **read-through / cache** for that integration (and optionally per-integration retention), allow **storing or caching** normalized slices of tool or webhook responses for faster repeat lookups and offline-friendly UX—without silently replacing the org DB as source of truth unless explicitly modeled.
+
+**Acceptance criteria (future; not started):**
+
+- [ ] **Authoring** — Clear UI contract: “Use local store” vs “Also persist via integration X (admin: cache on/off, TTL)” on HTTP tool or adjacent workflow storage node; no ambiguous dual-writes.
+- [ ] **Admin** — Org-level toggles per integration for **cache enabled**, **max retention**, and **PII class** (block vs allow with redaction policy); audit log of policy changes.
+- [ ] **Runtime** — HTTP tool execution path respects policy: write-through only when enabled; failures fall back to live API only (documented); metrics on cache hit rate (optional).
+- [ ] **Docs** — [http-api.mdx](docs/voice-agent/tools/http-api.mdx) + integration docs describe default-local vs integration-backed storage and compliance expectations.
+
+**Key files (when staffed):** [custom_tool.py](api/services/workflow/tools/custom_tool.py), integration services under [api/services/integrations/](api/services/integrations/), workflow tool attach models, org settings routes, HTTP tool editor ([HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx)).
+
+---
+
 ### WE-01-A11Y-QA — Accessibility and editor QA
 
 **Status:** `Done` (ongoing: optional **full visual audit** vs external reference; **Lighthouse** under **WE-01-VISUAL-DEPTH** optional)
@@ -650,6 +668,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | WE-01 | Workflow editor parity (reference UI) | §2 Pillar 1, §1 Authoring row |
 | WE-01-VISUAL-DEPTH | Bento / glass / tactile UI (under **WE-01**) | UX polish; org dashboard row |
 | WE-01-HYPER-DENSITY | High-density SaaS extension (`Done` — slices 1–3) | [Brief](#we-01-hyper-density-saas-ui-extension-brief) · [Package](#we-01-hyper-density--high-density-shell-and-operator-chrome) |
+| WE-01-DATASTORE-INTEG | Org datastore default vs integration-backed HTTP cache | Pillar 1; Integrations row |
 | DX-01 | Three-tier experience (no-code, builder, ADK) | §8 Experience tiers |
 | _TBD_ | (next epic) | … |
 
@@ -732,6 +751,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | 2026-04-25 | **WE-01-DUALMODE** — [READMEBUILDME.md](READMEBUILDME.md) **After a fresh git pull**; [CallContextSampleEditor](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx) custom-variable discoverability. |
 | 2026-04-25 | **DX-01 (dev experience)** — [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh) + [READMEBUILDME.md](READMEBUILDME.md#one-command-local-bootstrap) / [AGENTS.md](AGENTS.md) / **After a fresh pull**; optional Pipecat via [setup_pipecat.sh](scripts/setup_pipecat.sh). |
 | 2026-04-25 | **WE-01-DUALMODE** — HTTP variable pickers: sorted live group, ARIA labels, scrollable `SelectContent` ([page.tsx](ui/src/app/tools/[toolUuid]/page.tsx), [jsonTemplateTextarea.tsx](ui/src/app/tools/[toolUuid]/components/jsonTemplateTextarea.tsx), [key-value-editor](ui/src/components/http/key-value-editor.tsx), [parameter-editor](ui/src/components/http/parameter-editor.tsx), [CallContextSampleEditor](ui/src/app/tools/[toolUuid]/components/CallContextSampleEditor.tsx)). |
+| 2026-04-25 | **WE-01-DUALMODE** — [UrlInput](ui/src/components/http/url-input.tsx) grouped variable insert on endpoint URL; **WE-01-DATASTORE-INTEG** stub in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md). |
 | 2026-04-25 | **WE-01-VISUAL-DEPTH** — Authenticated **`/usage`** + **`/workflow/catalog`** Lighthouse lines in [READMENEWRELEASES.md](READMENEWRELEASES.md); [api/alembic/env.py](api/alembic/env.py) **`transaction_per_migration=True`**; local compose Postgres host **5433** ([docker-compose-local.yaml](docker-compose-local.yaml), [api/.env.example](api/.env.example)); [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh) **`WE01_POSTGRES_PORT`**, **`.env`** before **wait_port**. |
 | 2026-04-25 | **WE-01-VISUAL-DEPTH** — OSS public **`/templates`**: [LocalProviderWrapper](ui/src/lib/auth/providers/LocalProviderWrapper.tsx) + [middleware](ui/src/middleware.ts); catalog **Lighthouse** line in [READMENEWRELEASES.md](READMENEWRELEASES.md); **`npm run perf:lighthouse:summary`** / **`--latest-auth`**; [lighthouse-summarize.mjs](ui/scripts/lighthouse-summarize.mjs); **`npm run perf:lighthouse:oss-headers`** + **`LIGHTHOUSE_OSS_AUTO_SIGNUP`** ([lighthouse-oss-session-headers.mjs](ui/scripts/lighthouse-oss-session-headers.mjs)); **`npm run perf:lighthouse:auth:full`** ([lighthouse-auth-full.sh](ui/scripts/lighthouse-auth-full.sh)). |
 | 2026-05-06 | **WE-01-VISUAL-DEPTH** — E2E [scripts/we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh): **Compose** v2/v1, **`--help`**, **`import api.app`** preflight, **Docker** [docker-compose-local.yaml](docker-compose-local.yaml) + **alembic** + **API :8000** + **Next** + **`auth:full`**; **`WE01_UI_PORT`**; [READMEBUILDME.md](READMEBUILDME.md) §4 step **6**. |

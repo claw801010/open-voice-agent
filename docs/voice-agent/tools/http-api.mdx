@@ -70,7 +70,7 @@ An HTTP API Tool is a REST API definition that the LLM can invoke at runtime.
 
 - Full URL (**must include `http://` or `https://`**)
 - Supports **REST** methods
-- **Templated URLs:** you may include `{{path.to.value}}` in the path or query, for example `https://api.example.com/orders/{{order_id}}`. The editor accepts these while you are authoring; the URL is resolved at runtime. See [Template resolution order](#template-resolution-order) below.
+- **Templated URLs:** you may include `{{path.to.value}}` in the path or query, for example `https://api.example.com/orders/{{order_id}}`. The editor accepts these while you are authoring; the URL is resolved at runtime. See [Template resolution order](#template-resolution-order) below. In the dashboard, the **Endpoint URL** field includes the same **grouped variable picker** as parameters and headers so you can insert system, conversation, custom, and tool keys at the caret without retyping.
 
 <Note>Common mistake: forgetting https:// in the URL. Templated URLs must still start with `http://` or `https://`.</Note>
 
