@@ -412,7 +412,7 @@ export default function ToolDetailPage() {
             { label: HTTP_VARIABLE_GROUP_LABELS.conversation, options: CONVERSATION_CONTEXT_VARIABLE_TEMPLATES },
             { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: customSorted },
             { label: HTTP_VARIABLE_GROUP_LABELS.live, options: liveParameterAndMapping },
-        ].filter((group) => group.options.length > 0);
+        ];
     }, [customVariableSuggestions, parameters, responseMappings]);
 
     const buildPendingPayload = useCallback(() => {

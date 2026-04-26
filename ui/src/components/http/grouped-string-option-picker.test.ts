@@ -11,6 +11,14 @@ describe("filterGroupedStringOptions", () => {
         expect(filterGroupedStringOptions(groups, [], "")).toEqual(groups);
     });
 
+    it("keeps empty groups when query is empty (picker headers stay visible)", () => {
+        const groups = [
+            { label: "A", options: ["x"] },
+            { label: "B", options: [] as string[] },
+        ];
+        expect(filterGroupedStringOptions(groups, [], "")).toEqual(groups);
+    });
+
     it("filters case-insensitive within groups", () => {
         const groups = [{ label: "System", options: ["caller_number", "foo"] }];
         expect(filterGroupedStringOptions(groups, [], "CALL")).toEqual([

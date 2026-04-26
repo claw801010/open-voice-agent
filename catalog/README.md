@@ -14,7 +14,7 @@
 
 **Template quality rubric:** see **MK-01-RUBRIC** in [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md). **Reviewer worksheet:** [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md) (copy into PRs); complements [PARTNER_REVIEW.md](PARTNER_REVIEW.md). **CI:** [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py) guards `vertical-packs.json` shape, on-disk refs, and **parses every** `catalog/packaged-workflows/*.json` as a minimal **nodes/edges** graph. PRs touching the catalog: see [.github/pull_request_template.md](../.github/pull_request_template.md).
 
-**Import adapters spike (MK-01-IMPORT-OPTIONS):** worksheet [IMPORT_ADAPTERS_SPIKE.md](IMPORT_ADAPTERS_SPIKE.md) — owner, first target, security notes before importer code lands. **Native JSON playbook:** [import-packaged-workflow-json.md](import-packaged-workflow-json.md) (`POST /api/v1/workflow/create/definition` + validation).
+**Import adapters spike (MK-01-IMPORT-OPTIONS):** worksheet [IMPORT_ADAPTERS_SPIKE.md](IMPORT_ADAPTERS_SPIKE.md) — owner, first target, security notes before importer code lands. **Native JSON playbook:** [import-packaged-workflow-json.md](import-packaged-workflow-json.md) (`POST /api/v1/workflow/create/definition` + validation). **n8n (manual) spike:** [import-adapter-n8n-spike.md](import-adapter-n8n-spike.md).
 
 ## Pack versioning (semver)
 

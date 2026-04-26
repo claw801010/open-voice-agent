@@ -39,11 +39,11 @@ export const HTTP_VARIABLE_GROUP_LABELS = {
 /** Native `title` on grouped variable picker headers (`{{…}}` inserts — URL, headers, JSON, etc.). */
 export const HTTP_VARIABLE_GROUP_PICKER_TOOLTIPS: Record<string, string> = {
     [HTTP_VARIABLE_GROUP_LABELS.system]:
-        "Per-call metadata: phone numbers, call_id, workflow_id, organization_id, timestamp, timezone, locale.",
+        "Built-in {{…}} tokens for per-call metadata (phone numbers, call_id, workflow_id, organization_id, time, locale). Values come from the live session; the HTTP tool test card uses an app default sample in call context JSON.",
     [HTTP_VARIABLE_GROUP_LABELS.conversation]:
-        "Session fields: initial_context.* and conversation.* (intent, summary, last user message, sentiment).",
+        "Built-in {{…}} for session fields: initial_context.* and conversation.*. Same runtime vs app default sample split as System.",
     [HTTP_VARIABLE_GROUP_LABELS.custom]:
-        "Paths you added under Custom flow variable (stored as {{path}} in this browser).",
+        "Paths you added under Custom flow variable (stored as {{path}} in this browser). Appears here, in Preset path (Form), and in JSON insert pickers.",
     [HTTP_VARIABLE_GROUP_LABELS.live]:
         "Parameter names and response-mapping keys from this tool — same names the model may send.",
 };

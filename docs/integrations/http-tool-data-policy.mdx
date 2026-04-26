@@ -5,7 +5,7 @@ description: "How HTTP API tools use org-local configuration, runtime call conte
 
 ## Summary
 
-HTTP tools combine **saved tool definitions** (your organization’s database) with **live call context** at runtime. Optional **integration-backed response caching** is a **roadmap** item; it is **not** enabled in the product today except for a **no-op environment flag** reserved for future implementation.
+HTTP tools combine **saved tool definitions** (your organization’s database) with **live call context** at runtime. Optional **integration-backed response caching** is a **roadmap** item; it is **not** enabled in the product today and there is **no** cache-related environment toggle.
 
 Read the full authoring story in the [HTTP API tool guide](/voice-agent/tools/http-api) — especially **Storage model** and **Template resolution order**.
 
@@ -30,3 +30,5 @@ When implemented, expect:
 - **Runtime**: read-through or short-lived cache only when policy allows; fallback to live API on failure.
 
 Track delivery in **READMEPLANTOEXECUTE.md** (repo root) under **WE-01-DATASTORE-INTEG**.
+
+**Design note (policy + persistence):** [HTTP tool — org datastore design](/integrations/http-tool-org-datastore-design) outlines proposed org policy fields, storage boundaries, and rollout gates before any cache code ships.

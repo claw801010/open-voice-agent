@@ -261,8 +261,10 @@ export function CallContextSampleEditor({
                     includes system and conversation keys plus any paths from your custom variables and tool
                     parameters (add custom {"{{…}}"} keys in the Custom flow variable field at the top of this
                     card so they appear here and in other pickers). Choosing a preset while the value is empty fills
-                    the app default sample for that path when available (hover group headers for hints). Add rows for
-                    anything else; JSON tab stays in sync.
+                    the app default sample for that path when available (hover group headers for hints).{" "}
+                    <span className="font-medium text-foreground/80">Use app default</span> on a row copies that
+                    sample into the value field when the path exists in the built-in sample. Add rows for anything
+                    else; JSON tab stays in sync.
                 </p>
                 {duplicatePaths.length > 0 ? (
                     <p className="text-[11px] text-amber-800">
@@ -271,7 +273,10 @@ export function CallContextSampleEditor({
                     </p>
                 ) : null}
                 <div className="space-y-3">
-                    {rows.map((row) => (
+                    {rows.map((row) => {
+                        const pathTrim = row.path.trim();
+                        const hasAppDefault = pathTrim.length > 0 && defaultSamplePathValues.has(pathTrim);
+                        return (
                         <div
                             key={row.id}
                             className="rounded-md border border-border p-2 space-y-2 bg-muted/20"
@@ -316,18 +321,38 @@ export function CallContextSampleEditor({
                             </div>
                             <div className="grid gap-1">
                                 <Label className="text-[11px] text-muted-foreground">Value</Label>
-                                <InputTemplateVariable
-                                    value={row.value}
-                                    onChange={(v) => updateRow(row.id, { value: v })}
-                                    variableInsertMode={variableInsertMode}
-                                    variableSuggestionGroups={variableSuggestionGroups}
-                                    variableSuggestions={variableSuggestions}
-                                    placeholder='Literal, JSON, or {{template}}'
-                                    selectPlaceholder="Insert into value"
-                                />
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <div className="min-w-0 flex-1">
+                                        <InputTemplateVariable
+                                            value={row.value}
+                                            onChange={(v) => updateRow(row.id, { value: v })}
+                                            variableInsertMode={variableInsertMode}
+                                            variableSuggestionGroups={variableSuggestionGroups}
+                                            variableSuggestions={variableSuggestions}
+                                            placeholder='Literal, JSON, or {{template}}'
+                                            selectPlaceholder="Insert into value"
+                                        />
+                                    </div>
+                                    {hasAppDefault ? (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 shrink-0 text-[11px]"
+                                            onClick={() =>
+                                                updateRow(row.id, {
+                                                    value: defaultSamplePathValues.get(pathTrim) ?? "",
+                                                })
+                                            }
+                                        >
+                                            Use app default
+                                        </Button>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                     <Button type="button" variant="outline" size="sm" onClick={addMissingPresetRows} className="w-fit">

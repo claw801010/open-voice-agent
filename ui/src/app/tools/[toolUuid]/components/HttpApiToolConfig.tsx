@@ -175,9 +175,14 @@ export function HttpApiToolConfig({
             </CardHeader>
             <CardContent>
                 <div className="mb-4 rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
-                    Use templates like <code>{"{{conversation.customer.id}}"}</code> or <code>{"{{customer.id}}"}</code> in parameter defaults, header values, body template JSON, and the endpoint URL. Headers and URL resolve {"{{…}}"} after body defaults merge with arguments (same as live calls and Test API Call). Variable pickers are grouped: {HTTP_VARIABLE_GROUP_LABELS.system},{" "}
-                    {HTTP_VARIABLE_GROUP_LABELS.conversation}, {HTTP_VARIABLE_GROUP_LABELS.custom}, and{" "}
-                    {HTTP_VARIABLE_GROUP_LABELS.live} (from parameters and response mapping key names when present). Open a picker and type in the filter box to jump to a path or template quickly.
+                    Use templates like <code>{"{{conversation.customer.id}}"}</code> or <code>{"{{customer.id}}"}</code> in parameter defaults, header values, body template JSON, and the endpoint URL. Headers and URL resolve {"{{…}}"} after body defaults merge with arguments (same as live calls and Test API Call). Pickers always list four groups (empty groups show a short hint):{" "}
+                    <strong className="text-foreground/90">{HTTP_VARIABLE_GROUP_LABELS.system}</strong> and{" "}
+                    <strong className="text-foreground/90">{HTTP_VARIABLE_GROUP_LABELS.conversation}</strong> for built-in
+                    tokens; <strong className="text-foreground/90">{HTTP_VARIABLE_GROUP_LABELS.custom}</strong> for paths
+                    you add above; <strong className="text-foreground/90">{HTTP_VARIABLE_GROUP_LABELS.live}</strong> from
+                    parameter names and response-mapping keys. Call context (test) Form tab: preset paths plus{" "}
+                    <span className="font-medium text-foreground/80">Use app default</span> per row when a built-in sample
+                    exists. Open any picker and type in the filter box to jump quickly.
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                         <a
                             href={CONTEXT_VARIABLES_DOC_URL}
@@ -662,7 +667,9 @@ export function HttpApiToolConfig({
                                         </div>
                                         <Label className="text-xs text-muted-foreground">
                                             On the Form tab, choosing a preset path while the value is empty fills the
-                                            default sample when defined (hover group headers). Add missing sample values
+                                            default sample when defined (hover group headers);{" "}
+                                            <span className="font-medium text-foreground/80">Use app default</span> per
+                                            row copies the built-in sample for that path. Add missing sample values
                                             copies standard system, conversation, and initial_context keys that are not
                                             present yet. Reset sample context replaces the entire sample. Values are not
                                             saved to the tool.{" "}

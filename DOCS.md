@@ -32,7 +32,8 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | [catalog/README.md](catalog/README.md) | Vertical pack JSON (`MK-01-CATALOG`) |
 | [docs/voice-agent/tools/http-api.mdx](docs/voice-agent/tools/http-api.mdx) | HTTP tool user doc (templated URL, headers, **Template resolution order**, **Storage model**, **Screenshots** / **WE-01-DATASTORE-INTEG**) — publish at [docs.dograh.com](https://docs.dograh.com) with site sync |
 | [docs/images/](docs/images/) | **http-api-*.png** placeholder assets (1×1 PNGs; replace for GTM); see [docs/images/README.md](docs/images/README.md) |
-| [docs/integrations/http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx) | HTTP tools — org data, browser test samples, env stub, roadmap cache (**WE-01-DATASTORE-INTEG**); linked from [integrations/overview.mdx](docs/integrations/overview.mdx) |
+| [docs/integrations/http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx) | HTTP tools — org data, browser-only test samples, roadmap cache (**WE-01-DATASTORE-INTEG**); linked from [integrations/overview.mdx](docs/integrations/overview.mdx) |
+| [docs/integrations/http-tool-org-datastore-design.mdx](docs/integrations/http-tool-org-datastore-design.mdx) | **Design** — org policy fields, persistence boundaries, rollout gates for optional HTTP integration cache |
 | [runbooks/README.md](runbooks/README.md) | Per-vertical operational runbooks |
 
 ## Epics (execution IDs)

@@ -20,12 +20,13 @@ export function filterGroupedStringOptions(
 ): VariableSuggestionGroup[] {
     const needle = query.trim().toLowerCase();
     if (groups.length > 0) {
-        return groups
-            .map((g) => ({
-                label: g.label,
-                options: needle ? g.options.filter((o) => o.toLowerCase().includes(needle)) : [...g.options],
-            }))
-            .filter((g) => g.options.length > 0);
+        const mapped = groups.map((g) => ({
+            label: g.label,
+            options: needle ? g.options.filter((o) => o.toLowerCase().includes(needle)) : [...g.options],
+        }));
+        // When not filtering: keep empty groups so picker headers (e.g. Custom flow variables) stay visible.
+        if (needle) return mapped.filter((g) => g.options.length > 0);
+        return mapped;
     }
     const opts = needle ? flatFallback.filter((o) => o.toLowerCase().includes(needle)) : [...flatFallback];
     if (opts.length === 0) return [];
@@ -140,16 +141,22 @@ export function GroupedStringOptionPicker({
                                     </div>
                                 ) : null}
                                 <div className="pb-1">
-                                    {group.options.map((opt) => (
-                                        <button
-                                            key={`${group.label}-${opt}`}
-                                            type="button"
-                                            className="w-full px-2 py-1.5 text-left font-mono text-[11px] leading-snug hover:bg-muted/80 focus:bg-muted/80 focus:outline-none"
-                                            onClick={() => handlePick(opt)}
-                                        >
-                                            {opt}
-                                        </button>
-                                    ))}
+                                    {group.options.length === 0 ? (
+                                        <p className="px-2 py-1.5 text-[10px] text-muted-foreground leading-snug">
+                                            No entries in this group yet.
+                                        </p>
+                                    ) : (
+                                        group.options.map((opt) => (
+                                            <button
+                                                key={`${group.label}-${opt}`}
+                                                type="button"
+                                                className="w-full px-2 py-1.5 text-left font-mono text-[11px] leading-snug hover:bg-muted/80 focus:bg-muted/80 focus:outline-none"
+                                                onClick={() => handlePick(opt)}
+                                            >
+                                                {opt}
+                                            </button>
+                                        ))
+                                    )}
                                 </div>
                             </div>
                         ))

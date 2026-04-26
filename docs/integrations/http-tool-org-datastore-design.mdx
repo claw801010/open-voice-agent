@@ -1,0 +1,53 @@
+---
+title: "HTTP tool — org datastore design (WE-01-DATASTORE-INTEG)"
+description: "Proposed org policy, persistence boundaries, and rollout gates for optional integration-backed HTTP response cache — design only until implemented."
+---
+
+## Purpose
+
+This document is a **design anchor** for **WE-01-DATASTORE-INTEG**. It does **not** turn on caching in the product. It aligns product, security, and ops on **what** would be stored **where**, **who** can enable it, and **how** authoring stays explicit.
+
+Related: [HTTP tools — org data and cache policy](/integrations/http-tool-data-policy), [HTTP API tool user guide](/voice-agent/tools/http-api) (**Storage model**).
+
+## Principles
+
+1. **Org DB remains source of truth** for tool definitions (URL, headers, parameters, credentials references, response mappings).
+2. **Runtime call context** (`{{…}}` resolution) is session data — not silently persisted as integration cache unless a **documented policy** allows it.
+3. **No silent dual-writes** — authors and admins see a clear contract: live API only vs optional cache/read-through.
+4. **Fail open** — if cache read/write fails, execution falls back to the live HTTP call (behavior and metrics TBD in implementation).
+
+## Proposed org policy object (per integration or per “HTTP tool + integration” binding)
+
+| Field | Type (conceptual) | Notes |
+|-------|-------------------|--------|
+| `cache_enabled` | boolean | Default **false**. |
+| `ttl_seconds` | integer | Upper bound; org may set lower max platform-wide later. |
+| `pii_class` | enum | e.g. `none` / `low` / `high` — blocks or redacts cache for high. |
+| `scope` | enum | e.g. `off` / `read_through` / `write_through_normalized` — exact names TBD. |
+| `audit` | boolean | When true, policy changes append to org audit stream (implementation-specific). |
+
+**Storage:** org-scoped table or JSON column on existing org/integration settings — **not** decided here; must support RLS/tenant isolation consistent with existing Postgres models.
+
+## Authoring UI (future)
+
+- HTTP tool editor: optional block **“Response handling”** with radio or toggle **Live only** (default) vs **Use org cache policy for integration X** (disabled until admin enables integration + policy).
+- Copy must state: cached payloads may contain PII from the upstream API; retention follows org policy.
+
+## Runtime (future)
+
+1. Resolve effective policy: org default → integration override → tool override (if product supports tool-level opt-in).
+2. On HTTP success: if `write_through_normalized` and policy allows, persist a **normalized slice** (schema TBD — likely keyed by org, tool, stable request fingerprint or explicit cache key from tool config).
+3. On HTTP call: if `read_through` and a fresh entry exists, return cached body; else call live API.
+4. Metrics: cache hit/miss, bypass reason (PII, TTL, error) — optional first slice.
+
+## Rollout gates (checklist before shipping code)
+
+- [ ] Security review: PII, encryption at rest, key rotation.
+- [ ] Legal / DPA: customer notification for new data classes.
+- [ ] Admin UI + API for policy CRUD with audit.
+- [ ] Authoring copy + feature flag default **off**.
+- [ ] Load test: no regression on live-only path when cache disabled.
+
+## Status
+
+**Design only** — implementation tracks **READMEPLANTOEXECUTE.md** → **WE-01-DATASTORE-INTEG**. The repo’s `api/services/workflow/tools/http_tool_cache_policy.py` module remains a **doc-only code anchor** until the gates above are met.
