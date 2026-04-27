@@ -47,6 +47,12 @@ When packs add **HTTP API** steps, authors should rely on:
 
 Prebuilt workflows should ship **safe placeholders** in `default_template_variables` for any URL, header, or body template—never production secrets (rubric row 4).
 
+## Analytics & call intelligence (MK-01-ANALYTICS-VERTICAL)
+
+Buyer demos need **observability**: filterable **calls**, **call detail** (outcomes, metrics, tool/API traces, QA/QM), **default + custom dashboards** (widget cards), and eventually **APIs / DB** access for enterprise.
+
+Scope, phasing, and vertical-specific widget ideas: **[ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md)**. When packs add HTTP tools, align **response_mapping** keys with the metrics and widgets you plan to show.
+
 ## Checklist before marketing “prebuild for {vertical}”
 
 - [ ] Runbook happy path matches the graph (rubric row 3).  
@@ -54,5 +60,6 @@ Prebuilt workflows should ship **safe placeholders** in `default_template_variab
 - [ ] Revenue or booking claims are **either** implemented in JSON **or** explicitly labeled roadmap in this file + runbook.  
 - [ ] PARTNER_REVIEW + compliance tags reviewed for new tools or PII.  
 - [ ] `pack_semver` bumped per [catalog/README.md](README.md).
+- [ ] Runbook or pack PR links **metrics / analytics** expectations to [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) when claiming buyer-visible insights.
 
 **Maintainers:** when a new packaged graph ships, add a row to the first table and shrink the booking gap column to **Shipped**.

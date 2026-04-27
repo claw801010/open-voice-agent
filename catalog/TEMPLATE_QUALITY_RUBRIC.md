@@ -26,7 +26,7 @@ Copy this table into a PR description or ticket when adding or materially changi
 | 6 | **`compliance_tags`** match integrations and data flows described in the runbook and [PARTNER_REVIEW.md](PARTNER_REVIEW.md) (no contradictory claims). | ☐ | |
 | 7 | **`runbook_path`** resolves to a checked-in markdown file; runbook links back to this pack slug. | ☐ | |
 | 8 | **`use_cases`** and **`languages`** are non-empty and aligned with READMEPLANNING §6 positioning for the vertical. | ☐ | |
-| 9 | **Revenue / booking claims:** if the summary or `use_cases` mention scheduling, payments, or conversion, the **packaged graph or runbook** makes clear what is **shipped vs roadmap** (see [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md)). | ☐ | |
+| 9 | **Revenue / booking / analytics claims:** if the summary or `use_cases` mention scheduling, payments, conversion, or **insights/dashboards**, the **packaged graph or runbook** makes clear what is **shipped vs roadmap** ([PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md), [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md)). | ☐ | |
 
 ## Catalog JSON field map (quick reference)
 
@@ -40,7 +40,7 @@ Copy this table into a PR description or ticket when adding or materially changi
 | 6 | `compliance_tags`, runbook + PARTNER_REVIEW |
 | 7 | `runbook_path` |
 | 8 | `use_cases`, `languages` |
-| 9 | `summary`, `use_cases`, runbook, [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md) |
+| 9 | `summary`, `use_cases`, runbook, [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md), [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) |
 
 ## Sign-off
 
