@@ -1,9 +1,10 @@
 "use client";
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { GroupedStringOptionPicker } from "@/components/http/grouped-string-option-picker";
+import { useTemplateSnippetInsert } from "@/components/http/templateSnippetInsert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,11 +32,6 @@ import { JsonTemplateTextarea } from "./jsonTemplateTextarea";
 
 const TAB_STORAGE_KEY = "tool-http-call-context-editor-tab";
 
-function captureInputSelection(el: HTMLInputElement | null) {
-    if (!el) return { start: 0, end: 0 };
-    return { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
-}
-
 function InputTemplateVariable({
     value,
     onChange,
@@ -53,49 +49,13 @@ function InputTemplateVariable({
     placeholder?: string;
     selectPlaceholder?: string;
 }) {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const savedSel = useRef({ start: 0, end: 0 });
-    const pendingCaret = useRef<number | null>(null);
-
-    const syncSelection = () => {
-        savedSel.current = captureInputSelection(inputRef.current);
-    };
-
-    useLayoutEffect(() => {
-        const el = inputRef.current;
-        if (el == null || pendingCaret.current == null) return;
-        const pos = pendingCaret.current;
-        pendingCaret.current = null;
-        el.focus();
-        el.setSelectionRange(pos, pos);
-    }, [value]);
-
-    const applyVariable = (snippet: string) => {
-        const { start, end } = savedSel.current;
-        const trimmed = value.trim();
-
-        if (variableInsertMode === "replace") {
-            if (start !== end) {
-                const next = value.slice(0, start) + snippet + value.slice(end);
-                pendingCaret.current = start + snippet.length;
-                onChange(next);
-                return;
-            }
-            pendingCaret.current = snippet.length;
-            onChange(snippet);
-            return;
-        }
-
-        if (!trimmed) {
-            pendingCaret.current = snippet.length;
-            onChange(snippet);
-            return;
-        }
-        const insertAt = end;
-        const next = value.slice(0, insertAt) + snippet + value.slice(insertAt);
-        pendingCaret.current = insertAt + snippet.length;
-        onChange(next);
-    };
+    const { elRef: inputRef, syncSelection, applySnippet: applyVariable } = useTemplateSnippetInsert<
+        HTMLInputElement
+    >({
+        value,
+        onChange,
+        variableInsertMode,
+    });
 
     return (
         <div className="flex flex-wrap items-center gap-2">

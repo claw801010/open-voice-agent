@@ -2,6 +2,7 @@
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
 
+import { useTemplateSnippetInsert } from "@/components/http/templateSnippetInsert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,56 @@ import { Switch } from "@/components/ui/switch";
 import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
 
 import { GroupedStringOptionPicker } from "./grouped-string-option-picker";
+
+function ParameterValueTemplateInput({
+    value,
+    onChange,
+    disabled,
+    variableSuggestionGroups,
+    variableSuggestions,
+    variableInsertMode,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    disabled: boolean;
+    variableSuggestionGroups: VariableSuggestionGroup[];
+    variableSuggestions: string[];
+    variableInsertMode: "replace" | "append";
+}) {
+    const { elRef, syncSelection, applySnippet } = useTemplateSnippetInsert<HTMLInputElement>({
+        value,
+        onChange,
+        variableInsertMode,
+    });
+
+    return (
+        <div className="flex gap-2">
+            <Input
+                ref={elRef}
+                placeholder='e.g., {{customer.id}}'
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                disabled={disabled}
+                onSelect={syncSelection}
+                onBlur={syncSelection}
+                onKeyUp={syncSelection}
+                onMouseUp={syncSelection}
+            />
+            {variableSuggestions.length > 0 || variableSuggestionGroups.length > 0 ? (
+                <GroupedStringOptionPicker
+                    variableSuggestionGroups={variableSuggestionGroups}
+                    variableSuggestions={variableSuggestions}
+                    disabled={disabled}
+                    triggerClassName="w-[220px] shrink-0"
+                    placeholder="Insert variable"
+                    ariaLabel="Insert system, conversation, custom, or tool variable for value template"
+                    onTriggerPointerDown={syncSelection}
+                    onPick={applySnippet}
+                />
+            ) : null}
+        </div>
+    );
+}
 
 export type ParameterType = "string" | "number" | "boolean";
 
@@ -152,37 +203,14 @@ export function ParameterEditor({
                         <Label className="text-xs text-muted-foreground">
                             Use conversation variables like {"{{customer.name}}"} as fallback when LLM omits this parameter.
                         </Label>
-                        <div className="flex gap-2">
-                            <Input
-                                placeholder='e.g., {{customer.id}}'
-                                value={param.valueTemplate || ""}
-                                onChange={(e) =>
-                                    updateParameter(index, "valueTemplate", e.target.value)
-                                }
-                                disabled={disabled}
-                            />
-                            {variableSuggestions.length > 0 ||
-                            variableSuggestionGroups.length > 0 ? (
-                                <GroupedStringOptionPicker
-                                    variableSuggestionGroups={variableSuggestionGroups}
-                                    variableSuggestions={variableSuggestions}
-                                    disabled={disabled}
-                                    triggerClassName="w-[220px] shrink-0"
-                                    placeholder="Insert variable"
-                                    ariaLabel="Insert system, conversation, custom, or tool variable for value template"
-                                    onPick={(value) =>
-                                        updateParameter(
-                                            index,
-                                            "valueTemplate",
-                                            variableInsertMode === "append" &&
-                                                (param.valueTemplate || "").trim()
-                                                ? `${param.valueTemplate} ${value}`
-                                                : value
-                                        )
-                                    }
-                                />
-                            ) : null}
-                        </div>
+                        <ParameterValueTemplateInput
+                            value={param.valueTemplate || ""}
+                            onChange={(v) => updateParameter(index, "valueTemplate", v)}
+                            disabled={disabled}
+                            variableSuggestionGroups={variableSuggestionGroups}
+                            variableSuggestions={variableSuggestions}
+                            variableInsertMode={variableInsertMode}
+                        />
                     </div>
 
                     <div className="flex items-center gap-2">

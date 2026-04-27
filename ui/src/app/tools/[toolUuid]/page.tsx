@@ -51,6 +51,10 @@ import { BuiltinToolConfig, EndCallToolConfig, HttpApiToolConfig, TransferCallTo
 import { useToolFormRawTabs } from "./hooks/useToolFormRawTabs";
 import { useToolPageDirty } from "./hooks/useToolPageDirty";
 
+function customVariableStorageKey(toolUuid: string): string {
+    return `tool-custom-variable-suggestions:${toolUuid}`;
+}
+
 function collectTemplatePathsFromStrings(strings: string[]): string[] {
     const re = /\{\{\s*([^}]+?)\s*\}\}/g;
     const out = new Set<string>();
@@ -379,9 +383,16 @@ export default function ToolDetailPage() {
     }, [callContextTestJson]);
 
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        if (typeof window === "undefined" || !toolUuid) return;
         try {
-            const raw = window.localStorage.getItem("tool-custom-variable-suggestions");
+            const perToolKey = customVariableStorageKey(toolUuid);
+            let raw = window.localStorage.getItem(perToolKey);
+            if (!raw) {
+                raw = window.localStorage.getItem("tool-custom-variable-suggestions");
+                if (raw) {
+                    window.localStorage.setItem(perToolKey, raw);
+                }
+            }
             if (!raw) return;
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
@@ -394,26 +405,27 @@ export default function ToolDetailPage() {
         } catch {
             // ignore invalid local storage payload
         }
-    }, []);
+    }, [toolUuid]);
 
     const addCustomVariableSuggestion = useCallback(() => {
         const cleaned = customVariableDraft.trim().replace(/^\{\{|\}\}$/g, "");
         if (!cleaned) return;
+        if (!toolUuid) {
+            toast.error("Tool id missing; cannot save custom variables.");
+            return;
+        }
         const template = `{{${cleaned}}}`;
         setCustomVariableSuggestions((prev) => {
             if (prev.includes(template)) return prev;
             const next = [...prev, template].slice(-30);
             if (typeof window !== "undefined") {
-                window.localStorage.setItem(
-                    "tool-custom-variable-suggestions",
-                    JSON.stringify(next)
-                );
+                window.localStorage.setItem(customVariableStorageKey(toolUuid), JSON.stringify(next));
             }
             return next;
         });
         setCustomVariableDraft("");
-        toast.success("Custom variable added to pickers.");
-    }, [customVariableDraft]);
+        toast.success("Custom variable added to pickers for this tool.");
+    }, [customVariableDraft, toolUuid]);
 
     const resetCallContextSample = useCallback(() => {
         setCallContextTestJson(DEFAULT_CALL_CONTEXT_TEST_JSON);

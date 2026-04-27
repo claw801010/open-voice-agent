@@ -259,7 +259,8 @@ export function HttpApiToolConfig({
                     </div>
                     <p className="mt-2 text-xs text-muted-foreground">
                         Enter a path without braces (e.g. <code className="text-[11px]">customer.segment</code>); it is stored as{" "}
-                        <code className="text-[11px]">{"{{customer.segment}}"}</code> in pickers. Suggestions are saved in this browser only.
+                        <code className="text-[11px]">{"{{customer.segment}}"}</code> in pickers. Suggestions are saved in this browser{" "}
+                        <span className="font-medium text-foreground/80">per HTTP tool</span> (localStorage).
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">
                         Added variables appear in picker dropdowns for parameters, headers, body template, endpoint
@@ -278,15 +279,17 @@ export function HttpApiToolConfig({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="replace">Replace field</SelectItem>
-                                    <SelectItem value="append">Append to field</SelectItem>
+                                    <SelectItem value="replace">Replace selection / insert at caret</SelectItem>
+                                    <SelectItem value="append">Append at cursor</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <p className="text-[11px] text-muted-foreground max-w-md pb-0.5">
-                            JSON areas (test payload, call context, body template): Replace overwrites the whole field,
-                            or only the highlighted range; Append inserts at the text cursor. Single-line fields (URL,
-                            headers, parameter value template) use the same mode; place the caret before inserting.
+                            <span className="font-medium text-foreground/80">Replace selection / insert at caret</span>{" "}
+                            replaces a highlighted range, or inserts the token at your caret when nothing is selected
+                            (does not wipe URL or JSON). <span className="font-medium text-foreground/80">Append at cursor</span>{" "}
+                            always inserts at the end of the selection (or at the caret when collapsed). Place the
+                            caret before opening the picker when inserting mid-string.
                         </p>
                     </div>
                 </div>
@@ -343,14 +346,14 @@ export function HttpApiToolConfig({
                                     <SelectTrigger className="w-[170px]">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="replace">Replace field</SelectItem>
-                                        <SelectItem value="append">Append to field</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <p className="text-[11px] text-muted-foreground max-w-md pb-0.5">
-                                Same setting as the Custom flow variable section at the top. Variable groups:{" "}
+                                <SelectContent>
+                                    <SelectItem value="replace">Replace selection / insert at caret</SelectItem>
+                                    <SelectItem value="append">Append at cursor</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground max-w-md pb-0.5">
+                            Same setting as the Custom flow variable section at the top. Variable groups:{" "}
                                 {HTTP_VARIABLE_GROUP_LABELS.system}, {HTTP_VARIABLE_GROUP_LABELS.conversation},{" "}
                                 {HTTP_VARIABLE_GROUP_LABELS.custom}, and {HTTP_VARIABLE_GROUP_LABELS.live}.
                             </p>

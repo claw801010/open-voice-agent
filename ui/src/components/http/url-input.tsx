@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
 import { cn } from "@/lib/utils";
 
 import { GroupedStringOptionPicker } from "./grouped-string-option-picker";
+import { useTemplateSnippetInsert } from "./templateSnippetInsert";
 
 // URL regex pattern that validates:
 // - http:// or https:// protocol (required)
@@ -52,11 +53,6 @@ export function validateUrl(url: string): UrlValidationResult {
     return { valid: true };
 }
 
-function captureInputSelection(el: HTMLInputElement | null) {
-    if (!el) return { start: 0, end: 0 };
-    return { start: el.selectionStart ?? 0, end: el.selectionEnd ?? 0 };
-}
-
 interface UrlInputProps {
     value: string;
     onChange: (value: string) => void;
@@ -88,60 +84,17 @@ export function UrlInput({
     selectPlaceholder = "Insert into URL",
 }: UrlInputProps) {
     const [touched, setTouched] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const savedSel = useRef({ start: 0, end: 0 });
-    const pendingCaret = useRef<number | null>(null);
 
     const hasVariablePicker =
         variableSuggestionGroups.length > 0 || variableSuggestions.length > 0;
 
-    const syncSelection = useCallback(() => {
-        savedSel.current = captureInputSelection(inputRef.current);
-    }, []);
-
-    useLayoutEffect(() => {
-        const el = inputRef.current;
-        if (el == null || pendingCaret.current == null) return;
-        const pos = pendingCaret.current;
-        pendingCaret.current = null;
-        el.focus();
-        el.setSelectionRange(pos, pos);
-    }, [value]);
-
-    const applyVariable = useCallback(
-        (snippet: string) => {
-            const { start, end } = savedSel.current;
-            const trimmed = value.trim();
-
-            if (variableInsertMode === "replace") {
-                if (start !== end) {
-                    const next = value.slice(0, start) + snippet + value.slice(end);
-                    pendingCaret.current = start + snippet.length;
-                    onChange(next);
-                    return;
-                }
-                if (!trimmed) {
-                    pendingCaret.current = snippet.length;
-                    onChange(snippet);
-                    return;
-                }
-                pendingCaret.current = snippet.length;
-                onChange(snippet);
-                return;
-            }
-
-            if (!trimmed) {
-                pendingCaret.current = snippet.length;
-                onChange(snippet);
-                return;
-            }
-            const insertAt = end;
-            const next = value.slice(0, insertAt) + snippet + value.slice(insertAt);
-            pendingCaret.current = insertAt + snippet.length;
-            onChange(next);
-        },
-        [onChange, value, variableInsertMode]
-    );
+    const { elRef: inputRef, syncSelection, applySnippet: applyVariable } = useTemplateSnippetInsert<
+        HTMLInputElement
+    >({
+        value,
+        onChange,
+        variableInsertMode,
+    });
 
     const handleChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,6 +109,7 @@ export function UrlInput({
     );
 
     const handleBlur = useCallback(() => {
+        syncSelection();
         setTouched(true);
         const trimmedValue = value.trim();
         if (trimmedValue !== value) {
@@ -164,7 +118,7 @@ export function UrlInput({
         if (onValidationChange && trimmedValue) {
             onValidationChange(validateUrl(trimmedValue));
         }
-    }, [onChange, onValidationChange, value]);
+    }, [syncSelection, onChange, onValidationChange, value]);
 
     const validation = validateUrl(value);
     const showError = showValidation && touched && !validation.valid && value;

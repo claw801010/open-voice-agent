@@ -1,15 +1,9 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-
 import { GroupedStringOptionPicker } from "@/components/http/grouped-string-option-picker";
+import { useTemplateSnippetInsert } from "@/components/http/templateSnippetInsert";
 import { Textarea } from "@/components/ui/textarea";
 import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
-
-function captureTextareaSelection(el: HTMLTextAreaElement | null) {
-    if (!el) return { start: 0, end: 0 };
-    return { start: el.selectionStart, end: el.selectionEnd };
-}
 
 export interface JsonTemplateTextareaProps {
     value: string;
@@ -33,49 +27,13 @@ export function JsonTemplateTextarea({
     placeholder,
     selectPlaceholder = "Insert variable template",
 }: JsonTemplateTextareaProps) {
-    const taRef = useRef<HTMLTextAreaElement>(null);
-    const savedSel = useRef({ start: 0, end: 0 });
-    const pendingCaret = useRef<number | null>(null);
-
-    const syncSelection = () => {
-        savedSel.current = captureTextareaSelection(taRef.current);
-    };
-
-    useLayoutEffect(() => {
-        const el = taRef.current;
-        if (el == null || pendingCaret.current == null) return;
-        const pos = pendingCaret.current;
-        pendingCaret.current = null;
-        el.focus();
-        el.setSelectionRange(pos, pos);
-    }, [value]);
-
-    const applyVariable = (snippet: string) => {
-        const { start, end } = savedSel.current;
-        const trimmed = value.trim();
-
-        if (variableInsertMode === "replace") {
-            if (start !== end) {
-                const next = value.slice(0, start) + snippet + value.slice(end);
-                pendingCaret.current = start + snippet.length;
-                onChange(next);
-                return;
-            }
-            pendingCaret.current = snippet.length;
-            onChange(snippet);
-            return;
-        }
-
-        if (!trimmed) {
-            pendingCaret.current = snippet.length;
-            onChange(snippet);
-            return;
-        }
-        const insertAt = end;
-        const next = value.slice(0, insertAt) + snippet + value.slice(insertAt);
-        pendingCaret.current = insertAt + snippet.length;
-        onChange(next);
-    };
+    const { elRef: taRef, syncSelection, applySnippet: applyVariable } = useTemplateSnippetInsert<
+        HTMLTextAreaElement
+    >({
+        value,
+        onChange,
+        variableInsertMode,
+    });
 
     return (
         <div className="grid gap-2">

@@ -2,11 +2,65 @@
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
 
+import { useTemplateSnippetInsert } from "@/components/http/templateSnippetInsert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { VariableSuggestionGroup } from "@/constants/contextVariableTemplates";
 
 import { GroupedStringOptionPicker } from "./grouped-string-option-picker";
+
+function KeyValueValueWithPicker({
+    value,
+    onChange,
+    valuePlaceholder,
+    disabled,
+    variableSuggestionGroups,
+    variableSuggestions,
+    variableInsertMode,
+}: {
+    value: string;
+    onChange: (v: string) => void;
+    valuePlaceholder: string;
+    disabled: boolean;
+    variableSuggestionGroups: VariableSuggestionGroup[];
+    variableSuggestions: string[];
+    variableInsertMode: "replace" | "append";
+}) {
+    const { elRef, syncSelection, applySnippet } = useTemplateSnippetInsert<HTMLInputElement>({
+        value,
+        onChange,
+        variableInsertMode,
+    });
+
+    return (
+        <>
+            <Input
+                ref={elRef}
+                placeholder={valuePlaceholder}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="flex-1"
+                disabled={disabled}
+                onSelect={syncSelection}
+                onBlur={syncSelection}
+                onKeyUp={syncSelection}
+                onMouseUp={syncSelection}
+            />
+            {variableSuggestions.length > 0 || variableSuggestionGroups.length > 0 ? (
+                <GroupedStringOptionPicker
+                    variableSuggestionGroups={variableSuggestionGroups}
+                    variableSuggestions={variableSuggestions}
+                    disabled={disabled}
+                    triggerClassName="w-[190px] shrink-0"
+                    placeholder="Insert var"
+                    ariaLabel="Insert system, conversation, custom, or tool variable into value"
+                    onTriggerPointerDown={syncSelection}
+                    onPick={applySnippet}
+                />
+            ) : null}
+        </>
+    );
+}
 
 export interface KeyValueItem {
     key: string;
@@ -72,33 +126,15 @@ export function KeyValueEditor({
                             className="flex-1"
                             disabled={disabled}
                         />
-                        <Input
-                            placeholder={valuePlaceholder}
+                        <KeyValueValueWithPicker
                             value={item.value}
-                            onChange={(e) => updateItem(index, "value", e.target.value)}
-                            className="flex-1"
+                            onChange={(v) => updateItem(index, "value", v)}
+                            valuePlaceholder={valuePlaceholder}
                             disabled={disabled}
+                            variableSuggestionGroups={variableSuggestionGroups}
+                            variableSuggestions={variableSuggestions}
+                            variableInsertMode={variableInsertMode}
                         />
-                        {variableSuggestions.length > 0 ||
-                        variableSuggestionGroups.length > 0 ? (
-                            <GroupedStringOptionPicker
-                                variableSuggestionGroups={variableSuggestionGroups}
-                                variableSuggestions={variableSuggestions}
-                                disabled={disabled}
-                                triggerClassName="w-[190px] shrink-0"
-                                placeholder="Insert var"
-                                ariaLabel="Insert system, conversation, custom, or tool variable into value"
-                                onPick={(value) =>
-                                    updateItem(
-                                        index,
-                                        "value",
-                                        variableInsertMode === "append" && (item.value || "").trim()
-                                            ? `${item.value} ${value}`
-                                            : value
-                                    )
-                                }
-                            />
-                        ) : null}
                         <Button
                             variant="outline"
                             size="icon"
