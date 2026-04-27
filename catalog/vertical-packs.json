@@ -4,14 +4,15 @@
   "packs": [
     {
       "slug": "healthcare-clinic-screening",
-      "pack_semver": "1.0.0",
+      "pack_semver": "1.0.1",
       "industry": "Healthcare / clinics",
       "display_name": "Patient screening & triage",
       "summary": "After-hours and overflow voice flow for symptom triage, scheduling handoff, and scripted guardrails—designed for PHI minimization in the agent layer.",
       "use_cases": [
         "screening triage",
         "appointment confirm/remind",
-        "post-visit follow-up prompts"
+        "post-visit follow-up prompts",
+        "provider or visit booking with scheduling API (roadmap — see catalog/PREBUILD_VERTICAL_ROADMAP.md)"
       ],
       "languages": ["en-US", "es-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -30,14 +31,15 @@
     },
     {
       "slug": "retail-wismo-faq",
-      "pack_semver": "1.0.0",
+      "pack_semver": "1.0.1",
       "industry": "Retail / e-commerce",
       "display_name": "WISMO & store policy FAQ",
       "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk—reduces tier-1 load while staying policy-safe.",
       "use_cases": [
         "where is my order (WISMO)",
         "return window FAQ",
-        "store hours and pickup"
+        "store hours and pickup",
+        "in-store service or pickup-window booking (roadmap — see catalog/PREBUILD_VERTICAL_ROADMAP.md)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -56,14 +58,15 @@
     },
     {
       "slug": "b2b-saas-trial-nurture",
-      "pack_semver": "1.0.0",
+      "pack_semver": "1.0.1",
       "industry": "B2B SaaS",
       "display_name": "Trial nurture & PQL voice qual",
       "summary": "Short qualification and onboarding check-in calls with CRM-friendly variables—pipeline velocity without full SDR staffing.",
       "use_cases": [
         "trial nurture",
         "PQL voice qualification",
-        "onboarding check-in"
+        "onboarding check-in",
+        "demo or customer-success calendar booking (roadmap — see catalog/PREBUILD_VERTICAL_ROADMAP.md)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],

@@ -9,3 +9,5 @@ One-page **operational** guides for each marketplace vertical pack in [catalog/v
 | `b2b-saas-trial-nurture` | [b2b-saas-trial-nurture.md](b2b-saas-trial-nurture.md) | B2B SaaS |
 
 **Execution ID:** **MK-01-CATALOG** ([READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md)).
+
+**Prebuild / revenue roadmap:** [catalog/PREBUILD_VERTICAL_ROADMAP.md](../catalog/PREBUILD_VERTICAL_ROADMAP.md) — booking-per-vertical gaps, high-revenue motions, and HTTP-tool expectations for the next packaged slices.
