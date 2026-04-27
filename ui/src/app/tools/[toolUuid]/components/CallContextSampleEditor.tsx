@@ -1,7 +1,7 @@
 "use client";
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { GroupedStringOptionPicker } from "@/components/http/grouped-string-option-picker";
 import { useTemplateSnippetInsert } from "@/components/http/templateSnippetInsert";
@@ -30,7 +30,11 @@ import {
 
 import { JsonTemplateTextarea } from "./jsonTemplateTextarea";
 
-const TAB_STORAGE_KEY = "tool-http-call-context-editor-tab";
+const TAB_STORAGE_KEY_BASE = "tool-http-call-context-editor-tab";
+
+function tabStorageKey(scopeId?: string): string {
+    return scopeId ? `${TAB_STORAGE_KEY_BASE}:${scopeId}` : TAB_STORAGE_KEY_BASE;
+}
 
 function InputTemplateVariable({
     value,
@@ -98,6 +102,8 @@ export interface CallContextSampleEditorProps {
     variableSuggestions: string[];
     /** Optional override; defaults to app system + conversation + initial_context presets. */
     pathPresetGroups?: VariableSuggestionGroup[];
+    /** When set (e.g. tool UUID), Form|JSON tab choice is remembered per tool in localStorage. */
+    storageScopeId?: string;
 }
 
 export function CallContextSampleEditor({
@@ -107,6 +113,7 @@ export function CallContextSampleEditor({
     variableSuggestionGroups,
     variableSuggestions,
     pathPresetGroups = CALL_CONTEXT_PATH_PRESET_GROUPS,
+    storageScopeId,
 }: CallContextSampleEditorProps) {
     const [tab, setTab] = useState<"form" | "json">("form");
     const [rows, setRows] = useState<CallContextFormRow[]>(() => rowsFromJsonString(value));
@@ -114,14 +121,15 @@ export function CallContextSampleEditor({
 
     useEffect(() => {
         if (typeof window === "undefined") return;
-        const s = window.localStorage.getItem(TAB_STORAGE_KEY);
+        const key = tabStorageKey(storageScopeId);
+        const s = window.localStorage.getItem(key);
         if (s === "json" || s === "form") setTab(s);
-    }, []);
+    }, [storageScopeId]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
-        window.localStorage.setItem(TAB_STORAGE_KEY, tab);
-    }, [tab]);
+        window.localStorage.setItem(tabStorageKey(storageScopeId), tab);
+    }, [tab, storageScopeId]);
 
     useEffect(() => {
         if (value === lastEmitted.current) return;

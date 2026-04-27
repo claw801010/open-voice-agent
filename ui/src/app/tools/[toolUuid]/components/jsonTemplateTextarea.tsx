@@ -14,6 +14,7 @@ export interface JsonTemplateTextareaProps {
     rows?: number;
     placeholder?: string;
     selectPlaceholder?: string;
+    spellCheck?: boolean;
 }
 
 /** JSON-ish textarea with grouped variable insert at cursor / selection (popover preserves saved caret). */
@@ -26,6 +27,7 @@ export function JsonTemplateTextarea({
     rows = 5,
     placeholder,
     selectPlaceholder = "Insert variable template",
+    spellCheck = true,
 }: JsonTemplateTextareaProps) {
     const { elRef: taRef, syncSelection, applySnippet: applyVariable } = useTemplateSnippetInsert<
         HTMLTextAreaElement
@@ -48,6 +50,7 @@ export function JsonTemplateTextarea({
                 rows={rows}
                 className="font-mono text-xs"
                 placeholder={placeholder}
+                spellCheck={spellCheck}
             />
             {variableSuggestionGroups.length > 0 || variableSuggestions.length > 0 ? (
                 <GroupedStringOptionPicker

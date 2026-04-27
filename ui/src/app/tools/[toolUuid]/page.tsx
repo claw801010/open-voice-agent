@@ -55,6 +55,10 @@ function customVariableStorageKey(toolUuid: string): string {
     return `tool-custom-variable-suggestions:${toolUuid}`;
 }
 
+function callContextSampleStorageKey(toolUuid: string): string {
+    return `tool-http-call-context-json:${toolUuid}`;
+}
+
 function collectTemplatePathsFromStrings(strings: string[]): string[] {
     const re = /\{\{\s*([^}]+?)\s*\}\}/g;
     const out = new Set<string>();
@@ -359,28 +363,41 @@ export default function ToolDetailPage() {
     }, [user, tool, getAccessToken]);
 
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        if (typeof window === "undefined" || !toolUuid) return;
         try {
-            const raw = window.localStorage.getItem("tool-http-call-context-json");
+            const perToolKey = callContextSampleStorageKey(toolUuid);
+            let raw = window.localStorage.getItem(perToolKey);
+            if (!raw?.trim()) {
+                const legacy = window.localStorage.getItem("tool-http-call-context-json");
+                if (legacy?.trim()) {
+                    raw = legacy;
+                    window.localStorage.setItem(perToolKey, legacy);
+                }
+            }
             if (raw?.trim()) {
                 setCallContextTestJson(raw);
+            } else {
+                setCallContextTestJson(DEFAULT_CALL_CONTEXT_TEST_JSON);
             }
         } catch {
             // ignore
         }
-    }, []);
+    }, [toolUuid]);
 
     useEffect(() => {
-        if (typeof window === "undefined") return;
+        if (typeof window === "undefined" || !toolUuid) return;
         const timer = window.setTimeout(() => {
             try {
-                window.localStorage.setItem("tool-http-call-context-json", callContextTestJson);
+                window.localStorage.setItem(
+                    callContextSampleStorageKey(toolUuid),
+                    callContextTestJson
+                );
             } catch {
                 // ignore quota / private mode
             }
         }, 500);
         return () => window.clearTimeout(timer);
-    }, [callContextTestJson]);
+    }, [callContextTestJson, toolUuid]);
 
     useEffect(() => {
         if (typeof window === "undefined" || !toolUuid) return;
@@ -1315,6 +1332,7 @@ const data = await response.json();`;
                             httpIntegrationCachePolicy={
                                 tool?.category === "http_api" ? httpIntegrationCachePolicy : undefined
                             }
+                            callContextStorageScopeId={toolUuid}
                         />
                     )}
 

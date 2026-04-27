@@ -118,6 +118,8 @@ export interface HttpApiToolConfigProps {
         cacheEnabled: boolean;
         implementationStatus: string;
     } | null;
+    /** Scopes call-context editor tab preference in localStorage (pass tool UUID from the page). */
+    callContextStorageScopeId?: string;
 }
 
 export function HttpApiToolConfig({
@@ -173,6 +175,7 @@ export function HttpApiToolConfig({
     onSeedBodyTemplateFromParameters,
     templatePreviewWarnings,
     httpIntegrationCachePolicy,
+    callContextStorageScopeId,
 }: HttpApiToolConfigProps) {
     const [variableInsertMode, setVariableInsertMode] = useState<"replace" | "append">(
         "replace"
@@ -417,7 +420,9 @@ export function HttpApiToolConfig({
                                 </div>
                             </div>
                             <Label className="text-xs text-muted-foreground">
-                                Edit sample values for system and conversation variables; saved in this browser only. On
+                                Edit sample values for system and conversation variables; sample JSON is saved in this
+                                browser <span className="font-medium text-foreground/80">per HTTP tool</span> (not on the
+                                server). On
                                 the Form tab, choosing a preset path while the value is empty fills the app default
                                 sample for that path when available (hover picker group headers for hints). The Add
                                 missing sample values button copies in any standard paths you have not set yet; your
@@ -437,6 +442,7 @@ export function HttpApiToolConfig({
                                 variableInsertMode={variableInsertMode}
                                 variableSuggestionGroups={variableSuggestionGroups}
                                 variableSuggestions={variableSuggestions}
+                                storageScopeId={callContextStorageScopeId}
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -790,6 +796,7 @@ export function HttpApiToolConfig({
                                             variableInsertMode={variableInsertMode}
                                             variableSuggestionGroups={variableSuggestionGroups}
                                             variableSuggestions={variableSuggestions}
+                                            storageScopeId={callContextStorageScopeId}
                                         />
                                     </div>
                                     <Button type="button" variant="secondary" onClick={onTestCall} disabled={isTestingCall} className="w-fit">
@@ -843,10 +850,12 @@ export function HttpApiToolConfig({
                         <div className="rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground space-y-1.5">
                             <p>
                                 Form and Test API Call resolve {"{{path}}"} the same as production (tool arguments
-                                + call / conversation context). Switch to Simple or Advanced to use grouped pickers
-                                (system, conversation, custom, tool keys), then return here if you edit raw code. In
-                                raw code you build the request yourself; use the same path strings the pickers insert,
-                                and see{" "}
+                                + call / conversation context). Use the{" "}
+                                <span className="font-medium text-foreground/80">Insert variable</span> control below
+                                the raw editor for the same grouped pickers (system, conversation, custom, tool keys)
+                                at your caret. In raw code you build the request yourself; path strings match the
+                                pickers, and
+                                see{" "}
                                 <a
                                     href={CONTEXT_VARIABLES_DOC_URL}
                                     target="_blank"
@@ -877,8 +886,26 @@ export function HttpApiToolConfig({
                                     Regenerate from form
                                 </Button>
                             </div>
-                            <Textarea value={rawCode} onChange={(e) => onRawCodeChange(e.target.value)} rows={16} className="font-mono text-xs" spellCheck={false} />
-                            <p className="text-xs text-muted-foreground">Raw code starts from current form values and is editable. Python is first-class by default.</p>
+                            <Label className="text-xs text-muted-foreground font-normal">
+                                Same variable groups as Simple / Advanced — place the caret, then pick a token to
+                                insert <code className="text-[11px]">{"{{…}}"}</code> (cursor-aware insert mode above
+                                applies).
+                            </Label>
+                            <JsonTemplateTextarea
+                                value={rawCode}
+                                onChange={onRawCodeChange}
+                                variableInsertMode={variableInsertMode}
+                                variableSuggestionGroups={variableSuggestionGroups}
+                                variableSuggestions={variableSuggestions}
+                                rows={16}
+                                spellCheck={false}
+                                placeholder="# Build request (Python or Bash); insert {{caller_number}}, {{conversation.intent}}, custom paths, or parameter names at the caret."
+                                selectPlaceholder="Insert variable into raw code"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Raw code starts from current form values and is editable. Python is first-class by
+                                default.
+                            </p>
                         </div>
                     </TabsContent>
                 </Tabs>
