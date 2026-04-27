@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from loguru import logger
 from pydantic import BaseModel
 
+from api.routes.analytics import router as analytics_router
 from api.routes.auth import router as auth_router
 from api.routes.catalog import router as catalog_router
 from api.routes.campaign import router as campaign_router
@@ -33,6 +34,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+router.include_router(analytics_router)
 router.include_router(feedback_router)
 router.include_router(telephony_router)
 router.include_router(catalog_router)

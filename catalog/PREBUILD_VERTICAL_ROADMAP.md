@@ -51,7 +51,7 @@ Prebuilt workflows should ship **safe placeholders** in `default_template_variab
 
 Buyer demos need **observability**: filterable **calls**, **call detail** (outcomes, metrics, tool/API traces, QA/QM), **default + custom dashboards** (widget cards), and eventually **APIs / DB** access for enterprise.
 
-Scope, phasing, and vertical-specific widget ideas: **[ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md)**. When packs add HTTP tools, align **response_mapping** keys with the metrics and widgets you plan to show. **REST contract (draft, not live):** [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml).
+Scope, phasing, and vertical-specific widget ideas: **[ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md)**. When packs add HTTP tools, align **response_mapping** keys with the metrics and widgets you plan to show. **REST contract:** [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) (aligned with live **`GET /api/v1/analytics/calls`** — see [api/routes/analytics.py](../api/routes/analytics.py)).
 
 ## Checklist before marketing “prebuild for {vertical}”
 

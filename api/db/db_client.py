@@ -1,4 +1,5 @@
 from api.db.agent_trigger_client import AgentTriggerClient
+from api.db.analytics_calls_client import AnalyticsCallsClient
 from api.db.api_key_client import APIKeyClient
 from api.db.campaign_client import CampaignClient
 from api.db.embed_token_client import EmbedTokenClient
@@ -21,6 +22,7 @@ from api.db.workflow_template_client import WorkflowTemplateClient
 
 class DBClient(
     ProductFeedbackClient,
+    AnalyticsCallsClient,
     WorkflowClient,
     WorkflowRunClient,
     UserClient,
@@ -44,6 +46,7 @@ class DBClient(
     Unified database client that combines all specialized database operations.
 
     This client inherits from:
+    - AnalyticsCallsClient: org-scoped analytics over workflow runs
     - WorkflowClient: handles workflow and workflow definition operations
     - WorkflowRunClient: handles workflow run operations
     - UserClient: handles user and user configuration operations

@@ -37,7 +37,7 @@ Prebuilt **vertical** workflows (healthcare, retail, B2B SaaS) need a **credible
 | Phase | Deliverable |
 |-------|-------------|
 | **A — Spec** | **Draft OpenAPI:** [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) (`GET /api/v1/analytics/calls`, `GET /api/v1/analytics/calls/{call_id}`, list/detail schemas, **HttpToolSpanSummary**, **DashboardWidgetDef**). Privacy matrix with [PARTNER_REVIEW.md](PARTNER_REVIEW.md) (separate PR/table). |
-| **B — Ingest** | Persist tool spans + mapped HTTP payload summaries on run completion; PII redaction rules. |
+| **B — Ingest** | **Shipped (MVP):** `GET /api/v1/analytics/calls` + `GET …/calls/{call_id}` ([api/routes/analytics.py](../api/routes/analytics.py)) — org-scoped list/detail from `workflow_runs`; **tool_spans** derived from persisted `logs.realtime_feedback_events` (HTTP summaries from tool result JSON). **Deferred:** dedicated span rows + PII redaction matrix ([PARTNER_REVIEW.md](PARTNER_REVIEW.md)). |
 | **C — UI** | Calls list + detail MVP; one default dashboard template per vertical pack slug. |
 | **D — Custom** | Widget card library + save custom layout; export CSV for QM. |
 
@@ -47,4 +47,4 @@ Prebuilt **vertical** workflows (healthcare, retail, B2B SaaS) need a **credible
 - [ ] HTTP-heavy demos document **which** `response_mapping` keys feed **which** dashboard widget.  
 - [ ] No analytics copy promises **AI grading** until models and retention policy are named in PR.
 
-**Maintainers:** when Phase A API is drafted, add links under **Key files** in [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md) for **MK-01-ANALYTICS-VERTICAL** and bump status from `NotStarted`.
+**Maintainers:** keep [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) aligned with live routes; document any response-only fields in the YAML description blocks.

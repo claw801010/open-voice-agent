@@ -2,10 +2,13 @@ openapi: 3.0.3
 info:
   title: Analytics — calls & tool traces (draft contract)
   description: |
-    **MK-01-ANALYTICS-VERTICAL Phase A** — proposed REST surface for vertical prebuild + GTM demos.
-    Not implemented by the API yet; iterate here before wiring routes. Aligns HTTP tool semantics with
-    [docs/voice-agent/tools/http-api.mdx](../docs/voice-agent/tools/http-api.mdx) (response_mapping / mapped_data).
-  version: 0.1.0-draft
+    **MK-01-ANALYTICS-VERTICAL** — calls list + detail contract for vertical prebuild + GTM demos.
+    **Phase B (shipped):** FastAPI routes `GET /api/v1/analytics/calls` and `GET /api/v1/analytics/calls/{call_id}`
+    ([api/routes/analytics.py](../api/routes/analytics.py)) backed by `workflow_runs` + `logs.realtime_feedback_events`
+    (tool spans derived from `rtf-function-call-*` events; HTTP summaries from tool result JSON).
+    **Phase B (deferred):** optional dedicated `tool_spans` table + redaction matrix — see [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md).
+    Aligns HTTP tool semantics with [docs/voice-agent/tools/http-api.mdx](../docs/voice-agent/tools/http-api.mdx) (response_mapping / mapped_data).
+  version: 0.2.0-draft
 
 servers:
   - url: https://api.example.com
@@ -29,7 +32,8 @@ paths:
       parameters:
         - name: workflow_id
           in: query
-          schema: { type: string, format: uuid }
+          description: Internal workflow primary key (integer in this product)
+          schema: { type: integer }
         - name: since
           in: query
           description: ISO-8601 UTC inclusive lower bound
@@ -115,8 +119,8 @@ components:
         call_id:
           type: string
         workflow_id:
-          type: string
-          format: uuid
+          type: integer
+          description: Internal workflow primary key
         workflow_slug:
           type: string
           nullable: true
@@ -146,8 +150,12 @@ components:
         call_id:
           type: string
         workflow_id:
+          type: integer
+          description: Internal workflow primary key
+        workflow_slug:
           type: string
-          format: uuid
+          nullable: true
+          description: Optional vertical pack catalog slug (`workflow_configurations.mk01.catalog_slug`)
         started_at:
           type: string
           format: date-time

@@ -7,7 +7,7 @@
 | [vertical-packs.json](vertical-packs.json) | Canonical JSON for **≥3** verticals (healthcare, retail, B2B SaaS); each entry references a **runbook** under [runbooks/](../runbooks/). |
 | [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md) | **Booking + revenue motions** gap analysis vs shipped graphs; next slices for prebuilt marketplace demos (**MK-01-RUBRIC**). |
 | [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) | **Calls, dashboards, APIs, DB** — analytics companion for vertical prebuilds (**MK-01-ANALYTICS-VERTICAL**). |
-| [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) | **OpenAPI 0.1.0-draft** — `GET /api/v1/analytics/calls`, `GET …/calls/{call_id}` (list/detail, **HttpToolSpanSummary**, **DashboardWidgetDef**); implementation tracks Phase **B** in roadmap. |
+| [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) | **OpenAPI 0.2.0-draft** — contract for `GET /api/v1/analytics/calls` + detail (aligned with [api/routes/analytics.py](../api/routes/analytics.py)); **HttpToolSpanSummary**, **DashboardWidgetDef**; UI/dashboards still roadmap. |
 | [packaged-workflows/looptalk-simulated-caller.json](packaged-workflows/looptalk-simulated-caller.json) | **System** adversary graph for LoopTalk quick-persona tests (not a marketplace vertical); installed per org as `[System] LoopTalk simulated caller` via `POST /api/v1/looptalk/test-sessions/quick-persona`. |
 | [PARTNER_REVIEW.md](PARTNER_REVIEW.md) | Partner / community **review checklist** (safety, PII, telephony compliance) before a pack is **published** — **MK-01-PARTNER**. |
 
