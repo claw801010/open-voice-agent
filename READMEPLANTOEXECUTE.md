@@ -81,14 +81,14 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| _(none)_ | | **MK-01-ANALYTICS-VERTICAL** stub — [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) + [PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) analytics section + **DOCS** index. *Suggested next:* **MK-01** Phase A OpenAPI for calls + ingest plan; **MK-01** booking-spine graph; **GTM** **http-api** screenshots; **DATASTORE** PUT stub or defer. |
+| **MK-01-ANALYTICS-VERTICAL** | _TBD_ | Phase **A** done: [analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml); **no** live API yet. *Suggested next:* Phase **B** (ingest + **FastAPI** routes); **MK-01** booking-spine packaged graph; **GTM** **http-api** screenshots; **DATASTORE** PUT stub or defer. |
 
 #### Rolling pass notes (keep short; update when you ship a slice)
 
 | | |
 |--|--|
-| **This pass (shipped in repo now)** | **MK-01-ANALYTICS-VERTICAL** (stub) — [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) (calls list/detail, outcomes, HTTP traces, dashboards, API/DB); [PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) analytics checklist; [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) package + epic index; [DOCS.md](DOCS.md), [catalog/README.md](catalog/README.md). **WE-01** — doc pointer for tool evidence in analytics ([http-api.mdx](docs/voice-agent/tools/http-api.mdx)). |
-| **Next pass (suggested)** | **MK-01** — Phase **A** from analytics roadmap (OpenAPI sketch + privacy matrix); ship **one** **booking-spine** packaged workflow + HTTP stub. **GTM** — **http-api-*.png** + [docs/images/README.md](docs/images/README.md). **DATASTORE** — PUT stub or defer. |
+| **This pass (shipped in repo now)** | **MK-01-ANALYTICS-VERTICAL** — [analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) OpenAPI **0.1.0-draft** (calls list/detail, **HttpToolSpanSummary**, **DashboardWidgetDef**); package **InProgress** + Phase A checkbox closed in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md); [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) Phase A row; [catalog/README.md](catalog/README.md), [DOCS.md](DOCS.md). |
+| **Next pass (suggested)** | **MK-01** — Implement routes + DB ingest per draft YAML; privacy/redaction matrix + **PARTNER_REVIEW** tie-in. **MK-01** — **booking-spine** packaged graph + HTTP stub. **GTM** — **http-api-*.png** + [docs/images/README.md](docs/images/README.md). **DATASTORE** — PUT stub or defer. |
 
 ### Strategic review (major bets)
 
@@ -129,9 +129,9 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 **Draft criteria (v0):** (1) industry + primary use case are explicit; (2) default graph validates and has one documented happy-path test; (3) template variables are listed with safe sample values; (4) latency/cost band is honest vs declared providers; (5) compliance/data-handling tags match integrations used in the pack.
 
-**Shipped in repo:** reviewer worksheet [catalog/TEMPLATE_QUALITY_RUBRIC.md](catalog/TEMPLATE_QUALITY_RUBRIC.md); pytest [test_vertical_packs_catalog.py](api/tests/test_vertical_packs_catalog.py) for `vertical-packs.json`, on-disk runbook / packaged refs, and **JSON parse + minimal graph shape** for every `packaged-workflows/*.json`; [.github/pull_request_template.md](.github/pull_request_template.md); links from [catalog/README.md](catalog/README.md). **Prebuild / revenue:** [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) (booking + high-revenue motions vs shipped packs; **WE-01** HTTP tool expectations); rubric **row 9** (shipped vs roadmap claims). **Analytics stub:** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) + **MK-01-ANALYTICS-VERTICAL** package.
+**Shipped in repo:** reviewer worksheet [catalog/TEMPLATE_QUALITY_RUBRIC.md](catalog/TEMPLATE_QUALITY_RUBRIC.md); pytest [test_vertical_packs_catalog.py](api/tests/test_vertical_packs_catalog.py) for `vertical-packs.json`, on-disk runbook / packaged refs, and **JSON parse + minimal graph shape** for every `packaged-workflows/*.json`; [.github/pull_request_template.md](.github/pull_request_template.md); links from [catalog/README.md](catalog/README.md). **Prebuild / revenue:** [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) (booking + high-revenue motions vs shipped packs; **WE-01** HTTP tool expectations); rubric **row 9** (shipped vs roadmap claims). **Analytics (plan):** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) + [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) + **MK-01-ANALYTICS-VERTICAL** package (**InProgress**).
 
-**Next pass:** **MK-01** — first **booking-spine** packaged slice (one vertical: graph + runbook happy path + safe `default_template_variables` for scheduling HTTP stub); **MK-01-ANALYTICS-VERTICAL** Phase A (OpenAPI + privacy matrix per [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md)). **MK-01-IMPORT-OPTIONS** spike unchanged. **WE-01-DUALMODE** — GTM **http-api** screenshots when ready.
+**Next pass:** **MK-01** — first **booking-spine** packaged slice (one vertical: graph + runbook happy path + safe `default_template_variables` for scheduling HTTP stub); **MK-01-ANALYTICS-VERTICAL** Phase **B** (ingest + FastAPI routes per [analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml)) + privacy matrix. **MK-01-IMPORT-OPTIONS** spike unchanged. **WE-01-DUALMODE** — GTM **http-api** screenshots when ready.
 
 ### MK-01-IMPORT-OPTIONS — External flows & agent skills (research package)
 
@@ -231,9 +231,9 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ---
 
-### MK-01-ANALYTICS-VERTICAL — Call insights & dashboards (stub)
+### MK-01-ANALYTICS-VERTICAL — Call insights & dashboards (plan + OpenAPI draft)
 
-**Status:** `NotStarted` (roadmap + acceptance only; no product surface shipped in this slice.)
+**Status:** `InProgress` (Phase **A** draft contract in repo; **no** live routes yet.)
 
 **Goal:** Define how **vertical prebuilds** pair with **analytics**: filterable **calls list**, **call detail** (customer-defined outcomes, key metrics, AI/QA/QM views), **default + custom dashboards** (widget cards with insight functions), and **API / database** access patterns for enterprise — including **HTTP tool call/response** visibility aligned with [docs/voice-agent/tools/http-api.mdx](docs/voice-agent/tools/http-api.mdx).
 
@@ -241,9 +241,10 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 - [x] **Scope doc** — [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md): calls list/detail, outcomes, tool traces, dashboards, API/DB, phasing A–D.
 - [x] **Cross-links** — [PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) analytics section; [catalog/README.md](catalog/README.md); [DOCS.md](DOCS.md); this epic index row.
-- [ ] **OpenAPI / implementation** — `GET /calls`, `GET /calls/{id}`, widget schema (deferred until owner picks Phase A in roadmap).
+- [x] **OpenAPI draft (Phase A)** — [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml): `GET /api/v1/analytics/calls`, `GET /api/v1/analytics/calls/{call_id}`, **HttpToolSpanSummary**, **DashboardWidgetDef**.
+- [ ] **Implementation** — FastAPI routes + persistence + UI (deferred).
 
-**Key files (planning):** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md), [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md), [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) (this section).
+**Key files (planning):** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md), [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml), [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md), [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) (this section).
 
 **HTTP tool UX (WE-01-DUALMODE):** Marketplace **prebuild** authors use grouped pickers, hints, per-tool test payload/context, and response mapping as documented — no change required in this slice; roadmap references [http-api.mdx](docs/voice-agent/tools/http-api.mdx) for **tool evidence** in analytics.
 
@@ -693,7 +694,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | MK-01 | Marketplace: ready-to-bake vertical packs | §6 Marketplace and GTM |
 | MK-01-RUBRIC | Template quality rubric (stub; under **MK-01**) | §2 Pillar 1 near-term (template quality) |
 | MK-01-IMPORT-OPTIONS | External flows / skills import research (under **MK-01**) | [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md) |
-| MK-01-ANALYTICS-VERTICAL | Call insights, dashboards, APIs (stub; under **MK-01**) | [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) |
+| MK-01-ANALYTICS-VERTICAL | Call insights, dashboards, APIs (**InProgress** — OpenAPI draft; under **MK-01**) | [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md), [analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) |
 | WE-01 | Workflow editor parity (reference UI) | §2 Pillar 1, §1 Authoring row |
 | WE-01-VISUAL-DEPTH | Bento / glass / tactile UI (under **WE-01**) | UX polish; org dashboard row |
 | WE-01-HYPER-DENSITY | High-density SaaS extension (`Done` — slices 1–3) | [Brief](#we-01-hyper-density-saas-ui-extension-brief) · [Package](#we-01-hyper-density--high-density-shell-and-operator-chrome) |
@@ -811,3 +812,4 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | 2026-04-25 | **WE-01-DUALMODE / Tool API** — **Fallback hints** for custom / live / flow-path picker rows + filter map ([contextVariableTemplates.ts](ui/src/constants/contextVariableTemplates.ts), [grouped-string-option-picker.tsx](ui/src/components/http/grouped-string-option-picker.tsx), [contextVariableTemplates.test.ts](ui/src/constants/contextVariableTemplates.test.ts)); [http-api.mdx](docs/voice-agent/tools/http-api.mdx); [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx). |
 | 2026-04-25 | **MK-01-RUBRIC / prebuild** — [PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md); [TEMPLATE_QUALITY_RUBRIC.md](catalog/TEMPLATE_QUALITY_RUBRIC.md) row **9**; [vertical-packs.json](catalog/vertical-packs.json) **1.0.1** + booking/revenue roadmap `use_cases`; [catalog/README.md](catalog/README.md); [runbooks/README.md](runbooks/README.md). |
 | 2026-04-25 | **MK-01-ANALYTICS-VERTICAL** (stub) — [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md); [PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) analytics section; [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) package + epic index; [DOCS.md](DOCS.md). |
+| 2026-04-25 | **MK-01-ANALYTICS-VERTICAL** — [analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) OpenAPI draft; package **InProgress**; [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) Phase A; [catalog/README.md](catalog/README.md), [DOCS.md](DOCS.md). |

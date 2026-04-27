@@ -31,6 +31,7 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | [READMENEWRELEASES.md](READMENEWRELEASES.md) | What shipped (tie to execution IDs) |
 | [catalog/README.md](catalog/README.md) | Vertical pack JSON (`MK-01-CATALOG`) |
 | [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) | Calls, dashboards, tool/API observability for vertical GTM (`MK-01-ANALYTICS-VERTICAL`) |
+| [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) | **Draft** OpenAPI for analytics calls list/detail + HTTP tool span summaries (`MK-01-ANALYTICS-VERTICAL` Phase A) |
 | [docs/voice-agent/tools/http-api.mdx](docs/voice-agent/tools/http-api.mdx) | HTTP tool user doc (templated URL, headers, **Template resolution order**, **Storage model**, **Screenshots** / **WE-01-DATASTORE-INTEG**) — publish at [docs.dograh.com](https://docs.dograh.com) with site sync |
 | [docs/images/](docs/images/) | **http-api-*.png** doc figures (1280×720 placeholders via [scripts/gen_http_api_doc_pngs.py](scripts/gen_http_api_doc_pngs.py); replace with product shots for GTM); [docs/images/README.md](docs/images/README.md) |
 | [docs/integrations/http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx) | HTTP tools — org data, browser-only test samples, roadmap cache (**WE-01-DATASTORE-INTEG**); linked from [integrations/overview.mdx](docs/integrations/overview.mdx) |

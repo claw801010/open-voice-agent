@@ -1,0 +1,274 @@
+openapi: 3.0.3
+info:
+  title: Analytics — calls & tool traces (draft contract)
+  description: |
+    **MK-01-ANALYTICS-VERTICAL Phase A** — proposed REST surface for vertical prebuild + GTM demos.
+    Not implemented by the API yet; iterate here before wiring routes. Aligns HTTP tool semantics with
+    [docs/voice-agent/tools/http-api.mdx](../docs/voice-agent/tools/http-api.mdx) (response_mapping / mapped_data).
+  version: 0.1.0-draft
+
+servers:
+  - url: https://api.example.com
+    description: Placeholder — replace with org deployment base URL
+
+tags:
+  - name: analytics-calls
+    description: Filterable call history and per-call intelligence
+
+paths:
+  /api/v1/analytics/calls:
+    get:
+      tags: [analytics-calls]
+      summary: List calls (filterable)
+      description: |
+        Paginated list for dashboards and QM sampling. Filters are AND-combined where supported.
+        **Tool filters** help prove HTTP/API outcomes in buyer demos (e.g. only calls where `book_slot` returned 200).
+      operationId: listAnalyticsCalls
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workflow_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: since
+          in: query
+          description: ISO-8601 UTC inclusive lower bound
+          schema: { type: string, format: date-time }
+        - name: until
+          in: query
+          schema: { type: string, format: date-time }
+        - name: disposition
+          in: query
+          schema: { type: string }
+        - name: outcome_key
+          in: query
+          description: Customer-defined outcome enum key from workflow config
+          schema: { type: string }
+        - name: tool_name
+          in: query
+          description: Filter calls that invoked an HTTP (or other) tool with this logical name
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: cursor
+          in: query
+          description: Opaque pagination cursor from previous response
+          schema: { type: string }
+      responses:
+        "200":
+          description: Page of calls
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallListPage"
+        "401":
+          description: Unauthorized
+
+  /api/v1/analytics/calls/{call_id}:
+    get:
+      tags: [analytics-calls]
+      summary: Call detail (transcript summary, metrics, tool spans, QA)
+      operationId: getAnalyticsCallDetail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: call_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Full call intelligence payload (PII policy TBD per org)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallDetail"
+        "404":
+          description: Call not found or not visible to this org
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CallListPage:
+      type: object
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CallListItem"
+        next_cursor:
+          type: string
+          nullable: true
+          description: Pass as `cursor` on next request; null when no more pages
+
+    CallListItem:
+      type: object
+      required: [call_id, workflow_id, started_at, duration_ms]
+      properties:
+        call_id:
+          type: string
+        workflow_id:
+          type: string
+          format: uuid
+        workflow_slug:
+          type: string
+          nullable: true
+          description: Optional catalog slug when run from a vertical pack install
+        started_at:
+          type: string
+          format: date-time
+        duration_ms:
+          type: integer
+          minimum: 0
+        disposition:
+          type: string
+          nullable: true
+        outcome_key:
+          type: string
+          nullable: true
+          description: Customer-defined outcome (e.g. booked, escalated, no_show_risk)
+        tool_names:
+          type: array
+          items: { type: string }
+          description: Distinct logical tool names invoked during the call (HTTP, function, etc.)
+
+    CallDetail:
+      type: object
+      required: [call_id, workflow_id, started_at, duration_ms, metrics, tool_spans]
+      properties:
+        call_id:
+          type: string
+        workflow_id:
+          type: string
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        duration_ms:
+          type: integer
+        metrics:
+          $ref: "#/components/schemas/CallMetrics"
+        outcomes:
+          type: object
+          additionalProperties: true
+          description: Key/value customer-defined outcomes at end of call
+        tool_spans:
+          type: array
+          items:
+            $ref: "#/components/schemas/ToolSpan"
+        ai_summary:
+          type: string
+          nullable: true
+          description: Optional model-generated summary (policy + retention TBD)
+        qa:
+          $ref: "#/components/schemas/QaQmSummary"
+          nullable: true
+
+    CallMetrics:
+      type: object
+      properties:
+        llm_rounds:
+          type: integer
+          minimum: 0
+        tool_invocation_count:
+          type: integer
+          minimum: 0
+        stt_seconds:
+          type: number
+          format: float
+          nullable: true
+        tts_seconds:
+          type: number
+          format: float
+          nullable: true
+
+    ToolSpan:
+      type: object
+      required: [span_id, tool_name, started_at, duration_ms]
+      properties:
+        span_id:
+          type: string
+        tool_name:
+          type: string
+        tool_type:
+          type: string
+          enum: [http_api, function, other]
+        started_at:
+          type: string
+          format: date-time
+        duration_ms:
+          type: integer
+          minimum: 0
+        http:
+          $ref: "#/components/schemas/HttpToolSpanSummary"
+          nullable: true
+          description: Present when tool_type is http_api
+
+    HttpToolSpanSummary:
+      type: object
+      description: |
+        Redacted request/response envelope for analytics and QM. Mapped fields mirror workflow
+        `response_mapping` keys where safe to expose (no raw secrets).
+      properties:
+        method:
+          type: string
+          example: POST
+        url_template:
+          type: string
+          description: Templated URL as configured (host may be redacted per org policy)
+        request_status:
+          type: integer
+          description: HTTP status from upstream
+        mapped_data:
+          type: object
+          additionalProperties: true
+          nullable: true
+          description: Subset of tool `mapped_data` / mapping keys safe for analytics
+        error_message:
+          type: string
+          nullable: true
+
+    QaQmSummary:
+      type: object
+      properties:
+        score:
+          type: number
+          format: float
+          nullable: true
+          description: Aggregate QA score if rubric applied
+        flags:
+          type: array
+          items: { type: string }
+          description: e.g. policy_violation_suspected, escalation_required
+        reviewer_notes:
+          type: string
+          nullable: true
+
+    DashboardWidgetDef:
+      type: object
+      description: Declarative widget for default or custom dashboards (persisted layout TBD)
+      required: [widget_id, function_id, title]
+      properties:
+        widget_id:
+          type: string
+        function_id:
+          type: string
+          description: |
+            Server-known function e.g. `calls_funnel`, `http_tool_success_rate`, `booking_conversion`
+        title:
+          type: string
+        query:
+          type: object
+          additionalProperties: true
+          description: Parameters bound to this widget (workflow_id, date range, etc.)

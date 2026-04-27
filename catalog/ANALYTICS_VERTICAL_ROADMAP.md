@@ -36,7 +36,7 @@ Prebuilt **vertical** workflows (healthcare, retail, B2B SaaS) need a **credible
 
 | Phase | Deliverable |
 |-------|-------------|
-| **A — Spec** | OpenAPI sketch for `GET /calls`, `GET /calls/{id}`, dashboard widget schema; privacy matrix with [PARTNER_REVIEW.md](PARTNER_REVIEW.md). |
+| **A — Spec** | **Draft OpenAPI:** [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) (`GET /api/v1/analytics/calls`, `GET /api/v1/analytics/calls/{call_id}`, list/detail schemas, **HttpToolSpanSummary**, **DashboardWidgetDef**). Privacy matrix with [PARTNER_REVIEW.md](PARTNER_REVIEW.md) (separate PR/table). |
 | **B — Ingest** | Persist tool spans + mapped HTTP payload summaries on run completion; PII redaction rules. |
 | **C — UI** | Calls list + detail MVP; one default dashboard template per vertical pack slug. |
 | **D — Custom** | Widget card library + save custom layout; export CSV for QM. |
