@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
+  ClipboardList,
   Database,
   FileText,
   Home,
@@ -166,6 +167,11 @@ export function AppSidebar() {
       title: "Reports",
       url: "/reports",
       icon: FileText,
+    },
+    {
+      title: "Call analytics",
+      url: "/analytics/calls",
+      icon: ClipboardList,
     },
     // {
     //   title: "LoopTalk",

@@ -38,7 +38,7 @@ Prebuilt **vertical** workflows (healthcare, retail, B2B SaaS) need a **credible
 |-------|-------------|
 | **A — Spec** | **Draft OpenAPI:** [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) (`GET /api/v1/analytics/calls`, `GET /api/v1/analytics/calls/{call_id}`, list/detail schemas, **HttpToolSpanSummary**, **DashboardWidgetDef**). Privacy matrix with [PARTNER_REVIEW.md](PARTNER_REVIEW.md) (separate PR/table). |
 | **B — Ingest** | **Shipped (MVP):** `GET /api/v1/analytics/calls` + `GET …/calls/{call_id}` ([api/routes/analytics.py](../api/routes/analytics.py)) — org-scoped list/detail from `workflow_runs`; **tool_spans** derived from persisted `logs.realtime_feedback_events` (HTTP summaries from tool result JSON). **Deferred:** dedicated span rows + PII redaction matrix ([PARTNER_REVIEW.md](PARTNER_REVIEW.md)). |
-| **C — UI** | Calls list + detail MVP; one default dashboard template per vertical pack slug. |
+| **C — UI** | **In progress:** authenticated **Call analytics** UI — list + detail under [`ui/src/app/analytics/`](../ui/src/app/analytics/) (`/analytics/calls`, `/analytics/calls/[callId]`): filterable list + insight strip; outcomes, metrics, tool spans (HTTP `mapped_data`), QA. **Next:** vertical-pack default dashboard template + widget library. |
 | **D — Custom** | Widget card library + save custom layout; export CSV for QM. |
 
 ## Checklist (template + analytics together)

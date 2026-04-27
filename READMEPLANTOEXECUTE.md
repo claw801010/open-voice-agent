@@ -81,14 +81,14 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| **MK-01-ANALYTICS-VERTICAL** | _TBD_ | Phase **B** MVP: [api/routes/analytics.py](api/routes/analytics.py) + [analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) **0.2.0-draft**. *Suggested next:* **C** calls UI + default dashboard stub; **MK-01** booking-spine packaged graph; redaction matrix + optional `tool_spans` table; **GTM** **http-api** screenshots; **DATASTORE** PUT stub or defer. |
+| **MK-01-ANALYTICS-VERTICAL** | _TBD_ | Phase **C** started: UI [`/analytics/calls`](ui/src/app/analytics/calls/page.tsx) + detail + sidebar / ⌘K. *Suggested next:* default **dashboard** widget row per vertical slug; **MK-01** booking-spine graph; redaction matrix; **GTM** screenshots; **DATASTORE** PUT or defer. |
 
 #### Rolling pass notes (keep short; update when you ship a slice)
 
 | | |
 |--|--|
-| **This pass (shipped in repo now)** | **MK-01-ANALYTICS-VERTICAL** Phase **B** — `GET /api/v1/analytics/calls` + `GET …/calls/{call_id}` ([api/routes/analytics.py](api/routes/analytics.py), [api/db/analytics_calls_client.py](api/db/analytics_calls_client.py), [api/services/analytics/call_intel.py](api/services/analytics/call_intel.py)); OpenAPI **0.2.0-draft** + `workflow_id` integer + `workflow_slug` on detail; pytest [test_call_intel.py](api/tests/test_call_intel.py); integration [test_analytics_calls_routes.py](api/tests/test_analytics_calls_routes.py) (needs Postgres + asyncpg per [api/.env.test.example](api/.env.test.example)). |
-| **Next pass (suggested)** | **MK-01-ANALYTICS-VERTICAL** Phase **C** — UI calls list/detail + one default dashboard card; redaction matrix. **MK-01** — **booking-spine** packaged graph + HTTP stub. **GTM** — **http-api-*.png** + [docs/images/README.md](docs/images/README.md). **DATASTORE** — PUT stub or defer. |
+| **This pass (shipped in repo now)** | **MK-01-ANALYTICS-VERTICAL** Phase **C** (MVP UI) — [`/analytics/calls`](ui/src/app/analytics/calls/page.tsx) filterable list + **insight strip** (calls / distinct tools / with outcome), shareable query params, **Load more**; [`/analytics/calls/[callId]`](ui/src/app/analytics/calls/[callId]/page.tsx) detail (outcomes JSON, metrics, **tool spans** + HTTP `mapped_data`, QA); [analyticsCallsApi.ts](ui/src/lib/analyticsCallsApi.ts) + [getBackendPublicBaseUrl](ui/src/lib/apiClient.ts); sidebar + [appNavigationCommands](ui/src/lib/appNavigationCommands.ts). |
+| **Next pass (suggested)** | **MK-01-ANALYTICS-VERTICAL** — default **dashboard** widget row tied to vertical `catalog_slug`; custom widget cards + persistence. **MK-01** — **booking-spine** packaged graph + HTTP stub. **Redaction** matrix + optional `tool_spans` table. **GTM** — **http-api-*.png**. **DATASTORE** — PUT stub or defer. |
 
 ### Strategic review (major bets)
 
@@ -131,7 +131,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 **Shipped in repo:** reviewer worksheet [catalog/TEMPLATE_QUALITY_RUBRIC.md](catalog/TEMPLATE_QUALITY_RUBRIC.md); pytest [test_vertical_packs_catalog.py](api/tests/test_vertical_packs_catalog.py) for `vertical-packs.json`, on-disk runbook / packaged refs, and **JSON parse + minimal graph shape** for every `packaged-workflows/*.json`; [.github/pull_request_template.md](.github/pull_request_template.md); links from [catalog/README.md](catalog/README.md). **Prebuild / revenue:** [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) (booking + high-revenue motions vs shipped packs; **WE-01** HTTP tool expectations); rubric **row 9** (shipped vs roadmap claims). **Analytics:** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) + [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) + [api/routes/analytics.py](api/routes/analytics.py) + **MK-01-ANALYTICS-VERTICAL** package (**InProgress**).
 
-**Next pass:** **MK-01** — first **booking-spine** packaged slice (one vertical: graph + runbook happy path + safe `default_template_variables` for scheduling HTTP stub); **MK-01-ANALYTICS-VERTICAL** Phase **C** (calls UI + default dashboard) + privacy/redaction matrix. **MK-01-IMPORT-OPTIONS** spike unchanged. **WE-01-DUALMODE** — GTM **http-api** screenshots when ready.
+**Next pass:** **MK-01** — first **booking-spine** packaged slice (one vertical: graph + runbook happy path + safe `default_template_variables` for scheduling HTTP stub); **MK-01-ANALYTICS-VERTICAL** — default **dashboard** widgets per `catalog_slug` + redaction matrix. **MK-01-IMPORT-OPTIONS** spike unchanged. **WE-01-DUALMODE** — GTM **http-api** screenshots when ready.
 
 ### MK-01-IMPORT-OPTIONS — External flows & agent skills (research package)
 
@@ -233,7 +233,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ### MK-01-ANALYTICS-VERTICAL — Call insights & dashboards (plan + OpenAPI draft)
 
-**Status:** `InProgress` (Phase **B** MVP: **live** `GET /api/v1/analytics/calls` + detail; UI + dashboards + optional span table deferred.)
+**Status:** `InProgress` (Phase **B** REST + **Phase** **C** list/detail UI shipped; default per-vertical **dashboard** widgets + optional span table deferred.)
 
 **Goal:** Define how **vertical prebuilds** pair with **analytics**: filterable **calls list**, **call detail** (customer-defined outcomes, key metrics, AI/QA/QM views), **default + custom dashboards** (widget cards with insight functions), and **API / database** access patterns for enterprise — including **HTTP tool call/response** visibility aligned with [docs/voice-agent/tools/http-api.mdx](docs/voice-agent/tools/http-api.mdx).
 
@@ -243,9 +243,10 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 - [x] **Cross-links** — [PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) analytics section; [catalog/README.md](catalog/README.md); [DOCS.md](DOCS.md); this epic index row.
 - [x] **OpenAPI draft (Phase A)** — [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml): `GET /api/v1/analytics/calls`, `GET /api/v1/analytics/calls/{call_id}`, **HttpToolSpanSummary**, **DashboardWidgetDef**.
 - [x] **REST MVP (Phase B)** — [api/routes/analytics.py](api/routes/analytics.py): org-scoped list + detail; **tool_spans** from `workflow_runs.logs` (`call_id` = `wr-{run.id}`); filters: `workflow_id`, `since`/`until`, `disposition`, `outcome_key`, `tool_name`, cursor pagination.
-- [ ] **UI + dashboards + optional span persistence** — Phase **C** / **D** (deferred).
+- [x] **UI MVP (Phase C)** — [`/analytics/calls`](ui/src/app/analytics/calls/page.tsx), [`/analytics/calls/[callId]`](ui/src/app/analytics/calls/[callId]/page.tsx), [analyticsCallsApi.ts](ui/src/lib/analyticsCallsApi.ts) (regenerate OpenAPI client when API is up: `npm run generate-client`).
+- [ ] **Dashboards + optional span persistence** — Phase **C** (widgets) / **D** (custom layouts).
 
-**Key files:** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md), [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml), [api/routes/analytics.py](api/routes/analytics.py), [api/db/analytics_calls_client.py](api/db/analytics_calls_client.py), [api/services/analytics/call_intel.py](api/services/analytics/call_intel.py), [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md), [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) (this section).
+**Key files:** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md), [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml), [api/routes/analytics.py](api/routes/analytics.py), [api/db/analytics_calls_client.py](api/db/analytics_calls_client.py), [api/services/analytics/call_intel.py](api/services/analytics/call_intel.py), [ui/src/app/analytics/](ui/src/app/analytics/), [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md), [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) (this section).
 
 **HTTP tool UX (WE-01-DUALMODE):** Marketplace **prebuild** authors use grouped pickers, hints, per-tool test payload/context, and response mapping as documented — no change required in this slice; roadmap references [http-api.mdx](docs/voice-agent/tools/http-api.mdx) for **tool evidence** in analytics.
 
@@ -815,3 +816,4 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | 2026-04-25 | **MK-01-ANALYTICS-VERTICAL** (stub) — [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md); [PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) analytics section; [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) package + epic index; [DOCS.md](DOCS.md). |
 | 2026-04-25 | **MK-01-ANALYTICS-VERTICAL** — [analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) OpenAPI draft; package **InProgress**; [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) Phase A; [catalog/README.md](catalog/README.md), [DOCS.md](DOCS.md). |
 | 2026-04-25 | **MK-01-ANALYTICS-VERTICAL** Phase **B** — `GET /api/v1/analytics/calls` + detail ([api/routes/analytics.py](api/routes/analytics.py), [api/db/analytics_calls_client.py](api/db/analytics_calls_client.py), [call_intel.py](api/services/analytics/call_intel.py)); OpenAPI **0.2.0-draft**; [test_call_intel.py](api/tests/test_call_intel.py); [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) Phase B row. |
+| 2026-04-25 | **MK-01-ANALYTICS-VERTICAL** Phase **C** (UI MVP) — [`/analytics/calls`](ui/src/app/analytics/calls/page.tsx), [`[callId]`](ui/src/app/analytics/calls/[callId]/page.tsx), [analyticsCallsApi.ts](ui/src/lib/analyticsCallsApi.ts); sidebar + command palette; [ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) Phase C row. |

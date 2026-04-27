@@ -1,22 +1,19 @@
 import type { Client } from '@/client/client';
 import type { CreateClientConfig } from '@/client/client.gen';
 
-export const createClientConfig: CreateClientConfig = (config) => {
-    // Use different URLs for server-side vs client-side
+/** Browser or server origin for REST calls (same rules as generated SDK `createClientConfig`). */
+export function getBackendPublicBaseUrl(): string {
     const isServer = typeof window === 'undefined';
-    let baseUrl: string;
-
     if (isServer) {
-        baseUrl = process.env.BACKEND_URL || 'http://api:8000';
-    } else {
-        baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL || window.location.origin;
+        return process.env.BACKEND_URL || 'http://api:8000';
     }
+    return process.env.NEXT_PUBLIC_BACKEND_URL || window.location.origin;
+}
 
-    return {
-        ...config,
-        baseUrl,
-    };
-};
+export const createClientConfig: CreateClientConfig = (config) => ({
+    ...config,
+    baseUrl: getBackendPublicBaseUrl(),
+});
 
 let interceptorRegistered = false;
 
