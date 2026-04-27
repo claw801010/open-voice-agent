@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import {
+    buildGroupedPickerFilterSubtitleLookup,
+    GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES,
+    HTTP_VARIABLE_GROUP_LABELS,
+} from "@/constants/contextVariableTemplates";
+
 import { filterGroupedStringOptions } from "./grouped-string-option-picker";
 
 describe("filterGroupedStringOptions", () => {
@@ -49,6 +55,16 @@ describe("filterGroupedStringOptions", () => {
         const subtitles = { "{{caller_number}}": "Caller phone (E.164)" };
         expect(filterGroupedStringOptions(groups, [], "e.164", subtitles)).toEqual([
             { label: "System", options: ["{{caller_number}}"] },
+        ]);
+    });
+
+    it("matches custom-group tokens by fallback hint text (e.g. search “browser”)", () => {
+        const groups = [
+            { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: ["{{acme.segment}}", "{{other}}"] },
+        ];
+        const lookup = buildGroupedPickerFilterSubtitleLookup(groups, [], GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES);
+        expect(filterGroupedStringOptions(groups, [], "browser", lookup)).toEqual([
+            { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: ["{{acme.segment}}", "{{other}}"] },
         ]);
     });
 });

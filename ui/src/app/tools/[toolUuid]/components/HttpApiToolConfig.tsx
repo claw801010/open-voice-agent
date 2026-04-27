@@ -198,7 +198,8 @@ export function HttpApiToolConfig({
                     you add above; <strong className="text-foreground/90">{HTTP_VARIABLE_GROUP_LABELS.live}</strong> from
                     parameter names and response-mapping keys. Call context (test) Form tab: preset paths plus{" "}
                     <span className="font-medium text-foreground/80">Use app default</span> per row when a built-in sample
-                    exists. Open any picker and filter by token text or the short hint under built-in rows.{" "}
+                    exists. Open any picker and filter by token text or the hint line (built-in, custom, live, or flow
+                    paths).{" "}
                     <span className="font-medium text-foreground/80">Test payload</span> (Test API Call) is remembered{" "}
                     <span className="font-medium text-foreground/80">per HTTP tool</span> in this browser (not saved on
                     the server).

@@ -156,6 +156,54 @@ export const GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES: Record<string, string> = {
     ...CALL_CONTEXT_PATH_LABELS,
 };
 
+/**
+ * Generic hint when an option has no explicit subtitle — keeps **Custom**, **Live**, and **From your flow** rows
+ * self-explanatory in every picker.
+ */
+export function groupedPickerFallbackHint(groupLabel: string): string | undefined {
+    if (groupLabel === HTTP_VARIABLE_GROUP_LABELS.custom) {
+        return "Path you added under Custom flow variable (this tool, this browser)";
+    }
+    if (groupLabel === HTTP_VARIABLE_GROUP_LABELS.live) {
+        return "Parameter name or response-mapping key from this tool";
+    }
+    if (groupLabel === CALL_CONTEXT_FLOW_PATH_GROUP_LABEL) {
+        return "Dot path from your custom {{…}} keys or from tool parameters / mappings";
+    }
+    return undefined;
+}
+
+/** One line under a picker row: explicit map first, then group fallback. */
+export function resolveGroupedPickerRowHint(
+    groupLabel: string,
+    option: string,
+    mergedSubtitles: Readonly<Record<string, string>>
+): string | undefined {
+    const explicit = mergedSubtitles[option];
+    if (explicit) return explicit;
+    return groupedPickerFallbackHint(groupLabel);
+}
+
+/** Flat lookup for filter (matches token or any resolved hint). */
+export function buildGroupedPickerFilterSubtitleLookup(
+    groups: readonly VariableSuggestionGroup[],
+    flatSuggestions: readonly string[],
+    mergedSubtitles: Readonly<Record<string, string>>
+): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const g of groups) {
+        for (const o of g.options) {
+            const h = resolveGroupedPickerRowHint(g.label, o, mergedSubtitles);
+            if (h) out[o] = h;
+        }
+    }
+    for (const o of flatSuggestions) {
+        const h = mergedSubtitles[o];
+        if (h) out[o] = h;
+    }
+    return out;
+}
+
 /** `{{a.b.c}}` → `a.b.c` for call-context path fields (matches template resolution keys). */
 export function templateTokenToDotPath(template: string): string | null {
     const t = template.trim();

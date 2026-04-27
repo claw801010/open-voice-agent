@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
+    buildGroupedPickerFilterSubtitleLookup,
     GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS,
     GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES,
+    resolveGroupedPickerRowHint,
     type VariableSuggestionGroup,
 } from "@/constants/contextVariableTemplates";
 import { cn } from "@/lib/utils";
@@ -91,6 +93,16 @@ export function GroupedStringOptionPicker({
         [optionSubtitles]
     );
 
+    const filterSubtitleLookup = useMemo(
+        () =>
+            buildGroupedPickerFilterSubtitleLookup(
+                variableSuggestionGroups,
+                variableSuggestions,
+                mergedSubtitles
+            ),
+        [variableSuggestionGroups, variableSuggestions, mergedSubtitles]
+    );
+
     const hasAny =
         variableSuggestionGroups.some((g) => g.options.length > 0) || variableSuggestions.length > 0;
 
@@ -100,9 +112,9 @@ export function GroupedStringOptionPicker({
                 variableSuggestionGroups,
                 variableSuggestions,
                 query,
-                mergedSubtitles
+                filterSubtitleLookup
             ),
-        [variableSuggestionGroups, variableSuggestions, query, mergedSubtitles]
+        [variableSuggestionGroups, variableSuggestions, query, filterSubtitleLookup]
     );
 
     const handleOpenChange = (next: boolean) => {
@@ -152,7 +164,7 @@ export function GroupedStringOptionPicker({
                         className="h-8 text-xs"
                         aria-label="Filter list"
                         autoComplete="off"
-                        title="Matches token text or the short hint under built-in rows"
+                        title="Matches token text or the hint line (built-in, custom, live, or flow paths)"
                     />
                 </div>
                 <div className="max-h-72 overflow-y-auto py-1">
@@ -179,7 +191,11 @@ export function GroupedStringOptionPicker({
                                         </p>
                                     ) : (
                                         group.options.map((opt) => {
-                                            const hint = mergedSubtitles[opt];
+                                            const hint = resolveGroupedPickerRowHint(
+                                                group.label,
+                                                opt,
+                                                mergedSubtitles
+                                            );
                                             return (
                                                 <button
                                                     key={`${group.label}-${opt}`}
