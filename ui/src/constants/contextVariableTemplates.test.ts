@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
     CALL_CONTEXT_FLOW_PATH_GROUP_LABEL,
+    CALL_CONTEXT_PATH_LABELS,
     CALL_CONTEXT_PATH_PRESET_GROUPS,
+    CONVERSATION_CONTEXT_VARIABLE_TEMPLATES,
     GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS,
     HTTP_VARIABLE_GROUP_LABELS,
+    HTTP_VARIABLE_TEMPLATE_LABELS,
     mergePathPresetGroupsWithFlowTemplates,
+    SYSTEM_CONTEXT_VARIABLE_TEMPLATES,
     templateTokenToDotPath,
 } from "./contextVariableTemplates";
 
@@ -38,6 +42,27 @@ describe("templateTokenToDotPath", () => {
     it("returns null for non-matching input", () => {
         expect(templateTokenToDotPath("not a template")).toBeNull();
         expect(templateTokenToDotPath("{x}")).toBeNull();
+    });
+});
+
+describe("HTTP_VARIABLE_TEMPLATE_LABELS", () => {
+    it("has a hint for every built-in system and conversation template token", () => {
+        for (const t of SYSTEM_CONTEXT_VARIABLE_TEMPLATES) {
+            expect(HTTP_VARIABLE_TEMPLATE_LABELS[t]?.length).toBeGreaterThan(3);
+        }
+        for (const t of CONVERSATION_CONTEXT_VARIABLE_TEMPLATES) {
+            expect(HTTP_VARIABLE_TEMPLATE_LABELS[t]?.length).toBeGreaterThan(3);
+        }
+    });
+});
+
+describe("CALL_CONTEXT_PATH_LABELS", () => {
+    it("has a hint for every static preset path option", () => {
+        for (const g of CALL_CONTEXT_PATH_PRESET_GROUPS) {
+            for (const p of g.options) {
+                expect(CALL_CONTEXT_PATH_LABELS[p]?.length).toBeGreaterThan(3);
+            }
+        }
     });
 });
 

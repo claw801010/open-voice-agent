@@ -43,4 +43,12 @@ describe("filterGroupedStringOptions", () => {
     it("returns empty when flat fallback has no matches", () => {
         expect(filterGroupedStringOptions([], ["{{a}}"], "zzz")).toEqual([]);
     });
+
+    it("matches options by subtitle text when subtitle lookup is provided", () => {
+        const groups = [{ label: "System", options: ["{{caller_number}}", "{{locale}}"] }];
+        const subtitles = { "{{caller_number}}": "Caller phone (E.164)" };
+        expect(filterGroupedStringOptions(groups, [], "e.164", subtitles)).toEqual([
+            { label: "System", options: ["{{caller_number}}"] },
+        ]);
+    });
 });

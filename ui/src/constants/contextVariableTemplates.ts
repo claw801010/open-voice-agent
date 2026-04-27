@@ -23,6 +23,24 @@ export const DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS = [
     ...CONVERSATION_CONTEXT_VARIABLE_TEMPLATES,
 ];
 
+/** Short hint under each `{{…}}` row in grouped pickers; filter matches this text too. */
+export const HTTP_VARIABLE_TEMPLATE_LABELS: Record<string, string> = {
+    "{{caller_number}}": "Caller phone (E.164)",
+    "{{called_number}}": "Number that was dialed",
+    "{{call_id}}": "Unique call/session id",
+    "{{workflow_id}}": "Current workflow id",
+    "{{organization_id}}": "Current organization id",
+    "{{timestamp}}": "ISO time of the request",
+    "{{timezone}}": "IANA timezone id",
+    "{{locale}}": "BCP 47 locale (e.g. en-US)",
+    "{{initial_context.customer_name}}": "Customer display name from workflow",
+    "{{initial_context.customer_id}}": "Customer id from workflow",
+    "{{conversation.intent}}": "Last classified intent",
+    "{{conversation.summary}}": "Rolling conversation summary",
+    "{{conversation.last_user_message}}": "Last user utterance",
+    "{{conversation.sentiment}}": "Sentiment label (e.g. neutral)",
+};
+
 export interface VariableSuggestionGroup {
     label: string;
     options: string[];
@@ -113,6 +131,30 @@ export const CALL_CONTEXT_PATH_PRESET_GROUPS: VariableSuggestionGroup[] = [
         options: ["initial_context.customer_name", "initial_context.customer_id"],
     },
 ];
+
+/** Short hint under each dot path in call-context Preset path pickers; filter matches hint text too. */
+export const CALL_CONTEXT_PATH_LABELS: Record<string, string> = {
+    caller_number: "Maps to {{caller_number}} in templates",
+    called_number: "Maps to {{called_number}}",
+    call_id: "Maps to {{call_id}}",
+    workflow_id: "Maps to {{workflow_id}}",
+    organization_id: "Maps to {{organization_id}}",
+    timestamp: "Maps to {{timestamp}}",
+    timezone: "Maps to {{timezone}}",
+    locale: "Maps to {{locale}}",
+    "conversation.intent": "Maps to {{conversation.intent}}",
+    "conversation.summary": "Maps to {{conversation.summary}}",
+    "conversation.last_user_message": "Maps to {{conversation.last_user_message}}",
+    "conversation.sentiment": "Maps to {{conversation.sentiment}}",
+    "initial_context.customer_name": "Maps to {{initial_context.customer_name}}",
+    "initial_context.customer_id": "Maps to {{initial_context.customer_id}}",
+};
+
+/** Merged built-in subtitles for [GroupedStringOptionPicker](ui/src/components/http/grouped-string-option-picker.tsx). */
+export const GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES: Record<string, string> = {
+    ...HTTP_VARIABLE_TEMPLATE_LABELS,
+    ...CALL_CONTEXT_PATH_LABELS,
+};
 
 /** `{{a.b.c}}` → `a.b.c` for call-context path fields (matches template resolution keys). */
 export function templateTokenToDotPath(template: string): string | null {

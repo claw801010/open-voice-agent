@@ -8,27 +8,44 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
     GROUPED_PICKER_BUILTIN_HEADER_TOOLTIPS,
+    GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES,
     type VariableSuggestionGroup,
 } from "@/constants/contextVariableTemplates";
 import { cn } from "@/lib/utils";
+
+function optionMatchesFilter(
+    opt: string,
+    needle: string,
+    subtitleLookup?: Readonly<Record<string, string>>
+): boolean {
+    if (!needle) return true;
+    if (opt.toLowerCase().includes(needle)) return true;
+    const sub = subtitleLookup?.[opt];
+    return sub ? sub.toLowerCase().includes(needle) : false;
+}
 
 /** Filter grouped or flat string lists for the HTTP tool variable / path pickers (case-insensitive substring). */
 export function filterGroupedStringOptions(
     groups: readonly VariableSuggestionGroup[],
     flatFallback: readonly string[],
-    query: string
+    query: string,
+    subtitleLookup?: Readonly<Record<string, string>>
 ): VariableSuggestionGroup[] {
     const needle = query.trim().toLowerCase();
     if (groups.length > 0) {
         const mapped = groups.map((g) => ({
             label: g.label,
-            options: needle ? g.options.filter((o) => o.toLowerCase().includes(needle)) : [...g.options],
+            options: needle
+                ? g.options.filter((o) => optionMatchesFilter(o, needle, subtitleLookup))
+                : [...g.options],
         }));
         // When not filtering: keep empty groups so picker headers (e.g. Custom flow variables) stay visible.
         if (needle) return mapped.filter((g) => g.options.length > 0);
         return mapped;
     }
-    const opts = needle ? flatFallback.filter((o) => o.toLowerCase().includes(needle)) : [...flatFallback];
+    const opts = needle
+        ? flatFallback.filter((o) => optionMatchesFilter(o, needle, subtitleLookup))
+        : [...flatFallback];
     if (opts.length === 0) return [];
     return [{ label: "", options: opts }];
 }
@@ -47,6 +64,8 @@ export interface GroupedStringOptionPickerProps {
     searchPlaceholder?: string;
     /** Optional `title` on group headers; defaults merge with built-in tooltips for known labels. */
     groupHeaderTooltips?: Record<string, string>;
+    /** Extra one-line hints under options; merged after built-in HTTP + call-context maps. */
+    optionSubtitles?: Record<string, string>;
 }
 
 export function GroupedStringOptionPicker({
@@ -59,19 +78,31 @@ export function GroupedStringOptionPicker({
     ariaLabel,
     onTriggerPointerDown,
     align = "start",
-    searchPlaceholder = "Filter…",
+    searchPlaceholder = "Filter tokens or hints…",
     groupHeaderTooltips,
+    optionSubtitles,
 }: GroupedStringOptionPickerProps) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
     const searchRef = useRef<HTMLInputElement>(null);
 
+    const mergedSubtitles = useMemo(
+        () => ({ ...GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES, ...optionSubtitles }),
+        [optionSubtitles]
+    );
+
     const hasAny =
         variableSuggestionGroups.some((g) => g.options.length > 0) || variableSuggestions.length > 0;
 
     const filtered = useMemo(
-        () => filterGroupedStringOptions(variableSuggestionGroups, variableSuggestions, query),
-        [variableSuggestionGroups, variableSuggestions, query]
+        () =>
+            filterGroupedStringOptions(
+                variableSuggestionGroups,
+                variableSuggestions,
+                query,
+                mergedSubtitles
+            ),
+        [variableSuggestionGroups, variableSuggestions, query, mergedSubtitles]
     );
 
     const handleOpenChange = (next: boolean) => {
@@ -121,6 +152,7 @@ export function GroupedStringOptionPicker({
                         className="h-8 text-xs"
                         aria-label="Filter list"
                         autoComplete="off"
+                        title="Matches token text or the short hint under built-in rows"
                     />
                 </div>
                 <div className="max-h-72 overflow-y-auto py-1">
@@ -146,16 +178,27 @@ export function GroupedStringOptionPicker({
                                             No entries in this group yet.
                                         </p>
                                     ) : (
-                                        group.options.map((opt) => (
-                                            <button
-                                                key={`${group.label}-${opt}`}
-                                                type="button"
-                                                className="w-full px-2 py-1.5 text-left font-mono text-[11px] leading-snug hover:bg-muted/80 focus:bg-muted/80 focus:outline-none"
-                                                onClick={() => handlePick(opt)}
-                                            >
-                                                {opt}
-                                            </button>
-                                        ))
+                                        group.options.map((opt) => {
+                                            const hint = mergedSubtitles[opt];
+                                            return (
+                                                <button
+                                                    key={`${group.label}-${opt}`}
+                                                    type="button"
+                                                    className="w-full px-2 py-1.5 text-left hover:bg-muted/80 focus:bg-muted/80 focus:outline-none"
+                                                    title={hint ? `${opt} — ${hint}` : opt}
+                                                    onClick={() => handlePick(opt)}
+                                                >
+                                                    <span className="block font-mono text-[11px] leading-snug">
+                                                        {opt}
+                                                    </span>
+                                                    {hint ? (
+                                                        <span className="mt-0.5 block text-[10px] leading-snug text-muted-foreground">
+                                                            {hint}
+                                                        </span>
+                                                    ) : null}
+                                                </button>
+                                            );
+                                        })
                                     )}
                                 </div>
                             </div>

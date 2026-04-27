@@ -59,6 +59,10 @@ function callContextSampleStorageKey(toolUuid: string): string {
     return `tool-http-call-context-json:${toolUuid}`;
 }
 
+function testPayloadStorageKey(toolUuid: string): string {
+    return `tool-http-test-payload:${toolUuid}`;
+}
+
 function collectTemplatePathsFromStrings(strings: string[]): string[] {
     const re = /\{\{\s*([^}]+?)\s*\}\}/g;
     const out = new Set<string>();
@@ -398,6 +402,32 @@ export default function ToolDetailPage() {
         }, 500);
         return () => window.clearTimeout(timer);
     }, [callContextTestJson, toolUuid]);
+
+    useEffect(() => {
+        if (typeof window === "undefined" || !toolUuid) return;
+        try {
+            const raw = window.localStorage.getItem(testPayloadStorageKey(toolUuid));
+            if (raw != null && raw.trim() !== "") {
+                setTestPayload(raw);
+            } else {
+                setTestPayload("{}");
+            }
+        } catch {
+            // ignore
+        }
+    }, [toolUuid]);
+
+    useEffect(() => {
+        if (typeof window === "undefined" || !toolUuid) return;
+        const timer = window.setTimeout(() => {
+            try {
+                window.localStorage.setItem(testPayloadStorageKey(toolUuid), testPayload);
+            } catch {
+                // ignore quota / private mode
+            }
+        }, 500);
+        return () => window.clearTimeout(timer);
+    }, [testPayload, toolUuid]);
 
     useEffect(() => {
         if (typeof window === "undefined" || !toolUuid) return;
