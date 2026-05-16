@@ -10,8 +10,15 @@
 !.yarn/releases
 !.yarn/versions
 
+# OpenAPI snapshot for offline `npm run generate-client` (scripts/generate_ui_openapi_client.sh)
+.openapi.snapshot.json
+
 # testing
 /coverage
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
 
 # next.js
 /.next/
@@ -40,6 +47,7 @@ next-env.d.ts
 # Sentry Config File
 .env.sentry-build-plugin
 
+.env
 .env.local
 
 # Local scratch (perf runs, ad-hoc exports)
