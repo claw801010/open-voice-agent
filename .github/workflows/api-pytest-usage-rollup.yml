@@ -1,14 +1,18 @@
-# WE-01-ORG-USAGE — usage rollups; WE-01-DATASTORE-INTEG — HTTP integration cache policy read stub.
-name: API — usage rollup tests
+# WE-01-ORG-USAGE — usage rollups; WE-01-DATASTORE-INTEG — HTTP cache stub; MK-01 — vertical-packs + install-from-catalog API + packaged graph CI, booking HTTP→analytics + redact + CSV units + span-table RLS integration + analytics/call-review route tests; MK-01-IMPORT-OPTIONS — n8n adapter unit.
+name: API — usage rollup + MK-01 analytics units
 
 on:
   push:
     paths:
       - "api/**"
+      - "catalog/vertical-packs.json"
+      - "catalog/packaged-workflows/**"
       - ".github/workflows/api-pytest-usage-rollup.yml"
   pull_request:
     paths:
       - "api/**"
+      - "catalog/vertical-packs.json"
+      - "catalog/packaged-workflows/**"
       - ".github/workflows/api-pytest-usage-rollup.yml"
 
 concurrency:
@@ -42,6 +46,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+
     defaults:
       run:
         working-directory: api
@@ -61,13 +68,42 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements.dev.txt
 
-      - name: Run usage rollup + HTTP cache policy stub tests
+      - name: Alembic upgrade head
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+        run: alembic upgrade head
+
+      - name: Run usage rollup, HTTP cache, MK-01 analytics units
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
           REDIS_URL: redis://127.0.0.1:6379/0
           LOG_LEVEL: WARNING
         run: |
           python -m pytest \
+            tests/test_vertical_packs_catalog.py \
+            tests/test_catalog_install.py \
+            tests/test_install_from_catalog_routes.py \
+            tests/test_workflow_n8n_import_route.py \
+            tests/test_make_scenario_adapter_unit.py \
+            tests/test_workflow_make_import_route.py \
+            tests/test_zapier_zap_adapter_unit.py \
+            tests/test_skill_packaged_adapter_unit.py \
+            tests/test_workflow_zapier_skill_import_route.py \
             tests/test_usage_daily_rollup_routes.py \
             tests/test_http_integration_cache_policy_route.py \
+            tests/test_http_tool_cache_policy_unit.py \
+            tests/test_stack_auth_team_permissions_url_unit.py \
+            tests/test_http_tool_response_storage_mode_unit.py \
+            tests/test_booking_http_mapping_analytics_span.py \
+            tests/test_analytics_redact_unit.py \
+            tests/test_analytics_calls_csv_unit.py \
+            tests/test_analytics_calls_routes.py \
+            tests/test_analytics_call_review_routes.py \
+            tests/test_analytics_dashboard_layout_routes.py \
+            tests/test_analytics_qm_export_routes.py \
+            tests/test_analytics_http_tool_span_rls_unit.py \
+            tests/test_analytics_http_tool_span_rls_integration.py \
+            tests/test_analytics_redaction_policy_routes.py \
+            tests/test_redaction_policy_rbac_unit.py \
+            tests/test_n8n_workflow_adapter_unit.py \
             -q --tb=short
