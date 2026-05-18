@@ -1,0 +1,1264 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Dograh Workflow Import API",
+    "description": "MK-01 external flow import routes (subset of Dograh API).",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development"
+    },
+    {
+      "url": "https://app.dograh.com",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/api/v1/workflow/import/n8n-packaged-draft": {
+      "post": {
+        "tags": [
+          "workflow-import"
+        ],
+        "summary": "N8N Packaged Draft",
+        "operationId": "n8n_packaged_draft_api_v1_workflow_import_n8n_packaged_draft_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/N8nPackagedDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/N8nPackagedDraftResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflow/import/n8n-and-create": {
+      "post": {
+        "tags": [
+          "workflow-import"
+        ],
+        "summary": "N8N And Create",
+        "operationId": "n8n_and_create_api_v1_workflow_import_n8n_and_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/N8nImportAndCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/N8nImportAndCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflow/import/make-packaged-draft": {
+      "post": {
+        "tags": [
+          "workflow-import"
+        ],
+        "summary": "Make Packaged Draft",
+        "operationId": "make_packaged_draft_api_v1_workflow_import_make_packaged_draft_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MakePackagedDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MakePackagedDraftResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflow/import/make-and-create": {
+      "post": {
+        "tags": [
+          "workflow-import"
+        ],
+        "summary": "Make And Create",
+        "operationId": "make_and_create_api_v1_workflow_import_make_and_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MakeImportAndCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MakeImportAndCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflow/import/zapier-packaged-draft": {
+      "post": {
+        "tags": [
+          "workflow-import"
+        ],
+        "summary": "Zapier Packaged Draft",
+        "operationId": "zapier_packaged_draft_api_v1_workflow_import_zapier_packaged_draft_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZapierPackagedDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZapierPackagedDraftResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflow/import/zapier-and-create": {
+      "post": {
+        "tags": [
+          "workflow-import"
+        ],
+        "summary": "Zapier And Create",
+        "operationId": "zapier_and_create_api_v1_workflow_import_zapier_and_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ZapierImportAndCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ZapierImportAndCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflow/import/skill-packaged-draft": {
+      "post": {
+        "tags": [
+          "workflow-import"
+        ],
+        "summary": "Skill Packaged Draft",
+        "operationId": "skill_packaged_draft_api_v1_workflow_import_skill_packaged_draft_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillPackagedDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillPackagedDraftResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workflow/import/skill-and-create": {
+      "post": {
+        "tags": [
+          "workflow-import"
+        ],
+        "summary": "Skill And Create",
+        "operationId": "skill_and_create_api_v1_workflow_import_skill_and_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillImportAndCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillImportAndCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CallDispositionCodes": {
+        "properties": {
+          "disposition_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Disposition Codes",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "CallDispositionCodes"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MakeImportAndCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "make_blueprint": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Make Blueprint"
+          },
+          "strict_http_only": {
+            "type": "boolean",
+            "title": "Strict Http Only",
+            "default": false
+          },
+          "emit_route_subflows": {
+            "type": "boolean",
+            "title": "Emit Route Subflows",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "make_blueprint"
+        ],
+        "title": "MakeImportAndCreateRequest"
+      },
+      "MakeImportAndCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "workflow_definition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Workflow Definition"
+          },
+          "current_definition_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Definition Id"
+          },
+          "template_context_variables": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Context Variables"
+          },
+          "call_disposition_codes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallDispositionCodes"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_runs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Runs"
+          },
+          "workflow_configurations": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Configurations"
+          },
+          "version_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Number"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "created_at",
+          "workflow_definition",
+          "current_definition_id"
+        ],
+        "title": "MakeImportAndCreateResponse"
+      },
+      "MakePackagedDraftRequest": {
+        "properties": {
+          "make_blueprint": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Make Blueprint",
+            "description": "Make scenario blueprint JSON."
+          },
+          "strict_http_only": {
+            "type": "boolean",
+            "title": "Strict Http Only",
+            "default": false
+          },
+          "emit_route_subflows": {
+            "type": "boolean",
+            "title": "Emit Route Subflows",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "make_blueprint"
+        ],
+        "title": "MakePackagedDraftRequest"
+      },
+      "MakePackagedDraftResponse": {
+        "properties": {
+          "workflow_definition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Workflow Definition"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workflow_definition"
+        ],
+        "title": "MakePackagedDraftResponse"
+      },
+      "N8nImportAndCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "n8n_export": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              }
+            ],
+            "title": "N8N Export"
+          },
+          "strict_http_only": {
+            "type": "boolean",
+            "title": "Strict Http Only",
+            "default": false
+          },
+          "emit_branch_subflows": {
+            "type": "boolean",
+            "title": "Emit Branch Subflows",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "n8n_export"
+        ],
+        "title": "N8nImportAndCreateRequest"
+      },
+      "N8nImportAndCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "workflow_definition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Workflow Definition"
+          },
+          "current_definition_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Definition Id"
+          },
+          "template_context_variables": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Context Variables"
+          },
+          "call_disposition_codes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallDispositionCodes"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_runs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Runs"
+          },
+          "workflow_configurations": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Configurations"
+          },
+          "version_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Number"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "created_at",
+          "workflow_definition",
+          "current_definition_id"
+        ],
+        "title": "N8nImportAndCreateResponse"
+      },
+      "N8nPackagedDraftRequest": {
+        "properties": {
+          "n8n_export": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              }
+            ],
+            "title": "N8N Export",
+            "description": "Raw n8n export; HTTP Request nodes become tool hints in a linear voice graph."
+          },
+          "strict_http_only": {
+            "type": "boolean",
+            "title": "Strict Http Only",
+            "description": "When true, reject exports containing non-HTTP nodes.",
+            "default": false
+          },
+          "emit_branch_subflows": {
+            "type": "boolean",
+            "title": "Emit Branch Subflows",
+            "description": "Map n8n IF/Switch branches to Dograh subflows.",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "n8n_export"
+        ],
+        "title": "N8nPackagedDraftRequest"
+      },
+      "N8nPackagedDraftResponse": {
+        "properties": {
+          "workflow_definition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Workflow Definition"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workflow_definition"
+        ],
+        "title": "N8nPackagedDraftResponse"
+      },
+      "SkillImportAndCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "skill_markdown": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Skill Markdown"
+          },
+          "skill_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill Title"
+          },
+          "max_prompt_chars": {
+            "type": "integer",
+            "maximum": 50000.0,
+            "minimum": 500.0,
+            "title": "Max Prompt Chars",
+            "default": 12000
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "skill_markdown"
+        ],
+        "title": "SkillImportAndCreateRequest"
+      },
+      "SkillImportAndCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "workflow_definition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Workflow Definition"
+          },
+          "current_definition_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Definition Id"
+          },
+          "template_context_variables": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Context Variables"
+          },
+          "call_disposition_codes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallDispositionCodes"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_runs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Runs"
+          },
+          "workflow_configurations": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Configurations"
+          },
+          "version_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Number"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "suggested_template_variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Suggested Template Variables"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "created_at",
+          "workflow_definition",
+          "current_definition_id"
+        ],
+        "title": "SkillImportAndCreateResponse"
+      },
+      "SkillPackagedDraftRequest": {
+        "properties": {
+          "skill_markdown": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Skill Markdown"
+          },
+          "skill_title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skill Title"
+          },
+          "max_prompt_chars": {
+            "type": "integer",
+            "maximum": 50000.0,
+            "minimum": 500.0,
+            "title": "Max Prompt Chars",
+            "default": 12000
+          }
+        },
+        "type": "object",
+        "required": [
+          "skill_markdown"
+        ],
+        "title": "SkillPackagedDraftRequest"
+      },
+      "SkillPackagedDraftResponse": {
+        "properties": {
+          "workflow_definition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Workflow Definition"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "suggested_template_variables": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Suggested Template Variables"
+          },
+          "agent_prompt_draft": {
+            "type": "string",
+            "title": "Agent Prompt Draft"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workflow_definition",
+          "agent_prompt_draft"
+        ],
+        "title": "SkillPackagedDraftResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ZapierImportAndCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "zapier_export": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Zapier Export"
+          },
+          "strict_http_only": {
+            "type": "boolean",
+            "title": "Strict Http Only",
+            "default": false
+          },
+          "emit_paths_subflows": {
+            "type": "boolean",
+            "title": "Emit Paths Subflows",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "zapier_export"
+        ],
+        "title": "ZapierImportAndCreateRequest"
+      },
+      "ZapierImportAndCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "workflow_definition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Workflow Definition"
+          },
+          "current_definition_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Definition Id"
+          },
+          "template_context_variables": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Context Variables"
+          },
+          "call_disposition_codes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CallDispositionCodes"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_runs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Runs"
+          },
+          "workflow_configurations": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workflow Configurations"
+          },
+          "version_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Number"
+          },
+          "version_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Status"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "created_at",
+          "workflow_definition",
+          "current_definition_id"
+        ],
+        "title": "ZapierImportAndCreateResponse"
+      },
+      "ZapierPackagedDraftRequest": {
+        "properties": {
+          "zapier_export": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Zapier Export",
+            "description": "Zapier import-subset JSON or platform nodes map."
+          },
+          "strict_http_only": {
+            "type": "boolean",
+            "title": "Strict Http Only",
+            "default": false
+          },
+          "emit_paths_subflows": {
+            "type": "boolean",
+            "title": "Emit Paths Subflows",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "zapier_export"
+        ],
+        "title": "ZapierPackagedDraftRequest"
+      },
+      "ZapierPackagedDraftResponse": {
+        "properties": {
+          "workflow_definition": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Workflow Definition"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workflow_definition"
+        ],
+        "title": "ZapierPackagedDraftResponse"
+      }
+    }
+  }
+}

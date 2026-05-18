@@ -1,0 +1,34 @@
+{
+  "title": "Fixture — Webhook, Code, HTTP POST",
+  "steps": [
+    {
+      "id": "1",
+      "step_type": "trigger",
+      "app": "webhooks",
+      "action": "catch_hook",
+      "title": "Catch Hook"
+    },
+    {
+      "id": "2",
+      "step_type": "action",
+      "app": "code",
+      "action": "run_javascript",
+      "title": "Normalize payload",
+      "params": {
+        "code": "return { customer_id: inputData.customer_id, ready: true };"
+      }
+    },
+    {
+      "id": "3",
+      "step_type": "action",
+      "app": "webhooks",
+      "action": "post",
+      "title": "Book slot",
+      "params": {
+        "url": "https://httpbin.org/post",
+        "method": "POST",
+        "body": "{}"
+      }
+    }
+  ]
+}

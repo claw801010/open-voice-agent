@@ -1,0 +1,33 @@
+{
+  "name": "Fixture — Make Set variables then HTTP",
+  "metadata": { "version": 1 },
+  "flow": [
+    {
+      "id": 10,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "mapper": {
+        "scope": "roundtrip",
+        "variables": [
+          { "name": "customer_id", "value": "{{1.phone}}" },
+          { "name": "timezone", "value": "America/New_York" }
+        ]
+      },
+      "metadata": { "designer": { "name": "Shape payload" } }
+    },
+    {
+      "id": 11,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "mapper": {
+        "url": "https://httpbin.org/post",
+        "method": "post",
+        "headers": [],
+        "qs": [],
+        "bodyType": "",
+        "parseResponse": true
+      },
+      "metadata": { "designer": { "name": "Book slot" } }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Short greeting for {{store_name}}; offer order status, returns, hours, or booking help.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "WISMO & pickup booking",
+        "prompt": "You represent {{store_name}}. Help with order status (WISMO), return windows, and store hours using policy-safe answers.\n\nWhen the caller wants an in-store service, styling appointment, or pickup window: capture intent, preferred date/time range, and location (hint code {{pickup_location_code}}). If an HTTP tool is attached (e.g. reserve_pickup_slot) pointing at {{scheduling_api_base_url}}, invoke it after you have structured slot preferences — do not promise a reservation until the tool succeeds. For order lookups, only use connected OMS tools with buyer credentials. Escalate to {{support_email}} when needed.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank them; confirm any next step or follow-up channel.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

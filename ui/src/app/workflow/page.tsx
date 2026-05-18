@@ -3,7 +3,9 @@ import { Suspense } from 'react';
 import { getWorkflowsApiV1WorkflowFetchGet } from '@/client/sdk.gen';
 import type { WorkflowListResponse } from '@/client/types.gen';
 import { CreateWorkflowButton } from "@/components/workflow/CreateWorkflowButton";
+import { ImportExternalWorkflowButton } from '@/components/workflow/ImportExternalWorkflowButton';
 import { UploadWorkflowButton } from '@/components/workflow/UploadWorkflowButton';
+import { WorkflowGetStartedPanel } from '@/components/workflow/WorkflowGetStartedPanel';
 import { WorkflowTable } from "@/components/workflow/WorkflowTable";
 import { getServerAccessToken, getServerAuthProvider } from '@/lib/auth/server';
 import logger from '@/lib/logger';
@@ -93,11 +95,13 @@ async function PageContent() {
 
     return (
         <div className="container mx-auto px-4 py-8">
+            <WorkflowGetStartedPanel />
             {/* Your Workflows Section */}
             <div className="mb-6">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Your Agents</h1>
                     <div className="flex gap-2">
+                        <ImportExternalWorkflowButton />
                         <UploadWorkflowButton />
                         <CreateWorkflowButton />
                     </div>

@@ -1,0 +1,63 @@
+{
+  "name": "Fixture — Set + Code before HTTP",
+  "meta": { "instanceId": "fixture-catalog" },
+  "nodes": [
+    {
+      "id": "set-1",
+      "name": "Shape payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [300, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "customer_id",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "timezone",
+              "value": "America/New_York",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "code-1",
+      "name": "Normalize slot",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn items.map(i => ({ json: { ...i.json, slot: 'confirmed' } }));"
+      }
+    },
+    {
+      "id": "http-1",
+      "name": "Book slot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [660, 300],
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://httpbin.org/post",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Shape payload": {
+      "main": [[{ "node": "Normalize slot", "type": "main", "index": 0 }]]
+    },
+    "Normalize slot": {
+      "main": [[{ "node": "Book slot", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {}
+}

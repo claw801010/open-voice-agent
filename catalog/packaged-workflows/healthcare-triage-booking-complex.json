@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Greet briefly; explain you can help with symptom questions, routing, or scheduling next steps for {{clinic_name}}.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Triage & scheduling",
+        "prompt": "After-hours clinic assistant for {{clinic_name}}. Minimize PHI; follow org policies.\n\nScreen symptoms only as needed to route safely. When the caller wants to book, reschedule, or confirm a visit: collect visit type (default hint: {{preferred_visit_type}}), location or provider preference if relevant, and a time window. If your workspace has an HTTP tool (e.g. book_slot) wired to {{scheduling_api_base_url}}, call it only after you have structured preferences — never claim the appointment is confirmed until the tool returns success. Escalate emergencies per policy. Reference support at {{support_phone}} when appropriate.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; remind them of next steps or {{support_phone}} if needed.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When complete or escalated" }
+    }
+  ]
+}

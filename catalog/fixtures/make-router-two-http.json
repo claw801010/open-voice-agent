@@ -1,0 +1,51 @@
+{
+  "name": "Fixture — Make Router with HTTP on two routes",
+  "metadata": { "version": 1 },
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "mapper": null,
+      "metadata": { "designer": { "name": "Route booking", "x": 0, "y": 0 } },
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 2,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "mapper": {
+                "url": "https://httpbin.org/post",
+                "method": "post",
+                "headers": [],
+                "qs": [],
+                "bodyType": "",
+                "parseResponse": true
+              },
+              "metadata": { "designer": { "name": "Book slot" } }
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 3,
+              "module": "http:ActionSendData",
+              "version": 3,
+              "mapper": {
+                "url": "https://httpbin.org/get",
+                "method": "get",
+                "headers": [],
+                "qs": [],
+                "bodyType": "",
+                "parseResponse": true
+              },
+              "metadata": { "designer": { "name": "Log decline" } }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

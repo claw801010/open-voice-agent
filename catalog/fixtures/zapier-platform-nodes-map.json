@@ -1,0 +1,21 @@
+{
+  "title": "Fixture — Zapier platform-style nodes map",
+  "nodes": {
+    "1": {
+      "type": "trigger",
+      "app": "webhooks",
+      "action": "catch_hook",
+      "title": "Catch Hook"
+    },
+    "2": {
+      "type": "action",
+      "app": "webhooks",
+      "action": "post",
+      "title": "Book slot",
+      "params": {
+        "url": "https://httpbin.org/post",
+        "method": "POST"
+      }
+    }
+  }
+}

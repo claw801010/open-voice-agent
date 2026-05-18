@@ -3,7 +3,7 @@ import re
 import uuid
 from datetime import date, datetime
 from pathlib import Path
-from typing import List, Literal, Optional
+from typing import Any, List, Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -17,6 +17,25 @@ from api.db.models import UserModel
 from api.db.workflow_template_client import WorkflowTemplateClient
 from api.enums import CallType, PostHogEvent, StorageBackend
 from api.schemas.workflow import WorkflowRunResponseSchema
+from api.schemas.workflow_import import (
+    MakeImportAndCreateRequest,
+    MakeImportAndCreateResponse,
+    MakePackagedDraftRequest,
+    MakePackagedDraftResponse,
+    N8nImportAndCreateRequest,
+    N8nImportAndCreateResponse,
+    N8nPackagedDraftRequest,
+    N8nPackagedDraftResponse,
+    SkillImportAndCreateRequest,
+    SkillImportAndCreateResponse,
+    SkillPackagedDraftRequest,
+    SkillPackagedDraftResponse,
+    WorkflowResponse,
+    ZapierImportAndCreateRequest,
+    ZapierImportAndCreateResponse,
+    ZapierPackagedDraftRequest,
+    ZapierPackagedDraftResponse,
+)
 from api.services.auth.depends import get_user
 from api.services.campaign.report import generate_workflow_report_csv
 from api.services.configuration.check_validity import UserConfigurationValidator
@@ -47,6 +66,29 @@ from api.schemas.usage_rollup import (
     WeeklyRollupResponse,
 )
 from api.services.workflow.workflow import WorkflowGraph
+from api.utils.catalog_install import resolve_packaged_definition_ref
+from api.utils.make_scenario_adapter import (
+    MakeScenarioExportError,
+    MakeUnsupportedModulesError,
+    draft_packaged_workflow_from_make,
+    normalize_make_export,
+)
+from api.utils.skill_packaged_adapter import (
+    SkillImportError,
+    draft_packaged_workflow_from_skill,
+)
+from api.utils.zapier_zap_adapter import (
+    ZapierUnsupportedStepsError,
+    ZapierZapExportError,
+    draft_packaged_workflow_from_zapier,
+    normalize_zapier_export,
+)
+from api.utils.n8n_workflow_adapter import (
+    N8nUnsupportedNodesError,
+    N8nWorkflowExportError,
+    draft_packaged_workflow_from_n8n,
+    normalize_n8n_export,
+)
 from api.utils.usage_rollup_range import parse_utc_inclusive_date_range
 
 
@@ -117,21 +159,6 @@ class CallDispositionCodes(BaseModel):
     disposition_codes: list[str] = []
 
 
-class WorkflowResponse(BaseModel):
-    id: int
-    name: str
-    status: str
-    created_at: datetime
-    workflow_definition: dict
-    current_definition_id: int | None
-    template_context_variables: dict | None = None
-    call_disposition_codes: CallDispositionCodes | None = None
-    total_runs: int | None = None
-    workflow_configurations: dict | None = None
-    version_number: int | None = None
-    version_status: str | None = None
-
-
 class WorkflowListResponse(BaseModel):
     """Lightweight response for workflow listings (excludes large fields)."""
 
@@ -164,6 +191,62 @@ class CreateWorkflowRequest(BaseModel):
     workflow_definition: dict
 
 
+def _definition_from_n8n_import(
+    n8n_export: dict[str, Any] | list[Any],
+    *,
+    strict_http_only: bool,
+    emit_branch_subflows: bool = True,
+) -> tuple[dict[str, Any], list[str]]:
+    wf = normalize_n8n_export(n8n_export)
+    return draft_packaged_workflow_from_n8n(
+        wf,
+        strict_http_only=strict_http_only,
+        emit_branch_subflows=emit_branch_subflows,
+    )
+
+
+def _definition_from_make_import(
+    make_blueprint: dict[str, Any],
+    *,
+    strict_http_only: bool,
+    emit_route_subflows: bool = True,
+) -> tuple[dict[str, Any], list[str]]:
+    bp = normalize_make_export(make_blueprint)
+    return draft_packaged_workflow_from_make(
+        bp,
+        strict_http_only=strict_http_only,
+        emit_route_subflows=emit_route_subflows,
+    )
+
+
+def _definition_from_zapier_import(
+    zapier_export: dict[str, Any],
+    *,
+    strict_http_only: bool,
+    emit_paths_subflows: bool = True,
+) -> tuple[dict[str, Any], list[str]]:
+    zap = normalize_zapier_export(zapier_export)
+    return draft_packaged_workflow_from_zapier(
+        zap,
+        strict_http_only=strict_http_only,
+        emit_paths_subflows=emit_paths_subflows,
+    )
+
+
+def _definition_from_skill_import(
+    skill_markdown: str,
+    *,
+    skill_title: str | None,
+    max_prompt_chars: int,
+) -> tuple[dict[str, Any], list[str], list[str]]:
+    graph, warnings, suggested = draft_packaged_workflow_from_skill(
+        skill_markdown,
+        skill_title=skill_title,
+        max_prompt_chars=max_prompt_chars,
+    )
+    return graph, warnings, suggested
+
+
 class DuplicateTemplateRequest(BaseModel):
     template_id: int
     workflow_name: str
@@ -175,6 +258,12 @@ class DuplicateTemplateRequest(BaseModel):
 class InstallFromCatalogRequest(BaseModel):
     slug: str = Field(..., min_length=1, max_length=128)
     workflow_name: str = Field(..., min_length=1, max_length=200)
+    variant_id: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=64,
+        description="Optional; must match a variant_id in the pack's workflow_variants (catalog/vertical-packs.json).",
+    )
 
 
 class UpdateWorkflowRequest(BaseModel):
@@ -348,6 +437,339 @@ async def create_workflow(
         "call_disposition_codes": workflow.call_disposition_codes,
         "workflow_configurations": workflow.workflow_configurations,
     }
+
+
+@router.post("/import/n8n-packaged-draft")
+async def import_n8n_packaged_draft(
+    request: N8nPackagedDraftRequest,
+    user: UserModel = Depends(get_user),
+) -> N8nPackagedDraftResponse:
+    """
+    Convert an n8n export into a Dograh packaged-style workflow_definition.
+
+    By default, non-HTTP nodes are skipped with warnings. Set ``strict_http_only`` to reject them.
+    Does not create a workflow row — pair with ``POST /create/definition`` or the catalog install path.
+    """
+    _ = user
+    try:
+        definition, warnings = _definition_from_n8n_import(
+            request.n8n_export,
+            strict_http_only=request.strict_http_only,
+            emit_branch_subflows=request.emit_branch_subflows,
+        )
+    except N8nUnsupportedNodesError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except N8nWorkflowExportError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return N8nPackagedDraftResponse(
+        workflow_definition=definition,
+        warnings=warnings,
+    )
+
+
+@router.post("/import/n8n-and-create")
+async def import_n8n_and_create_workflow(
+    request: N8nImportAndCreateRequest,
+    user: UserModel = Depends(get_user),
+) -> N8nImportAndCreateResponse:
+    """
+    Convert an n8n export into a workflow_definition and create a workflow in the caller's org.
+
+    Same n8n rules as ``/import/n8n-packaged-draft``; returns the new workflow row plus import warnings.
+    """
+    try:
+        definition, warnings = _definition_from_n8n_import(
+            request.n8n_export,
+            strict_http_only=request.strict_http_only,
+            emit_branch_subflows=request.emit_branch_subflows,
+        )
+    except N8nUnsupportedNodesError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except N8nWorkflowExportError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    workflow = await db_client.create_workflow(
+        request.name,
+        definition,
+        user.id,
+        user.selected_organization_id,
+    )
+
+    capture_event(
+        distinct_id=str(user.provider_id),
+        event=PostHogEvent.WORKFLOW_CREATED,
+        properties={
+            "workflow_id": workflow.id,
+            "workflow_name": workflow.name,
+            "source": "n8n_import",
+            "organization_id": user.selected_organization_id,
+        },
+    )
+
+    trigger_paths = extract_trigger_paths(definition)
+    if trigger_paths:
+        await db_client.sync_triggers_for_workflow(
+            workflow_id=workflow.id,
+            organization_id=user.selected_organization_id,
+            trigger_paths=trigger_paths,
+        )
+
+    return N8nImportAndCreateResponse(
+        id=workflow.id,
+        name=workflow.name,
+        status=workflow.status,
+        created_at=workflow.created_at,
+        workflow_definition=mask_workflow_definition(definition),
+        current_definition_id=workflow.current_definition_id,
+        template_context_variables=workflow.template_context_variables,
+        call_disposition_codes=workflow.call_disposition_codes,
+        workflow_configurations=workflow.workflow_configurations,
+        warnings=warnings,
+    )
+
+
+@router.post("/import/make-packaged-draft")
+async def import_make_packaged_draft(
+    request: MakePackagedDraftRequest,
+    user: UserModel = Depends(get_user),
+) -> MakePackagedDraftResponse:
+    """Convert a Make scenario blueprint into a Dograh packaged-style workflow_definition."""
+    _ = user
+    try:
+        definition, warnings = _definition_from_make_import(
+            request.make_blueprint,
+            strict_http_only=request.strict_http_only,
+            emit_route_subflows=request.emit_route_subflows,
+        )
+    except MakeUnsupportedModulesError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except MakeScenarioExportError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return MakePackagedDraftResponse(
+        workflow_definition=definition,
+        warnings=warnings,
+    )
+
+
+@router.post("/import/make-and-create")
+async def import_make_and_create_workflow(
+    request: MakeImportAndCreateRequest,
+    user: UserModel = Depends(get_user),
+) -> MakeImportAndCreateResponse:
+    """Convert a Make blueprint and create a workflow in the caller's org."""
+    try:
+        definition, warnings = _definition_from_make_import(
+            request.make_blueprint,
+            strict_http_only=request.strict_http_only,
+            emit_route_subflows=request.emit_route_subflows,
+        )
+    except MakeUnsupportedModulesError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except MakeScenarioExportError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    workflow = await db_client.create_workflow(
+        request.name,
+        definition,
+        user.id,
+        user.selected_organization_id,
+    )
+
+    capture_event(
+        distinct_id=str(user.provider_id),
+        event=PostHogEvent.WORKFLOW_CREATED,
+        properties={
+            "workflow_id": workflow.id,
+            "workflow_name": workflow.name,
+            "source": "make_import",
+            "organization_id": user.selected_organization_id,
+        },
+    )
+
+    trigger_paths = extract_trigger_paths(definition)
+    if trigger_paths:
+        await db_client.sync_triggers_for_workflow(
+            workflow_id=workflow.id,
+            organization_id=user.selected_organization_id,
+            trigger_paths=trigger_paths,
+        )
+
+    return MakeImportAndCreateResponse(
+        id=workflow.id,
+        name=workflow.name,
+        status=workflow.status,
+        created_at=workflow.created_at,
+        workflow_definition=mask_workflow_definition(definition),
+        current_definition_id=workflow.current_definition_id,
+        template_context_variables=workflow.template_context_variables,
+        call_disposition_codes=workflow.call_disposition_codes,
+        workflow_configurations=workflow.workflow_configurations,
+        warnings=warnings,
+    )
+
+
+@router.post("/import/zapier-packaged-draft")
+async def import_zapier_packaged_draft(
+    request: ZapierPackagedDraftRequest,
+    user: UserModel = Depends(get_user),
+) -> ZapierPackagedDraftResponse:
+    """Convert a Zapier import-subset export into a packaged-style workflow_definition."""
+    _ = user
+    try:
+        definition, warnings = _definition_from_zapier_import(
+            request.zapier_export,
+            strict_http_only=request.strict_http_only,
+            emit_paths_subflows=request.emit_paths_subflows,
+        )
+    except ZapierUnsupportedStepsError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except ZapierZapExportError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return ZapierPackagedDraftResponse(
+        workflow_definition=definition,
+        warnings=warnings,
+    )
+
+
+@router.post("/import/zapier-and-create")
+async def import_zapier_and_create_workflow(
+    request: ZapierImportAndCreateRequest,
+    user: UserModel = Depends(get_user),
+) -> ZapierImportAndCreateResponse:
+    """Convert a Zapier export and create a workflow in the caller's org."""
+    try:
+        definition, warnings = _definition_from_zapier_import(
+            request.zapier_export,
+            strict_http_only=request.strict_http_only,
+            emit_paths_subflows=request.emit_paths_subflows,
+        )
+    except ZapierUnsupportedStepsError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except ZapierZapExportError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    workflow = await db_client.create_workflow(
+        request.name,
+        definition,
+        user.id,
+        user.selected_organization_id,
+    )
+
+    capture_event(
+        distinct_id=str(user.provider_id),
+        event=PostHogEvent.WORKFLOW_CREATED,
+        properties={
+            "workflow_id": workflow.id,
+            "workflow_name": workflow.name,
+            "source": "zapier_import",
+            "organization_id": user.selected_organization_id,
+        },
+    )
+
+    trigger_paths = extract_trigger_paths(definition)
+    if trigger_paths:
+        await db_client.sync_triggers_for_workflow(
+            workflow_id=workflow.id,
+            organization_id=user.selected_organization_id,
+            trigger_paths=trigger_paths,
+        )
+
+    return ZapierImportAndCreateResponse(
+        id=workflow.id,
+        name=workflow.name,
+        status=workflow.status,
+        created_at=workflow.created_at,
+        workflow_definition=mask_workflow_definition(definition),
+        current_definition_id=workflow.current_definition_id,
+        template_context_variables=workflow.template_context_variables,
+        call_disposition_codes=workflow.call_disposition_codes,
+        workflow_configurations=workflow.workflow_configurations,
+        warnings=warnings,
+    )
+
+
+@router.post("/import/skill-packaged-draft")
+async def import_skill_packaged_draft(
+    request: SkillPackagedDraftRequest,
+    user: UserModel = Depends(get_user),
+) -> SkillPackagedDraftResponse:
+    """Distill agent skill markdown into a packaged-style workflow_definition."""
+    _ = user
+    try:
+        definition, warnings, suggested = _definition_from_skill_import(
+            request.skill_markdown,
+            skill_title=request.skill_title,
+            max_prompt_chars=request.max_prompt_chars,
+        )
+    except SkillImportError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    agent_prompt = next(
+        n["data"]["prompt"]
+        for n in definition["nodes"]
+        if n.get("type") == "agentNode"
+    )
+    return SkillPackagedDraftResponse(
+        workflow_definition=definition,
+        warnings=warnings,
+        suggested_template_variables=suggested,
+        agent_prompt_draft=agent_prompt,
+    )
+
+
+@router.post("/import/skill-and-create")
+async def import_skill_and_create_workflow(
+    request: SkillImportAndCreateRequest,
+    user: UserModel = Depends(get_user),
+) -> SkillImportAndCreateResponse:
+    """Distill skill markdown and create a workflow in the caller's org."""
+    try:
+        definition, warnings, suggested = _definition_from_skill_import(
+            request.skill_markdown,
+            skill_title=request.skill_title,
+            max_prompt_chars=request.max_prompt_chars,
+        )
+    except SkillImportError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    workflow = await db_client.create_workflow(
+        request.name,
+        definition,
+        user.id,
+        user.selected_organization_id,
+    )
+
+    capture_event(
+        distinct_id=str(user.provider_id),
+        event=PostHogEvent.WORKFLOW_CREATED,
+        properties={
+            "workflow_id": workflow.id,
+            "workflow_name": workflow.name,
+            "source": "skill_import",
+            "organization_id": user.selected_organization_id,
+        },
+    )
+
+    trigger_paths = extract_trigger_paths(definition)
+    if trigger_paths:
+        await db_client.sync_triggers_for_workflow(
+            workflow_id=workflow.id,
+            organization_id=user.selected_organization_id,
+            trigger_paths=trigger_paths,
+        )
+
+    return SkillImportAndCreateResponse(
+        id=workflow.id,
+        name=workflow.name,
+        status=workflow.status,
+        created_at=workflow.created_at,
+        workflow_definition=mask_workflow_definition(definition),
+        current_definition_id=workflow.current_definition_id,
+        template_context_variables=workflow.template_context_variables,
+        call_disposition_codes=workflow.call_disposition_codes,
+        workflow_configurations=workflow.workflow_configurations,
+        warnings=warnings,
+        suggested_template_variables=suggested,
+    )
 
 
 @router.post("/create/template")
@@ -1207,13 +1629,23 @@ async def install_workflow_from_catalog(
     default_vars = pack.get("default_template_variables") or {}
 
     if wt.get("source") == "packaged_definition" and wt.get("packaged_definition_ref"):
-        workflow_def = _load_packaged_workflow_json(wt["packaged_definition_ref"])
+        try:
+            packaged_name, catalog_variant_id = resolve_packaged_definition_ref(
+                pack,
+                template_packaged_ref=wt["packaged_definition_ref"],
+                variant_id=request.variant_id,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        workflow_def = _load_packaged_workflow_json(packaged_name)
         workflow_def = regenerate_trigger_uuids(workflow_def)
         mk01 = {
             "installation_locked": True,
             "catalog_slug": pack["slug"],
             "source": "packaged_definition",
         }
+        if catalog_variant_id:
+            mk01["catalog_variant_id"] = catalog_variant_id
         workflow = await db_client.create_workflow(
             request.workflow_name,
             workflow_def,
@@ -1230,16 +1662,19 @@ async def install_workflow_from_catalog(
                     organization_id=user.selected_organization_id,
                     trigger_paths=trigger_paths,
                 )
+        ph_props = {
+            "workflow_id": workflow.id,
+            "workflow_name": workflow.name,
+            "source": "catalog_pack",
+            "catalog_slug": pack["slug"],
+            "organization_id": user.selected_organization_id,
+        }
+        if catalog_variant_id:
+            ph_props["catalog_variant_id"] = catalog_variant_id
         capture_event(
             distinct_id=str(user.provider_id),
             event=PostHogEvent.WORKFLOW_CREATED,
-            properties={
-                "workflow_id": workflow.id,
-                "workflow_name": workflow.name,
-                "source": "catalog_pack",
-                "catalog_slug": pack["slug"],
-                "organization_id": user.selected_organization_id,
-            },
+            properties=ph_props,
         )
         return {
             "id": workflow.id,

@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief intro: trial check-in from {{product_name}}; stay concise and respectful of time.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "PQL & demo booking",
+        "prompt": "Conduct a short trial nurture / PQL conversation for {{product_name}}. Qualify fit: goals, role, timeline, blockers. Reference CRM owner handoff {{crm_owner_email}} only as provided.\n\nWhen the caller wants a sales demo, onboarding call, or CS escalation: capture timezone, preferred windows, and meeting length (default {{demo_duration_minutes}} minutes). If an HTTP tool (e.g. book_demo) is wired to {{scheduling_api_base_url}}, call it once you have structured preferences — do not assert the meeting is booked until the tool returns success. Keep data minimization in mind.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank them; recap agreed next steps.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After intro" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When qualification complete" }
+    }
+  ]
+}

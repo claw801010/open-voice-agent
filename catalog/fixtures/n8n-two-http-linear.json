@@ -1,0 +1,36 @@
+{
+  "name": "Fixture — two HTTP Request nodes (connection order)",
+  "meta": { "instanceId": "fixture-catalog" },
+  "nodes": [
+    {
+      "id": "http-b",
+      "name": "Fetch B",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [520, 300],
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://httpbin.org/post",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-a",
+      "name": "Fetch A",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [420, 300],
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "https://httpbin.org/get",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Fetch A": {
+      "main": [[{ "node": "Fetch B", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {}
+}

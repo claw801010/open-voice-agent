@@ -1,0 +1,46 @@
+{
+  "title": "Fixture — Zapier Paths with HTTP on two branches",
+  "steps": [
+    {
+      "id": "10",
+      "step_type": "branch",
+      "app": "paths",
+      "action": "split",
+      "title": "Route booking",
+      "branches": [
+        {
+          "title": "book",
+          "steps": [
+            {
+              "id": "11",
+              "step_type": "action",
+              "app": "webhooks",
+              "action": "post",
+              "title": "Book slot",
+              "params": {
+                "url": "https://httpbin.org/post",
+                "method": "POST"
+              }
+            }
+          ]
+        },
+        {
+          "title": "decline",
+          "steps": [
+            {
+              "id": "12",
+              "step_type": "action",
+              "app": "webhooks",
+              "action": "get",
+              "title": "Log decline",
+              "params": {
+                "url": "https://httpbin.org/get",
+                "method": "GET"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

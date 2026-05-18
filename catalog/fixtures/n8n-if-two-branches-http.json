@@ -1,0 +1,53 @@
+{
+  "name": "Fixture — IF node with HTTP on true/false branches",
+  "meta": { "instanceId": "fixture-catalog" },
+  "nodes": [
+    {
+      "id": "if-1",
+      "name": "Route booking",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [400, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "version": 2 },
+          "combinator": "and",
+          "conditions": []
+        }
+      }
+    },
+    {
+      "id": "http-true",
+      "name": "Book slot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [620, 200],
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://httpbin.org/post",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-false",
+      "name": "Log decline",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [620, 420],
+      "parameters": {
+        "requestMethod": "GET",
+        "url": "https://httpbin.org/get",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Route booking": {
+      "main": [
+        [{ "node": "Book slot", "type": "main", "index": 0 }],
+        [{ "node": "Log decline", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "pinData": {}
+}

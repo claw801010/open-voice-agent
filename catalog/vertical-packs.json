@@ -1,10 +1,10 @@
 {
-  "catalog_version": 2,
-  "description": "Canonical vertical pack metadata for MK-01 marketplace work. Packaged graphs live under catalog/packaged-workflows/; install uses POST /api/v1/workflow/install-from-catalog. Each pack has pack_semver (see catalog/README.md).",
+  "catalog_version": 4,
+  "description": "Canonical vertical pack metadata for MK-01 marketplace work. Packaged graphs live under catalog/packaged-workflows/; install uses POST /api/v1/workflow/install-from-catalog. Each pack has pack_semver (see catalog/README.md). Optional workflow_variants list simple vs complex graphs for the same vertical (complex = booking/API-ready prompts); default install uses workflow_template.packaged_definition_ref.",
   "packs": [
     {
       "slug": "healthcare-clinic-screening",
-      "pack_semver": "1.0.1",
+      "pack_semver": "1.2.0",
       "industry": "Healthcare / clinics",
       "display_name": "Patient screening & triage",
       "summary": "After-hours and overflow voice flow for symptom triage, scheduling handoff, and scripted guardrails—designed for PHI minimization in the agent layer.",
@@ -12,7 +12,7 @@
         "screening triage",
         "appointment confirm/remind",
         "post-visit follow-up prompts",
-        "provider or visit booking with scheduling API (roadmap — see catalog/PREBUILD_VERTICAL_ROADMAP.md)"
+        "provider or visit booking with scheduling API (complex variant + HTTP tool after install)"
       ],
       "languages": ["en-US", "es-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -24,14 +24,38 @@
         "source": "packaged_definition",
         "packaged_definition_ref": "healthcare-clinic-screening.json"
       },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Linear triage (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "healthcare-clinic-screening.json",
+          "description": "Minimal start → triage → end graph for fast compliance demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Booking-ready prompts",
+          "complexity": "complex",
+          "packaged_definition_ref": "healthcare-triage-booking-complex.json",
+          "description": "Richer scheduling narrative; import JSON via POST /workflow/create/definition or swap packaged ref before install when supported. Add HTTP book_slot tool after install; map response_mapping to analytics."
+        }
+      ],
       "default_template_variables": {
         "clinic_name": "Your Clinic Name",
-        "support_phone": "+1-555-0100"
-      }
+        "support_phone": "+1-555-0100",
+        "scheduling_api_base_url": "https://scheduling.example.com/api/v1",
+        "preferred_visit_type": "primary_care",
+        "clinic_location_id": "demo-location-1"
+      },
+      "analytics_hooks": [
+        "After catalog install, workflows expose MK-01 catalog_slug — filter /analytics and /analytics/calls by that slug.",
+        "Prove triage → handoff with outcome_key in gathered_context and HTTP tool mapped_data on call detail.",
+        "Complex variant + HTTP tool: filter tool_name for book_slot; export CSV for booking funnel QA."
+      ]
     },
     {
       "slug": "retail-wismo-faq",
-      "pack_semver": "1.0.1",
+      "pack_semver": "1.2.0",
       "industry": "Retail / e-commerce",
       "display_name": "WISMO & store policy FAQ",
       "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk—reduces tier-1 load while staying policy-safe.",
@@ -39,7 +63,7 @@
         "where is my order (WISMO)",
         "return window FAQ",
         "store hours and pickup",
-        "in-store service or pickup-window booking (roadmap — see catalog/PREBUILD_VERTICAL_ROADMAP.md)"
+        "in-store service or pickup-window booking (complex variant + HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -51,14 +75,37 @@
         "source": "packaged_definition",
         "packaged_definition_ref": "retail-wismo-faq.json"
       },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "WISMO FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "retail-wismo-faq.json",
+          "description": "Minimal FAQ flow for quick demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Pickup / service booking prompts",
+          "complexity": "complex",
+          "packaged_definition_ref": "retail-wismo-booking-complex.json",
+          "description": "Adds scheduling language for pickup windows; pair with HTTP reserve_pickup_slot and OMS tools when creds exist."
+        }
+      ],
       "default_template_variables": {
         "store_name": "Your Store",
-        "support_email": "support@example.com"
-      }
+        "support_email": "support@example.com",
+        "scheduling_api_base_url": "https://appointments.retail.example.com/v1",
+        "pickup_location_code": "STORE-DEMO-01"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug retail-wismo-faq after install; compare tool_names (e.g. OMS) across calls.",
+        "Complex variant: track reserve_pickup_slot vs pure WISMO in tool_names and outcomes.",
+        "CSV export on call list supports QM sampling for WISMO vs booking funnel experiments."
+      ]
     },
     {
       "slug": "b2b-saas-trial-nurture",
-      "pack_semver": "1.0.1",
+      "pack_semver": "1.2.0",
       "industry": "B2B SaaS",
       "display_name": "Trial nurture & PQL voice qual",
       "summary": "Short qualification and onboarding check-in calls with CRM-friendly variables—pipeline velocity without full SDR staffing.",
@@ -66,7 +113,7 @@
         "trial nurture",
         "PQL voice qualification",
         "onboarding check-in",
-        "demo or customer-success calendar booking (roadmap — see catalog/PREBUILD_VERTICAL_ROADMAP.md)"
+        "demo or customer-success calendar booking (complex variant + HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -78,10 +125,33 @@
         "source": "packaged_definition",
         "packaged_definition_ref": "b2b-saas-trial-nurture.json"
       },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Trial nurture (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "b2b-saas-trial-nurture.json",
+          "description": "Linear qualification flow."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Demo / CS booking prompts",
+          "complexity": "complex",
+          "packaged_definition_ref": "b2b-trial-booking-complex.json",
+          "description": "Emphasizes calendar booking; add HTTP book_demo when buyer connects calendar API."
+        }
+      ],
       "default_template_variables": {
         "product_name": "Your Product",
-        "crm_owner_email": "owner@example.com"
-      }
+        "crm_owner_email": "owner@example.com",
+        "scheduling_api_base_url": "https://calendar.example.com/api",
+        "demo_duration_minutes": "30"
+      },
+      "analytics_hooks": [
+        "Filter by slug b2b-saas-trial-nurture for PQL → demo narratives; tie CRM stage variables to outcome_key.",
+        "Complex variant: tool_names book_demo / calendar tools vs nurture-only calls.",
+        "Export CSV from call list for trial-stage cohort reviews with disposition and outcome columns."
+      ]
     }
   ]
 }
