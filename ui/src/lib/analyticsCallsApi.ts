@@ -1,166 +1,57 @@
 /**
- * Call analytics REST (MK-01-ANALYTICS-VERTICAL) until OpenAPI client is regenerated.
- * @see api/routes/analytics.py
+ * Call analytics REST (MK-01) — typed SDK from full OpenAPI snapshot.
+ * Regenerate: `bash scripts/generate_ui_openapi_client.sh --full --offline`
  */
-import { getBackendPublicBaseUrl } from '@/lib/apiClient';
+import { createClient } from '@/client/client';
+import {
+    exportAnalyticsCallsCsvApiV1AnalyticsCallsExportGet,
+    getAnalyticsCallApiV1AnalyticsCallsCallIdGet,
+    getAnalyticsDashboardLayoutApiV1AnalyticsDashboardLayoutGet,
+    getAnalyticsInsightsApiV1AnalyticsInsightsGet,
+    getAnalyticsQmExportScheduleApiV1AnalyticsQmExportScheduleGet,
+    getAnalyticsQmScorecardApiV1AnalyticsQmScorecardGet,
+    getAnalyticsRedactionPolicyApiV1AnalyticsRedactionPolicyGet,
+    listAnalyticsCallsApiV1AnalyticsCallsGet,
+    putAnalyticsDashboardLayoutApiV1AnalyticsDashboardLayoutPut,
+    putAnalyticsQmExportScheduleApiV1AnalyticsQmExportSchedulePut,
+    putAnalyticsQmScorecardApiV1AnalyticsQmScorecardPut,
+    putAnalyticsRedactionPolicyApiV1AnalyticsRedactionPolicyPut,
+} from '@/client/sdk.gen';
+import type {
+    AnalyticsRedactionPolicyResponse,
+    CallDetailResponse,
+    CallListItemResponse,
+    CallListPageResponse,
+    CallMetricsResponse,
+    ContainmentMixItemResponse,
+    HttpToolSpanSummaryResponse,
+    InsightsQualitySummaryResponse,
+    InsightsResponse,
+    OutcomeMixItemResponse,
+    QaQmSummaryResponse,
+    QmExportLastRunResponse,
+    QmExportScheduleGetResponse,
+    QmExportScheduleSettingsResponse,
+    QmScorecardPutBody,
+    ToolHealthItemResponse,
+    ToolNameMixItemResponse,
+    ToolSpanResponse,
+} from '@/client/types.gen';
+import { createClientConfig, setupAuthInterceptor } from '@/lib/apiClient';
 
-export type AnalyticsCallListItem = {
-    call_id: string;
-    workflow_id: number;
-    workflow_slug: string | null;
-    /** MK-01 `workflow_configurations.mk01.catalog_variant_id` when set at install */
-    catalog_variant_id?: string | null;
-    started_at: string;
-    duration_ms: number;
-    disposition: string | null;
-    outcome_key: string | null;
-    tool_names: string[];
-    /** Set when list is fetched with `include_qm_summary=true` */
-    cx_score?: number | null;
-    containment?: string | null;
-    qa_score?: number | null;
-    scorecard_pass_rate?: number | null;
-};
-
-export type AnalyticsCallListPage = {
-    items: AnalyticsCallListItem[];
-    next_cursor: string | null;
-};
-
-export type HttpToolSpanSummary = {
-    method?: string | null;
-    url_template?: string | null;
-    request_status?: number | null;
-    mapped_data?: Record<string, unknown> | null;
-    error_message?: string | null;
-};
-
-export type AnalyticsToolSpan = {
-    span_id: string;
-    tool_name: string;
-    tool_type: string;
-    started_at: string;
-    duration_ms: number;
-    http: HttpToolSpanSummary | null;
-};
-
-export type AnalyticsCallMetrics = {
-    llm_rounds: number;
-    tool_invocation_count: number;
-    stt_seconds?: number | null;
-    tts_seconds?: number | null;
-};
-
-export type AnalyticsQaSummary = {
-    score?: number | null;
-    flags?: string[];
-    reviewer_notes?: string | null;
-};
-
-export type AnalyticsInsightsOutcomeMixItem = {
-    outcome: string;
-    count: number;
-};
-
-export type AnalyticsInsightsToolNameMixItem = {
-    tool_name: string;
-    count: number;
-};
-
-export type AnalyticsInsightsContainmentMixItem = {
-    containment: string;
-    count: number;
-};
-
-export type AnalyticsInsightsToolHealthItem = {
-    function_name: string;
-    invocation_count: number;
-    success_count: number;
-    success_rate: number;
-    failed_invocations: number;
-};
-
-export type AnalyticsInsightsQualitySummary = {
-    sampled_calls: number;
-    sample_capped: boolean;
-    avg_cx_score: number | null;
-    containment_mix: AnalyticsInsightsContainmentMixItem[];
-    calls_with_qa: number;
-    avg_qa_score: number | null;
-    avg_tool_success_rate: number | null;
-    tool_health: AnalyticsInsightsToolHealthItem[];
-};
-
-export type AnalyticsInsights = {
-    total_calls: number;
-    calls_with_outcome: number;
-    /** Canonical when present: runs with tool evidence in logs and/or `analytics_http_tool_spans`. */
-    calls_with_tool_evidence?: number;
-    /** Same integer as `calls_with_tool_evidence` when API returns both (legacy key). */
-    calls_with_logged_tools: number;
-    outcome_mix: AnalyticsInsightsOutcomeMixItem[];
-    /** Distinct runs per `function_name`, top 15. */
-    tool_name_mix: AnalyticsInsightsToolNameMixItem[];
-    quality_summary: AnalyticsInsightsQualitySummary;
-    since: string;
-    until: string;
-};
-
-export type AnalyticsCallDetail = {
-    call_id: string;
-    workflow_id: number;
-    workflow_slug?: string | null;
-    catalog_variant_id?: string | null;
-    started_at: string;
-    ended_at?: string | null;
-    duration_ms: number;
-    metrics: AnalyticsCallMetrics;
-    outcomes: Record<string, unknown>;
-    tool_spans: AnalyticsToolSpan[];
-    transcript?: string | null;
-    ai_summary?: string | null;
-    qa?: AnalyticsQaSummary | null;
-    follow_ups?: Array<Record<string, unknown>>;
-    live_trace?: {
-        timeline: Array<Record<string, unknown>>;
-        tool_invocations: Array<Record<string, unknown>>;
-        llm_inference: {
-            inference_count: number;
-            avg_ttfb_ms: number | null;
-            max_ttfb_ms: number | null;
-            models: string[];
-        };
-    } | null;
-    quality_report?: {
-        containment: string;
-        cx_score: number;
-        qa_score?: number | null;
-        qa_flags: string[];
-        outcome_key?: string | null;
-        outcomes: Record<string, unknown>;
-        tool_invocation_count: number;
-        tool_success_rate: number | null;
-        llm_inference: {
-            inference_count: number;
-            avg_ttfb_ms: number | null;
-            max_ttfb_ms: number | null;
-            models: string[];
-        };
-        tool_functions: Array<{
-            function_name: string;
-            invocation_count: number;
-            success_count: number;
-            success_rate: number;
-            avg_duration_ms: number | null;
-        }>;
-        error_count: number;
-        duration_ms: number;
-    } | null;
-    scorecard?: CallScorecardPayload | null;
-    engineering_links?: {
-        langfuse_trace_url?: string;
-    };
-};
+export type AnalyticsCallListItem = CallListItemResponse;
+export type AnalyticsCallListPage = CallListPageResponse;
+export type HttpToolSpanSummary = HttpToolSpanSummaryResponse;
+export type AnalyticsToolSpan = ToolSpanResponse;
+export type AnalyticsCallMetrics = CallMetricsResponse;
+export type AnalyticsQaSummary = QaQmSummaryResponse;
+export type AnalyticsInsightsOutcomeMixItem = OutcomeMixItemResponse;
+export type AnalyticsInsightsToolNameMixItem = ToolNameMixItemResponse;
+export type AnalyticsInsightsContainmentMixItem = ContainmentMixItemResponse;
+export type AnalyticsInsightsToolHealthItem = ToolHealthItemResponse;
+export type AnalyticsInsightsQualitySummary = InsightsQualitySummaryResponse;
+export type AnalyticsInsights = InsightsResponse;
+export type AnalyticsCallDetail = CallDetailResponse;
 
 export type CallScorecardPayload = {
     rubric_version?: number;
@@ -185,285 +76,53 @@ export type QmScorecardRubric = {
     criteria: Array<{ id: string; label: string; description?: string | null }>;
 };
 
-function buildExportQuery(params: {
-    workflow_id?: number;
-    catalog_slug?: string;
-    catalog_variant_id?: string;
-    since?: string;
-    until?: string;
-    disposition?: string;
-    outcome_key?: string;
-    tool_name?: string;
-    max_rows?: number;
-    sampling_mode?: 'fifo' | 'smart';
-}): string {
-    const q = new URLSearchParams();
-    if (params.workflow_id != null) q.set('workflow_id', String(params.workflow_id));
-    if (params.catalog_slug) q.set('catalog_slug', params.catalog_slug);
-    if (params.catalog_variant_id) q.set('catalog_variant_id', params.catalog_variant_id);
-    if (params.since) q.set('since', params.since);
-    if (params.until) q.set('until', params.until);
-    if (params.disposition) q.set('disposition', params.disposition);
-    if (params.outcome_key) q.set('outcome_key', params.outcome_key);
-    if (params.tool_name) q.set('tool_name', params.tool_name);
-    if (params.max_rows != null) q.set('max_rows', String(params.max_rows));
-    if (params.sampling_mode) q.set('sampling_mode', params.sampling_mode);
-    const s = q.toString();
-    return s ? `?${s}` : '';
-}
-
-function buildListQuery(params: {
-    workflow_id?: number;
-    catalog_slug?: string;
-    catalog_variant_id?: string;
-    since?: string;
-    until?: string;
-    disposition?: string;
-    outcome_key?: string;
-    tool_name?: string;
-    limit?: number;
-    cursor?: string | null;
-    include_qm_summary?: boolean;
-}): string {
-    const q = new URLSearchParams();
-    if (params.workflow_id != null) q.set('workflow_id', String(params.workflow_id));
-    if (params.catalog_slug) q.set('catalog_slug', params.catalog_slug);
-    if (params.catalog_variant_id) q.set('catalog_variant_id', params.catalog_variant_id);
-    if (params.since) q.set('since', params.since);
-    if (params.until) q.set('until', params.until);
-    if (params.disposition) q.set('disposition', params.disposition);
-    if (params.outcome_key) q.set('outcome_key', params.outcome_key);
-    if (params.tool_name) q.set('tool_name', params.tool_name);
-    if (params.limit != null) q.set('limit', String(params.limit));
-    if (params.cursor) q.set('cursor', params.cursor);
-    if (params.include_qm_summary) q.set('include_qm_summary', 'true');
-    const s = q.toString();
-    return s ? `?${s}` : '';
-}
-
-function buildInsightsQuery(params: {
-    days?: number;
-    since?: string;
-    until?: string;
-    workflow_id?: number;
-    catalog_slug?: string;
-    catalog_variant_id?: string;
-}): string {
-    const q = new URLSearchParams();
-    if (params.days != null) q.set('days', String(params.days));
-    if (params.since) q.set('since', params.since);
-    if (params.until) q.set('until', params.until);
-    if (params.workflow_id != null) q.set('workflow_id', String(params.workflow_id));
-    if (params.catalog_slug) q.set('catalog_slug', params.catalog_slug);
-    if (params.catalog_variant_id) q.set('catalog_variant_id', params.catalog_variant_id);
-    const s = q.toString();
-    return s ? `?${s}` : '';
-}
-
-export async function fetchAnalyticsInsights(
-    getAccessToken: () => Promise<string>,
-    params: {
-        days?: number;
-        since?: string;
-        until?: string;
-        workflow_id?: number;
-        catalog_slug?: string;
-        catalog_variant_id?: string;
-    } = {},
-): Promise<AnalyticsInsights> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const query = buildInsightsQuery({ ...params, days: params.days ?? 7 });
-    const res = await fetch(`${base}/api/v1/analytics/insights${query}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-        },
-    });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
-    }
-    return res.json() as Promise<AnalyticsInsights>;
-}
-
-export async function fetchAnalyticsCallsPage(
-    getAccessToken: () => Promise<string>,
-    params: {
-        workflow_id?: number;
-        catalog_slug?: string;
-        catalog_variant_id?: string;
-        since?: string;
-        until?: string;
-        disposition?: string;
-        outcome_key?: string;
-        tool_name?: string;
-        limit?: number;
-        cursor?: string | null;
-        include_qm_summary?: boolean;
-    },
-): Promise<AnalyticsCallListPage> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const query = buildListQuery({
-        ...params,
-        limit: params.limit ?? 50,
-        cursor: params.cursor ?? undefined,
-    });
-    const res = await fetch(`${base}/api/v1/analytics/calls${query}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-        },
-    });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
-    }
-    return res.json() as Promise<AnalyticsCallListPage>;
-}
-
-/**
- * Server-side CSV: same filters as the call list (no cursor), up to `max_rows` (default 5000).
- * Opens a browser download; requires auth like other analytics routes.
- */
-export async function downloadAnalyticsCallsServerExport(
-    getAccessToken: () => Promise<string>,
-    params: {
-        workflow_id?: number;
-        catalog_slug?: string;
-        catalog_variant_id?: string;
-        since?: string;
-        until?: string;
-        disposition?: string;
-        outcome_key?: string;
-        tool_name?: string;
-        max_rows?: number;
-        sampling_mode?: 'fifo' | 'smart';
-    },
-): Promise<void> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const query = buildExportQuery({
-        ...params,
-        max_rows: params.max_rows ?? 5000,
-        sampling_mode: params.sampling_mode ?? 'smart',
-    });
-    const res = await fetch(`${base}/api/v1/analytics/calls/export${query}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'text/csv',
-        },
-    });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
-    }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    a.href = url;
-    a.download = `analytics-calls-export-${stamp}.csv`;
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
 /** Same shape as stored org config + localStorage (`normalize_analytics_dashboard_layout` on the server). */
 export type AnalyticsDashboardLayoutPayload = {
     v: 1;
     widgets: { id: string; type: string }[];
 };
 
-export async function fetchAnalyticsDashboardLayout(
-    getAccessToken: () => Promise<string>,
-): Promise<AnalyticsDashboardLayoutPayload | null> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const res = await fetch(`${base}/api/v1/analytics/dashboard-layout`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-        },
-    });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
-    }
-    const data = (await res.json()) as { layout: unknown };
-    const layout = data.layout;
-    if (layout == null) return null;
-    if (typeof layout !== 'object' || layout === null) return null;
-    return layout as AnalyticsDashboardLayoutPayload;
-}
-
-export type AnalyticsRedactionPolicy = {
-    detail_redaction_enabled: boolean;
-    /** Server: whether this principal may set detail_redaction_enabled to false. */
-    may_disable_detail_redaction?: boolean;
-};
-
-export async function fetchAnalyticsRedactionPolicy(
-    getAccessToken: () => Promise<string>,
-): Promise<AnalyticsRedactionPolicy> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const res = await fetch(`${base}/api/v1/analytics/redaction-policy`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-        },
-    });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
-    }
-    return res.json() as Promise<AnalyticsRedactionPolicy>;
-}
-
-export type AnalyticsQmExportScheduleSettings = {
-    enabled: boolean;
-    hour_utc: number;
-    window_days: number;
-    max_rows: number;
-    sampling_mode: 'fifo' | 'smart';
-    workflow_id: number | null;
-    catalog_slug: string | null;
-    catalog_variant_id: string | null;
-};
-
-export type AnalyticsQmExportLastRun = {
-    started_at: string | null;
-    finished_at: string | null;
-    status: string | null;
-    object_key: string | null;
-    error_message: string | null;
-};
-
-export type AnalyticsQmExportScheduleResponse = {
-    schedule: AnalyticsQmExportScheduleSettings;
-    last_run: AnalyticsQmExportLastRun;
-    /** True when deployment workers run hourly ARQ cron dispatch. */
-    cron_enabled: boolean;
-    /** ISO UTC when the next cron slot may enqueue this org; null if disabled or cron off. */
-    next_run_at_utc: string | null;
-};
+export type AnalyticsRedactionPolicy = AnalyticsRedactionPolicyResponse;
+export type AnalyticsQmExportScheduleSettings = QmExportScheduleSettingsResponse;
+export type AnalyticsQmExportLastRun = QmExportLastRunResponse;
+export type AnalyticsQmExportScheduleResponse = QmExportScheduleGetResponse;
 
 /** Aligns with `QM_EXPORT_CRON_DISPATCH_MINUTE_UTC` in the API QM schedule module. */
 export const QM_EXPORT_CRON_DISPATCH_MINUTE_UTC = 47;
+
+function analyticsClient(getAccessToken: () => Promise<string>) {
+    const client = createClient(createClientConfig());
+    setupAuthInterceptor(client, getAccessToken);
+    return client;
+}
+
+function apiErrorMessage(error: unknown, status?: number): string {
+    if (error && typeof error === 'object' && 'detail' in error) {
+        const d = (error as { detail: unknown }).detail;
+        if (typeof d === 'string') {
+            return d;
+        }
+        if (Array.isArray(d) && d.length > 0) {
+            return String(d[0]);
+        }
+    }
+    if (typeof error === 'string') {
+        return error;
+    }
+    return status ? `Request failed (${status})` : 'Request failed';
+}
+
+function throwApiError(error: unknown, status?: number): never {
+    const err = new Error(apiErrorMessage(error, status));
+    if (status != null) {
+        Object.assign(err, { status });
+    }
+    throw err;
+}
+
+function asQmScorecardRubric(scorecard: { [key: string]: unknown }): QmScorecardRubric {
+    return scorecard as QmScorecardRubric;
+}
 
 /** Live preview of the next dispatch instant (same rules as GET qm-export-schedule). */
 export function previewNextQmExportDispatchUtc(opts: {
@@ -488,131 +147,258 @@ export function previewNextQmExportDispatchUtc(opts: {
     return new Date(candMs).toISOString();
 }
 
+export async function fetchAnalyticsInsights(
+    getAccessToken: () => Promise<string>,
+    params: {
+        days?: number;
+        since?: string;
+        until?: string;
+        workflow_id?: number;
+        catalog_slug?: string;
+        catalog_variant_id?: string;
+    } = {},
+): Promise<AnalyticsInsights> {
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await getAnalyticsInsightsApiV1AnalyticsInsightsGet({
+        client,
+        query: {
+            days: params.days ?? 7,
+            since: params.since ?? null,
+            until: params.until ?? null,
+            workflow_id: params.workflow_id ?? null,
+            catalog_slug: params.catalog_slug ?? null,
+            catalog_variant_id: params.catalog_variant_id ?? null,
+        },
+    });
+    if (error || !data) {
+        throwApiError(error, response?.status);
+    }
+    return data;
+}
+
+export async function fetchAnalyticsCallsPage(
+    getAccessToken: () => Promise<string>,
+    params: {
+        workflow_id?: number;
+        catalog_slug?: string;
+        catalog_variant_id?: string;
+        since?: string;
+        until?: string;
+        disposition?: string;
+        outcome_key?: string;
+        tool_name?: string;
+        limit?: number;
+        cursor?: string | null;
+        include_qm_summary?: boolean;
+    },
+): Promise<AnalyticsCallListPage> {
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await listAnalyticsCallsApiV1AnalyticsCallsGet({
+        client,
+        query: {
+            workflow_id: params.workflow_id ?? null,
+            catalog_slug: params.catalog_slug ?? null,
+            catalog_variant_id: params.catalog_variant_id ?? null,
+            since: params.since ?? null,
+            until: params.until ?? null,
+            disposition: params.disposition ?? null,
+            outcome_key: params.outcome_key ?? null,
+            tool_name: params.tool_name ?? null,
+            limit: params.limit ?? 50,
+            cursor: params.cursor ?? null,
+            include_qm_summary: params.include_qm_summary ?? false,
+        },
+    });
+    if (error || !data) {
+        throwApiError(error, response?.status);
+    }
+    return data;
+}
+
+/**
+ * Server-side CSV: same filters as the call list (no cursor), up to `max_rows` (default 5000).
+ * Opens a browser download; requires auth like other analytics routes.
+ */
+export async function downloadAnalyticsCallsServerExport(
+    getAccessToken: () => Promise<string>,
+    params: {
+        workflow_id?: number;
+        catalog_slug?: string;
+        catalog_variant_id?: string;
+        since?: string;
+        until?: string;
+        disposition?: string;
+        outcome_key?: string;
+        tool_name?: string;
+        max_rows?: number;
+        sampling_mode?: 'fifo' | 'smart';
+    },
+): Promise<void> {
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await exportAnalyticsCallsCsvApiV1AnalyticsCallsExportGet({
+        client,
+        query: {
+            workflow_id: params.workflow_id ?? null,
+            catalog_slug: params.catalog_slug ?? null,
+            catalog_variant_id: params.catalog_variant_id ?? null,
+            since: params.since ?? null,
+            until: params.until ?? null,
+            disposition: params.disposition ?? null,
+            outcome_key: params.outcome_key ?? null,
+            tool_name: params.tool_name ?? null,
+            max_rows: params.max_rows ?? 5000,
+            sampling_mode: params.sampling_mode ?? 'smart',
+        },
+        parseAs: 'blob',
+        headers: { Accept: 'text/csv' },
+    });
+    if (error || !data) {
+        throwApiError(error, response?.status);
+    }
+    const blob = data instanceof Blob ? data : new Blob([String(data)]);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    a.href = url;
+    a.download = `analytics-calls-export-${stamp}.csv`;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+export async function fetchAnalyticsDashboardLayout(
+    getAccessToken: () => Promise<string>,
+): Promise<AnalyticsDashboardLayoutPayload | null> {
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await getAnalyticsDashboardLayoutApiV1AnalyticsDashboardLayoutGet({
+        client,
+    });
+    if (error) {
+        throwApiError(error, response?.status);
+    }
+    if (data == null || typeof data !== 'object' || !('layout' in data)) {
+        return null;
+    }
+    const layout = (data as { layout: unknown }).layout;
+    if (layout == null || typeof layout !== 'object') {
+        return null;
+    }
+    return layout as AnalyticsDashboardLayoutPayload;
+}
+
+export async function fetchAnalyticsRedactionPolicy(
+    getAccessToken: () => Promise<string>,
+): Promise<AnalyticsRedactionPolicy> {
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await getAnalyticsRedactionPolicyApiV1AnalyticsRedactionPolicyGet({
+        client,
+    });
+    if (error || !data) {
+        throwApiError(error, response?.status);
+    }
+    return data;
+}
+
 export async function fetchAnalyticsQmExportSchedule(
     getAccessToken: () => Promise<string>,
 ): Promise<AnalyticsQmExportScheduleResponse> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const res = await fetch(`${base}/api/v1/analytics/qm-export-schedule`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-        },
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await getAnalyticsQmExportScheduleApiV1AnalyticsQmExportScheduleGet({
+        client,
     });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
+    if (error || !data) {
+        throwApiError(error, response?.status);
     }
-    return res.json() as Promise<AnalyticsQmExportScheduleResponse>;
+    return data;
 }
 
 export async function fetchAnalyticsQmScorecard(
     getAccessToken: () => Promise<string>,
 ): Promise<{ scorecard: QmScorecardRubric; qa_prompt_hint: string }> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const res = await fetch(`${base}/api/v1/analytics/qm-scorecard`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await getAnalyticsQmScorecardApiV1AnalyticsQmScorecardGet({
+        client,
     });
-    if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
+    if (error || !data) {
+        throw new Error(apiErrorMessage(error, response?.status));
     }
-    return res.json() as Promise<{ scorecard: QmScorecardRubric; qa_prompt_hint: string }>;
+    return {
+        scorecard: asQmScorecardRubric(data.scorecard),
+        qa_prompt_hint: data.qa_prompt_hint ?? '',
+    };
 }
 
 export async function putAnalyticsQmScorecard(
     getAccessToken: () => Promise<string>,
     criteria: QmScorecardRubric['criteria'],
 ): Promise<{ scorecard: QmScorecardRubric; qa_prompt_hint: string }> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const res = await fetch(`${base}/api/v1/analytics/qm-scorecard`, {
-        method: 'PUT',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ criteria }),
+    const client = analyticsClient(getAccessToken);
+    const body: QmScorecardPutBody = { criteria };
+    const { data, error, response } = await putAnalyticsQmScorecardApiV1AnalyticsQmScorecardPut({
+        client,
+        body,
     });
-    if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
+    if (error || !data) {
+        throw new Error(apiErrorMessage(error, response?.status));
     }
-    return res.json() as Promise<{ scorecard: QmScorecardRubric; qa_prompt_hint: string }>;
+    return {
+        scorecard: asQmScorecardRubric(data.scorecard),
+        qa_prompt_hint: data.qa_prompt_hint ?? '',
+    };
 }
 
 export async function putAnalyticsQmExportSchedule(
     getAccessToken: () => Promise<string>,
     body: AnalyticsQmExportScheduleSettings,
 ): Promise<AnalyticsQmExportScheduleResponse> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const res = await fetch(`${base}/api/v1/analytics/qm-export-schedule`, {
-        method: 'PUT',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await putAnalyticsQmExportScheduleApiV1AnalyticsQmExportSchedulePut({
+        client,
+        body: {
+            enabled: body.enabled,
+            hour_utc: body.hour_utc,
+            window_days: body.window_days,
+            max_rows: body.max_rows,
+            sampling_mode: body.sampling_mode,
+            workflow_id: body.workflow_id,
+            catalog_slug: body.catalog_slug,
+            catalog_variant_id: body.catalog_variant_id,
         },
-        body: JSON.stringify(body),
     });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
+    if (error || !data) {
+        throwApiError(error, response?.status);
     }
-    return res.json() as Promise<AnalyticsQmExportScheduleResponse>;
+    return data;
 }
 
 export async function putAnalyticsRedactionPolicy(
     getAccessToken: () => Promise<string>,
     policy: Pick<AnalyticsRedactionPolicy, 'detail_redaction_enabled'>,
 ): Promise<AnalyticsRedactionPolicy> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const res = await fetch(`${base}/api/v1/analytics/redaction-policy`, {
-        method: 'PUT',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(policy),
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await putAnalyticsRedactionPolicyApiV1AnalyticsRedactionPolicyPut({
+        client,
+        body: policy,
     });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
+    if (error || !data) {
+        throwApiError(error, response?.status);
     }
-    return res.json() as Promise<AnalyticsRedactionPolicy>;
+    return data;
 }
 
 export async function putAnalyticsDashboardLayout(
     getAccessToken: () => Promise<string>,
     layout: AnalyticsDashboardLayoutPayload,
 ): Promise<void> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const res = await fetch(`${base}/api/v1/analytics/dashboard-layout`, {
-        method: 'PUT',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ layout }),
+    const client = analyticsClient(getAccessToken);
+    const { error, response } = await putAnalyticsDashboardLayoutApiV1AnalyticsDashboardLayoutPut({
+        client,
+        body: { layout },
     });
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
+    if (error) {
+        throwApiError(error, response?.status);
     }
 }
 
@@ -620,23 +406,16 @@ export async function fetchAnalyticsCallDetail(
     getAccessToken: () => Promise<string>,
     callId: string,
 ): Promise<AnalyticsCallDetail | null> {
-    const base = getBackendPublicBaseUrl();
-    const token = await getAccessToken();
-    const enc = encodeURIComponent(callId);
-    const res = await fetch(`${base}/api/v1/analytics/calls/${enc}`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-        },
+    const client = analyticsClient(getAccessToken);
+    const { data, error, response } = await getAnalyticsCallApiV1AnalyticsCallsCallIdGet({
+        client,
+        path: { call_id: callId },
     });
-    if (res.status === 404) {
+    if (response?.status === 404) {
         return null;
     }
-    if (!res.ok) {
-        const text = await res.text();
-        const err = new Error(text || `HTTP ${res.status}`);
-        Object.assign(err, { status: res.status });
-        throw err;
+    if (error || !data) {
+        throwApiError(error, response?.status);
     }
-    return res.json() as Promise<AnalyticsCallDetail>;
+    return data;
 }
