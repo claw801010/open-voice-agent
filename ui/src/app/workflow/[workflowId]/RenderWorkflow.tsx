@@ -615,6 +615,21 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
         return catalogPackMeta?.cost_latency_estimate_band ?? null;
     }, [initialWorkflowConfigurations, catalogPackMeta]);
 
+    const hasPublishedVersion = useMemo(
+        () => versions.some((v) => v.status === 'published'),
+        [versions],
+    );
+
+    const toolNamesByUuid = useMemo(() => {
+        const m = new Map<string, string>();
+        for (const t of tools ?? []) {
+            if (t.tool_uuid && t.name) {
+                m.set(t.tool_uuid, t.name);
+            }
+        }
+        return m;
+    }, [tools]);
+
     const fetchRecentRunUsage = useCallback(async () => {
         setRunsUsageLoading(true);
         setRunsUsageError(false);
@@ -1131,6 +1146,7 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                                 <Button
                                     variant="outline"
                                     size="icon"
+                                    aria-label="Tidy up layout"
                                     onClick={() => {
                                         setNodes(layoutNodes(nodes, edges, 'TB', rfInstance));
                                         setIsDirty(true);
@@ -1216,6 +1232,13 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                                 <WorkflowEditorRightRail
                                     workflowId={workflowId}
                                     mode={editorMode}
+                                    workflowName={workflowName}
+                                    graphNodes={nodes}
+                                    validationErrorCount={workflowValidationErrors.length}
+                                    hasPublishedVersion={hasPublishedVersion}
+                                    toolNamesByUuid={toolNamesByUuid}
+                                    catalogSlug={catalogSlug ?? null}
+                                    catalogDisplayName={catalogPackMeta?.display_name ?? null}
                                     simulationDebugSnapshot={simulationDebugSnapshot}
                                     templateContextVariables={templateContextVariables ?? {}}
                                     saveTemplateContextVariables={saveTemplateContextVariables}

@@ -261,6 +261,15 @@ export default function WorkflowRunPage() {
                                         Recording
                                     </Button>
                                 </div>
+                                <div className="flex items-center gap-2 border-l border-border pl-4">
+                                    <span className="text-sm text-muted-foreground">Analytics:</span>
+                                    <Button asChild size="sm" variant="outline" className="gap-2">
+                                        <Link href={`/analytics/calls/wr-${params.runId}`}>
+                                            <ExternalLink className="h-4 w-4" />
+                                            Call trace & quality
+                                        </Link>
+                                    </Button>
+                                </div>
                                 {workflowRun?.gathered_context?.trace_url && (
                                     <div className="flex items-center gap-2 border-l border-border pl-4">
                                         <span className="text-sm text-muted-foreground">Trace:</span>

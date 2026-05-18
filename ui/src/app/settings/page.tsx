@@ -2,6 +2,8 @@
 
 import { ExternalLink } from "lucide-react";
 
+import { HttpIntegrationCachePolicySection } from "@/components/HttpIntegrationCachePolicySection";
+import { LocalSchedulingSection } from "@/components/settings/LocalSchedulingSection";
 import { MCPSection } from "@/components/MCPSection";
 import { TelemetrySection } from "@/components/TelemetrySection";
 import {
@@ -41,6 +43,33 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <MCPSection />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Local demo calendar</CardTitle>
+            <CardDescription>
+              Create and manage appointments in-process for booking GTM demos — no Google Calendar required.
+              Wire the generated <strong className="font-medium text-foreground">book_slot</strong> HTTP tool on
+              catalog agents.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LocalSchedulingSection />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>HTTP integration cache (draft)</CardTitle>
+            <CardDescription>
+              Org-wide draft for HTTP tool response caching after rollout. Runtime caching stays off until the
+              deferral date.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <HttpIntegrationCachePolicySection />
           </CardContent>
         </Card>
 

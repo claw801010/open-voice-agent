@@ -1,0 +1,11 @@
+{
+  "appointment": {
+    "id": "demo-appt-001",
+    "status": "confirmed",
+    "slot": {
+      "start": "2026-04-25T15:00:00Z",
+      "resource_id": "provider-room-2"
+    }
+  },
+  "confirmation_code": "HX9-DEMO"
+}

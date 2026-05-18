@@ -40,7 +40,9 @@ import type { UsageTrendBucket } from '@/lib/workflow/workflowRunTrends';
 
 import { SimulationManualChatPanel } from './SimulationManualChatPanel';
 import { TemplateVariablesRailPanel } from './TemplateVariablesRailPanel';
+import { WorkflowHappyPathStrip } from './WorkflowHappyPathStrip';
 import { WorkflowUsageTrendPanel } from './WorkflowUsageTrendPanel';
+import { WorkflowVerticalGuideCard } from './WorkflowVerticalGuideCard';
 
 function nodeInspectorRows(node: FlowNode): { label: string; value: string }[] {
     const d = node.data;
@@ -111,6 +113,14 @@ export type WorkflowEditorRightRailProps = {
     usageTrendExportPng?: boolean;
     /** Stem for CSV/PNG filenames (no extension), e.g. `workflow-42-usage-weekly-trend`. */
     usageTrendExportFilenameBase?: string;
+    /** WE-01-DUALMODE: outcome checklist + catalog HTTP guide */
+    workflowName?: string;
+    graphNodes?: FlowNode[];
+    validationErrorCount?: number;
+    hasPublishedVersion?: boolean;
+    toolNamesByUuid?: ReadonlyMap<string, string>;
+    catalogSlug?: string | null;
+    catalogDisplayName?: string | null;
 };
 
 /**
@@ -148,7 +158,38 @@ export function WorkflowEditorRightRail({
     usageTrendExportCsv = false,
     usageTrendExportPng = false,
     usageTrendExportFilenameBase,
+    workflowName = '',
+    graphNodes = [],
+    validationErrorCount = 0,
+    hasPublishedVersion = false,
+    toolNamesByUuid = new Map(),
+    catalogSlug = null,
+    catalogDisplayName = null,
 }: WorkflowEditorRightRailProps) {
+    const guidanceBlock =
+        graphNodes.length > 0 ? (
+            <>
+                <WorkflowHappyPathStrip
+                    workflowId={workflowId}
+                    workflowName={workflowName}
+                    nodes={graphNodes}
+                    validationErrorCount={validationErrorCount}
+                    hasPublishedVersion={hasPublishedVersion}
+                    toolNamesByUuid={toolNamesByUuid}
+                    catalogSlug={catalogSlug}
+                    editorMode={mode}
+                />
+                {catalogSlug ? (
+                    <WorkflowVerticalGuideCard
+                        catalogSlug={catalogSlug}
+                        catalogDisplayName={catalogDisplayName}
+                        workflowId={workflowId}
+                        templateContextVariables={templateContextVariables}
+                        saveTemplateContextVariables={saveTemplateContextVariables}
+                    />
+                ) : null}
+            </>
+        ) : null;
     const router = useRouter();
     const usageTrendGranularityLabelId = useId();
     const { getAccessToken } = useAuth();
@@ -197,6 +238,7 @@ export function WorkflowEditorRightRail({
                     </p>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-4 text-sm">
+                    {guidanceBlock}
                     {onWebTest ? (
                         <section className="rounded-md border border-teal-500/25 bg-teal-500/5 p-3 space-y-2">
                             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -446,6 +488,7 @@ export function WorkflowEditorRightRail({
                     Inspector + global template variables (WE-01-RIGHT-INSPECTOR).
                 </p>
             </div>
+            {guidanceBlock ? <div className="shrink-0 px-3 pt-2">{guidanceBlock}</div> : null}
             <Tabs defaultValue="inspector" className="flex min-h-0 flex-1 flex-col">
                 <TabsList className="mx-3 mt-2 grid w-auto shrink-0 grid-cols-2">
                     <TabsTrigger value="inspector" className="text-xs">
