@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Opt-in GTM deck PNG capture (1280×720 → docs/images/gtm-*.png).
-# Prereqs: API :8000, UI (dev or prod on E2E_BASE_URL), Playwright chromium.
+# Prereqs: Docker infra (postgres:5433, redis), API :8000, UI on E2E_BASE_URL, Playwright chromium.
+#   ./scripts/start_services_dev.sh && alembic upgrade head (from api/)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,11 +33,15 @@ if [[ -z "${E2E_GTM_SAMPLE_CALL_ID:-}" ]]; then
   CALL_ID="$(curl -sf "${E2E_BACKEND_URL}/api/v1/analytics/calls?limit=1" \
     -H "Authorization: Bearer ${TOKEN}" \
     | python3 -c "import json,sys; d=json.load(sys.stdin); items=d.get('items') or []; print(items[0]['call_id'] if items else '')" 2>/dev/null || true)"
+  if [[ -z "${CALL_ID}" ]]; then
+    echo "Seeding demo analytics call for GTM call-detail frames…"
+    CALL_ID="$(PYTHONPATH="${ROOT}" python3 "${ROOT}/scripts/seed_gtm_analytics_demo_call.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  fi
   if [[ -n "${CALL_ID}" ]]; then
     export E2E_GTM_SAMPLE_CALL_ID="${CALL_ID}"
     echo "Using E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID}"
   else
-    echo "No calls in org yet — skipping call-detail / call-review PNGs (run a Web test first)."
+    echo "No calls in org — skipping call-detail / call-review PNGs."
   fi
 fi
 

@@ -21,7 +21,7 @@ interface Workflow {
     status: string;
     created_at: string;
     total_runs?: number | null;
-    template_context_variables?: Record<string, string> | null;
+    template_context_variables?: Record<string, unknown> | null;
 }
 
 interface WorkflowTableProps {

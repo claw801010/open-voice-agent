@@ -52,4 +52,5 @@ export async function loginOssSessionFromBackend(
             value: JSON.stringify(body.user),
         },
     ]);
+    await page.goto(`${opts.baseURL}/templates`, { waitUntil: "domcontentloaded" });
 }

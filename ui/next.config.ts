@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  eslint: {
+    // Lint in CI separately; allow production builds for GTM captures when eslint drifts.
+    ignoreDuringBuilds: true,
+  },
   output: 'standalone',
   experimental: {
     serverSourceMaps: true,
