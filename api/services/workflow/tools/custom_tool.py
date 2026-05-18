@@ -8,6 +8,7 @@ import httpx
 from loguru import logger
 
 from api.db import db_client
+from api.services.workflow.tools import http_tool_cache_policy
 from api.utils.credential_auth import build_auth_header
 
 # Map tool parameter types to JSON schema types
@@ -104,6 +105,19 @@ async def execute_http_tool(
     """
     definition = tool.definition or {}
     config = definition.get("config", {})
+
+    storage_mode = http_tool_cache_policy.coerce_response_storage_mode(
+        config.get("response_storage_mode")
+    )
+    if storage_mode == "org_cache_when_enabled":
+        logger.debug(
+            "HTTP tool {!r} ({}): response_storage_mode=org_cache_when_enabled; "
+            "integration response cache not implemented — using live request "
+            "(WE-01-DATASTORE-INTEG; deferral not before {}).",
+            tool.name,
+            tool.tool_uuid,
+            http_tool_cache_policy.INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE,
+        )
 
     logger.info(
         f"Executing custom tool '{tool.name}' ({tool.tool_uuid}): "

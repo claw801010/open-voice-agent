@@ -19,15 +19,29 @@ Read the full authoring story in the [HTTP API tool guide](/voice-agent/tools/ht
 
 ## Runtime extension point (no env flags yet)
 
-There is **no** environment variable or toggle for HTTP response caching in this repo today. A small **`http_tool_cache_policy.py`** module exists only as a **documentation anchor** for future **WE-01-DATASTORE-INTEG** work (org policy + persistence first — do not add silent caches).
+There is **no** environment variable or toggle that turns on HTTP response **execution** caching. A small **`http_tool_cache_policy.py`** module centralizes policy constants and parsing for **WE-01-DATASTORE-INTEG** (do not add silent runtime caches).
 
-**Read stub:** `GET /api/v1/organizations/http-integration-cache-policy` (authenticated, org-scoped) returns `cache_enabled: false` and the documented deferral date — see [org datastore design](/integrations/http-tool-org-datastore-design).
+**Policy API (runtime off, draft on):** `GET` / `PUT` `/api/v1/organizations/http-integration-cache-policy` (authenticated, org-scoped) return effective `cache_enabled: false`, deferral, `implementation_status`, `policy_schema_version`, merged **`stored_preferences`** (`cache_enabled_when_shipped`, optional `ttl_seconds`), and **`policy_audit`** (rolling tail when drafts change — actor id + timestamp). **PUT** persists draft fields and appends an audit row only when values change; HTTP tool calls remain live-only until runtime cache ships. Successful **PUT** also emits PostHog `http_integration_cache_policy_updated` when telemetry is configured. See [org datastore design](/integrations/http-tool-org-datastore-design).
+
+### Governance and audit (draft policy era)
+
+Use this section for security reviews until **per-integration** execution caches ship.
+
+- **Data minimization:** The policy API stores only org intent (`stored_preferences`), a versioned JSON envelope, and **`policy_audit`** rows (timestamp, actor identifier, and the draft fields saved). It does **not** store HTTP response bodies, upstream URLs with secrets, or voice payloads.
+- **Immutability:** Audit entries are append-only in configuration JSON (trimmed to a fixed maximum length server-side). Editors surface recent saves under **Platform settings**.
+- **Access:** Mutations require an authenticated session with your normal org authorization path (same as other org configuration APIs). Audit **`actor_provider_id`** identifies the saver for accountability—not an end-customer phone number or email.
+- **Telemetry:** When PostHog is configured, **`http_integration_cache_policy_updated`** records organization id and coarse flags (for example whether TTL was set); it must not include credentials or integration secrets.
+- **Separation of concerns:** Call-analytics **PII redaction** for QM exports and call detail (MK-01) is unrelated to integration-cache drafts—continue to treat analytics governance independently.
+
+### Future per-connector compliance notes
+
+When **org-admin toggles per integration** (cache on/off, retention, PII class) ship, expand this page with connector-specific matrices (what may be cached, residency expectations, and revoke paths). Until then, HTTP tool execution remains **live-only** on every request.
 
 ## Roadmap (WE-01-DATASTORE-INTEG)
 
 When implemented, expect:
 
-- **Org-admin** toggles per integration: cache on/off, TTL, PII class, audit of policy changes.
+- **Org-admin** toggles per integration: cache on/off, TTL, PII class, audit of policy changes (today you have **org-wide draft** prefs + **`policy_audit`** only).
 - **Authoring** UI: explicit “local only” vs “also persist/cache via integration X” — no silent dual-writes.
 - **Runtime**: read-through or short-lived cache only when policy allows; fallback to live API on failure.
 

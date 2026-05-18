@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+    COMMON_PACK_FLOW_TEMPLATE_STRINGS,
     CONVERSATION_CONTEXT_VARIABLE_TEMPLATES,
     DEFAULT_CALL_CONTEXT_TEST_JSON,
     DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS,
@@ -37,7 +38,12 @@ import {
     seedBodyTemplateJsonFromParameters,
     seedTestPayloadJsonFromParameters,
 } from "@/lib/callContextSampleForm";
-import { sortDistinctTemplates } from "@/lib/httpToolVariablePickers";
+import { fetchHttpIntegrationCachePolicy } from "@/lib/httpIntegrationCachePolicy";
+import {
+    collectTemplatePathsFromStrings,
+    pathsToTemplateTokens,
+    sortDistinctTemplates,
+} from "@/lib/httpToolVariablePickers";
 
 import {
     DEFAULT_END_CALL_REASON_DESCRIPTION,
@@ -63,22 +69,9 @@ function testPayloadStorageKey(toolUuid: string): string {
     return `tool-http-test-payload:${toolUuid}`;
 }
 
-function collectTemplatePathsFromStrings(strings: string[]): string[] {
-    const re = /\{\{\s*([^}]+?)\s*\}\}/g;
-    const out = new Set<string>();
-    for (const str of strings) {
-        if (!str) continue;
-        const r = new RegExp(re.source, "g");
-        let m: RegExpExecArray | null;
-        while ((m = r.exec(str)) !== null) {
-            const p = m[1].trim();
-            if (p) out.add(p);
-        }
-    }
-    return [...out];
-}
-
 // Extended HttpApiConfig with parameters (until client types are regenerated)
+type HttpResponseStorageMode = "live_only" | "org_cache_when_enabled";
+
 interface HttpApiConfigWithParams {
     method?: string;
     url?: string;
@@ -92,6 +85,8 @@ interface HttpApiConfigWithParams {
     body_template?: string;
     raw_code?: string;
     raw_language?: 'python' | 'bash';
+    /** WE-01-DATASTORE-INTEG — persisted; runtime still live-only until cache ships. */
+    response_storage_mode?: HttpResponseStorageMode;
 }
 
 export default function ToolDetailPage() {
@@ -125,9 +120,12 @@ export default function ToolDetailPage() {
     const [isTestingCall, setIsTestingCall] = useState(false);
     const [testResult, setTestResult] = useState<string>("");
     const [lastResponseData, setLastResponseData] = useState<unknown>(null);
+    const [lastTestCallSucceeded, setLastTestCallSucceeded] = useState(false);
     const [rawCode, setRawCode] = useState("");
     const [rawLanguage, setRawLanguage] = useState<'python' | 'bash'>("python");
     const [bodyTemplate, setBodyTemplate] = useState("");
+    const [httpResponseStorageMode, setHttpResponseStorageMode] =
+        useState<HttpResponseStorageMode>("live_only");
     const [customVariableSuggestions, setCustomVariableSuggestions] = useState<string[]>([]);
     const [customVariableDraft, setCustomVariableDraft] = useState("");
     const [callContextTestJson, setCallContextTestJson] = useState(DEFAULT_CALL_CONTEXT_TEST_JSON);
@@ -137,6 +135,10 @@ export default function ToolDetailPage() {
               deferralNotBefore: string;
               cacheEnabled: boolean;
               implementationStatus: string;
+              storedPreferences: {
+                  cacheEnabledWhenShipped: boolean;
+                  ttlSeconds: number | null;
+              };
           }
         | null
         | undefined
@@ -280,6 +282,11 @@ export default function ToolDetailPage() {
                 setRawLanguage(config.raw_language || "python");
                 setRawCode(config.raw_code || "");
                 setBodyTemplate(config.body_template || "");
+                setHttpResponseStorageMode(
+                    config.response_storage_mode === "org_cache_when_enabled"
+                        ? "org_cache_when_enabled"
+                        : "live_only",
+                );
             }
         }
     }, []);
@@ -338,24 +345,17 @@ export default function ToolDetailPage() {
         let cancelled = false;
         void (async () => {
             try {
-                const token = await getAccessToken();
-                const res = await fetch("/api/v1/organizations/http-integration-cache-policy", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const policy = await fetchHttpIntegrationCachePolicy(getAccessToken);
                 if (cancelled) return;
-                if (!res.ok) {
+                if (!policy) {
                     setHttpIntegrationCachePolicy(null);
                     return;
                 }
-                const data = (await res.json()) as {
-                    deferral_not_before?: string;
-                    cache_enabled?: boolean;
-                    implementation_status?: string;
-                };
                 setHttpIntegrationCachePolicy({
-                    deferralNotBefore: String(data.deferral_not_before ?? ""),
-                    cacheEnabled: Boolean(data.cache_enabled),
-                    implementationStatus: String(data.implementation_status ?? ""),
+                    deferralNotBefore: policy.deferralNotBefore,
+                    cacheEnabled: policy.cacheEnabled,
+                    implementationStatus: policy.implementationStatus,
+                    storedPreferences: policy.storedPreferences,
                 });
             } catch {
                 if (!cancelled) setHttpIntegrationCachePolicy(null);
@@ -508,6 +508,18 @@ export default function ToolDetailPage() {
         toast.success(`Added ${addedKeys.length} body template key(s): ${addedKeys.join(", ")}`);
     }, [bodyTemplate, parameters]);
 
+    /** `{{…}}` tokens found in the URL, body, headers, parameter value templates, and raw code — surfaced in pickers + call-context flow paths. */
+    const discoveredTemplateTokens = useMemo(() => {
+        const paths = collectTemplatePathsFromStrings([
+            url,
+            bodyTemplate,
+            ...headers.map((h) => h.value),
+            ...parameters.map((p) => p.valueTemplate || ""),
+            rawCode,
+        ]);
+        return pathsToTemplateTokens(paths);
+    }, [url, bodyTemplate, headers, parameters, rawCode]);
+
     const variableSuggestions = useMemo(() => {
         const fromParameters = parameters
             .map((p) => p.name.trim())
@@ -519,11 +531,13 @@ export default function ToolDetailPage() {
             .map((key) => `{{${key}}}`);
         return sortDistinctTemplates([
             ...DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS,
+            ...COMMON_PACK_FLOW_TEMPLATE_STRINGS,
             ...customVariableSuggestions,
             ...fromParameters,
             ...fromMappings,
+            ...discoveredTemplateTokens,
         ]);
-    }, [customVariableSuggestions, parameters, responseMappings]);
+    }, [customVariableSuggestions, parameters, responseMappings, discoveredTemplateTokens]);
 
     const variableSuggestionGroups = useMemo(() => {
         const liveParameterAndMapping = sortDistinctTemplates([
@@ -536,14 +550,23 @@ export default function ToolDetailPage() {
                 .filter(Boolean)
                 .map((key) => `{{${key}}}`),
         ]);
-        const customSorted = sortDistinctTemplates(customVariableSuggestions);
+        const systemConvAndLive = new Set<string>([
+            ...SYSTEM_CONTEXT_VARIABLE_TEMPLATES,
+            ...CONVERSATION_CONTEXT_VARIABLE_TEMPLATES,
+            ...liveParameterAndMapping,
+        ]);
+        const customSorted = sortDistinctTemplates(
+            [...COMMON_PACK_FLOW_TEMPLATE_STRINGS, ...customVariableSuggestions, ...discoveredTemplateTokens].filter(
+                (t) => !systemConvAndLive.has(t)
+            )
+        );
         return [
             { label: HTTP_VARIABLE_GROUP_LABELS.system, options: SYSTEM_CONTEXT_VARIABLE_TEMPLATES },
             { label: HTTP_VARIABLE_GROUP_LABELS.conversation, options: CONVERSATION_CONTEXT_VARIABLE_TEMPLATES },
             { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: customSorted },
             { label: HTTP_VARIABLE_GROUP_LABELS.live, options: liveParameterAndMapping },
         ];
-    }, [customVariableSuggestions, parameters, responseMappings]);
+    }, [customVariableSuggestions, parameters, responseMappings, discoveredTemplateTokens]);
 
     const buildPendingPayload = useCallback(() => {
         if (!tool) return {};
@@ -641,6 +664,7 @@ export default function ToolDetailPage() {
                     raw_code: rawCode || undefined,
                     raw_language: rawLanguage || undefined,
                     body_template: bodyTemplate.trim() || undefined,
+                    response_storage_mode: httpResponseStorageMode,
                 },
             },
         };
@@ -669,6 +693,7 @@ export default function ToolDetailPage() {
         rawCode,
         rawLanguage,
         bodyTemplate,
+        httpResponseStorageMode,
     ]);
 
     const buildHeadersObject = useCallback(() => {
@@ -942,6 +967,7 @@ export default function ToolDetailPage() {
                                       }))
                                 : undefined,
                         body_template: bodyTemplate.trim() || undefined,
+                        response_storage_mode: httpResponseStorageMode,
                     },
                     arguments: parsedPayload,
                     call_context_vars:
@@ -961,6 +987,7 @@ export default function ToolDetailPage() {
                 ...headers.map((h) => h.value),
                 ...headers.map((h) => (h.description || "").trim()).filter(Boolean),
                 ...parameters.map((p) => p.valueTemplate || ""),
+                rawCode,
             ];
             const paths = collectTemplatePathsFromStrings(stringsToScan);
             setTemplatePreviewWarnings(
@@ -970,9 +997,11 @@ export default function ToolDetailPage() {
                         extractPathValue(parsedCallContext, path) === undefined
                 )
             );
+            setLastTestCallSucceeded(true);
             toast.success("Test API call succeeded.");
         } catch (err) {
             const message = err instanceof Error ? err.message : "Test call failed";
+            setLastTestCallSucceeded(false);
             setError(message);
             setTemplatePreviewWarnings([]);
             toast.error(message);
@@ -992,7 +1021,9 @@ export default function ToolDetailPage() {
         callContextTestJson,
         timeoutMs,
         url,
+        rawCode,
         extractPathValue,
+        httpResponseStorageMode,
     ]);
 
     const applyToolPayload = useCallback(
@@ -1359,10 +1390,14 @@ const data = await response.json();`;
                             onSeedTestPayloadFromParameters={seedTestPayloadFromParameters}
                             onSeedBodyTemplateFromParameters={seedBodyTemplateFromParameters}
                             templatePreviewWarnings={templatePreviewWarnings}
+                            responseStorageMode={httpResponseStorageMode}
+                            onResponseStorageModeChange={setHttpResponseStorageMode}
                             httpIntegrationCachePolicy={
                                 tool?.category === "http_api" ? httpIntegrationCachePolicy : undefined
                             }
                             callContextStorageScopeId={toolUuid}
+                            testCallSucceeded={lastTestCallSucceeded}
+                            isToolSaved={!isFormDirty}
                         />
                     )}
 

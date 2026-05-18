@@ -50,7 +50,7 @@ Related: [HTTP tools — org data and cache policy](/integrations/http-tool-data
 
 ## Status
 
-**Design only** — implementation tracks **READMEPLANTOEXECUTE.md** → **WE-01-DATASTORE-INTEG**. The repo’s `api/services/workflow/tools/http_tool_cache_policy.py` module remains a **doc-only code anchor** until the gates above are met.
+**Design + draft persistence** — runtime integration response cache remains **not_implemented** until the gates above are met. Org-level **draft** preferences (`stored_preferences`) may still be stored via `organization_configurations` and exposed on **GET/PUT** `/organizations/http-integration-cache-policy`; see **READMEPLANTOEXECUTE.md** → **WE-01-DATASTORE-INTEG**.
 
 ### Fork posture (non-binding)
 
@@ -58,4 +58,4 @@ Until **admin policy CRUD** and **explicit authoring opt-in** are staffed, treat
 
 **Calendar boundary (this fork):** no **runtime** integration response cache implementation is planned **before 2026-07-01** unless **READMEPLANTOEXECUTE.md** and this doc are explicitly revised (dates are planning signals, not contractual SLAs). Update both when you start build or change the boundary.
 
-**Read API (stub):** authenticated `GET /api/v1/organizations/http-integration-cache-policy` returns `cache_enabled: false`, `deferral_not_before`, and `implementation_status` for the **selected** org (`api/routes/organization.py`). Clients can treat this as the single source of truth until admin policy CRUD ships.
+**Policy API (runtime stub + draft):** authenticated **GET** returns effective `cache_enabled: false`, deferral, `implementation_status`, `policy_schema_version`, and merged **`stored_preferences`**. **PUT** persists draft fields (`cache_enabled_when_shipped`, `ttl_seconds`) on the selected org — runtime execution still performs live HTTP only (`api/routes/organization.py`).

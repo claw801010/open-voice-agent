@@ -1,6 +1,23 @@
 import os
 
 import aiohttp
+from loguru import logger
+
+
+def resolve_stack_team_permissions_url(api_base: str | None, permissions_path: str) -> str:
+    """Join Stack API base URL with the team-permissions path.
+
+    ``permissions_path`` comes from ``STACK_AUTH_TEAM_PERMISSIONS_PATH`` or the default
+    ``/api/v1/team-permissions``. A path without a leading slash is normalized.
+    Empty ``api_base`` yields a path-only URL (relative join behavior matches prior code).
+    """
+    base = (api_base or "").rstrip("/")
+    normalized = (
+        permissions_path
+        if permissions_path.startswith("/")
+        else f"/{permissions_path}"
+    )
+    return f"{base}{normalized}"
 
 
 class StackAuth:
@@ -41,6 +58,69 @@ class StackAuth:
                     return response
                 else:
                     return None
+
+    async def list_team_permission_ids(self, access_token: str, team_id: str) -> list[str]:
+        """Return permission id strings for the current user on ``team_id`` (Stack Auth RBAC).
+
+        Uses ``GET`` ``/api/v1/team-permissions`` by default. Override path via
+        ``STACK_AUTH_TEAM_PERMISSIONS_PATH`` if your Stack deployment differs.
+        """
+        if not access_token or not team_id:
+            return []
+
+        access_token = self._strip_bearer(access_token)
+        if not access_token:
+            return []
+
+        path = os.getenv(
+            "STACK_AUTH_TEAM_PERMISSIONS_PATH", "/api/v1/team-permissions"
+        )
+        url = resolve_stack_team_permissions_url(
+            os.environ.get("STACK_AUTH_API_URL"), path
+        )
+
+        headers = {
+            "x-stack-access-type": "server",
+            "x-stack-project-id": self.project_id,
+            "x-stack-secret-server-key": self.secret_server_key,
+            "x-stack-access-token": access_token,
+        }
+
+        params = {"team_id": team_id, "user_id": "me"}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, params=params) as response:
+                if response.status != 200:
+                    logger.warning(
+                        "Stack team permissions HTTP {} for team_id={}",
+                        response.status,
+                        team_id,
+                    )
+                    return []
+                try:
+                    payload = await response.json()
+                except Exception:
+                    return []
+
+        return self._parse_permission_ids(payload)
+
+    @staticmethod
+    def _parse_permission_ids(payload: object) -> list[str]:
+        if payload is None:
+            return []
+        if isinstance(payload, list):
+            out: list[str] = []
+            for x in payload:
+                if isinstance(x, str):
+                    out.append(x)
+                elif isinstance(x, dict) and x.get("id") is not None:
+                    out.append(str(x["id"]))
+            return out
+        if isinstance(payload, dict):
+            for key in ("items", "permissions", "team_permissions"):
+                if key in payload:
+                    return StackAuth._parse_permission_ids(payload[key])
+        return []
 
     async def impersonate(self, stack_user_id: str):
         url = os.environ.get("STACK_AUTH_API_URL") + "/api/v1/auth/sessions"

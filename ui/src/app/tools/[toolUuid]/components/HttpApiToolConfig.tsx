@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +36,7 @@ import {
 } from "@/constants/documentation";
 
 import { CallContextSampleEditor } from "./CallContextSampleEditor";
+import { HttpToolHappyPathStrip } from "./HttpToolHappyPathStrip";
 import { JsonTemplateTextarea } from "./jsonTemplateTextarea";
 
 function TemplatePreviewWarnings({ paths }: { paths: string[] }) {
@@ -112,14 +114,23 @@ export interface HttpApiToolConfigProps {
     /** Same as test payload seeding, for optional body template JSON. */
     onSeedBodyTemplateFromParameters?: () => void;
     templatePreviewWarnings: string[];
+    /** WE-01-DATASTORE-INTEG — persisted on tool; runtime still live-only until cache ships. */
+    responseStorageMode: "live_only" | "org_cache_when_enabled";
+    onResponseStorageModeChange: (mode: "live_only" | "org_cache_when_enabled") => void;
     /** Loaded from GET /api/v1/organizations/http-integration-cache-policy (HTTP tools only). */
     httpIntegrationCachePolicy?: {
         deferralNotBefore: string;
         cacheEnabled: boolean;
         implementationStatus: string;
+        storedPreferences: {
+            cacheEnabledWhenShipped: boolean;
+            ttlSeconds: number | null;
+        };
     } | null;
     /** Scopes call-context editor tab preference in localStorage (pass tool UUID from the page). */
     callContextStorageScopeId?: string;
+    testCallSucceeded?: boolean;
+    isToolSaved?: boolean;
 }
 
 export function HttpApiToolConfig({
@@ -174,8 +185,12 @@ export function HttpApiToolConfig({
     onSeedTestPayloadFromParameters,
     onSeedBodyTemplateFromParameters,
     templatePreviewWarnings,
+    responseStorageMode,
+    onResponseStorageModeChange,
     httpIntegrationCachePolicy,
     callContextStorageScopeId,
+    testCallSucceeded = false,
+    isToolSaved = true,
 }: HttpApiToolConfigProps) {
     const [variableInsertMode, setVariableInsertMode] = useState<"replace" | "append">(
         "replace"
@@ -190,6 +205,13 @@ export function HttpApiToolConfig({
                 </CardDescription>
             </CardHeader>
             <CardContent>
+                <HttpToolHappyPathStrip
+                    toolName={name}
+                    url={url}
+                    testCallSucceeded={testCallSucceeded}
+                    responseMappings={responseMappings}
+                    isSaved={isToolSaved}
+                />
                 <div className="mb-4 rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
                     Use templates like <code>{"{{conversation.customer.id}}"}</code> or <code>{"{{customer.id}}"}</code> in parameter defaults, header values, body template JSON, and the endpoint URL. Headers and URL resolve {"{{…}}"} after body defaults merge with arguments (same as live calls and Test API Call). Pickers always list four groups (empty groups show a short hint):{" "}
                     <strong className="text-foreground/90">{HTTP_VARIABLE_GROUP_LABELS.system}</strong> and{" "}
@@ -198,11 +220,47 @@ export function HttpApiToolConfig({
                     you add above; <strong className="text-foreground/90">{HTTP_VARIABLE_GROUP_LABELS.live}</strong> from
                     parameter names and response-mapping keys. Call context (test) Form tab: preset paths plus{" "}
                     <span className="font-medium text-foreground/80">Use app default</span> per row when a built-in sample
-                    exists. Open any picker and filter by token text or the hint line (built-in, custom, live, or flow
+                    exists.                     Open any picker and filter by token text or the hint line (built-in, custom, live, or flow
                     paths).{" "}
                     <span className="font-medium text-foreground/80">Test payload</span> (Test API Call) is remembered{" "}
                     <span className="font-medium text-foreground/80">per HTTP tool</span> in this browser (not saved on
                     the server).
+                    <ul className="mt-3 list-disc pl-5 space-y-1.5">
+                        <li>
+                            <span className="font-medium text-foreground/85">System</span>{" "}
+                            <span className="text-muted-foreground">
+                                — built-in tokens from live session metadata (caller/called numbers, ids, time).
+                            </span>
+                        </li>
+                        <li>
+                            <span className="font-medium text-foreground/85">Conversation / initial context</span>{" "}
+                            <span className="text-muted-foreground">
+                                — per-call fields from the workflow run (e.g. customer_name); merged into resolution.
+                            </span>
+                        </li>
+                        <li>
+                            <span className="font-medium text-foreground/85">Workflow template variables</span>{" "}
+                            <span className="text-muted-foreground">
+                                — keys from Workflow → Template variables (install defaults from catalog packs included).
+                            </span>
+                        </li>
+                        <li>
+                            <span className="font-medium text-foreground/85">Custom flow variables</span>{" "}
+                            <span className="text-muted-foreground">
+                                — paths you add below plus auto-listed {"{{…}}"} from this tool&apos;s URL, headers, body,
+                                and parameters.
+                            </span>
+                        </li>
+                        <li>
+                            <span className="font-medium text-foreground/85">Analytics &amp; QM</span>{" "}
+                            <span className="text-muted-foreground">
+                                — align <strong className="text-foreground/80">response mapping</strong> keys with proof
+                                you need: they surface as HTTP <code className="text-[11px]">mapped_data</code> on{" "}
+                                <code className="text-[11px]">/analytics/calls/&lt;callId&gt;</code> and support{" "}
+                                <code className="text-[11px]">tool_name</code> filters on the call list API.
+                            </span>
+                        </li>
+                    </ul>
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                         <a
                             href={CONTEXT_VARIABLES_DOC_URL}
@@ -236,7 +294,22 @@ export function HttpApiToolConfig({
                         is <span className="font-medium text-foreground/80">{httpIntegrationCachePolicy.cacheEnabled ? "on" : "off"}</span>
                         {" "}
                         (<code className="text-[10px]">{httpIntegrationCachePolicy.implementationStatus}</code>
-                        ). Runtime cache is not planned{" "}
+                        ). Org draft (persisted):{" "}
+                        <span className="font-medium text-foreground/80">
+                            {httpIntegrationCachePolicy.storedPreferences.cacheEnabledWhenShipped
+                                ? "prefer cache when shipped"
+                                : "prefer live-only when shipped"}
+                        </span>
+                        {httpIntegrationCachePolicy.storedPreferences.ttlSeconds != null ? (
+                            <>
+                                {" "}
+                                · TTL hint{" "}
+                                <span className="font-mono text-[10px] text-foreground/85">
+                                    {httpIntegrationCachePolicy.storedPreferences.ttlSeconds}s
+                                </span>
+                            </>
+                        ) : null}
+                        . Runtime cache is not planned{" "}
                         <span className="font-medium text-foreground/80">
                             before {httpIntegrationCachePolicy.deferralNotBefore}
                         </span>{" "}
@@ -252,6 +325,50 @@ export function HttpApiToolConfig({
                         .
                     </div>
                 ) : null}
+                <div className="mb-4 rounded-md border border-border p-3 space-y-3">
+                    <div>
+                        <p className="text-xs font-medium text-foreground">Response handling</p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                            Stored on this tool. Calls still hit the live HTTP API until org integration response cache
+                            is implemented; then this preference can opt into the org policy path.
+                        </p>
+                    </div>
+                    <RadioGroup
+                        className="gap-3"
+                        value={responseStorageMode}
+                        onValueChange={(v) =>
+                            onResponseStorageModeChange(v as "live_only" | "org_cache_when_enabled")
+                        }
+                    >
+                        <div className="flex items-start gap-2">
+                            <RadioGroupItem value="live_only" id="http-response-live-only" className="mt-0.5" />
+                            <div className="grid gap-0.5">
+                                <Label htmlFor="http-response-live-only" className="text-xs font-normal cursor-pointer">
+                                    Live API only
+                                </Label>
+                                <p className="text-[11px] text-muted-foreground">
+                                    Default — always resolve via upstream HTTP (recommended until cache ships).
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                            <RadioGroupItem
+                                value="org_cache_when_enabled"
+                                id="http-response-org-cache"
+                                className="mt-0.5"
+                            />
+                            <div className="grid gap-0.5">
+                                <Label htmlFor="http-response-org-cache" className="text-xs font-normal cursor-pointer">
+                                    Use organization HTTP cache policy when enabled
+                                </Label>
+                                <p className="text-[11px] text-muted-foreground">
+                                    Authoring intent only today — honor org draft + rollout settings once runtime cache
+                                    exists (see Platform Settings and integration cache banner above).
+                                </p>
+                            </div>
+                        </div>
+                    </RadioGroup>
+                </div>
                 <div className="mb-4 rounded-md border border-border p-3">
                     <Label className="text-xs">Custom flow variable</Label>
                     <div className="mt-2 flex items-center gap-2">
@@ -271,7 +388,11 @@ export function HttpApiToolConfig({
                     </p>
                     <p className="mt-2 text-xs text-muted-foreground">
                         Added variables appear in picker dropdowns for parameters, headers, body template, endpoint
-                        URL, test JSON, and call context (Form and JSON tabs).
+                        URL, test JSON, and call context (Form and JSON tabs). Any <code className="text-[11px]">{"{{path}}"}</code>{" "}
+                        you use in the URL, headers, body template, parameter value templates, or raw code is also listed
+                        automatically under <span className="font-medium text-foreground/85">Custom flow variables</span>{" "}
+                        (unless it is already a system, conversation, or tool-parameter token) so you can insert it again
+                        without re-adding the path here.
                     </p>
                     <div className="mt-3 flex flex-wrap items-end gap-2">
                         <div className="grid gap-1">

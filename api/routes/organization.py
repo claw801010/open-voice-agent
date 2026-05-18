@@ -1,7 +1,7 @@
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api.constants import DEFAULT_CAMPAIGN_RETRY_CONFIG, DEFAULT_ORG_CONCURRENCY_LIMIT
 from api.db import db_client
@@ -24,8 +24,12 @@ from api.schemas.telephony_config import (
 )
 from api.services.auth.depends import get_user
 from api.services.workflow.tools.http_tool_cache_policy import (
+    HTTP_INTEGRATION_CACHE_POLICY_SCHEMA_VERSION,
     INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE,
     INTEGRATION_RESPONSE_CACHE_STATUS,
+    merge_http_cache_policy_document_with_audit,
+    parse_stored_http_cache_policy_audit,
+    parse_stored_http_cache_policy_preferences,
 )
 from api.services.configuration.masking import is_mask_of, mask_key
 from api.services.posthog_client import capture_event
@@ -35,13 +39,103 @@ from api.services.worker_sync.protocol import WorkerSyncEventType
 router = APIRouter(prefix="/organizations", tags=["organizations"])
 
 
+class HttpIntegrationCacheIntegrationOverride(BaseModel):
+    """Per-connection draft (Nango ``integration_id``). Runtime cache still off."""
+
+    integration_id: str = Field(min_length=1, max_length=512)
+    cache_enabled_when_shipped: bool = False
+    ttl_seconds: Optional[int] = Field(
+        default=None,
+        ge=60,
+        le=7776000,
+        description="Optional TTL override for this connection when cache ships; omit for org default.",
+    )
+    pii_handling: Literal["allow_with_redaction", "block_cached_store"] = Field(
+        default="allow_with_redaction",
+        description="Whether cached payloads may be stored subject to org redaction vs blocked for this connection.",
+    )
+
+
+class HttpIntegrationCacheStoredPreferences(BaseModel):
+    """Org-persisted draft only. Effective runtime cache remains off until ``implementation_status`` changes."""
+
+    cache_enabled_when_shipped: bool = False
+    ttl_seconds: Optional[int] = None
+    integration_overrides: List[HttpIntegrationCacheIntegrationOverride] = Field(default_factory=list)
+
+
+class HttpIntegrationCachePolicyAuditEntry(BaseModel):
+    ts: str
+    actor_provider_id: str
+    cache_enabled_when_shipped: bool
+    ttl_seconds: Optional[int] = None
+    integration_overrides_count: Optional[int] = Field(
+        default=None,
+        description="Number of per-integration override rows after this save (schema v4+).",
+    )
+
+
+class HttpIntegrationCachePolicyPut(BaseModel):
+    cache_enabled_when_shipped: bool = False
+    ttl_seconds: Optional[int] = Field(
+        default=None,
+        ge=60,
+        le=7776000,
+        description="Upper TTL hint when cache ships; max 90 days.",
+    )
+    integration_overrides: List[HttpIntegrationCacheIntegrationOverride] = Field(
+        default_factory=list,
+        description="Draft per Nango connection id; replaces prior overrides list on save.",
+    )
+
+
 class HttpIntegrationCachePolicyResponse(BaseModel):
-    """WE-01-DATASTORE-INTEG — org-scoped read model until admin policy + persistence ship."""
+    """WE-01-DATASTORE-INTEG — effective runtime stub + optional org-stored draft preferences."""
 
     organization_id: int
     cache_enabled: bool = False
     deferral_not_before: str
     implementation_status: str
+    policy_schema_version: int = HTTP_INTEGRATION_CACHE_POLICY_SCHEMA_VERSION
+    stored_preferences: HttpIntegrationCacheStoredPreferences
+    policy_audit: List[HttpIntegrationCachePolicyAuditEntry] = Field(default_factory=list)
+
+
+async def _http_integration_cache_policy_response(org_id: int) -> HttpIntegrationCachePolicyResponse:
+    raw = await db_client.get_configuration_value(
+        org_id,
+        OrganizationConfigurationKey.HTTP_INTEGRATION_CACHE_POLICY.value,
+        default=None,
+    )
+    prefs_dict = parse_stored_http_cache_policy_preferences(raw)
+    audit_raw = parse_stored_http_cache_policy_audit(raw)
+    audit_models = []
+    for row in audit_raw:
+        audit_models.append(
+            HttpIntegrationCachePolicyAuditEntry(
+                ts=row["ts"],
+                actor_provider_id=row["actor_provider_id"],
+                cache_enabled_when_shipped=row["cache_enabled_when_shipped"],
+                ttl_seconds=row.get("ttl_seconds"),
+                integration_overrides_count=row.get("integration_overrides_count"),
+            )
+        )
+    overrides = prefs_dict.get("integration_overrides") or []
+    ov_models = [HttpIntegrationCacheIntegrationOverride(**o) for o in overrides]
+    sp = HttpIntegrationCacheStoredPreferences(
+        cache_enabled_when_shipped=prefs_dict["cache_enabled_when_shipped"],
+        ttl_seconds=prefs_dict["ttl_seconds"],
+        integration_overrides=ov_models,
+    )
+    return HttpIntegrationCachePolicyResponse(
+        organization_id=org_id,
+        cache_enabled=False,
+        deferral_not_before=INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE,
+        implementation_status=INTEGRATION_RESPONSE_CACHE_STATUS,
+        policy_schema_version=HTTP_INTEGRATION_CACHE_POLICY_SCHEMA_VERSION,
+        stored_preferences=sp,
+        policy_audit=audit_models,
+    )
 
 
 @router.get("/http-integration-cache-policy", response_model=HttpIntegrationCachePolicyResponse)
@@ -49,18 +143,52 @@ async def get_http_integration_cache_policy(user: UserModel = Depends(get_user))
     """
     Integration-backed HTTP **response** cache policy for the selected org.
 
-    Today: always `cache_enabled=false` with a documented deferral date; see
-    `http_tool_cache_policy` and docs/integrations/http-tool-org-datastore-design.mdx.
+    ``cache_enabled`` is always false until runtime cache ships. ``stored_preferences`` merges
+    the org configuration row when present (draft intent for a future admin UI).
     """
     if not user.selected_organization_id:
         raise HTTPException(status_code=400, detail="No organization selected")
 
-    return HttpIntegrationCachePolicyResponse(
-        organization_id=user.selected_organization_id,
-        cache_enabled=False,
-        deferral_not_before=INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE,
-        implementation_status=INTEGRATION_RESPONSE_CACHE_STATUS,
+    return await _http_integration_cache_policy_response(user.selected_organization_id)
+
+
+@router.put("/http-integration-cache-policy", response_model=HttpIntegrationCachePolicyResponse)
+async def put_http_integration_cache_policy(
+    body: HttpIntegrationCachePolicyPut,
+    user: UserModel = Depends(get_user),
+):
+    """Persist draft HTTP integration cache preferences for the selected org (runtime cache still off)."""
+    if not user.selected_organization_id:
+        raise HTTPException(status_code=400, detail="No organization selected")
+
+    prev_raw = await db_client.get_configuration_value(
+        user.selected_organization_id,
+        OrganizationConfigurationKey.HTTP_INTEGRATION_CACHE_POLICY.value,
+        default=None,
     )
+    doc = merge_http_cache_policy_document_with_audit(
+        prev_raw,
+        body.cache_enabled_when_shipped,
+        body.ttl_seconds,
+        str(user.provider_id),
+        [o.model_dump() for o in body.integration_overrides],
+    )
+    await db_client.upsert_configuration(
+        user.selected_organization_id,
+        OrganizationConfigurationKey.HTTP_INTEGRATION_CACHE_POLICY.value,
+        doc,
+    )
+    capture_event(
+        distinct_id=str(user.provider_id),
+        event=PostHogEvent.HTTP_INTEGRATION_CACHE_POLICY_UPDATED,
+        properties={
+            "organization_id": user.selected_organization_id,
+            "cache_enabled_when_shipped": body.cache_enabled_when_shipped,
+            "ttl_seconds_set": body.ttl_seconds is not None,
+            "integration_overrides_count": len(body.integration_overrides),
+        },
+    )
+    return await _http_integration_cache_policy_response(user.selected_organization_id)
 
 # Provider configuration constants
 PROVIDER_MASKED_FIELDS = {
