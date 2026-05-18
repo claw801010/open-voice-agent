@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ClipboardList } from "lucide-react";
+import { ArrowLeft, ClipboardList, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,6 +17,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { CallLiveTracePanel } from '@/components/analytics/CallLiveTracePanel';
+import { CallReviewPanel } from '@/components/analytics/CallReviewPanel';
+import { CallScorecardPanel, type CallScorecard } from '@/components/analytics/CallScorecardPanel';
+import type { CallLiveTrace, CallQualityReport } from '@/lib/callLiveTraceTypes';
 import { type AnalyticsCallDetail, fetchAnalyticsCallDetail } from "@/lib/analyticsCallsApi";
 import { useAuth } from "@/lib/auth";
 
@@ -83,6 +87,18 @@ export default function AnalyticsCallDetailPage() {
                         All calls
                     </Link>
                 </Button>
+                {typeof detail?.engineering_links?.langfuse_trace_url === "string" ? (
+                    <Button variant="outline" size="sm" asChild className="gap-1.5">
+                        <a
+                            href={detail.engineering_links.langfuse_trace_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <ExternalLink className="h-4 w-4" />
+                            Open in Langfuse
+                        </a>
+                    </Button>
+                ) : null}
             </div>
 
             <div className="flex items-start gap-3">
@@ -119,6 +135,14 @@ export default function AnalyticsCallDetailPage() {
                                     <div>
                                         <span className="text-muted-foreground">Pack slug </span>
                                         <Badge variant="secondary">{detail.workflow_slug}</Badge>
+                                    </div>
+                                ) : null}
+                                {detail.catalog_variant_id ? (
+                                    <div>
+                                        <span className="text-muted-foreground">Catalog variant </span>
+                                        <Badge variant="outline" className="font-mono">
+                                            {detail.catalog_variant_id}
+                                        </Badge>
                                     </div>
                                 ) : null}
                                 <div>
@@ -158,7 +182,9 @@ export default function AnalyticsCallDetailPage() {
                         <CardHeader>
                             <CardTitle className="text-base">Customer outcomes</CardTitle>
                             <CardDescription>
-                                From <code className="text-xs">gathered_context</code> (convention keys).
+                                Customer-defined results from <code className="text-xs">gathered_context</code> (e.g.{" "}
+                                <code className="text-xs">outcome_key</code>, disposition tags). Use these for vertical
+                                KPIs (booking, escalation, resolution).
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -222,16 +248,27 @@ export default function AnalyticsCallDetailPage() {
                         </CardContent>
                     </Card>
 
+                    <CallLiveTracePanel
+                        liveTrace={(detail.live_trace as CallLiveTrace | undefined) ?? null}
+                        qualityReport={(detail.quality_report as CallQualityReport | undefined) ?? null}
+                    />
+
+                    <CallScorecardPanel scorecard={(detail.scorecard as CallScorecard | undefined) ?? null} />
+
+                    <CallReviewPanel callId={callId} detail={detail} />
+
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-base">QA / QM</CardTitle>
-                            <CardDescription>From workflow run annotations when QA nodes ran.</CardDescription>
+                            <CardTitle className="text-base">QM / QA review</CardTitle>
+                            <CardDescription>
+                                Score, flags, and reviewer notes from workflow annotations when QA nodes ran.
+                            </CardDescription>
                         </CardHeader>
                         <CardContent>
                             {!detail.qa ? (
-                                <p className="text-sm text-muted-foreground">No QA summary stored.</p>
+                                <p className="text-sm text-muted-foreground">No QM or QA metadata stored.</p>
                             ) : (
-                                <div className="space-y-2 text-sm">
+                                <div className="space-y-3 text-sm">
                                     {detail.qa.score != null ? (
                                         <div>
                                             <span className="text-muted-foreground">Score </span>
@@ -247,19 +284,25 @@ export default function AnalyticsCallDetailPage() {
                                             ))}
                                         </div>
                                     ) : null}
+                                    {detail.qa.reviewer_notes?.trim() ? (
+                                        <div>
+                                            <span className="text-muted-foreground block text-xs mb-1">
+                                                Reviewer notes
+                                            </span>
+                                            <p className="whitespace-pre-wrap rounded-md border border-border/80 bg-muted/30 p-2 text-sm">
+                                                {detail.qa.reviewer_notes}
+                                            </p>
+                                        </div>
+                                    ) : null}
+                                    {detail.qa.score == null &&
+                                    (!detail.qa.flags || detail.qa.flags.length === 0) &&
+                                    !detail.qa.reviewer_notes?.trim() ? (
+                                        <p className="text-muted-foreground">QA object present but empty.</p>
+                                    ) : null}
                                 </div>
                             )}
                         </CardContent>
                     </Card>
-
-                    {detail.ai_summary ? (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-base">AI summary</CardTitle>
-                            </CardHeader>
-                            <CardContent className="text-sm">{detail.ai_summary}</CardContent>
-                        </Card>
-                    ) : null}
                 </>
             ) : null}
         </div>

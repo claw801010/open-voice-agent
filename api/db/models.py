@@ -384,6 +384,47 @@ class WorkflowRunModel(Base):
     )
 
 
+class AnalyticsHttpToolSpanModel(Base):
+    """Normalized tool spans for analytics (MK-01 Phase D); populated when a voice run completes."""
+
+    __tablename__ = "analytics_http_tool_spans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    organization_id = Column(
+        Integer, ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False
+    )
+    workflow_id = Column(
+        Integer, ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False
+    )
+    workflow_run_id = Column(
+        Integer, ForeignKey("workflow_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    span_id = Column(String(512), nullable=False)
+    tool_name = Column(String(512), nullable=False)
+    tool_type = Column(String(64), nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    duration_ms = Column(Integer, nullable=False, default=0, server_default=text("0"))
+    http_summary = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+
+    organization = relationship("OrganizationModel")
+    workflow = relationship("WorkflowModel")
+    workflow_run = relationship("WorkflowRunModel")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "workflow_run_id",
+            "span_id",
+            name="uq_analytics_http_tool_spans_run_span",
+        ),
+        Index(
+            "ix_analytics_http_tool_spans_org_run",
+            "organization_id",
+            "workflow_run_id",
+        ),
+    )
+
+
 # LoopTalk Testing Models
 class LoopTalkTestSession(Base):
     __tablename__ = "looptalk_test_sessions"

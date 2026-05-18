@@ -18,7 +18,9 @@ import { createClientConfig, setupAuthInterceptor } from '@/lib/apiClient';
 
 export type FollowUpActionType = CreateFollowUpBody['action_type'];
 
-export type CallReviewRecommendation = CallAiReviewResponse['recommendations'][number];
+export type CallReviewRecommendation = NonNullable<
+    CallAiReviewResponse['recommendations']
+>[number];
 
 export type CallAiReview = CallAiReviewResponse;
 

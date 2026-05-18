@@ -365,6 +365,21 @@ def register_event_handlers(
                 logger.debug(
                     f"Saved {len(feedback_events)} feedback events to workflow run logs"
                 )
+                wf = workflow_run.workflow
+                if wf is not None and wf.organization_id is not None:
+                    try:
+                        await db_client.replace_analytics_http_tool_spans_for_run(
+                            organization_id=wf.organization_id,
+                            workflow_id=workflow_run.workflow_id,
+                            workflow_run_id=workflow_run_id,
+                            logs={"realtime_feedback_events": feedback_events},
+                        )
+                    except Exception as span_exc:
+                        logger.error(
+                            "Error persisting analytics_http_tool_spans: %s",
+                            span_exc,
+                            exc_info=True,
+                        )
             except Exception as e:
                 logger.error(f"Error saving realtime feedback logs: {e}", exc_info=True)
         else:

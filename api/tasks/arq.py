@@ -3,7 +3,7 @@
 import ssl
 from urllib.parse import urlparse
 
-from api.constants import REDIS_URL
+from api.constants import ENABLE_ANALYTICS_QM_EXPORT_CRON, REDIS_URL
 
 # Setup logging - this is now idempotent and safe to call multiple times
 from api.logging_config import setup_logging
@@ -49,6 +49,25 @@ from api.tasks.s3_upload import (
     process_workflow_completion,
     upload_voicemail_audio_to_s3,
 )
+from api.tasks.analytics_qm_export_tasks import (
+    cron_enqueue_analytics_qm_exports,
+    run_analytics_qm_export_for_org,
+)
+from api.services.analytics.analytics_qm_export_schedule import (
+    QM_EXPORT_CRON_DISPATCH_MINUTE_UTC,
+)
+
+_QM_EXPORT_CRON_JOBS = []
+if ENABLE_ANALYTICS_QM_EXPORT_CRON:
+    from arq.cron import cron
+
+    _QM_EXPORT_CRON_JOBS = [
+        cron(
+            cron_enqueue_analytics_qm_exports,
+            minute=QM_EXPORT_CRON_DISPATCH_MINUTE_UTC,
+            run_at_startup=False,
+        )
+    ]
 
 
 class WorkerSettings:
@@ -59,8 +78,9 @@ class WorkerSettings:
         sync_campaign_source,
         process_campaign_batch,
         process_knowledge_base_document,
+        run_analytics_qm_export_for_org,
     ]
-    cron_jobs = []
+    cron_jobs = _QM_EXPORT_CRON_JOBS
     redis_settings = REDIS_SETTINGS
     max_jobs = 10
 

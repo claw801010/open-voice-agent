@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Call analytics",
+    title: "Call list",
     description: "Filterable call list and per-call outcomes, metrics, and HTTP tool traces.",
 };
 

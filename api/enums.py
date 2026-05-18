@@ -87,6 +87,21 @@ class OrganizationConfigurationKey(Enum):
     LANGFUSE_CREDENTIALS = (
         "LANGFUSE_CREDENTIALS"  # Org-level Langfuse tracing credentials
     )
+    MK01_ANALYTICS_DASHBOARD_LAYOUT = (
+        "MK01_ANALYTICS_DASHBOARD_LAYOUT"  # JSON: { v: 1, widgets: [{ id, type }, ...] }
+    )
+    MK01_ANALYTICS_DETAIL_REDACTION_ENABLED = (
+        "MK01_ANALYTICS_DETAIL_REDACTION_ENABLED"  # bool: default True — PII redaction on call detail + CSV export
+    )
+    MK01_ANALYTICS_QM_EXPORT_SCHEDULE = (
+        "MK01_ANALYTICS_QM_EXPORT_SCHEDULE"  # JSON: scheduled QM CSV export (Phase D)
+    )
+    MK01_ANALYTICS_QM_SCORECARD = (
+        "MK01_ANALYTICS_QM_SCORECARD"  # JSON: org QM rubric criteria for QA scorecard grid
+    )
+    HTTP_INTEGRATION_CACHE_POLICY = (
+        "HTTP_INTEGRATION_CACHE_POLICY"  # JSON draft prefs — WE-01-DATASTORE-INTEG; runtime cache still not_implemented
+    )
 
 
 class WorkflowStatus(Enum):
@@ -155,3 +170,4 @@ class PostHogEvent(str, Enum):
     KNOWLEDGE_BASE_CREATED = "knowledge_base_created"
     TOOL_CREATED = "tool_created"
     AGENT_EMBEDDED = "agent_embedded"
+    HTTP_INTEGRATION_CACHE_POLICY_UPDATED = "http_integration_cache_policy_updated"

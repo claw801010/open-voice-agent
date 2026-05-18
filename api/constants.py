@@ -69,6 +69,17 @@ LOG_RETENTION = os.getenv("LOG_RETENTION", "7 days")
 LOG_COMPRESSION = os.getenv("LOG_COMPRESSION", "gz")
 ENABLE_TELEMETRY = os.getenv("ENABLE_TELEMETRY", "false").lower() == "true"
 
+# ARQ cron: hourly enqueue of per-org analytics QM CSV uploads (see api/tasks/analytics_qm_export_tasks.py).
+ENABLE_ANALYTICS_QM_EXPORT_CRON = (
+    os.getenv("ENABLE_ANALYTICS_QM_EXPORT_CRON", "false").lower() == "true"
+)
+
+# Local in-process demo calendar (book_slot / lookup_availability HTTP targets for GTM).
+_default_local_scheduling = "true" if ENVIRONMENT == Environment.LOCAL.value else "false"
+ENABLE_LOCAL_SCHEDULING = (
+    os.getenv("ENABLE_LOCAL_SCHEDULING", _default_local_scheduling).lower() == "true"
+)
+
 
 def _get_version() -> str:
     """Read version from pyproject.toml."""

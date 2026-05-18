@@ -1,0 +1,224 @@
+# MK-01-ANALYTICS-VERTICAL — Playwright: OSS /analytics → login; optional full stack + strict redaction RBAC.
+name: UI — Playwright (analytics smoke)
+
+on:
+  push:
+    paths:
+      - "ui/**"
+      - "api/**"
+      - "scripts/ci_promote_oss_user_superuser.py"
+      - ".github/workflows/ui-playwright.yml"
+  pull_request:
+    paths:
+      - "ui/**"
+      - "api/**"
+      - "scripts/ci_promote_oss_user_superuser.py"
+      - ".github/workflows/ui-playwright.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright-analytics-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - run: npm ci
+
+      - name: Build Next.js (heap for large bundle)
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
+        run: npm run build
+
+      - run: npx playwright install chromium --with-deps
+
+      - name: Run Playwright (unauthenticated smoke; auth tests skipped without secrets)
+        env:
+          CI: true
+        run: npm run test:e2e
+
+  playwright-analytics-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: api/requirements*.txt
+
+      - name: Install API dependencies
+        working-directory: api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Alembic upgrade
+        working-directory: api
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+        run: alembic upgrade head
+
+      - name: Start API (strict local redaction RBAC for E2E)
+        working-directory: ${{ github.workspace }}
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+          REDIS_URL: redis://127.0.0.1:6379/0
+          AUTH_PROVIDER: local
+          MK01_ANALYTICS_LOCAL_E2E_STRICT_REDACTION_RBAC: "1"
+          MK01_ANALYTICS_REDACTION_DISABLE_REQUIRES_SUPERUSER: "1"
+          MINIO_PUBLIC_ENDPOINT: http://127.0.0.1:9000
+          LOG_LEVEL: WARNING
+        run: |
+          uvicorn api.app:app --host 127.0.0.1 --port 8000 &
+          for i in $(seq 1 90); do
+            curl -sf http://127.0.0.1:8000/api/v1/health && exit 0
+            sleep 1
+          done
+          echo "API failed to become healthy"
+          exit 1
+
+      - name: Seed OSS Playwright user
+        run: |
+          EMAIL="playwright-e2e-${{ github.run_id }}-${{ github.run_attempt }}@example.com"
+          curl -sf -X POST http://127.0.0.1:8000/api/v1/auth/signup \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"${EMAIL}\",\"password\":\"PlaywrightE2E-test-99\",\"name\":\"Playwright E2E\"}"
+          echo "E2E_EMAIL=${EMAIL}" >> "${GITHUB_ENV}"
+          echo "E2E_PASSWORD=PlaywrightE2E-test-99" >> "${GITHUB_ENV}"
+          echo "E2E_STRICT_REDACTION_RBAC=1" >> "${GITHUB_ENV}"
+
+      - name: Seed analytics demo call for call-detail E2E
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+        run: |
+          CALL_ID=$(python "${GITHUB_WORKSPACE}/scripts/seed_gtm_analytics_demo_call.py")
+          echo "Seeded call_id=${CALL_ID}"
+          echo "E2E_GTM_SAMPLE_CALL_ID=${CALL_ID}" >> "${GITHUB_ENV}"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install UI dependencies & Playwright browser
+        working-directory: ui
+        run: |
+          npm ci
+          npx playwright install chromium --with-deps
+
+      - name: Workflow-import OpenAPI + client are committed
+        run: |
+          python scripts/gen_workflow_import_openapi.py
+          git diff --exit-code catalog/openapi/workflow-import.openapi.json
+          cd ui && npm run generate-client:workflow-import
+          git diff --exit-code src/client/workflowImport/
+
+      - name: Verify OpenAPI exposes workflow import routes
+        run: |
+          IMPORT_COUNT=$(curl -sf http://127.0.0.1:8000/api/v1/openapi.json | python -c "
+          import json, sys
+          paths = json.load(sys.stdin).get('paths', {})
+          n = sum(1 for p in paths if '/workflow/import/' in p)
+          print(n)
+          ")
+          echo "workflow import paths in OpenAPI: ${IMPORT_COUNT}"
+          test "${IMPORT_COUNT}" -ge 8
+
+      - name: OpenAPI client drift (workflow import — advisory until MK-01-IMPORT-CLIENT Done)
+        working-directory: ui
+        env:
+          OPENAPI_INPUT: http://127.0.0.1:8000/api/v1/openapi.json
+        continue-on-error: true
+        run: |
+          npm run generate-client
+          if ! git diff --quiet -- src/client/; then
+            echo "::warning::ui/src/client drift — run: bash scripts/generate_ui_openapi_client.sh and commit"
+            git diff --stat -- src/client/ || true
+          fi
+
+      - name: Build Next.js
+        working-directory: ui
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
+          NEXT_PUBLIC_BACKEND_URL: http://127.0.0.1:8000
+        run: npm run build
+
+      - name: Start Next.js & run Playwright (strict RBAC member + superuser phases)
+        working-directory: ui
+        env:
+          CI: true
+          PLAYWRIGHT_SKIP_WEBSERVER: "1"
+          E2E_BACKEND_URL: http://127.0.0.1:8000
+          E2E_BASE_URL: http://127.0.0.1:3000
+          BACKEND_URL: http://127.0.0.1:8000
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+        run: |
+          npm run start &
+          NEXT_PID=$!
+          READY=
+          for _ in $(seq 1 90); do
+            if curl -sf http://127.0.0.1:3000/templates >/dev/null; then
+              READY=1
+              break
+            fi
+            sleep 1
+          done
+          if [ -z "$READY" ]; then
+            echo "Next.js failed to become reachable"
+            kill "$NEXT_PID" 2>/dev/null || true
+            exit 1
+          fi
+          npm run test:e2e
+          EC1=$?
+          if [ "$EC1" -ne 0 ]; then
+            kill "$NEXT_PID" 2>/dev/null || true
+            exit "$EC1"
+          fi
+          python "${GITHUB_WORKSPACE}/scripts/ci_promote_oss_user_superuser.py"
+          E2E_EXPECT_SUPERUSER_MAY_DISABLE=1 npm run test:e2e
+          EC2=$?
+          kill "$NEXT_PID" 2>/dev/null || true
+          exit "$EC2"
