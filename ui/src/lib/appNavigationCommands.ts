@@ -35,11 +35,18 @@ export const APP_NAV_COMMANDS: AppNavCommand[] = [
     { id: 'usage', title: 'Usage', href: '/usage', group: 'Observe', keywords: ['billing', 'tokens', 'quota'] },
     { id: 'reports', title: 'Reports', href: '/reports', group: 'Observe', keywords: ['analytics'] },
     {
+        id: 'analytics-overview',
+        title: 'Analytics',
+        href: '/analytics',
+        group: 'Observe',
+        keywords: ['dashboard', 'outcomes', 'rollups', 'gmv', 'vertical', 'booking', 'kpi', 'http'],
+    },
+    {
         id: 'analytics-calls',
-        title: 'Call analytics',
+        title: 'Call list',
         href: '/analytics/calls',
         group: 'Observe',
-        keywords: ['calls', 'qm', 'qa', 'tools', 'http', 'outcomes', 'vertical'],
+        keywords: ['calls', 'qm', 'qa', 'tools', 'http', 'outcomes', 'traces', 'list'],
     },
     { id: 'settings', title: 'Platform settings', href: '/settings', group: 'General', keywords: ['account', 'prefs'] },
 ];

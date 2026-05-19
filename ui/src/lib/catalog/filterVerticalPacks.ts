@@ -2,6 +2,15 @@
  * Client-side filters for MK-01 marketplace catalog (vertical-packs.json shape).
  */
 
+/** Optional simple vs complex graphs for the same vertical (see catalog/PREBUILD_VERTICAL_ROADMAP.md). */
+export type WorkflowVariantMeta = {
+    variant_id: string;
+    label: string;
+    complexity: 'simple' | 'complex';
+    packaged_definition_ref: string;
+    description?: string;
+};
+
 export type VerticalPack = {
     slug: string;
     /** Partner pack semver (MK-01-PARTNER); bump on published updates */
@@ -15,6 +24,8 @@ export type VerticalPack = {
     compliance_tags?: string[];
     default_template_variables?: Record<string, string>;
     cost_latency_estimate_band?: string;
+    /** Simple + booking/complex JSON graphs; default install uses workflow_template ref only */
+    workflow_variants?: WorkflowVariantMeta[];
 };
 
 export type CatalogJson = {

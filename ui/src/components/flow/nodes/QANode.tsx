@@ -307,7 +307,7 @@ const QANodeEditForm = ({
                     value={qaSystemPrompt}
                     onChange={(e) => setQaSystemPrompt(e.target.value)}
                     className="min-h-[300px] font-mono text-xs"
-                    placeholder={`You are a QA analyst evaluating a specific segment of a voice AI conversation.\n\n## Node Purpose\n{{node_summary}}\n\n## Previous Conversation Context\n{{previous_conversation_summary}}\n\n## Call Metrics\n{{metrics}}\n\nEvaluate the transcript and return JSON with:\n- "tags": array of relevant tags\n- "summary": 2-3 sentence summary of this segment\n- "call_quality_score": number 1-10\n- "overall_sentiment": "positive", "neutral", or "negative"`}
+                    placeholder={`You are a QA analyst evaluating a specific segment of a voice AI conversation.\n\n## Node Purpose\n{{node_summary}}\n\n## Previous Conversation Context\n{{previous_conversation_summary}}\n\n## Call Metrics\n{{metrics}}\n\nEvaluate the transcript and return JSON with:\n- "tags": array of relevant tags\n- "summary": 2-3 sentence summary of this segment\n- "call_quality_score": number 1-10\n- "overall_sentiment": "positive", "neutral", or "negative"\n- "criteria": array of {"criterion_id":"<id>","pass":true|false,"note":"brief"} for each org rubric criterion you can score`}
                 />
             </div>
 

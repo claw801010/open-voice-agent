@@ -1,31 +1,14 @@
 """Langfuse / OpenTelemetry tracing helpers for QA analysis."""
 
 import json
-import re
 
 from loguru import logger
 
 from api.db.models import WorkflowRunModel
+from api.services.analytics.langfuse_trace_id import extract_trace_id
 from api.services.pipecat.tracing_config import get_trace_url
 
-
-def extract_trace_id(gathered_context: dict) -> str | None:
-    """Extract Langfuse trace_id from gathered_context trace_url.
-
-    Supports both URL formats:
-    - New: https://langfuse.dograh.com/trace/<trace_id>
-    - Legacy: https://langfuse.dograh.com/project/<project_id>/traces/<trace_id>
-    """
-    trace_url = gathered_context.get("trace_url")
-    if not trace_url:
-        return None
-    try:
-        match = re.search(r"/traces?/([a-fA-F0-9]+)$", trace_url)
-        if match:
-            return match.group(1)
-    except Exception:
-        pass
-    return None
+__all__ = ["extract_trace_id", "setup_langfuse_parent_context", "add_qa_span_to_trace", "create_node_summary_trace"]
 
 
 def setup_langfuse_parent_context(workflow_run: WorkflowRunModel):

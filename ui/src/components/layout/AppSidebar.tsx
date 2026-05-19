@@ -16,6 +16,7 @@ import {
   Megaphone,
   Phone,
   Settings,
+  Store,
   TrendingUp,
   Workflow,
   Wrench,
@@ -111,6 +112,11 @@ export function AppSidebar() {
           icon: Workflow,
         },
         {
+          title: "Templates",
+          url: "/workflow/catalog",
+          icon: Store,
+        },
+        {
           title: "Campaigns",
           url: "/campaigns",
           icon: Megaphone,
@@ -169,8 +175,8 @@ export function AppSidebar() {
       icon: FileText,
     },
     {
-      title: "Call analytics",
-      url: "/analytics/calls",
+      title: "Analytics",
+      url: "/analytics",
       icon: ClipboardList,
     },
     // {

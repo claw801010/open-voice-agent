@@ -64,6 +64,13 @@ function toggleString(arr: string[], value: string, checked: boolean): string[] 
     return [...set];
 }
 
+function defaultCatalogVariantId(pack: VerticalPack): string {
+    const v = pack.workflow_variants;
+    if (!v || v.length === 0) return '';
+    const simple = v.find((x) => x.complexity === 'simple');
+    return (simple ?? v[0])!.variant_id;
+}
+
 export function MarketplaceCatalog({
     catalog,
     loadError,
@@ -75,7 +82,8 @@ export function MarketplaceCatalog({
     const router = useRouter();
     const { getAccessToken } = useAuth();
     const [filters, setFilters] = useState<CatalogFilters>(defaultCatalogFilters);
-    const [installSlug, setInstallSlug] = useState<string | null>(null);
+    const [installTarget, setInstallTarget] = useState<VerticalPack | null>(null);
+    const [installVariantId, setInstallVariantId] = useState('');
     const [installName, setInstallName] = useState('');
     const [installing, setInstalling] = useState(false);
     const [tryPack, setTryPack] = useState<VerticalPack | null>(null);
@@ -92,25 +100,33 @@ export function MarketplaceCatalog({
     }, []);
 
     const openInstall = useCallback((pack: VerticalPack) => {
-        setInstallSlug(pack.slug);
+        setInstallTarget(pack);
         setInstallName(pack.display_name);
+        setInstallVariantId(defaultCatalogVariantId(pack));
     }, []);
 
     const confirmInstall = useCallback(async () => {
-        if (!installSlug || !installName.trim()) {
+        if (!installTarget || !installName.trim()) {
             toast.error('Enter a name for the workflow');
             return;
         }
         setInstalling(true);
         try {
             const token = await getAccessToken();
+            const hasVariants = (installTarget.workflow_variants?.length ?? 0) > 0;
             const res = await installWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPost({
-                body: { slug: installSlug, workflow_name: installName.trim() },
+                body: {
+                    slug: installTarget.slug,
+                    workflow_name: installName.trim(),
+                    ...(hasVariants && installVariantId
+                        ? { variant_id: installVariantId }
+                        : {}),
+                },
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             if (res.data?.id) {
                 toast.success('Installed workflow in your organization');
-                setInstallSlug(null);
+                setInstallTarget(null);
                 router.push(`/workflow/${res.data.id}`);
             }
         } catch (e) {
@@ -119,7 +135,7 @@ export function MarketplaceCatalog({
         } finally {
             setInstalling(false);
         }
-    }, [installSlug, installName, getAccessToken, router]);
+    }, [installTarget, installName, installVariantId, getAccessToken, router]);
 
     const confirmTryWeb = useCallback(async () => {
         if (!tryPack) return;
@@ -403,6 +419,20 @@ export function MarketplaceCatalog({
                                         {Object.keys(pack.default_template_variables).join(', ')}
                                     </p>
                                 )}
+                                {pack.workflow_variants && pack.workflow_variants.length > 1 && (
+                                    <p className="text-xs leading-snug text-muted-foreground">
+                                        <span className="font-medium text-foreground">Templates: </span>
+                                        {pack.workflow_variants.map((v) => v.label).join(' · ')}. Default{' '}
+                                        <strong className="font-medium text-foreground">Install</strong> uses the simple graph;
+                                        the complex JSON lives under{' '}
+                                        <code className="rounded bg-muted px-1 py-0.5 text-[11px] text-foreground">catalog/packaged-workflows/</code>{' '}
+                                        for developers importing via{' '}
+                                        <code className="rounded bg-muted px-1 py-0.5 text-[11px] text-foreground">
+                                            POST /api/v1/workflow/create/definition
+                                        </code>{' '}
+                                        (<span className="text-foreground">catalog/import-packaged-workflow-json.md</span>).
+                                    </p>
+                                )}
                                 {pack.pack_semver ? (
                                     <p className="text-xs text-muted-foreground/80">Pack v{pack.pack_semver}</p>
                                 ) : null}
@@ -454,7 +484,10 @@ export function MarketplaceCatalog({
             )}
 
             {installable && (
-                <Dialog open={installSlug !== null} onOpenChange={(open) => !open && setInstallSlug(null)}>
+                <Dialog
+                    open={installTarget !== null}
+                    onOpenChange={(open) => !open && setInstallTarget(null)}
+                >
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Name your workflow</DialogTitle>
@@ -462,20 +495,62 @@ export function MarketplaceCatalog({
                                 This creates a new workflow in your organization only (no cross-org access).
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-2 py-2">
-                            <Label htmlFor="wf-name">Workflow name</Label>
-                            <Input
-                                id="wf-name"
-                                value={installName}
-                                onChange={(e) => setInstallName(e.target.value)}
-                                placeholder="e.g. Clinic screening — Main St"
-                            />
+                        <div className="space-y-4 py-2">
+                            {installTarget &&
+                                installTarget.workflow_variants &&
+                                installTarget.workflow_variants.length > 0 && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="catalog-variant">Graph variant</Label>
+                                        <Select
+                                            value={installVariantId}
+                                            onValueChange={setInstallVariantId}
+                                        >
+                                            <SelectTrigger id="catalog-variant" className="w-full">
+                                                <SelectValue placeholder="Choose variant" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {installTarget.workflow_variants.map((v) => (
+                                                    <SelectItem key={v.variant_id} value={v.variant_id}>
+                                                        {v.label}
+                                                        {v.complexity === 'complex'
+                                                            ? ' (booking / API–ready prompts)'
+                                                            : ' (default linear)'}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-xs text-muted-foreground">
+                                            Complex variants add scheduling language; attach HTTP tools after
+                                            install. Saved on the workflow as{' '}
+                                            <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                                                catalog_variant_id
+                                            </code>
+                                            .
+                                        </p>
+                                    </div>
+                                )}
+                            <div className="space-y-2">
+                                <Label htmlFor="wf-name">Workflow name</Label>
+                                <Input
+                                    id="wf-name"
+                                    value={installName}
+                                    onChange={(e) => setInstallName(e.target.value)}
+                                    placeholder="e.g. Clinic screening — Main St"
+                                />
+                            </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setInstallSlug(null)}>
+                            <Button variant="outline" onClick={() => setInstallTarget(null)}>
                                 Cancel
                             </Button>
-                            <Button onClick={confirmInstall} disabled={installing || !installName.trim()}>
+                            <Button
+                                onClick={confirmInstall}
+                                disabled={
+                                    installing ||
+                                    !installName.trim() ||
+                                    (!!(installTarget?.workflow_variants?.length) && !installVariantId)
+                                }
+                            >
                                 {installing ? 'Installing…' : 'Install'}
                             </Button>
                         </DialogFooter>

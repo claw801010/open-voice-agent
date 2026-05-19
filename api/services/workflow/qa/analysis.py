@@ -20,6 +20,7 @@ from api.services.workflow.qa.node_summary import (
     ensure_node_summaries,
     get_node_summary_text,
 )
+from api.services.analytics.qm_scorecard import parse_criteria_from_qa_parsed
 from api.services.workflow.qa.tracing import (
     add_qa_span_to_trace,
     setup_langfuse_parent_context,
@@ -211,6 +212,9 @@ async def run_per_node_qa_analysis(
             node_result["summary"] = parsed.get("summary", "")
             node_result["score"] = parsed.get("call_quality_score")
             node_result["overall_sentiment"] = parsed.get("overall_sentiment")
+            criteria = parse_criteria_from_qa_parsed(parsed)
+            if criteria:
+                node_result["criteria"] = criteria
         except (json.JSONDecodeError, ValueError):
             node_result["tags"] = []
             node_result["summary"] = ""
@@ -301,6 +305,9 @@ async def _run_whole_call_qa_analysis(
         node_result["summary"] = parsed.get("summary", "")
         node_result["score"] = parsed.get("call_quality_score")
         node_result["overall_sentiment"] = parsed.get("overall_sentiment")
+        criteria = parse_criteria_from_qa_parsed(parsed)
+        if criteria:
+            node_result["criteria"] = criteria
     except (json.JSONDecodeError, ValueError):
         node_result["tags"] = []
         node_result["summary"] = ""

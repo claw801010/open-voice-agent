@@ -105,7 +105,7 @@ describe("buildGroupedPickerFilterSubtitleLookup", () => {
     it("includes fallback text for custom options so filters can match it", () => {
         const groups = [{ label: HTTP_VARIABLE_GROUP_LABELS.custom, options: ["{{only.custom}}"] }];
         const lookup = buildGroupedPickerFilterSubtitleLookup(groups, [], GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES);
-        expect(lookup["{{only.custom}}"]?.toLowerCase()).toContain("browser");
+        expect(lookup["{{only.custom}}"]?.toLowerCase()).toContain("custom flow variable");
     });
 });
 

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import re
+from collections import deque
 from pathlib import Path
 
 import pytest
@@ -95,6 +97,114 @@ def test_each_vertical_pack_rubric_fields(catalog: dict) -> None:
             assert isinstance(v, str)
 
 
+_HAPPY_PATH_SECTION = "## Happy-path test"
+
+
+def test_runbooks_document_happy_path_test(catalog: dict) -> None:
+    """MK-01-RUBRIC (2–3): each pack runbook documents copy-pasteable happy-path steps + expected outcome."""
+    packs = catalog["packs"]
+    for pack in packs:
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _HAPPY_PATH_SECTION in text, f"{slug}: runbook missing {_HAPPY_PATH_SECTION!r} section"
+        idx = text.index(_HAPPY_PATH_SECTION)
+        tail = text[idx : idx + 1200]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: happy-path section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: happy-path section needs an expected outcome"
+
+
+def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
+    """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
+    packs = catalog["packs"]
+    for pack in packs:
+        slug = pack["slug"]
+        hooks = pack.get("analytics_hooks")
+        assert isinstance(hooks, list) and len(hooks) >= 1, (
+            f"{slug!r}: analytics_hooks must be a non-empty list of strings"
+        )
+        assert all(isinstance(h, str) and h.strip() for h in hooks), (
+            f"{slug!r}: each analytics_hooks entry must be a non-empty string"
+        )
+
+
+_PROMPT_TEMPLATE_TOKEN = re.compile(r"\{\{\s*([^}]+?)\s*\}\}")
+
+
+def _template_var_tokens_from_voice_prompts(data: dict) -> set[str]:
+    """Collect ``{{var}}`` tokens from startCall / agentNode / endCall ``data.prompt`` strings."""
+    out: set[str] = set()
+    for node in data.get("nodes", ()):
+        if not isinstance(node, dict):
+            continue
+        if node.get("type") not in ("startCall", "agentNode", "endCall"):
+            continue
+        raw = node.get("data")
+        if not isinstance(raw, dict):
+            continue
+        prompt = raw.get("prompt")
+        if not isinstance(prompt, str):
+            continue
+        for m in _PROMPT_TEMPLATE_TOKEN.finditer(prompt):
+            name = m.group(1).strip()
+            if name:
+                out.add(name)
+    return out
+
+
+def test_packaged_prompt_template_tokens_have_catalog_entries(catalog: dict) -> None:
+    """MK-01-RUBRIC (3): every ``{{variable}}`` in default + variant packaged prompts is in ``default_template_variables``."""
+    packs = catalog["packs"]
+    for pack in packs:
+        slug = pack["slug"]
+        dtv = pack["default_template_variables"]
+        assert isinstance(dtv, dict), slug
+        keys = set(dtv.keys())
+        refs: set[str] = set()
+        wt = pack.get("workflow_template") or {}
+        pr = wt.get("packaged_definition_ref")
+        if isinstance(pr, str):
+            refs.add(pr)
+        for v in pack.get("workflow_variants") or ():
+            if isinstance(v, dict):
+                r = v.get("packaged_definition_ref")
+                if isinstance(r, str):
+                    refs.add(r)
+        assert refs, f"{slug!r}: no packaged_definition_ref collected"
+        all_tokens: set[str] = set()
+        for ref in sorted(refs):
+            path = PACKAGED_DIR / ref
+            data = json.loads(path.read_text(encoding="utf-8"))
+            all_tokens |= _template_var_tokens_from_voice_prompts(data)
+        missing = all_tokens - keys
+        assert not missing, (
+            f"{slug!r}: tokens in packaged prompts missing from default_template_variables: "
+            f"{sorted(missing)}"
+        )
+
+
+def test_workflow_variants_when_present(catalog: dict) -> None:
+    """Optional workflow_variants: simple + complex graphs with valid packaged refs."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants")
+        if variants is None:
+            continue
+        assert isinstance(variants, list) and len(variants) >= 1
+        for i, v in enumerate(variants):
+            label = f'{pack.get("slug")!r} variants[{i}]'
+            assert isinstance(v, dict), label
+            vid = v.get("variant_id")
+            assert isinstance(vid, str) and vid.strip(), f"{label} missing variant_id"
+            assert v.get("complexity") in ("simple", "complex"), f"{label} bad complexity"
+            ref = v.get("packaged_definition_ref")
+            assert isinstance(ref, str) and ref.endswith(".json"), f"{label} bad ref"
+            path = PACKAGED_DIR / ref
+            assert path.is_file(), f"{label} missing file: {path}"
+            vdata = json.loads(path.read_text(encoding="utf-8"))
+            _assert_voice_workflow_graph_invariants(vdata, f"{path.name} ({label})")
+
+
 def _assert_minimal_workflow_graph(data: dict, label: str) -> None:
     assert isinstance(data, dict), f"{label}: root must be an object"
     nodes = data.get("nodes")
@@ -107,8 +217,67 @@ def _assert_minimal_workflow_graph(data: dict, label: str) -> None:
         assert node.get("type"), f"{label}: nodes[{i}] missing type"
 
 
+_VOICE_SKELETON_TYPES = frozenset({"startCall", "agentNode", "endCall"})
+
+
+def _assert_directed_path_start_call_to_end_call(data: dict, label: str) -> None:
+    """Exactly one start and one end; edges admit at least one directed path (happy-path spine)."""
+    nodes = data["nodes"]
+    edges = data["edges"]
+    start_ids = [n["id"] for n in nodes if n.get("type") == "startCall"]
+    end_ids = [n["id"] for n in nodes if n.get("type") == "endCall"]
+    assert len(start_ids) == 1, (
+        f"{label}: expected exactly one startCall node, found {len(start_ids)} ({start_ids!r})"
+    )
+    assert len(end_ids) == 1, (
+        f"{label}: expected exactly one endCall node, found {len(end_ids)} ({end_ids!r})"
+    )
+    start_id = start_ids[0]
+    end_id = end_ids[0]
+    adj: dict[str, list[str]] = {}
+    for e in edges:
+        s, t = e.get("source"), e.get("target")
+        if isinstance(s, str) and isinstance(t, str):
+            adj.setdefault(s, []).append(t)
+    q = deque([start_id])
+    seen = {start_id}
+    while q:
+        u = q.popleft()
+        if u == end_id:
+            return
+        for v in adj.get(u, ()):
+            if v not in seen:
+                seen.add(v)
+                q.append(v)
+    raise AssertionError(
+        f"{label}: no directed path along edges from startCall id {start_id!r} to endCall id {end_id!r}"
+    )
+
+
+def _assert_voice_workflow_graph_invariants(data: dict, label: str) -> None:
+    """MK-01-RUBRIC: every packaged graph is a valid single-flow voice skeleton (editor + Pipecat)."""
+    _assert_minimal_workflow_graph(data, label)
+    nodes = data["nodes"]
+    edges = data["edges"]
+    types = {n.get("type") for n in nodes}
+    missing = _VOICE_SKELETON_TYPES - types
+    assert not missing, (
+        f"{label}: packaged workflow must include node types "
+        f"{sorted(_VOICE_SKELETON_TYPES)} (missing: {sorted(missing)})"
+    )
+    node_ids = {n["id"] for n in nodes}
+    assert len(node_ids) == len(nodes), f"{label}: duplicate node id in nodes[]"
+    for i, edge in enumerate(edges):
+        assert isinstance(edge, dict), f"{label}: edges[{i}] must be an object"
+        src = edge.get("source")
+        tgt = edge.get("target")
+        assert src in node_ids, f"{label}: edges[{i}] source {src!r} not in node ids"
+        assert tgt in node_ids, f"{label}: edges[{i}] target {tgt!r} not in node ids"
+    _assert_directed_path_start_call_to_end_call(data, label)
+
+
 def test_all_packaged_workflow_json_files_parse_as_graphs(catalog: dict) -> None:
-    """Every *.json under packaged-workflows/ parses; catalog refs exist on disk; minimal graph shape."""
+    """Every *.json under packaged-workflows/ parses; catalog refs exist on disk; graph shape + happy-path spine."""
     json_files = sorted(PACKAGED_DIR.glob("*.json"))
     assert json_files, f"expected JSON graphs under {PACKAGED_DIR}"
     required_names = {
@@ -121,4 +290,4 @@ def test_all_packaged_workflow_json_files_parse_as_graphs(catalog: dict) -> None
     assert not missing, f"catalog packaged_definition_ref missing on disk: {sorted(missing)}"
     for path in json_files:
         data = json.loads(path.read_text(encoding="utf-8"))
-        _assert_minimal_workflow_graph(data, path.name)
+        _assert_voice_workflow_graph_invariants(data, path.name)

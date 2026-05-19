@@ -18,6 +18,24 @@ export const CONVERSATION_CONTEXT_VARIABLE_TEMPLATES = [
     "{{conversation.sentiment}}",
 ];
 
+/**
+ * Typical `{{…}}` keys from MK-01 vertical packs (`default_template_variables`) so HTTP tool authors can insert
+ * URLs/bodies without hand-typing; runtime resolution uses workflow initial_context / template_context merge.
+ */
+export const COMMON_PACK_FLOW_TEMPLATE_STRINGS = [
+    "{{clinic_name}}",
+    "{{support_phone}}",
+    "{{store_name}}",
+    "{{support_email}}",
+    "{{product_name}}",
+    "{{crm_owner_email}}",
+    "{{scheduling_api_base_url}}",
+    "{{preferred_visit_type}}",
+    "{{clinic_location_id}}",
+    "{{pickup_location_code}}",
+    "{{demo_duration_minutes}}",
+];
+
 export const DEFAULT_CONTEXT_TEMPLATE_SUGGESTIONS = [
     ...SYSTEM_CONTEXT_VARIABLE_TEMPLATES,
     ...CONVERSATION_CONTEXT_VARIABLE_TEMPLATES,
@@ -39,6 +57,17 @@ export const HTTP_VARIABLE_TEMPLATE_LABELS: Record<string, string> = {
     "{{conversation.summary}}": "Rolling conversation summary",
     "{{conversation.last_user_message}}": "Last user utterance",
     "{{conversation.sentiment}}": "Sentiment label (e.g. neutral)",
+    "{{clinic_name}}": "Vertical pack: clinic display name",
+    "{{support_phone}}": "Vertical pack: support phone",
+    "{{store_name}}": "Vertical pack: retail store name",
+    "{{support_email}}": "Vertical pack: support email",
+    "{{product_name}}": "Vertical pack: product name",
+    "{{crm_owner_email}}": "Vertical pack: CRM owner email",
+    "{{scheduling_api_base_url}}": "Vertical pack: scheduling API base URL (demo)",
+    "{{preferred_visit_type}}": "Vertical pack: default visit type",
+    "{{clinic_location_id}}": "Vertical pack: clinic location id",
+    "{{pickup_location_code}}": "Vertical pack: pickup / store location code",
+    "{{demo_duration_minutes}}": "Vertical pack: demo length hint",
 };
 
 export interface VariableSuggestionGroup {
@@ -61,7 +90,7 @@ export const HTTP_VARIABLE_GROUP_PICKER_TOOLTIPS: Record<string, string> = {
     [HTTP_VARIABLE_GROUP_LABELS.conversation]:
         "Built-in {{…}} for session fields: initial_context.* and conversation.*. Same runtime vs app default sample split as System.",
     [HTTP_VARIABLE_GROUP_LABELS.custom]:
-        "Paths you added under Custom flow variable (stored as {{path}} in this browser). Appears here, in Preset path (Form), and in JSON insert pickers.",
+        "MK-01 vertical pack placeholders (scheduling_api_base_url, clinic_name, …), paths you added under Custom flow variable (stored per tool), and tokens discovered from your URL/body — same runtime merge rules.",
     [HTTP_VARIABLE_GROUP_LABELS.live]:
         "Parameter names and response-mapping keys from this tool — same names the model may send.",
 };
@@ -162,7 +191,7 @@ export const GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES: Record<string, string> = {
  */
 export function groupedPickerFallbackHint(groupLabel: string): string | undefined {
     if (groupLabel === HTTP_VARIABLE_GROUP_LABELS.custom) {
-        return "Path you added under Custom flow variable (this tool, this browser)";
+        return "Added under Custom flow variable, or any {{path}} found in URL, headers, body, parameter templates, or raw code (this tool)";
     }
     if (groupLabel === HTTP_VARIABLE_GROUP_LABELS.live) {
         return "Parameter name or response-mapping key from this tool";
@@ -269,6 +298,17 @@ export const DEFAULT_CALL_CONTEXT_TEST_JSON = JSON.stringify(
             customer_name: "Test Customer",
             customer_id: "cust_test_123",
         },
+        clinic_name: "Sample Clinic",
+        support_phone: "+1-555-0100",
+        store_name: "Sample Store",
+        support_email: "support@example.com",
+        product_name: "Sample Product",
+        crm_owner_email: "owner@example.com",
+        scheduling_api_base_url: "https://scheduling.example.com/api/v1",
+        preferred_visit_type: "primary_care",
+        clinic_location_id: "demo-location-1",
+        pickup_location_code: "STORE-DEMO-01",
+        demo_duration_minutes: "30",
     },
     null,
     2

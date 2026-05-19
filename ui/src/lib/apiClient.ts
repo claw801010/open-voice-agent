@@ -15,15 +15,17 @@ export const createClientConfig: CreateClientConfig = (config) => ({
     baseUrl: getBackendPublicBaseUrl(),
 });
 
-let interceptorRegistered = false;
+const clientsWithAuth = new WeakSet<Client>();
 
 /**
  * Register a request interceptor that attaches a fresh access token
- * to every outgoing SDK request. Idempotent — safe for React strict mode.
+ * to every outgoing SDK request. Idempotent per client instance.
  */
 export function setupAuthInterceptor(apiClient: Client, getAccessToken: () => Promise<string>) {
-    if (interceptorRegistered) return;
-    interceptorRegistered = true;
+    if (clientsWithAuth.has(apiClient)) {
+        return;
+    }
+    clientsWithAuth.add(apiClient);
 
     apiClient.interceptors.request.use(async (request) => {
         if (request.headers.get('Authorization')) {

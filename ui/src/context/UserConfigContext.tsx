@@ -3,6 +3,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { client } from '@/client/client.gen';
+import { client as workflowImportClient } from '@/client/workflowImport/client.gen';
 import { getUserConfigurationsApiV1UserConfigurationsUserGet, updateUserConfigurationsApiV1UserConfigurationsUserPut } from '@/client/sdk.gen';
 import type { UserConfigurationRequestResponseSchema } from '@/client/types.gen';
 import { setupAuthInterceptor } from '@/lib/apiClient';
@@ -55,6 +56,7 @@ export function UserConfigProvider({ children }: { children: ReactNode }) {
     // setupAuthInterceptor is idempotent — safe for strict mode double-renders.
     if (!auth.loading && auth.isAuthenticated) {
         setupAuthInterceptor(client, auth.getAccessToken);
+        setupAuthInterceptor(workflowImportClient, auth.getAccessToken);
     }
 
     // Fetch permissions once when auth is ready
