@@ -7,6 +7,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+if [[ -x "${ROOT}/venv/bin/python" ]]; then
+  PYTHON="${ROOT}/venv/bin/python"
+else
+  PYTHON="python3"
+fi
+
 export E2E_BACKEND_URL="${E2E_BACKEND_URL:-http://127.0.0.1:8000}"
 export E2E_BASE_URL="${E2E_BASE_URL:-http://127.0.0.1:3000}"
 
@@ -35,7 +41,7 @@ if [[ -z "${E2E_GTM_SAMPLE_CALL_ID:-}" ]]; then
     | python3 -c "import json,sys; d=json.load(sys.stdin); items=d.get('items') or []; print(items[0]['call_id'] if items else '')" 2>/dev/null || true)"
   if [[ -z "${CALL_ID}" ]]; then
     echo "Seeding demo analytics call for GTM call-detail frames…"
-    CALL_ID="$(PYTHONPATH="${ROOT}" python3 "${ROOT}/scripts/seed_gtm_analytics_demo_call.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+    CALL_ID="$(PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/seed_gtm_analytics_demo_call.py" "${E2E_EMAIL}" 2>/dev/null || true)"
   fi
   if [[ -n "${CALL_ID}" ]]; then
     export E2E_GTM_SAMPLE_CALL_ID="${CALL_ID}"
