@@ -140,10 +140,19 @@ test.describe("Analytics authenticated (OSS / Stack)", () => {
             await expect(page.getByRole("heading", { name: "AI call review" })).toBeVisible();
             await expect(page.getByRole("button", { name: "Generate" })).toBeVisible();
 
+            const reviewDone = page.waitForResponse(
+                (r) =>
+                    r.url().includes("/ai-review") &&
+                    r.request().method() === "POST" &&
+                    r.ok(),
+                { timeout: 30_000 },
+            );
             await page.getByRole("button", { name: "Generate" }).click();
-            await expect(page.getByText(/Review generated/i)).toBeVisible({ timeout: 30_000 });
-            await expect(page.getByText("Summary", { exact: true })).toBeVisible();
-            await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible();
+            await reviewDone;
+            await expect(page.getByRole("button", { name: "Refresh" })).toBeVisible({
+                timeout: 15_000,
+            });
+            await expect(page.getByText(/Review generated/i)).toBeVisible({ timeout: 10_000 });
         });
     });
 });

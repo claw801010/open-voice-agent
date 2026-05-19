@@ -10,6 +10,8 @@ Use this checklist before a vertical pack is treated as **published** in the mar
 
 ## PII and data minimization
 
+- **Call Analytics (MK-01):** See [ANALYTICS_REDACTION_MATRIX.md](ANALYTICS_REDACTION_MATRIX.md) for what org redaction **v1** covers on call detail vs CSV vs list exports — partner narratives should not promise beyond that matrix without engineering sign-off.
+
 - [ ] **Collection**: Only variables and extraction fields needed for the stated use case; document what is spoken or stored.
 - [ ] **Retention**: Runbook states what is logged (transcripts, recordings) and org responsibilities.
 - [ ] **Secrets**: No API keys, tokens, or private URLs embedded in packaged JSON committed to the repo; use template variables and org-level configuration.

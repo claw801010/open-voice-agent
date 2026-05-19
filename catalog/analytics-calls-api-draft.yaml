@@ -3,12 +3,20 @@ info:
   title: Analytics — calls & tool traces (draft contract)
   description: |
     **MK-01-ANALYTICS-VERTICAL** — calls list + detail contract for vertical prebuild + GTM demos.
+        **Phase C (shipped):** `GET /api/v1/analytics/insights` — org roll-up (totals, outcome mix, **calls_with_tool_evidence** / **calls_with_logged_tools**, **tool_name_mix**) for default dashboards; optional
+    `workflow_id`, MK-01 `catalog_slug`, and optional `catalog_variant_id` (install-time graph variant).
+
+    **Phase D-lite (shipped):** `GET` / `PUT /api/v1/analytics/dashboard-layout` — org-scoped custom Overview widget order (`organization_configurations`).
+    **Phase D (partial, shipped):** `GET` / `PUT /api/v1/analytics/qm-export-schedule` — org schedule for automated QM CSV uploads to object storage (ARQ hourly cron when `ENABLE_ANALYTICS_QM_EXPORT_CRON=true`; same columns as `GET /analytics/calls/export`).
+    **Privacy (shipped):** `GET` / `PUT /api/v1/analytics/redaction-policy` — org toggle `detail_redaction_enabled` (default **true**: call detail + CSV cell redaction via [analytics_redact.py](../api/services/analytics/analytics_redact.py)); RBAC for **disabling** redaction (API keys blocked; optional Stack permission id / superuser-only via env — see [redaction_policy_rbac.py](../api/services/analytics/redaction_policy_rbac.py)).
+
     **Phase B (shipped):** FastAPI routes `GET /api/v1/analytics/calls` and `GET /api/v1/analytics/calls/{call_id}`
     ([api/routes/analytics.py](../api/routes/analytics.py)) backed by `workflow_runs` + `logs.realtime_feedback_events`
     (tool spans derived from `rtf-function-call-*` events; HTTP summaries from tool result JSON).
-    **Phase B (deferred):** optional dedicated `tool_spans` table + redaction matrix — see [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md).
+    **Phase B (shipped, privacy):** server-side PII redaction v1 ([api/services/analytics/analytics_redact.py](../api/services/analytics/analytics_redact.py)) on call detail + CSV export.
+    **Phase D (partial):** `analytics_http_tool_spans` table + insights **`calls_with_tool_evidence`** (alias **`calls_with_logged_tools`**) — see [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md).
     Aligns HTTP tool semantics with [docs/voice-agent/tools/http-api.mdx](../docs/voice-agent/tools/http-api.mdx) (response_mapping / mapped_data).
-  version: 0.2.0-draft
+  version: 0.3.9-draft
 
 servers:
   - url: https://api.example.com
@@ -19,6 +27,208 @@ tags:
     description: Filterable call history and per-call intelligence
 
 paths:
+  /api/v1/analytics/insights:
+    get:
+      tags: [analytics-calls]
+      summary: Default dashboard roll-ups (totals, outcomes, tool trace breadth)
+      description: |
+        Inclusive time range. If `since` is omitted, uses `days` (default 7) before `until` (default now).
+        `catalog_slug` filters to workflows with MK-01 `workflow_configurations.mk01.catalog_slug` = slug.
+        `catalog_variant_id` filters to workflows with that MK-01 `catalog_variant_id` (e.g. `simple`, `booking_complex`).
+      operationId: getAnalyticsInsights
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: days
+          in: query
+          description: Lookback in days when `since` is not set
+          schema: { type: integer, minimum: 1, maximum: 366, default: 7 }
+        - name: since
+          in: query
+          schema: { type: string, format: date-time }
+        - name: until
+          in: query
+          schema: { type: string, format: date-time }
+        - name: workflow_id
+          in: query
+          schema: { type: integer }
+        - name: catalog_slug
+          in: query
+          description: MK-01 install slug on the workflow row
+          schema: { type: string }
+        - name: catalog_variant_id
+          in: query
+          description: MK-01 graph variant id (`workflow_configurations.mk01.catalog_variant_id`)
+          schema: { type: string }
+      responses:
+        "200":
+          description: Roll-up for the org and filters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsInsights"
+        "400":
+          description: No org selected, or `since` after `until`
+        "401":
+          description: Unauthorized
+
+  /api/v1/analytics/dashboard-layout:
+    get:
+      tags: [analytics-calls]
+      summary: Org custom Overview dashboard layout
+      description: |
+        Returns stored layout JSON for the selected organization, or `null` if never set.
+        Shape matches the browser cache in `ui/src/lib/analyticsDashboardLayout.ts` (`v: 1`, `widgets` with `id` + `type`).
+      operationId: getAnalyticsDashboardLayout
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Layout or unset
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [layout]
+                properties:
+                  layout:
+                    $ref: "#/components/schemas/AnalyticsDashboardLayoutDoc"
+                    nullable: true
+        "400":
+          description: No org selected
+        "401":
+          description: Unauthorized
+    put:
+      tags: [analytics-calls]
+      summary: Replace org custom Overview dashboard layout
+      description: |
+        Validates and normalizes widget list (drops invalid entries). Persists to `MK01_ANALYTICS_DASHBOARD_LAYOUT`.
+      operationId: putAnalyticsDashboardLayout
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [layout]
+              properties:
+                layout:
+                  $ref: "#/components/schemas/AnalyticsDashboardLayoutDoc"
+      responses:
+        "200":
+          description: Normalized layout after save
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [layout]
+                properties:
+                  layout:
+                    $ref: "#/components/schemas/AnalyticsDashboardLayoutDoc"
+        "400":
+          description: No org selected
+        "401":
+          description: Unauthorized
+        "422":
+          description: Validation failed (e.g. `v` not 1, empty widgets)
+
+  /api/v1/analytics/redaction-policy:
+    get:
+      tags: [analytics-calls]
+      summary: Org analytics PII redaction policy
+      description: |
+        Default **true** when unset. When **false**, ``GET /analytics/calls/{call_id}`` and server CSV exports skip
+        conservative redaction (enterprise / QM — requires governance).
+      operationId: getAnalyticsRedactionPolicy
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsRedactionPolicy"
+        "400":
+          description: No org selected
+        "401":
+          description: Unauthorized
+    put:
+      tags: [analytics-calls]
+      summary: Replace org analytics PII redaction policy
+      operationId: putAnalyticsRedactionPolicy
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyticsRedactionPolicyPutBody"
+      responses:
+        "200":
+          description: Saved policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsRedactionPolicy"
+        "400":
+          description: No org selected
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden — disabling redaction not allowed for this principal (RBAC)
+
+  /api/v1/analytics/qm-export-schedule:
+    get:
+      tags: [analytics-calls]
+      summary: Org scheduled QM CSV export (object storage)
+      description: |
+        Persists under `MK01_ANALYTICS_QM_EXPORT_SCHEDULE`. When workers run with `ENABLE_ANALYTICS_QM_EXPORT_CRON=true`,
+        ARQ enqueues an export once per UTC hour :47 for orgs with `enabled` and matching `hour_utc`.
+        Uploaded keys look like `analytics-qm-exports/org-{id}/qm-{utc_stamp}.csv`.
+      operationId: getAnalyticsQmExportSchedule
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Schedule + last run audit fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsQmExportScheduleResponse"
+        "400":
+          description: No org selected
+        "401":
+          description: Unauthorized
+    put:
+      tags: [analytics-calls]
+      summary: Replace org QM export schedule
+      operationId: putAnalyticsQmExportSchedule
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyticsQmExportSchedulePutBody"
+      responses:
+        "200":
+          description: Saved schedule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsQmExportScheduleResponse"
+        "400":
+          description: No org selected
+        "401":
+          description: Unauthorized
+        "422":
+          description: Validation failed
+
   /api/v1/analytics/calls:
     get:
       tags: [analytics-calls]
@@ -34,6 +244,14 @@ paths:
           in: query
           description: Internal workflow primary key (integer in this product)
           schema: { type: integer }
+        - name: catalog_slug
+          in: query
+          description: MK-01 install slug on the workflow row (same as GET /analytics/insights)
+          schema: { type: string }
+        - name: catalog_variant_id
+          in: query
+          description: MK-01 catalog_variant_id (same as GET /analytics/insights)
+          schema: { type: string }
         - name: since
           in: query
           description: ISO-8601 UTC inclusive lower bound
@@ -69,6 +287,61 @@ paths:
         "401":
           description: Unauthorized
 
+  /api/v1/analytics/calls/export:
+    get:
+      tags: [analytics-calls]
+      summary: Export calls as CSV (server-side)
+      description: |
+        Same filters as `GET /analytics/calls`, without pagination — returns up to `max_rows` rows (default 5000, max 10000)
+        as UTF-8 CSV with BOM for Excel compatibility.
+      operationId: exportAnalyticsCallsCsv
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: workflow_id
+          in: query
+          schema: { type: integer }
+        - name: catalog_slug
+          in: query
+          schema: { type: string }
+        - name: catalog_variant_id
+          in: query
+          schema: { type: string }
+        - name: since
+          in: query
+          schema: { type: string, format: date-time }
+        - name: until
+          in: query
+          schema: { type: string, format: date-time }
+        - name: disposition
+          in: query
+          schema: { type: string }
+        - name: outcome_key
+          in: query
+          schema: { type: string }
+        - name: tool_name
+          in: query
+          schema: { type: string }
+        - name: max_rows
+          in: query
+          description: Cap rows (default 5000, max 10000)
+          schema: { type: integer, minimum: 1, maximum: 10000, default: 5000 }
+      responses:
+        "200":
+          description: |
+            UTF-8 CSV (BOM). Text cells are **defense-in-depth** redacted (email/phone patterns) per
+            [analytics_redact.py](../api/services/analytics/analytics_redact.py).
+          content:
+            text/csv:
+              schema: { type: string, format: binary }
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: attachment; filename="analytics-calls-export.csv"
+        "401":
+          description: Unauthorized
+
   /api/v1/analytics/calls/{call_id}:
     get:
       tags: [analytics-calls]
@@ -83,7 +356,11 @@ paths:
           schema: { type: string }
       responses:
         "200":
-          description: Full call intelligence payload (PII policy TBD per org)
+          description: |
+            Call intelligence payload. **PII:** responses are passed through
+            [analytics_redact.py](../api/services/analytics/analytics_redact.py) — sensitive keys in
+            ``outcomes`` / HTTP ``mapped_data``, free text (``error_message``, ``ai_summary``, ``qa.reviewer_notes``),
+            and email/phone-like substrings in strings.
           content:
             application/json:
               schema:
@@ -99,6 +376,159 @@ components:
       bearerFormat: JWT
 
   schemas:
+    AnalyticsDashboardLayoutDoc:
+      type: object
+      description: |
+        Stored custom dashboard layout for `/analytics` Overview (widget cards). `type` is one of
+        `kpi_row`, `outcome_top`, `dive_deeper`, `vertical_shortcuts`, `revenue_motions`.
+      required: [v, widgets]
+      properties:
+        v:
+          type: integer
+          enum: [1]
+        widgets:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [id, type]
+            properties:
+              id: { type: string }
+              type:
+                type: string
+                enum:
+                  - kpi_row
+                  - outcome_top
+                  - dive_deeper
+                  - vertical_shortcuts
+                  - revenue_motions
+
+    AnalyticsRedactionPolicyPutBody:
+      type: object
+      required: [detail_redaction_enabled]
+      properties:
+        detail_redaction_enabled:
+          type: boolean
+          description: When true (default), apply PII redaction to call detail and server CSV cells.
+
+    AnalyticsRedactionPolicy:
+      type: object
+      required: [detail_redaction_enabled, may_disable_detail_redaction]
+      properties:
+        detail_redaction_enabled:
+          type: boolean
+          description: When true (default), apply PII redaction to call detail and server CSV cells.
+        may_disable_detail_redaction:
+          type: boolean
+          description: Whether the caller may set `detail_redaction_enabled` to false (disabling is RBAC-gated).
+
+    AnalyticsQmExportSchedulePutBody:
+      type: object
+      required: [enabled, hour_utc, window_days, max_rows]
+      properties:
+        enabled: { type: boolean }
+        hour_utc: { type: integer, minimum: 0, maximum: 23 }
+        window_days: { type: integer, minimum: 1, maximum: 366 }
+        max_rows: { type: integer, minimum: 1, maximum: 10000 }
+        workflow_id: { type: integer, nullable: true }
+        catalog_slug: { type: string, nullable: true }
+        catalog_variant_id: { type: string, nullable: true }
+
+    AnalyticsQmExportScheduleLastRun:
+      type: object
+      properties:
+        started_at: { type: string, nullable: true }
+        finished_at: { type: string, nullable: true }
+        status: { type: string, nullable: true, description: ok or error }
+        object_key: { type: string, nullable: true }
+        error_message: { type: string, nullable: true }
+
+    AnalyticsQmExportScheduleSettings:
+      type: object
+      required: [enabled, hour_utc, window_days, max_rows]
+      properties:
+        enabled: { type: boolean }
+        hour_utc: { type: integer, minimum: 0, maximum: 23 }
+        window_days: { type: integer, minimum: 1, maximum: 366 }
+        max_rows: { type: integer, minimum: 1, maximum: 10000 }
+        workflow_id: { type: integer, nullable: true }
+        catalog_slug: { type: string, nullable: true }
+        catalog_variant_id: { type: string, nullable: true }
+
+    AnalyticsQmExportScheduleResponse:
+      type: object
+      required: [schedule, last_run, cron_enabled, next_run_at_utc]
+      properties:
+        schedule:
+          $ref: "#/components/schemas/AnalyticsQmExportScheduleSettings"
+        last_run:
+          $ref: "#/components/schemas/AnalyticsQmExportScheduleLastRun"
+        cron_enabled:
+          type: boolean
+          description: Deployment runs hourly ARQ cron dispatch when true
+        next_run_at_utc:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            Next UTC instant when the hourly worker may enqueue this org (same minute as QM cron, typically :47).
+            Null when the schedule is disabled or `cron_enabled` is false.
+
+    AnalyticsInsights:
+      type: object
+      required:
+        [
+          total_calls,
+          calls_with_outcome,
+          calls_with_logged_tools,
+          calls_with_tool_evidence,
+          outcome_mix,
+          tool_name_mix,
+          since,
+          until,
+        ]
+      properties:
+        total_calls:
+          type: integer
+          minimum: 0
+        calls_with_outcome:
+          type: integer
+          minimum: 0
+        calls_with_logged_tools:
+          type: integer
+          minimum: 0
+          description: Same integer as calls_with_tool_evidence (backward-compatible key).
+        calls_with_tool_evidence:
+          type: integer
+          minimum: 0
+          description: Runs with tool trace in logs and/or rows in analytics_http_tool_spans
+        outcome_mix:
+          type: array
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/OutcomeMixItem"
+        tool_name_mix:
+          type: array
+          maxItems: 15
+          items:
+            $ref: "#/components/schemas/ToolNameMixItem"
+        since:
+          type: string
+        until:
+          type: string
+    ToolNameMixItem:
+      type: object
+      required: [tool_name, count]
+      properties:
+        tool_name: { type: string }
+        count: { type: integer, minimum: 0 }
+    OutcomeMixItem:
+      type: object
+      required: [outcome, count]
+      properties:
+        outcome: { type: string }
+        count: { type: integer, minimum: 0 }
+
     CallListPage:
       type: object
       required: [items, next_cursor]
@@ -125,6 +555,10 @@ components:
           type: string
           nullable: true
           description: Optional catalog slug when run from a vertical pack install
+        catalog_variant_id:
+          type: string
+          nullable: true
+          description: MK-01 graph variant when set at install (`mk01.catalog_variant_id`)
         started_at:
           type: string
           format: date-time
@@ -156,6 +590,10 @@ components:
           type: string
           nullable: true
           description: Optional vertical pack catalog slug (`workflow_configurations.mk01.catalog_slug`)
+        catalog_variant_id:
+          type: string
+          nullable: true
+          description: MK-01 catalog_variant_id when set at install
         started_at:
           type: string
           format: date-time

@@ -20,13 +20,14 @@ Copy this table into a PR description or ticket when adding or materially changi
 |---|-----------|-------|-------|
 | 1 | **Industry + primary use case** are explicit in `industry`, `display_name`, and `summary` (buyer can tell who it is for in one read). | ☐ | |
 | 2 | **Packaged graph** referenced by `workflow_template.packaged_definition_ref` exists under [packaged-workflows/](packaged-workflows/) and installs without validation errors in CI. | ☐ | |
-| 3 | **Happy-path test** is documented in the pack runbook (steps + expected outcome); at least one scenario is copy-pasteable for QA. | ☐ | |
+| 3 | **Happy-path test** is documented in the pack runbook (steps + expected outcome); at least one scenario is copy-pasteable for QA. CI: `test_runbooks_document_happy_path_test` in [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py). | ☐ | |
 | 4 | **`default_template_variables`** lists every key the graph expects; values are **safe placeholders** (no real PII, secrets, or production URLs). | ☐ | |
 | 5 | **`cost_latency_estimate_band`** is plausible for declared `supported_modes` and typical tool/LLM usage described in the runbook. | ☐ | |
 | 6 | **`compliance_tags`** match integrations and data flows described in the runbook and [PARTNER_REVIEW.md](PARTNER_REVIEW.md) (no contradictory claims). | ☐ | |
 | 7 | **`runbook_path`** resolves to a checked-in markdown file; runbook links back to this pack slug. | ☐ | |
 | 8 | **`use_cases`** and **`languages`** are non-empty and aligned with READMEPLANNING §6 positioning for the vertical. | ☐ | |
 | 9 | **Revenue / booking / analytics claims:** if the summary or `use_cases` mention scheduling, payments, conversion, or **insights/dashboards**, the **packaged graph or runbook** makes clear what is **shipped vs roadmap** ([PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md), [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md)). | ☐ | |
+| 10 | **`workflow_variants` (optional):** when present, lists **simple** + **complex** `packaged_definition_ref` files on disk; complex graphs align with booking/API copy; **default install** graph stays the simple ref unless PR explicitly switches `workflow_template`. | ☐ | |
 
 ## Catalog JSON field map (quick reference)
 
@@ -41,6 +42,7 @@ Copy this table into a PR description or ticket when adding or materially changi
 | 7 | `runbook_path` |
 | 8 | `use_cases`, `languages` |
 | 9 | `summary`, `use_cases`, runbook, [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md), [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) |
+| 10 | `workflow_variants`, `workflow_template.packaged_definition_ref`, [packaged-workflows/](packaged-workflows/) |
 
 ## Sign-off
 

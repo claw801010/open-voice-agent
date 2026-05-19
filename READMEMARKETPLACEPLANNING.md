@@ -63,6 +63,14 @@ These artifacts are **not** the same as `catalog/packaged-workflows/*.json`:
 
 When a spike graduates, add acceptance criteria to READMEPLANTOEXECUTE and link the implementation PR here (append a **Shipped experiments** table).
 
+### Shipped experiments
+
+| ID | What | Where |
+|----|------|--------|
+| **MK-01-IMPORT-OPTIONS** | **n8n export** — HTTP / Set·Code·Merge hints, IF/Switch→subflows, **`POST /import/n8n-packaged-draft`**. | [n8n_workflow_adapter.py](api/utils/n8n_workflow_adapter.py), [validate-n8n-workflow-export.mjs](catalog/scripts/validate-n8n-workflow-export.mjs) |
+| **MK-01-IMPORT-OPTIONS** | **Make blueprint** — HTTP + Set hints, Router→subflows, **`POST /import/make-packaged-draft`**. | [make_scenario_adapter.py](api/utils/make_scenario_adapter.py), [validate-make-blueprint.mjs](catalog/scripts/validate-make-blueprint.mjs) |
+| **MK-01-IMPORT-OPTIONS** | **Zapier subset** + **skills** — import-subset JSON + SKILL.md → packaged graph; **`POST /import/zapier-packaged-draft`**, **`POST /import/skill-packaged-draft`**. | [zapier_zap_adapter.py](api/utils/zapier_zap_adapter.py), [skill_packaged_adapter.py](api/utils/skill_packaged_adapter.py) |
+
 ---
 
 ## 6. Related links

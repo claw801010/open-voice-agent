@@ -9,23 +9,23 @@ This document answers: *Are our shipped vertical packs ready to clone into **pre
 
 | Slug | Industry | Pack focus today | HTTP / tools posture |
 |------|----------|------------------|----------------------|
-| [healthcare-clinic-screening](packaged-workflows/healthcare-clinic-screening.json) | Healthcare / clinics | Screening, triage, after-hours guardrails; confirm/remind adjacent | Extend with **EHR or scheduling API** tools when buyer has creds; use system/conversation variables per [HTTP API tool docs](../docs/voice-agent/tools/http-api.mdx) |
-| [retail-wismo-faq](packaged-workflows/retail-wismo-faq.json) | Retail / e-commerce | WISMO, returns, hours | Natural extension: **OMS + appointment / pickup slot** HTTP tools |
-| [b2b-saas-trial-nurture](packaged-workflows/b2b-saas-trial-nurture.json) | B2B SaaS | Trial nurture, PQL voice, onboarding check-in | Extend with **CRM + calendar booking** (demo, QBR, onboarding call) |
+| [healthcare-clinic-screening](vertical-packs.json) | Healthcare / clinics | **Simple** install + **complex** [healthcare-triage-booking-complex.json](packaged-workflows/healthcare-triage-booking-complex.json) | **Complex** prompts expect `scheduling_api_base_url` + HTTP **book_slot** when buyer connects scheduling |
+| [retail-wismo-faq](vertical-packs.json) | Retail / e-commerce | **Simple** + **complex** [retail-wismo-booking-complex.json](packaged-workflows/retail-wismo-booking-complex.json) | **OMS** + **reserve_pickup_slot** / calendar HTTP tools |
+| [b2b-saas-trial-nurture](vertical-packs.json) | B2B SaaS | **Simple** + **complex** [b2b-trial-booking-complex.json](packaged-workflows/b2b-trial-booking-complex.json) | **CRM + calendar** HTTP tools (`book_demo`, …) |
 
 Each row must keep **happy-path QA** in its [runbook](../runbooks/README.md) and pass [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md) before we market it as “revenue-ready.”
 
 ## Gap: “Book an appointment” as a **primary** story per vertical
 
-Buyers often evaluate voice AI on **scheduling** first. Today’s graphs lead with **triage / FAQ / nurture**; booking is **secondary or roadmap** in copy, not yet a dedicated packaged graph per vertical.
+Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now ships **`workflow_variants`**: a **simple** graph (default **Install**) and a **complex** graph with **booking-ready prompts** (`*-booking-complex.json` under [packaged-workflows/](packaged-workflows/)). Authors still attach real **HTTP API** tools (`book_slot`, `reserve_pickup_slot`, `book_demo`, …) after install — graphs document safe URL placeholders via `default_template_variables` (`scheduling_api_base_url`, etc.).
 
 | Vertical | Booking story buyers expect | Status |
 |----------|------------------------------|--------|
-| Healthcare | Book **provider / visit type / location**; confirm slot; reschedule | **Roadmap** — extend graph + variables (`clinic_booking_api_url`, slot prefs) + HTTP tool to scheduling connector |
-| Retail | Book **in-store service, styling, or pickup window** | **Roadmap** — add nodes + optional HTTP to calendar/retail API |
-| B2B SaaS | Book **demo, onboarding, or CS escalation** | **Roadmap** — CRM + calendar HTTP tools; align `default_template_variables` with CRM owner + booking link |
+| Healthcare | Book **provider / visit type / location**; confirm slot; reschedule | **Complex variant shipped** — prompts + template vars; wire HTTP tool to buyer scheduling backend |
+| Retail | Book **in-store service, styling, or pickup window** | **Complex variant shipped** — prompts + vars; wire OMS / calendar HTTP tools |
+| B2B SaaS | Book **demo, onboarding, or CS escalation** | **Complex variant shipped** — prompts + vars; wire CRM + calendar HTTP tools |
 
-**Next engineering slice (suggested order):** (1) add **documented happy path** “book in under N turns” to each runbook even if stubbed; (2) ship **one** vertical with a minimal **HTTP Book** tool + sample `call_context` / template variables; (3) replicate pattern to the other two.
+**Next engineering slice:** (1) runbook happy paths per variant (“book in under N turns” **after** HTTP tool is attached); (2) **Done:** install API + UI **variant** — `POST /api/v1/workflow/install-from-catalog` with `variant_id`, `mk01.catalog_variant_id` on the workflow; (3) **Done:** **Analytics** filter by `catalog_variant_id` + **CI chain test** for `response_mapping` → `mapped_data` → tool span ([booking-http-analytics-smoke.md](recipes/booking-http-analytics-smoke.md), [test_booking_http_mapping_analytics_span.py](../api/tests/test_booking_http_mapping_analytics_span.py)); (4) optional **live** HTTP stub (docker) for manual QA beyond mocks.
 
 ## Other high-revenue motions (prioritize after booking spine)
 
@@ -49,9 +49,13 @@ Prebuilt workflows should ship **safe placeholders** in `default_template_variab
 
 ## Analytics & call intelligence (MK-01-ANALYTICS-VERTICAL)
 
-Buyer demos need **observability**: filterable **calls**, **call detail** (outcomes, metrics, tool/API traces, QA/QM), **default + custom dashboards** (widget cards), and eventually **APIs / DB** access for enterprise.
+Buyer demos need **observability**: filterable **calls**, **call detail** (outcomes, metrics, tool/API traces incl. **`mapped_data`**, QA/QM hints), **default + custom dashboards** (widget cards), **REST** plus **optional DB** access for enterprise.
 
-Scope, phasing, and vertical-specific widget ideas: **[ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md)**. When packs add HTTP tools, align **response_mapping** keys with the metrics and widgets you plan to show. **REST contract:** [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) (aligned with live **`GET /api/v1/analytics/calls`** — see [api/routes/analytics.py](../api/routes/analytics.py)).
+**Shipped (UI + API):** [`/analytics`](../ui/src/app/analytics/page.tsx) — insights + **customizable** widget board; layout **org-persisted** (`GET`/`PUT /api/v1/analytics/dashboard-layout`) with local cache fallback; **shareable** `?days=&catalog_slug=&catalog_variant_id=` on the overview. [`/analytics/calls`](../ui/src/app/analytics/calls/page.tsx) — filters incl. MK-01 **`catalog_slug`**, **`catalog_variant_id`**, **`tool_name`**, outcomes — same semantics as `GET /api/v1/analytics/insights` and list/export APIs. **Client CSV** (loaded rows) + **server CSV** (`GET /api/v1/analytics/calls/export`); call detail responses **PII-redacted** ([analytics_redact.py](../api/services/analytics/analytics_redact.py)).
+
+**Catalog metadata:** each pack in [vertical-packs.json](vertical-packs.json) includes **`analytics_hooks`** (strings) tying the slug to filters and proof — extend when adding motions.
+
+**Vertical × booking × HTTP × analytics** reviewer matrix: **[VERTICAL_ANALYTICS_HTTP_MATRIX.md](VERTICAL_ANALYTICS_HTTP_MATRIX.md)**. Scope and phasing: **[ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md)**. HTTP tools: align **`response_mapping`** keys with analytics **`mapped_data`** and call-list **`tool_name`** filters. **REST:** [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) ([api/routes/analytics.py](../api/routes/analytics.py)).
 
 ## Checklist before marketing “prebuild for {vertical}”
 

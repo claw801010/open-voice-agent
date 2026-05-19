@@ -1,6 +1,6 @@
 # n8n → packaged workflow import spike (MK-01-IMPORT-OPTIONS)
 
-**Status:** research / manual mapping — **no importer code** in this repo yet. Complements [IMPORT_ADAPTERS_SPIKE.md](IMPORT_ADAPTERS_SPIKE.md) and the native playbook [import-packaged-workflow-json.md](import-packaged-workflow-json.md).
+**Status:** **importer shipped** (HTTP + Set/Code/Merge hints + IF/Switch subflows) — this doc remains the **manual mapping** reference. Complements [IMPORT_ADAPTERS_SPIKE.md](IMPORT_ADAPTERS_SPIKE.md), [import-packaged-workflow-json.md](import-packaged-workflow-json.md), and [import-adapter-make-zapier-spike.md](import-adapter-make-zapier-spike.md).
 
 ## Why n8n first (optional)
 
@@ -27,5 +27,6 @@
 ## If you later ship code
 
 - Define a **supported subset**: e.g. only chains of **HTTP Request** + **Merge** into a single tool, reject unsupported nodes with a clear report.
-- Tests: golden file `n8n-export.json` → expected **warnings** list + one happy-path packaged JSON.
+- **Shipped:** Python [n8n_workflow_adapter.py](../api/utils/n8n_workflow_adapter.py) — **HTTP hints**, **Set/Code/Merge transform hints** (v1.4), **IF/Switch → subflows** (v1.3), **`POST /import/n8n-packaged-draft`** / **`/import/n8n-and-create`**. Tests [test_n8n_workflow_adapter_unit.py](../api/tests/test_n8n_workflow_adapter_unit.py); fixtures under [fixtures/](fixtures/). CLI: [validate-n8n-workflow-export.mjs](scripts/validate-n8n-workflow-export.mjs) (`--http-hints`, `--transform-hints`). HTTP tools are still created manually in the UI.
+- Tests (follow-on): golden file `n8n-export.json` → expected **warnings** list + one happy-path packaged JSON.
 - Update **READMEPLANTOEXECUTE** → **MK-01-IMPORT-OPTIONS** status and [READMENEWRELEASES.md](../READMENEWRELEASES.md).

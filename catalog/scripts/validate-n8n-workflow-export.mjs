@@ -6,6 +6,7 @@
  * Usage:
  *   node catalog/scripts/validate-n8n-workflow-export.mjs <path-to-workflow.json>
  *   node catalog/scripts/validate-n8n-workflow-export.mjs --http-hints <path>
+ *   node catalog/scripts/validate-n8n-workflow-export.mjs --transform-hints <path>
  * Stdin: … < export.json
  */
 
@@ -13,9 +14,11 @@ import { readFileSync } from "node:fs";
 
 const argv = process.argv.slice(2);
 let httpHints = false;
+let transformHints = false;
 let fileArg;
 for (const a of argv) {
     if (a === "--http-hints") httpHints = true;
+    else if (a === "--transform-hints") transformHints = true;
     else if (a === "-") fileArg = "-";
     else if (!a.startsWith("-")) fileArg = a;
     else {
@@ -25,7 +28,7 @@ for (const a of argv) {
 }
 if (!fileArg) {
     console.error(
-        "Usage: node catalog/scripts/validate-n8n-workflow-export.mjs [--http-hints] <file.json>|-"
+        "Usage: node catalog/scripts/validate-n8n-workflow-export.mjs [--http-hints] [--transform-hints] <file.json>|-"
     );
     process.exit(2);
 }
@@ -95,6 +98,71 @@ if (httpHints) {
     }
 } else if (httpLike.length > 0) {
     console.log(`Tip: ${httpLike.length} HTTP-like node(s) — re-run with --http-hints for JSON mapping hints.`);
+}
+
+function isSetNode(n) {
+    const t = String(n.type || "").toLowerCase();
+    return t.endsWith(".set") || t === "set";
+}
+function isCodeNode(n) {
+    const t = String(n.type || "").toLowerCase();
+    return t.includes(".code") || t.endsWith(".function");
+}
+function isMergeNode(n) {
+    return String(n.type || "").toLowerCase().includes(".merge");
+}
+
+function summarizeSetNode(node) {
+    const p = node.parameters && typeof node.parameters === "object" ? node.parameters : {};
+    const fields = [];
+    const items = p.assignments?.assignments;
+    if (Array.isArray(items)) {
+        for (const item of items) {
+            if (item && item.name) fields.push({ name: item.name, valuePreview: String(item.value ?? "").slice(0, 96) });
+        }
+    }
+    return { n8nNodeName: node.name || "(unnamed)", kind: "set", fields };
+}
+
+function summarizeCodeNode(node) {
+    const p = node.parameters && typeof node.parameters === "object" ? node.parameters : {};
+    const code = typeof p.jsCode === "string" ? p.jsCode : typeof p.pythonCode === "string" ? p.pythonCode : "";
+    return {
+        n8nNodeName: node.name || "(unnamed)",
+        kind: "code",
+        codePreview: code.length > 200 ? `${code.slice(0, 200)}…` : code,
+    };
+}
+
+function summarizeMergeNode(node) {
+    const p = node.parameters && typeof node.parameters === "object" ? node.parameters : {};
+    return {
+        n8nNodeName: node.name || "(unnamed)",
+        kind: "merge",
+        mergeMode: String(p.mode ?? "append"),
+    };
+}
+
+const transformLike = wf.nodes.filter(
+    (n) => n && typeof n === "object" && (isSetNode(n) || isCodeNode(n) || isMergeNode(n))
+);
+
+if (transformHints) {
+    if (transformLike.length === 0) {
+        console.log("--- No Set/Code/Merge nodes (transform hints skipped) ---");
+    } else {
+        console.log("--- Set / Code / Merge nodes (hints only) ---");
+        const out = transformLike.map((n) => {
+            if (isSetNode(n)) return summarizeSetNode(n);
+            if (isCodeNode(n)) return summarizeCodeNode(n);
+            return summarizeMergeNode(n);
+        });
+        console.log(JSON.stringify(out, null, 2));
+    }
+} else if (transformLike.length > 0) {
+    console.log(
+        `Tip: ${transformLike.length} Set/Code/Merge node(s) — re-run with --transform-hints for JSON summaries.`
+    );
 }
 
 console.log("Next: manual map per catalog/import-adapter-n8n-spike.md");
