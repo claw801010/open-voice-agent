@@ -32,6 +32,9 @@ if [[ -f "$ENV_FILE" ]]; then
   set -a && . "$ENV_FILE" && set +a
 fi
 
+# Repo root on PYTHONPATH (never ``api/`` alone — that makes ``import mcp`` load ``api/mcp``).
+export PYTHONPATH="${BASE_DIR}${PYTHONPATH:+:$PYTHONPATH}"
+
 UVICORN_BASE_PORT=${UVICORN_BASE_PORT:-8000}
 
 ###############################################################################
@@ -183,6 +186,7 @@ for i in "${!SERVICE_NAMES[@]}"; do
 
   (
     cd "$BASE_DIR"
+    export PYTHONPATH="${BASE_DIR}${PYTHONPATH:+:$PYTHONPATH}"
     if [[ "$LOG_TO_FILE" == "true" ]]; then
       export LOG_FILE_PATH="$LOG_DIR/$name.log"
       exec $cmd >>"$LOG_DIR/$name.log" 2>&1
