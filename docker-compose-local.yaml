@@ -59,6 +59,21 @@ services:
     networks:
       - app-network
 
+  booking-stub:
+    image: python:3.13-slim
+    profiles: ["booking-stub"]
+    working_dir: /app
+    volumes:
+      - .:/app:ro
+    command: ["python", "scripts/booking_scheduling_stub_server.py"]
+    environment:
+      BOOKING_STUB_HOST: "0.0.0.0"
+      BOOKING_STUB_PORT: "8765"
+    ports:
+      - "127.0.0.1:8765:8765"
+    networks:
+      - app-network
+
   coturn:
     image: coturn/coturn:4.8.0
     container_name: coturn

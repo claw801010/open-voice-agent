@@ -681,6 +681,10 @@ components:
           additionalProperties: true
           nullable: true
           description: Subset of tool `mapped_data` / mapping keys safe for analytics
+        cache_hit:
+          type: boolean
+          nullable: true
+          description: True when the HTTP tool result was served from org integration cache (WE-01-DATASTORE-INTEG)
         error_message:
           type: string
           nullable: true

@@ -15,9 +15,13 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ## Unreleased
 
+### Marketplace / booking QA
+
+- **MK-01-RUBRIC (booking stub)** — Local scheduling API on **:8765** for manual **booking_complex** demos: [booking_scheduling_stub_server.py](scripts/booking_scheduling_stub_server.py), Docker Compose profile **`booking-stub`**, [booking-scheduling-stub-local.md](catalog/recipes/booking-scheduling-stub-local.md). Set **`scheduling_api_base_url`** = `http://127.0.0.1:8765` on installed packs.
+
 ### HTTP integration cache (runtime)
 
-- **WE-01-DATASTORE-INTEG** — **Runtime v1** for HTTP tool responses: when org **HTTP integration cache** draft has **Enable when shipped** and a tool uses **Use organization HTTP cache policy when enabled**, identical requests are served from **Redis** (TTL from org or per-integration override). Cached JSON redacts obvious PII field names; failures fall back to live API. Policy API reports **`implementation_status: shipped_v1`** and **`cache_enabled`** from org draft. **Tests:** [test_http_tool_response_cache_unit.py](api/tests/test_http_tool_response_cache_unit.py).
+- **WE-01-DATASTORE-INTEG** — **Runtime v1** for HTTP tool responses: when org **HTTP integration cache** draft has **Enable when shipped** and a tool uses **Use organization HTTP cache policy when enabled**, identical requests are served from **Redis** (TTL from org or per-integration override). Cached JSON redacts obvious PII field names; failures fall back to live API. Policy API reports **`implementation_status: shipped_v1`** and **`cache_enabled`** from org draft. **Analytics** call detail HTTP spans expose **`cache_hit`** when served from cache. **Tests:** [test_http_tool_response_cache_unit.py](api/tests/test_http_tool_response_cache_unit.py), [test_call_intel.py](api/tests/test_call_intel.py).
 
 ### Workflow editor / voice delivery
 

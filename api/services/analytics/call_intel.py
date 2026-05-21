@@ -73,6 +73,8 @@ def _http_summary_from_tool_result(
         out["request_status"] = int(status_code)
     if mapped is not None and isinstance(mapped, dict):
         out["mapped_data"] = mapped
+    if parsed.get("cache_hit") is True:
+        out["cache_hit"] = True
     if err:
         out["error_message"] = str(err)
     return out or None

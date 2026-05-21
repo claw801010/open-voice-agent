@@ -23,6 +23,7 @@ def test_extract_tool_spans_http_tool():
         "status_code": 201,
         "data": {"id": "x"},
         "mapped_data": {"appointment_id": "x"},
+        "cache_hit": True,
     }
     logs = {
         "realtime_feedback_events": [
@@ -48,5 +49,6 @@ def test_extract_tool_spans_http_tool():
     assert spans[0]["tool_type"] == "http_api"
     assert spans[0]["http"]["request_status"] == 201
     assert spans[0]["http"]["mapped_data"]["appointment_id"] == "x"
+    assert spans[0]["http"]["cache_hit"] is True
     assert spans[0]["duration_ms"] == 1000
     assert distinct_tool_names_from_spans(spans) == ["book_slot"]

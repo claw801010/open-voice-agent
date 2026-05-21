@@ -168,6 +168,7 @@ class HttpToolSpanSummaryResponse(BaseModel):
     url_template: str | None = None
     request_status: int | None = None
     mapped_data: dict[str, Any] | None = None
+    cache_hit: bool | None = None
     error_message: str | None = None
 
 
