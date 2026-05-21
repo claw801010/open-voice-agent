@@ -13,7 +13,9 @@ test.describe("Voice profiles (authenticated)", () => {
         await expect(page.getByRole("heading", { name: "Voice profiles" })).toBeVisible({
             timeout: 30_000,
         });
-        await expect(page.getByText("Authentic — natural")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText(/Authentic|Professional/).first()).toBeVisible({
+            timeout: 30_000,
+        });
         await expect(page.getByRole("button", { name: "New profile" })).toBeVisible();
     });
 

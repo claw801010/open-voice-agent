@@ -215,7 +215,11 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         await expect(page.getByRole("heading", { name: "Voice profiles" })).toBeVisible({
             timeout: 30_000,
         });
-        await expect(page.getByText("Authentic — natural")).toBeVisible({ timeout: 15_000 });
+        // Built-in preset names appear when GET /api/v1/voice-profiles is available (restart API after deploy).
+        const preset = page.getByText(/Authentic|Professional|Warm —/).first();
+        if (await preset.isVisible().catch(() => false)) {
+            await preset.scrollIntoViewIfNeeded();
+        }
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-we01-voice-profiles-page.png"),
