@@ -44,7 +44,7 @@ async def test_http_integration_cache_policy_returns_stub(test_client_factory, o
     body = res.json()
     assert body["organization_id"] == org.id
     assert body["cache_enabled"] is False
-    assert body["implementation_status"] == "not_implemented"
+    assert body["implementation_status"] == "shipped_v1"
     assert body["deferral_not_before"] == "2026-07-01"
     assert body["policy_schema_version"] == 4
     assert body["policy_audit"] == []
@@ -71,7 +71,7 @@ async def test_http_integration_cache_policy_get_merges_stored_row(
         res = await client.get("/api/v1/organizations/http-integration-cache-policy")
     assert res.status_code == 200
     body = res.json()
-    assert body["cache_enabled"] is False
+    assert body["cache_enabled"] is True
     prefs = body["stored_preferences"]
     assert prefs["cache_enabled_when_shipped"] is True
     assert prefs["ttl_seconds"] == 3600

@@ -15,9 +15,13 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ## Unreleased
 
+### HTTP integration cache (runtime)
+
+- **WE-01-DATASTORE-INTEG** — **Runtime v1** for HTTP tool responses: when org **HTTP integration cache** draft has **Enable when shipped** and a tool uses **Use organization HTTP cache policy when enabled**, identical requests are served from **Redis** (TTL from org or per-integration override). Cached JSON redacts obvious PII field names; failures fall back to live API. Policy API reports **`implementation_status: shipped_v1`** and **`cache_enabled`** from org draft. **Tests:** [test_http_tool_response_cache_unit.py](api/tests/test_http_tool_response_cache_unit.py).
+
 ### Workflow editor / voice delivery
 
-- **WE-01-VOICE-PROFILES** — Org **voice delivery profiles**: four built-in presets (authenticity, **professional fillers** toggle separate from TTS, breath pauses, ElevenLabs stability/similarity/speed). **Custom profiles**: clone any preset, edit name/description/tags, set org default. Per-workflow override via **`voice_profile_id`**; live calls apply TTS merges + **VOICE DELIVERY** LLM instructions. **UI:** [voice-profiles](ui/src/app/voice-profiles/page.tsx), workflow settings card, **canvas quick-pick** ([VoiceProfileCanvasQuickPick.tsx](ui/src/components/voice/VoiceProfileCanvasQuickPick.tsx)), header **Voice: …** metadata. **Tests:** [test_voice_profiles.py](api/tests/test_voice_profiles.py), [voice-profiles.spec.ts](ui/e2e/voice-profiles.spec.ts). **For businesses:** sound more human on retail/hospitality lines without rewriting every agent prompt.
+- **WE-01-VOICE-PROFILES** — Org **voice delivery profiles** (GTM: `gtm-we01-voice-profiles-page.png`, `gtm-we01-workflow-voice-profile-quick-pick.png`): four built-in presets (authenticity, **professional fillers** toggle separate from TTS, breath pauses, ElevenLabs stability/similarity/speed). **Custom profiles**: clone any preset, edit name/description/tags, set org default. Per-workflow override via **`voice_profile_id`**; live calls apply TTS merges + **VOICE DELIVERY** LLM instructions. **UI:** [voice-profiles](ui/src/app/voice-profiles/page.tsx), workflow settings card, **canvas quick-pick** ([VoiceProfileCanvasQuickPick.tsx](ui/src/components/voice/VoiceProfileCanvasQuickPick.tsx)), header **Voice: …** metadata. **Tests:** [test_voice_profiles.py](api/tests/test_voice_profiles.py), [voice-profiles.spec.ts](ui/e2e/voice-profiles.spec.ts). **For businesses:** sound more human on retail/hospitality lines without rewriting every agent prompt.
 
 ### Developer experience (ADK tier)
 

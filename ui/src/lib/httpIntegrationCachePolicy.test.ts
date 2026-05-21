@@ -14,7 +14,7 @@ describe('fetchHttpIntegrationCachePolicy', () => {
                             organization_id: 42,
                             cache_enabled: false,
                             deferral_not_before: '2026-07-01',
-                            implementation_status: 'not_implemented',
+                            implementation_status: 'shipped_v1',
                             policy_schema_version: 4,
                             stored_preferences: {
                                 cache_enabled_when_shipped: false,
@@ -38,7 +38,7 @@ describe('fetchHttpIntegrationCachePolicy', () => {
         expect(p!.organizationId).toBe(42);
         expect(p!.cacheEnabled).toBe(false);
         expect(p!.deferralNotBefore).toBe('2026-07-01');
-        expect(p!.implementationStatus).toBe('not_implemented');
+        expect(p!.implementationStatus).toBe('shipped_v1');
         expect(p!.policySchemaVersion).toBe(4);
         expect(p!.storedPreferences.cacheEnabledWhenShipped).toBe(false);
         expect(p!.storedPreferences.ttlSeconds).toBeNull();
@@ -57,7 +57,7 @@ describe('fetchHttpIntegrationCachePolicy', () => {
                             organization_id: 7,
                             cache_enabled: false,
                             deferral_not_before: '2026-07-01',
-                            implementation_status: 'not_implemented',
+                            implementation_status: 'shipped_v1',
                             policy_schema_version: 4,
                             stored_preferences: {
                                 cache_enabled_when_shipped: true,
@@ -116,7 +116,7 @@ describe('putHttpIntegrationCachePolicy', () => {
                             organization_id: 1,
                             cache_enabled: false,
                             deferral_not_before: '2026-07-01',
-                            implementation_status: 'not_implemented',
+                            implementation_status: 'shipped_v1',
                             policy_schema_version: 4,
                             stored_preferences: {
                                 cache_enabled_when_shipped: true,

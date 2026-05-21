@@ -294,6 +294,59 @@ class TestExecuteHttpTool:
             assert result["status"] == "success"
 
     @pytest.mark.asyncio
+    async def test_cache_hit_skips_live_http_request(self):
+        """When org cache is on and Redis has a hit, do not call httpx."""
+        tool = MockToolModel(
+            tool_uuid="cache-tool-uuid",
+            name="Cached Lookup",
+            description="Cached GET",
+            category="http_api",
+            definition={
+                "schema_version": 1,
+                "type": "http_api",
+                "config": {
+                    "method": "GET",
+                    "url": "https://api.example.com/items/1",
+                    "response_storage_mode": "org_cache_when_enabled",
+                    "timeout_ms": 5000,
+                },
+            },
+        )
+
+        cached_payload = {
+            "status": "success",
+            "status_code": 200,
+            "data": {"id": 1, "ok": True},
+        }
+
+        with (
+            patch(
+                "api.services.workflow.tools.custom_tool.db_client.get_configuration_value",
+                new_callable=AsyncMock,
+            ) as mock_cfg,
+            patch(
+                "api.services.workflow.tools.http_tool_response_cache.get_cached_http_response",
+                new_callable=AsyncMock,
+            ) as mock_get,
+            patch(
+                "api.services.workflow.tools.custom_tool.httpx.AsyncClient"
+            ) as mock_client_class,
+        ):
+            mock_cfg.return_value = {
+                "cache_enabled_when_shipped": True,
+                "ttl_seconds": 300,
+                "integration_overrides": [],
+            }
+            mock_get.return_value = cached_payload
+
+            result = await execute_http_tool(tool, {}, organization_id=99)
+
+            mock_client_class.assert_not_called()
+            assert result["status"] == "success"
+            assert result.get("cache_hit") is True
+            assert result["data"]["id"] == 1
+
+    @pytest.mark.asyncio
     async def test_header_templates_resolve_from_body_template_defaults(self):
         """header_fields {{…}} use final merged payload (e.g. keys only from body_template)."""
         tool = MockToolModel(

@@ -9,8 +9,9 @@ READMEPLANTOEXECUTE (**WE-01-DATASTORE-INTEG**) and reviewed for compliance.
 When the feature ships, centralize TTL / PII class / integration selection in this module
 and call from ``execute_http_request`` in ``custom_tool.py``.
 
-Today, ``coerce_response_storage_mode`` is used in ``execute_http_tool`` so authoring intent is
-visible in logs (debug) when tools opt into ``org_cache_when_enabled`` before cache lands.
+Runtime read-through / write-through cache is implemented in
+``http_tool_response_cache.py`` when org ``cache_enabled_when_shipped`` is true and the tool uses
+``org_cache_when_enabled``.
 """
 
 from __future__ import annotations
@@ -18,8 +19,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, Literal
 
-# Explicit status for operators and future code paths.
-INTEGRATION_RESPONSE_CACHE_STATUS: str = "not_implemented"
+# Explicit status for operators and API/UI.
+INTEGRATION_RESPONSE_CACHE_STATUS: str = "shipped_v1"
 
 # Planning signal for API + docs (WE-01-DATASTORE-INTEG); revise when shipping or changing boundary.
 INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE: str = "2026-07-01"

@@ -54,7 +54,8 @@ fi
 export E2E_GTM_DECK_SCREENSHOTS=1
 export PLAYWRIGHT_SKIP_WEBSERVER=1
 
-echo "Optional: E2E_GTM_WORKFLOW_ID, E2E_GTM_HTTP_TOOL_UUID (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset})"
+echo "Optional: E2E_GTM_WORKFLOW_ID (voice quick-pick + editor rail), E2E_GTM_HTTP_TOOL_UUID"
+echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset})"
 
 cd ui
 npm run test:e2e -- gtm-deck

@@ -309,11 +309,8 @@ export function HttpApiToolConfig({
                                 </span>
                             </>
                         ) : null}
-                        . Runtime cache is not planned{" "}
-                        <span className="font-medium text-foreground/80">
-                            before {httpIntegrationCachePolicy.deferralNotBefore}
-                        </span>{" "}
-                        unless product policy changes — see{" "}
+                        . When org cache is on and this tool opts in below, identical requests may be served from Redis
+                        (v1 — see{" "}
                         <a
                             href={`${TOOL_DOCUMENTATION_URLS.http_api}#storage-model`}
                             target="_blank"
@@ -329,8 +326,8 @@ export function HttpApiToolConfig({
                     <div>
                         <p className="text-xs font-medium text-foreground">Response handling</p>
                         <p className="mt-1 text-[11px] text-muted-foreground">
-                            Stored on this tool. Calls still hit the live HTTP API until org integration response cache
-                            is implemented; then this preference can opt into the org policy path.
+                            Stored on this tool. Live API only always hits upstream; org-cache mode uses Redis when the
+                            org draft enables cache and this tool selects org policy below.
                         </p>
                     </div>
                     <RadioGroup
@@ -347,7 +344,7 @@ export function HttpApiToolConfig({
                                     Live API only
                                 </Label>
                                 <p className="text-[11px] text-muted-foreground">
-                                    Default — always resolve via upstream HTTP (recommended until cache ships).
+                                    Default — always resolve via upstream HTTP.
                                 </p>
                             </div>
                         </div>
@@ -362,8 +359,9 @@ export function HttpApiToolConfig({
                                     Use organization HTTP cache policy when enabled
                                 </Label>
                                 <p className="text-[11px] text-muted-foreground">
-                                    Authoring intent only today — honor org draft + rollout settings once runtime cache
-                                    exists (see Platform Settings and integration cache banner above).
+                                    Use org draft TTL and per-integration overrides when cache is enabled on Platform
+                                    Settings; results include <code className="text-[10px]">cache_hit</code> when served
+                                    from Redis.
                                 </p>
                             </div>
                         </div>

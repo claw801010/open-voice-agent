@@ -208,4 +208,38 @@ test.describe("GTM deck screenshots (opt-in)", () => {
             fullPage: false,
         });
     });
+
+    test("writes gtm-we01-voice-profiles-page.png", async ({ page }) => {
+        await page.goto("/voice-profiles");
+
+        await expect(page.getByRole("heading", { name: "Voice profiles" })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByText("Authentic — natural")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-we01-voice-profiles-page.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-we01-workflow-voice-profile-quick-pick.png", async ({ page }) => {
+        const workflowId = process.env.E2E_GTM_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_WORKFLOW_ID (editable workflow) to capture canvas voice profile quick-pick.",
+        );
+
+        await page.goto(`/workflow/${encodeURIComponent(workflowId)}`);
+        const quickPick = page.getByTestId("voice-profile-canvas-quick-pick");
+        await expect(quickPick).toBeVisible({ timeout: 30_000 });
+
+        await page.screenshot({
+            path: path.join(
+                gtmImagesDir(),
+                "gtm-we01-workflow-voice-profile-quick-pick.png",
+            ),
+            fullPage: false,
+        });
+    });
 });

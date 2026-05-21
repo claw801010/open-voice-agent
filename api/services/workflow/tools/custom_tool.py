@@ -109,16 +109,6 @@ async def execute_http_tool(
     storage_mode = http_tool_cache_policy.coerce_response_storage_mode(
         config.get("response_storage_mode")
     )
-    if storage_mode == "org_cache_when_enabled":
-        logger.debug(
-            "HTTP tool {!r} ({}): response_storage_mode=org_cache_when_enabled; "
-            "integration response cache not implemented — using live request "
-            "(WE-01-DATASTORE-INTEG; deferral not before {}).",
-            tool.name,
-            tool.tool_uuid,
-            http_tool_cache_policy.INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE,
-        )
-
     logger.info(
         f"Executing custom tool '{tool.name}' ({tool.tool_uuid}): "
         f"{config.get('method', 'POST').upper()} {config.get('url', '')}"
@@ -128,6 +118,8 @@ async def execute_http_tool(
         arguments=arguments,
         call_context_vars=call_context_vars,
         organization_id=organization_id,
+        tool_uuid=str(tool.tool_uuid),
+        response_storage_mode=storage_mode,
     )
 
 
@@ -221,8 +213,10 @@ async def execute_http_request(
     arguments: Dict[str, Any],
     call_context_vars: Optional[Dict[str, Any]] = None,
     organization_id: Optional[int] = None,
+    tool_uuid: Optional[str] = None,
+    response_storage_mode: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Execute an HTTP request with optional credential and response mapping."""
+    """Execute an HTTP request with optional credential, cache, and response mapping."""
     method = config.get("method", "POST").upper()
     url_raw = str(config.get("url", "") or "").strip()
     response_mapping = config.get("response_mapping") or {}
@@ -306,6 +300,60 @@ async def execute_http_request(
     elif method in ("GET", "DELETE") and final_payload:
         params = final_payload
 
+    cache_decision = None
+    cache_key = None
+    if organization_id and tool_uuid and response_storage_mode:
+        from api.enums import OrganizationConfigurationKey
+        from api.services.workflow.tools.http_tool_response_cache import (
+            build_cache_key,
+            get_cached_http_response,
+            resolve_runtime_cache_decision,
+            store_cached_http_response,
+        )
+
+        raw_policy = await db_client.get_configuration_value(
+            organization_id,
+            OrganizationConfigurationKey.HTTP_INTEGRATION_CACHE_POLICY.value,
+            default=None,
+        )
+        prefs = http_tool_cache_policy.parse_stored_http_cache_policy_preferences(
+            raw_policy
+        )
+        integration_id = config.get("integration_id")
+        if isinstance(integration_id, str):
+            integration_id = integration_id.strip() or None
+        else:
+            integration_id = None
+        cache_decision = resolve_runtime_cache_decision(
+            prefs,
+            response_storage_mode,
+            integration_id=integration_id,
+        )
+        if cache_decision.enabled:
+            cache_key = build_cache_key(
+                organization_id=organization_id,
+                tool_uuid=tool_uuid,
+                method=method,
+                url=url,
+                headers=headers,
+                body=body,
+                params=params,
+            )
+            cached = await get_cached_http_response(cache_key)
+            if cached is not None:
+                cached = dict(cached)
+                cached["mapped_data"] = _apply_response_mapping(
+                    cached.get("data"), response_mapping
+                ) or None
+                cached["cache_hit"] = True
+                logger.info(
+                    "HTTP tool cache hit for org={} tool={} url={}",
+                    organization_id,
+                    tool_uuid,
+                    url,
+                )
+                return cached
+
     try:
         async with httpx.AsyncClient(timeout=timeout_seconds) as client:
             response = await client.request(
@@ -323,12 +371,34 @@ async def execute_http_request(
 
             mapped_data = _apply_response_mapping(response_data, response_mapping)
 
-            return {
+            result = {
                 "status": "success",
                 "status_code": response.status_code,
                 "data": response_data,
                 "mapped_data": mapped_data if mapped_data else None,
+                "cache_hit": False,
             }
+            if (
+                cache_decision
+                and cache_decision.enabled
+                and cache_key
+                and response.status_code < 500
+            ):
+                from api.services.workflow.tools.http_tool_response_cache import (
+                    store_cached_http_response,
+                )
+
+                await store_cached_http_response(
+                    cache_key,
+                    {
+                        "status": "success",
+                        "status_code": response.status_code,
+                        "data": response_data,
+                    },
+                    ttl_seconds=cache_decision.ttl_seconds,
+                    redact=cache_decision.redact_before_store,
+                )
+            return result
 
     except httpx.TimeoutException:
         return {

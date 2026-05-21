@@ -129,7 +129,7 @@ async def _http_integration_cache_policy_response(org_id: int) -> HttpIntegratio
     )
     return HttpIntegrationCachePolicyResponse(
         organization_id=org_id,
-        cache_enabled=False,
+        cache_enabled=bool(prefs_dict.get("cache_enabled_when_shipped")),
         deferral_not_before=INTEGRATION_RESPONSE_CACHE_DEFERRAL_NOT_BEFORE,
         implementation_status=INTEGRATION_RESPONSE_CACHE_STATUS,
         policy_schema_version=HTTP_INTEGRATION_CACHE_POLICY_SCHEMA_VERSION,
@@ -143,7 +143,8 @@ async def get_http_integration_cache_policy(user: UserModel = Depends(get_user))
     """
     Integration-backed HTTP **response** cache policy for the selected org.
 
-    ``cache_enabled`` is always false until runtime cache ships. ``stored_preferences`` merges
+    ``cache_enabled`` reflects org draft ``cache_enabled_when_shipped`` (runtime honors it when
+    tools use ``org_cache_when_enabled``). ``stored_preferences`` merges
     the org configuration row when present (draft intent for a future admin UI).
     """
     if not user.selected_organization_id:
@@ -157,7 +158,7 @@ async def put_http_integration_cache_policy(
     body: HttpIntegrationCachePolicyPut,
     user: UserModel = Depends(get_user),
 ):
-    """Persist draft HTTP integration cache preferences for the selected org (runtime cache still off)."""
+    """Persist draft HTTP integration cache preferences for the selected org."""
     if not user.selected_organization_id:
         raise HTTPException(status_code=400, detail="No organization selected")
 
