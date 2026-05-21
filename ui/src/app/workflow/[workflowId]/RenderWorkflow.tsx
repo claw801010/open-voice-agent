@@ -67,6 +67,7 @@ import {
 import { WorkflowConfigurations } from '@/types/workflow-configurations';
 
 import { VoiceProfileCanvasQuickPick } from "@/components/voice/VoiceProfileCanvasQuickPick";
+import { useOrgVoiceProfiles } from "@/hooks/useOrgVoiceProfiles";
 import AddNodePanel from "../../../components/flow/AddNodePanel";
 import CustomEdge from "../../../components/flow/edges/CustomEdge";
 import { AgentNode, EndCall, GlobalNode, QANode, StartCall, TriggerNode, WebhookNode } from "../../../components/flow/nodes";
@@ -473,6 +474,15 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
         },
         [setActiveFlowScope],
     );
+
+    const { resolveEffectiveProfile } = useOrgVoiceProfiles();
+    const voiceProfileLabel = useMemo(() => {
+        if (!workflowConfigurations) return null;
+        const p = resolveEffectiveProfile(workflowConfigurations.voice_profile_id);
+        if (!p) return null;
+        const suffix = workflowConfigurations.voice_profile_id ? "" : " (org default)";
+        return `${p.name}${suffix}`;
+    }, [workflowConfigurations, resolveEffectiveProfile]);
 
     const flowNodesForHeader = useMemo(() => {
         if (activeFlowScope === 'main') return nodes;
@@ -1212,6 +1222,7 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                     onEditorModeChange={setEditorMode}
                     showEditorModeTabs={!isViewingHistoricalVersion}
                     flowNodes={flowNodesForHeader}
+                    voiceProfileLabel={voiceProfileLabel}
                 />
 
                 {/* WE-01-SUBFLOWS: Main flow vs component subgraph */}

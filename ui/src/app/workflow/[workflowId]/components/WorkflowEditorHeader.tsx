@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactFlowInstance } from "@xyflow/react";
-import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, ChevronDown, Copy, Download, Eye, History, LoaderCircle, Lock, Menu, MessageCircle, MoreVertical, Phone, Rocket, TrendingUp } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarDays, CheckCircle2, ChevronDown, Copy, Download, Eye, History, LoaderCircle, Lock, Menu, MessageCircle, Mic, MoreVertical, Phone, Rocket, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
@@ -80,6 +80,8 @@ interface WorkflowEditorHeaderProps {
     showEditorModeTabs?: boolean;
     /** Resolve node ids to display names in validation popover (DX-01-NOCODE) */
     flowNodes?: FlowNode[];
+    /** WE-01-VOICE-PROFILES: effective delivery preset for this workflow */
+    voiceProfileLabel?: string | null;
 }
 
 export const WorkflowEditorHeader = ({
@@ -112,6 +114,7 @@ export const WorkflowEditorHeader = ({
     onEditorModeChange,
     showEditorModeTabs = true,
     flowNodes,
+    voiceProfileLabel = null,
 }: WorkflowEditorHeaderProps) => {
     const feedbackUrl = getPublicFeedbackUrl();
     const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
@@ -286,6 +289,16 @@ export const WorkflowEditorHeader = ({
                             >
                                 {subflowInventoryHint}
                             </span>
+                        ) : null}
+                        {voiceProfileLabel ? (
+                            <Link
+                                href="/voice-profiles"
+                                className="inline-flex items-center gap-0.5 text-teal-300/90 truncate max-w-[min(100%,18rem)] hover:text-teal-200 hover:underline underline-offset-2"
+                                title="Voice delivery profile for live calls (authenticity, fillers, TTS). Change on canvas or in workflow settings."
+                            >
+                                <Mic className="h-3 w-3 shrink-0" aria-hidden />
+                                Voice: {voiceProfileLabel}
+                            </Link>
                         ) : null}
                     </div>
                     {showEditorModeTabs && onEditorModeChange && !isViewingHistoricalVersion ? (

@@ -2,7 +2,7 @@
 
 import { ExternalLink, Loader2, Mic } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,8 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAuth } from "@/lib/auth";
-import { fetchVoiceProfiles, type VoiceProfile } from "@/lib/voiceProfiles";
+import { useOrgVoiceProfiles } from "@/hooks/useOrgVoiceProfiles";
+import type { VoiceProfile } from "@/lib/voiceProfiles";
 import type { WorkflowConfigurations } from "@/types/workflow-configurations";
 
 const ORG_DEFAULT = "__org_default__";
@@ -52,53 +52,37 @@ export function VoiceProfileCanvasQuickPick({
     disabled = false,
     onSave,
 }: Props) {
-    const { getAccessToken } = useAuth();
-    const [profiles, setProfiles] = useState<VoiceProfile[]>([]);
-    const [orgDefaultId, setOrgDefaultId] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { loading, list } = useOrgVoiceProfiles();
     const [saving, setSaving] = useState(false);
 
+    const profiles = list?.profiles ?? [];
+    const orgDefaultId = list?.defaultProfileId ?? null;
     const storedId = workflowConfigurations.voice_profile_id;
     const selectValue = storedId ?? ORG_DEFAULT;
-
-    useEffect(() => {
-        void (async () => {
-            setLoading(true);
-            const list = await fetchVoiceProfiles(getAccessToken);
-            setLoading(false);
-            if (list) {
-                setProfiles(list.profiles);
-                setOrgDefaultId(list.defaultProfileId);
-            }
-        })();
-    }, [getAccessToken]);
 
     const effectiveProfile = useMemo(() => {
         const id = selectValue === ORG_DEFAULT ? orgDefaultId : selectValue;
         return profiles.find((p) => p.id === id) ?? null;
     }, [selectValue, orgDefaultId, profiles]);
 
-    const handleChange = useCallback(
-        async (value: string) => {
-            if (disabled) return;
-            setSaving(true);
-            try {
-                const next: WorkflowConfigurations = { ...workflowConfigurations };
-                if (value === ORG_DEFAULT) {
-                    delete next.voice_profile_id;
-                } else {
-                    next.voice_profile_id = value;
-                }
-                await onSave(next, workflowName);
-                toast.success("Voice profile updated");
-            } catch {
-                toast.error("Failed to save voice profile");
-            } finally {
-                setSaving(false);
+    const handleChange = async (value: string) => {
+        if (disabled) return;
+        setSaving(true);
+        try {
+            const next: WorkflowConfigurations = { ...workflowConfigurations };
+            if (value === ORG_DEFAULT) {
+                delete next.voice_profile_id;
+            } else {
+                next.voice_profile_id = value;
             }
-        },
-        [disabled, onSave, workflowConfigurations, workflowName],
-    );
+            await onSave(next, workflowName);
+            toast.success("Voice profile updated");
+        } catch {
+            toast.error("Failed to save voice profile");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div

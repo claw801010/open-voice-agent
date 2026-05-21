@@ -15,6 +15,10 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ## Unreleased
 
+### Workflow editor / voice delivery
+
+- **WE-01-VOICE-PROFILES** — Org **voice delivery profiles**: four built-in presets (authenticity, **professional fillers** toggle separate from TTS, breath pauses, ElevenLabs stability/similarity/speed). **Custom profiles**: clone any preset, edit name/description/tags, set org default. Per-workflow override via **`voice_profile_id`**; live calls apply TTS merges + **VOICE DELIVERY** LLM instructions. **UI:** [voice-profiles](ui/src/app/voice-profiles/page.tsx), workflow settings card, **canvas quick-pick** ([VoiceProfileCanvasQuickPick.tsx](ui/src/components/voice/VoiceProfileCanvasQuickPick.tsx)), header **Voice: …** metadata. **Tests:** [test_voice_profiles.py](api/tests/test_voice_profiles.py), [voice-profiles.spec.ts](ui/e2e/voice-profiles.spec.ts). **For businesses:** sound more human on retail/hospitality lines without rewriting every agent prompt.
+
 ### Developer experience (ADK tier)
 
 - **DX-01-ADK** — [READMEADK.md](READMEADK.md) adds **copy-paste MCP (Python + `fastmcp`)** and **REST publish** (`curl` + httpx) with `X-API-Key`; [ui/AGENTS.md](ui/AGENTS.md) documents **generated client** regeneration and optional CI drift check; [READMEEXPERIENCE.md](READMEEXPERIENCE.md) ADK journey links tightened.

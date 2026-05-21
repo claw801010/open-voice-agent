@@ -131,7 +131,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 **Shipped in repo:** reviewer worksheet [catalog/TEMPLATE_QUALITY_RUBRIC.md](catalog/TEMPLATE_QUALITY_RUBRIC.md); pytest [test_vertical_packs_catalog.py](api/tests/test_vertical_packs_catalog.py) for `vertical-packs.json`, on-disk runbook / packaged refs, **JSON parse + minimal graph shape**, **voice skeleton invariants**, **directed happy-path spine**, and **rubric (3) prompt tokens**; **install-from-catalog API happy-path** [test_install_from_catalog_routes.py](api/tests/test_install_from_catalog_routes.py); [.github/pull_request_template.md](.github/pull_request_template.md); links from [catalog/README.md](catalog/README.md). **Prebuild / revenue:** [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) (booking + high-revenue motions vs shipped packs; **WE-01** HTTP tool expectations); rubric **row 9** (shipped vs roadmap claims). **Analytics:** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) + [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) + [api/routes/analytics.py](api/routes/analytics.py) + **MK-01-ANALYTICS-VERTICAL** package (**`Done`**).
 
-**Next pass:** **MK-01** — optional live stub container for manual QA. **MK-01-ANALYTICS-VERTICAL** — **`Done`**; GTM PNGs via **`E2E_GTM_DECK_SCREENSHOTS=1`** ([gtm-deck-screenshots.spec.ts](ui/e2e/gtm-deck-screenshots.spec.ts)) or manual capture. **WE-01-DATASTORE-INTEG** — runtime wiring for **`response_storage_mode`** **or** per-integration policy + audit. **WE-01-DUALMODE** — tool UX polish adjacent to GTM checklist.
+**Next pass:** **MK-01** — optional live stub container for manual QA. **MK-01-ANALYTICS-VERTICAL** — **`Done`**; GTM PNGs via **`E2E_GTM_DECK_SCREENSHOTS=1`** ([gtm-deck-screenshots.spec.ts](ui/e2e/gtm-deck-screenshots.spec.ts)) or manual capture. **WE-01-DATASTORE-INTEG** — runtime wiring for **`response_storage_mode`** **or** per-integration policy + audit (deferral **2026-07-01** unless revised). **WE-01-VOICE-PROFILES** — **`Done`**; optional GTM PNG for **`/voice-profiles`** + canvas quick-pick.
 
 ### MK-01-IMPORT-OPTIONS — External flows & agent skills (research package)
 
@@ -650,6 +650,25 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ---
 
+### WE-01-VOICE-PROFILES — Org voice delivery presets + per-workflow override
+
+**Status:** `Done`
+
+**Goal:** Tune how agents **sound** (authenticity, professional fillers, breath pauses, ElevenLabs stability/similarity) without editing prompts per agent. Built-in presets, org default, custom profiles (clone/edit/tags), workflow override, runtime TTS + LLM delivery block on live calls.
+
+**Acceptance criteria:**
+
+- [x] **Built-in presets** — `professional_clear`, `warm_conversational`, `authentic_natural` (org default), `broadcast_polished` ([presets.py](api/services/voice/presets.py)).
+- [x] **Org API** — `GET/POST /api/v1/voice-profiles`, `GET/PUT/DELETE /{id}`, `POST /{id}/clone`, `PUT /org-default`; stored under **`VOICE_PROFILES`** org configuration ([voice_profiles.py](api/routes/voice_profiles.py)).
+- [x] **Custom profiles** — create, clone built-in/custom, edit name/description/tags + speech settings, delete; built-ins read-only ([VoiceProfilesManager.tsx](ui/src/components/voice/VoiceProfilesManager.tsx)).
+- [x] **Runtime** — `workflow_configurations.voice_profile_id` merges TTS overrides and appends **VOICE DELIVERY** instructions to node system prompts ([run_pipeline.py](api/services/pipecat/run_pipeline.py), [speech_delivery.py](api/services/voice/speech_delivery.py)).
+- [x] **UI** — **`/voice-profiles`** manager; workflow **settings** card; **canvas quick-pick** (top-left) saves on change ([VoiceProfileCanvasQuickPick.tsx](ui/src/components/voice/VoiceProfileCanvasQuickPick.tsx)); header metadata **Voice: …** link ([WorkflowEditorHeader.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx)).
+- [x] **Tests** — unit [test_voice_profiles.py](api/tests/test_voice_profiles.py); route [test_voice_profiles_routes.py](api/tests/test_voice_profiles_routes.py); Playwright [voice-profiles.spec.ts](ui/e2e/voice-profiles.spec.ts).
+
+**Key files:** [voice_profile.py](api/schemas/voice_profile.py), [voice_profiles.py](api/services/voice/voice_profiles.py), [service_factory.py](api/services/pipecat/service_factory.py) ElevenLabs `stability`/`similarity_boost`, [voiceProfiles.ts](ui/src/lib/voiceProfiles.ts), [useOrgVoiceProfiles.ts](ui/src/hooks/useOrgVoiceProfiles.ts).
+
+---
+
 ### WE-01-DATASTORE-INTEG — Org datastore default vs integration-backed HTTP (stub)
 
 **Status:** `InProgress` (documentation including **phase 3** governance/audit copy + org-wide **draft** policy API + **per-integration draft rows** + **`/settings`** UI; HTTP tool **`response_storage_mode`** authoring + **debug** runtime acknowledgement when `org_cache_when_enabled`; **no** cache env flags; **full runtime cache** not started)  
@@ -783,6 +802,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 | Date | Change |
 |------|--------|
+| 2026-05-20 | **WE-01-VOICE-PROFILES → Done** — Built-in + custom voice delivery presets; org API + runtime TTS/LLM wiring; **`/voice-profiles`**, canvas quick-pick, header metadata; Playwright [voice-profiles.spec.ts](ui/e2e/voice-profiles.spec.ts); [useOrgVoiceProfiles.ts](ui/src/hooks/useOrgVoiceProfiles.ts). |
 | 2026-05-16 | **MK-01-IMPORT-CLIENT → Done** — [workflow_import.py](api/schemas/workflow_import.py), [workflow-import.openapi.json](catalog/openapi/workflow-import.openapi.json), [ui/src/client/workflowImport](ui/src/client/workflowImport); `workflowImportApi` uses generated SDK. |
 | 2026-05-16 | **MK-01-IMPORT-CLIENT (E2E + interim client)** — Playwright all-vendor import; per-client auth interceptors ([apiClient.ts](ui/src/lib/apiClient.ts)). |
 | 2026-05-16 | **MK-01-IMPORT-UI → Done** — [ImportExternalWorkflowDialog.tsx](ui/src/components/workflow/ImportExternalWorkflowDialog.tsx), [workflowImportApi.ts](ui/src/lib/workflowImportApi.ts); `/workflow` + **Create Agent** entry; Playwright [workflow-import.spec.ts](ui/e2e/workflow-import.spec.ts); Zapier **`nodes`** map test [zapier-platform-nodes-map.json](catalog/fixtures/zapier-platform-nodes-map.json). |
