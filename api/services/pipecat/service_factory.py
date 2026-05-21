@@ -247,15 +247,17 @@ def create_tts_service(user_config, audio_config: "AudioConfig"):
             voice_id = user_config.tts.voice.split(" - ")[1]
         except IndexError:
             voice_id = user_config.tts.voice
+        stability = getattr(user_config.tts, "stability", None)
+        similarity_boost = getattr(user_config.tts, "similarity_boost", None)
         return ElevenLabsTTSService(
             reconnect_on_error=False,
             api_key=user_config.tts.api_key,
             settings=ElevenLabsTTSSettings(
                 voice=voice_id,
                 model=user_config.tts.model,
-                stability=0.8,
+                stability=stability if stability is not None else 0.8,
                 speed=user_config.tts.speed,
-                similarity_boost=0.75,
+                similarity_boost=similarity_boost if similarity_boost is not None else 0.75,
             ),
             text_filters=[xml_function_tag_filter],
             skip_aggregator_types=["recording_router", "recording"],

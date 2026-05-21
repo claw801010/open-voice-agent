@@ -608,6 +608,24 @@ async def _run_pipeline(
     model_overrides = run_configs.get("model_overrides")
     user_config = resolve_effective_config(user_config, model_overrides)
 
+    from api.enums import OrganizationConfigurationKey
+    from api.services.voice.speech_delivery import (
+        apply_voice_profile_to_user_config,
+        resolve_voice_profile_for_run,
+    )
+
+    org_voice_raw = await db_client.get_configuration_value(
+        workflow.organization_id,
+        OrganizationConfigurationKey.VOICE_PROFILES.value,
+        default=None,
+    )
+    voice_profile, speech_delivery_prompt_block = resolve_voice_profile_for_run(
+        org_voice_raw,
+        run_configs.get("voice_profile_id"),
+    )
+    if voice_profile:
+        user_config = apply_voice_profile_to_user_config(user_config, voice_profile)
+
     # Detect realtime mode (speech-to-speech services like OpenAI Realtime, Gemini Live)
     is_realtime = user_config.is_realtime and user_config.realtime is not None
 
@@ -735,6 +753,7 @@ async def _run_pipeline(
         embeddings_base_url=embeddings_base_url,
         has_recordings=has_recordings,
         context_compaction_enabled=context_compaction_enabled,
+        speech_delivery_prompt_block=speech_delivery_prompt_block,
     )
 
     # Create pipeline components

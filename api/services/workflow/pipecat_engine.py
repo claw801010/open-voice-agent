@@ -73,6 +73,7 @@ class PipecatEngine:
         embeddings_base_url: Optional[str] = None,
         has_recordings: bool = False,
         context_compaction_enabled: bool = False,
+        speech_delivery_prompt_block: Optional[str] = None,
     ):
         self.task = task
         self.llm = llm
@@ -136,6 +137,7 @@ class PipecatEngine:
         # True when the workflow has active recordings; enables recording
         # response mode instructions on all nodes for in-context learning.
         self._has_recordings: bool = has_recordings
+        self._speech_delivery_prompt_block = speech_delivery_prompt_block
 
         # Background context summarization on node transitions
         self._context_compaction_enabled: bool = context_compaction_enabled
@@ -552,6 +554,7 @@ class PipecatEngine:
             workflow=self.workflow,
             format_prompt=self._format_prompt,
             has_recordings=self._has_recordings,
+            speech_delivery_prompt_block=self._speech_delivery_prompt_block,
         )
         functions = await compose_functions_for_node(
             node=node,

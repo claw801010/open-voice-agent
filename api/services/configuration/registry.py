@@ -439,6 +439,18 @@ class ElevenlabsTTSConfiguration(BaseServiceConfiguration):
     provider: Literal[ServiceProviders.ELEVENLABS] = ServiceProviders.ELEVENLABS
     voice: str = "21m00Tcm4TlvDq8ikWAM"  # Rachel voice ID
     speed: float = Field(default=1.0, ge=0.1, le=2.0, description="Speed of the voice")
+    stability: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="ElevenLabs stability; None uses provider default (0.8)",
+    )
+    similarity_boost: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="ElevenLabs similarity_boost; None uses provider default (0.75)",
+    )
     model: str = Field(
         default="eleven_flash_v2_5",
         json_schema_extra={"examples": ELEVENLABS_TTS_MODELS},

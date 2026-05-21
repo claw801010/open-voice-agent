@@ -66,6 +66,7 @@ import {
 } from '@/lib/usageOrgDeepLink';
 import { WorkflowConfigurations } from '@/types/workflow-configurations';
 
+import { VoiceProfileCanvasQuickPick } from "@/components/voice/VoiceProfileCanvasQuickPick";
 import AddNodePanel from "../../../components/flow/AddNodePanel";
 import CustomEdge from "../../../components/flow/edges/CustomEdge";
 import { AgentNode, EndCall, GlobalNode, QANode, StartCall, TriggerNode, WebhookNode } from "../../../components/flow/nodes";
@@ -434,6 +435,7 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
         setIsDirty,
         handleNodeSelect,
         saveWorkflow,
+        saveWorkflowConfigurations,
         onConnect,
         onEdgesChange,
         onNodesChange,
@@ -1089,6 +1091,15 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                     </Panel>
                 )}
             </ReactFlow>
+
+            {!graphLocked && workflowConfigurations && (
+                <VoiceProfileCanvasQuickPick
+                    workflowConfigurations={workflowConfigurations}
+                    workflowName={workflowName}
+                    disabled={installationLocked}
+                    onSave={saveWorkflowConfigurations}
+                />
+            )}
 
             <div className="absolute bottom-12 left-8 z-10 flex gap-2">
                 <TooltipProvider>

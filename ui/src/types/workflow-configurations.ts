@@ -81,6 +81,8 @@ export interface WorkflowConfigurations {
     voicemail_detection?: VoicemailDetectionConfiguration;
     context_compaction_enabled?: boolean;  // Summarize context on node transitions to remove stale tool calls
     model_overrides?: ModelOverrides;  // Per-workflow model configuration overrides
+    /** Org voice delivery preset; omit to use organization default. */
+    voice_profile_id?: string;
     mk01?: Mk01InstallMetadata;
     [key: string]: unknown;  // Allow additional properties for future configurations
 }

@@ -52,6 +52,7 @@ def compose_system_prompt_for_node(
     workflow: "WorkflowGraph",
     format_prompt: Callable[[str], str],
     has_recordings: bool,
+    speech_delivery_prompt_block: str | None = None,
 ) -> str:
     """Compose the full system prompt text for a workflow node.
 
@@ -79,6 +80,9 @@ def compose_system_prompt_for_node(
 
     if has_recordings and "RECORDING_ID:" in formatted_node_prompt:
         parts.append(RECORDING_RESPONSE_MODE_INSTRUCTIONS)
+
+    if speech_delivery_prompt_block:
+        parts.append(speech_delivery_prompt_block)
 
     return "\n\n".join(parts)
 

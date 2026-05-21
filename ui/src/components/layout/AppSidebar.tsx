@@ -14,6 +14,7 @@ import {
   Key,
   LogOut,
   Megaphone,
+  Mic,
   Phone,
   Settings,
   Store,
@@ -150,6 +151,11 @@ export function AppSidebar() {
           title: "Recordings",
           url: "/recordings",
           icon: AudioLines,
+        },
+        {
+          title: "Voice profiles",
+          url: "/voice-profiles",
+          icon: Mic,
         },
         // {
         //   title: "Integrations",

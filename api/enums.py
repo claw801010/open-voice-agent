@@ -102,6 +102,9 @@ class OrganizationConfigurationKey(Enum):
     HTTP_INTEGRATION_CACHE_POLICY = (
         "HTTP_INTEGRATION_CACHE_POLICY"  # JSON draft prefs — WE-01-DATASTORE-INTEG; runtime cache still not_implemented
     )
+    VOICE_PROFILES = (
+        "VOICE_PROFILES"  # JSON: { v, default_profile_id, custom_profiles[] } — speech delivery presets
+    )
 
 
 class WorkflowStatus(Enum):
