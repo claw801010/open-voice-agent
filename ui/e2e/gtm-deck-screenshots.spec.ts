@@ -235,6 +235,11 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         );
 
         await page.goto(`/workflow/${encodeURIComponent(workflowId)}`);
+        const catalogBanner = page.getByText("Installed from catalog");
+        if (await catalogBanner.isVisible({ timeout: 15_000 }).catch(() => false)) {
+            await page.getByRole("button", { name: "Customize" }).click();
+            await expect(catalogBanner).toBeHidden({ timeout: 30_000 });
+        }
         const quickPick = page.getByTestId("voice-profile-canvas-quick-pick");
         await expect(quickPick).toBeVisible({ timeout: 30_000 });
 

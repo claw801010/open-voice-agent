@@ -54,6 +54,12 @@ fi
 export E2E_GTM_DECK_SCREENSHOTS=1
 export PLAYWRIGHT_SKIP_WEBSERVER=1
 
+if [[ -n "${E2E_GTM_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking catalog editor lock on workflow ${E2E_GTM_WORKFLOW_ID} (voice quick-pick / editor rail)…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_WORKFLOW_ID}" || true
+fi
+
 echo "Optional: E2E_GTM_WORKFLOW_ID (voice quick-pick + editor rail), E2E_GTM_HTTP_TOOL_UUID"
 echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset})"
 
