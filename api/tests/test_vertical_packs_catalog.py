@@ -114,6 +114,34 @@ def test_runbooks_document_happy_path_test(catalog: dict) -> None:
         assert "Expected" in tail, f"{slug}: happy-path section needs an expected outcome"
 
 
+_BOOKING_COMPLEX_SECTION = "## Booking-complex happy-path test"
+
+
+def test_runbooks_document_booking_complex_happy_path(catalog: dict) -> None:
+    """MK-01-RUBRIC: packs with booking_complex variant document stub + tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "booking_complex" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _BOOKING_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_BOOKING_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_BOOKING_COMPLEX_SECTION)
+        tail = text[idx : idx + 2000]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: booking-complex section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: booking-complex section needs expected outcome"
+        assert "booking_complex" in tail, f"{slug}: booking-complex section must name variant_id"
+        assert "scheduling_api_base_url" in tail, (
+            f"{slug}: booking-complex section must reference scheduling_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]

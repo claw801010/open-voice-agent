@@ -17,6 +17,7 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ### Marketplace / booking QA
 
+- **MK-01-RUBRIC (booking-complex runbooks)** — Each vertical runbook adds **Booking-complex happy-path test (QA)**: install **`booking_complex`**, wire HTTP tool to [booking stub](scripts/booking_scheduling_stub_server.py), book in **≤6 turns**, prove **`mapped_data`** in Analytics. CI: [test_runbooks_document_booking_complex_happy_path](api/tests/test_vertical_packs_catalog.py).
 - **MK-01-RUBRIC (booking stub)** — Local scheduling API on **:8765** for manual **booking_complex** demos: [booking_scheduling_stub_server.py](scripts/booking_scheduling_stub_server.py), Docker Compose profile **`booking-stub`**, [booking-scheduling-stub-local.md](catalog/recipes/booking-scheduling-stub-local.md). Set **`scheduling_api_base_url`** = `http://127.0.0.1:8765` on installed packs.
 
 ### HTTP integration cache (runtime)

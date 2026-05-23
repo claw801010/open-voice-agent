@@ -12,4 +12,6 @@ One-page **operational** guides for each marketplace vertical pack in [catalog/v
 
 **Prebuild / revenue roadmap:** [catalog/PREBUILD_VERTICAL_ROADMAP.md](../catalog/PREBUILD_VERTICAL_ROADMAP.md) — booking-per-vertical gaps, high-revenue motions, and HTTP-tool expectations for the next packaged slices.
 
+Each runbook includes **Happy-path test (QA)** (simple install) and **Booking-complex happy-path test (QA)** (`booking_complex` + HTTP tool + Analytics proof).
+
 **Analytics companion:** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](../catalog/ANALYTICS_VERTICAL_ROADMAP.md) — calls list/detail, dashboards, APIs, and **HTTP tool** trace expectations for buyer-ready demos (**MK-01-ANALYTICS-VERTICAL**).

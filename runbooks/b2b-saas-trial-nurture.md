@@ -18,6 +18,19 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 2. **Try (Web only)** or **Simulation → Start Web test** with sample `company_size` / `use_case` variables.
 3. **Expected:** short qualification conversation completes; agent proposes a sensible next step (e.g. demo or email follow-up). CRM HTTP tools may be stubs in dev — conversation should still end without errors.
 
+## Booking-complex happy-path test (QA)
+
+**Goal:** book a **demo** in **≤6 agent turns** after **`book_demo`** is wired.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+
+1. Install **Trial nurture & PQL voice qual** with variant **`booking_complex`**.
+2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`, **`demo_duration_minutes`**, and **`crm_owner_email`** as needed.
+3. HTTP tool **`book_demo`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `meeting_id` → `appointment.id`, `meeting_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
+4. Attach to agent; **Publish**.
+5. **Web test** script: trial goals → request demo → provide timezone + time window → confirm booking.
+6. **Expected:** **`book_demo`** appears in call detail tool spans with **`mapped_data`**; **`/analytics/calls?catalog_slug=b2b-saas-trial-nurture&catalog_variant_id=booking_complex&tool_name=book_demo`**.
+
 ## Day 1 checklist
 
 1. **Segments:** define who gets voice vs. email (e.g. high-intent trial only).
