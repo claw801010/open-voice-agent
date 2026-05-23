@@ -25,6 +25,7 @@ from api.services.analytics.call_live_trace import (
 )
 from api.services.analytics.call_quality_report import build_call_quality_report
 from api.services.analytics.call_engineering_links import build_engineering_links
+from api.services.analytics.http_cache_insights import fetch_http_cache_rollups
 from api.services.analytics.insights_quality_rollup import (
     QUALITY_ROLLUP_MAX_RUNS,
     rollup_quality_insights,
@@ -103,6 +104,8 @@ class AnalyticsCallsClient(BaseDBClient):
           trace in ``logs.realtime_feedback_events`` **or** rows in ``analytics_http_tool_spans``.
         * ``tool_name_mix`` — top tool ``function_name`` values by **distinct run** count (a run
           with multiple invocations of the same tool counts once).
+        * ``http_tool_invocations`` / ``http_tool_cache_hits`` — HTTP tool end events from span
+          rows (preferred) or run logs when no spans exist; ``cache_hit`` from stored summaries.
         """
         base_conds: list = [
             WorkflowModel.organization_id == organization_id,
@@ -294,6 +297,12 @@ class AnalyticsCallsClient(BaseDBClient):
                 snapshots, total_calls_in_range=total
             )
 
+            cache_rollups = await fetch_http_cache_rollups(
+                session,
+                mix_params=mix_params,
+                mix_sql_extra=mix_sql_extra,
+            )
+
         return {
             "total_calls": total,
             "calls_with_outcome": with_out,
@@ -302,6 +311,8 @@ class AnalyticsCallsClient(BaseDBClient):
             "outcome_mix": outcome_mix,
             "tool_name_mix": tool_name_mix,
             "quality_summary": quality_summary,
+            "http_tool_invocations": cache_rollups["http_tool_invocations"],
+            "http_tool_cache_hits": cache_rollups["http_tool_cache_hits"],
         }
 
     async def list_analytics_calls(

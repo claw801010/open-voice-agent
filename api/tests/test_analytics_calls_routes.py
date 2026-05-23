@@ -300,11 +300,11 @@ async def test_analytics_calls_span_table_tool_name_list_and_insights(
             organization_id=org.id,
             workflow_id=wf.id,
             workflow_run_id=run.id,
-            span_id="only-span",
+            span_id="cache-hit-span",
             tool_name="span_table_only_tool",
-            tool_type="function",
+            tool_type="http_api",
             duration_ms=10,
-            http_summary=None,
+            http_summary={"request_status": 201, "cache_hit": True},
         )
     )
     await async_session.flush()
@@ -333,6 +333,8 @@ async def test_analytics_calls_span_table_tool_name_list_and_insights(
         t["tool_name"] == "span_table_only_tool" and t["count"] >= 1
         for t in data["tool_name_mix"]
     )
+    assert data.get("http_tool_invocations", 0) >= 1
+    assert data.get("http_tool_cache_hits", 0) >= 1
 
 
 @pytest.mark.asyncio

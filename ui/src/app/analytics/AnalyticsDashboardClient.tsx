@@ -3,6 +3,7 @@
 import {
     BarChart2,
     Gauge,
+    HardDrive,
     LayoutGrid,
     Link2,
     ListOrdered,
@@ -69,6 +70,7 @@ import {
     buildAnalyticsCallsOutcomeExploreHref,
 } from "@/lib/analyticsOverviewDeepLinks";
 import { verticalHttpProofHintForSlug } from "@/lib/analyticsVerticalHttpHints";
+import { formatHttpCacheHitRate } from "@/lib/httpCacheInsights";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -432,6 +434,29 @@ export function AnalyticsDashboardClient() {
                                 </CardHeader>
                             </Card>
                         </div>
+                        {!loading && data && (data.http_tool_invocations ?? 0) > 0 ? (
+                            <div className="rounded-md border border-border/80 bg-muted/15 px-3 py-2 text-sm">
+                                <p className="flex items-center gap-2 text-xs font-medium text-foreground/90">
+                                    <HardDrive className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    HTTP integration cache
+                                </p>
+                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                    Cache hits in this window:{" "}
+                                    <span className="tabular-nums font-medium text-foreground/90">
+                                        {formatHttpCacheHitRate(
+                                            data.http_tool_invocations,
+                                            data.http_tool_cache_hits,
+                                        )}
+                                    </span>
+                                    . Enable under{" "}
+                                    <Link href="/settings" className="underline underline-offset-2">
+                                        Settings → HTTP integration cache
+                                    </Link>
+                                    ; per-tool mode{" "}
+                                    <code className="text-[11px]">Use organization HTTP cache policy when enabled</code>.
+                                </p>
+                            </div>
+                        ) : null}
                         {!loading && data && (data.tool_name_mix ?? []).length > 0 ? (
                             <div className="rounded-md border border-border/80 bg-muted/15 px-3 py-2 text-sm">
                                 <p className="text-xs font-medium text-foreground/90">Top tools by call</p>

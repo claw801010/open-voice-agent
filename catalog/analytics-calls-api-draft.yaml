@@ -512,6 +512,14 @@ components:
           maxItems: 15
           items:
             $ref: "#/components/schemas/ToolNameMixItem"
+        http_tool_invocations:
+          type: integer
+          minimum: 0
+          description: HTTP API tool invocations in range (spans and/or logs when spans absent)
+        http_tool_cache_hits:
+          type: integer
+          minimum: 0
+          description: Subset of http_tool_invocations served from org HTTP integration cache
         since:
           type: string
         until:

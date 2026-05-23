@@ -159,6 +159,19 @@ class InsightsResponse(BaseModel):
         default_factory=InsightsQualitySummaryResponse,
         description="CX, containment, and tool-function health roll-ups from call logs.",
     )
+    http_tool_invocations: int = Field(
+        ge=0,
+        default=0,
+        description=(
+            "HTTP API tool invocations in range (analytics_http_tool_spans and/or "
+            "rtf-function-call-end logs with status_code when spans are absent)."
+        ),
+    )
+    http_tool_cache_hits: int = Field(
+        ge=0,
+        default=0,
+        description="Subset of http_tool_invocations served from org HTTP integration cache.",
+    )
     since: str
     until: str
 
@@ -309,6 +322,8 @@ async def get_analytics_insights(
         "outcome_mix": row["outcome_mix"],
         "tool_name_mix": row["tool_name_mix"],
         "quality_summary": qs,
+        "http_tool_invocations": int(row.get("http_tool_invocations", 0)),
+        "http_tool_cache_hits": int(row.get("http_tool_cache_hits", 0)),
         "since": start.isoformat(),
         "until": end.isoformat(),
     }

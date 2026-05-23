@@ -2752,6 +2752,18 @@ export type InsightsResponse = {
      */
     quality_summary?: InsightsQualitySummaryResponse;
     /**
+     * Http Tool Invocations
+     *
+     * HTTP API tool invocations in range (spans and/or logs).
+     */
+    http_tool_invocations?: number;
+    /**
+     * Http Tool Cache Hits
+     *
+     * Subset served from org HTTP integration cache.
+     */
+    http_tool_cache_hits?: number;
+    /**
      * Since
      */
     since: string;

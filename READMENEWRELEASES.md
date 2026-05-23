@@ -22,7 +22,7 @@ Use this file to **prove momentum** to customers and partners: marketplace featu
 
 ### HTTP integration cache (runtime)
 
-- **WE-01-DATASTORE-INTEG** — **Runtime v1** for HTTP tool responses: when org **HTTP integration cache** draft has **Enable when shipped** and a tool uses **Use organization HTTP cache policy when enabled**, identical requests are served from **Redis** (TTL from org or per-integration override). Cached JSON redacts obvious PII field names; failures fall back to live API. Policy API reports **`implementation_status: shipped_v1`** and **`cache_enabled`** from org draft. **Analytics** call detail HTTP spans expose **`cache_hit`** when served from cache. **Tests:** [test_http_tool_response_cache_unit.py](api/tests/test_http_tool_response_cache_unit.py), [test_call_intel.py](api/tests/test_call_intel.py).
+- **WE-01-DATASTORE-INTEG** — **Runtime v1** for HTTP tool responses: when org **HTTP integration cache** draft has **Enable when shipped** and a tool uses **Use organization HTTP cache policy when enabled**, identical requests are served from **Redis** (TTL from org or per-integration override). Cached JSON redacts obvious PII field names; failures fall back to live API. Policy API reports **`implementation_status: shipped_v1`** and **`cache_enabled`** from org draft. **Analytics** call detail HTTP spans expose **`cache_hit`** when served from cache; **Overview insights** roll up **`http_tool_invocations`** and **`http_tool_cache_hits`**. **Tests:** [test_http_tool_response_cache_unit.py](api/tests/test_http_tool_response_cache_unit.py), [test_call_intel.py](api/tests/test_call_intel.py), [test_http_cache_insights_unit.py](api/tests/test_http_cache_insights_unit.py).
 
 ### Workflow editor / voice delivery
 
