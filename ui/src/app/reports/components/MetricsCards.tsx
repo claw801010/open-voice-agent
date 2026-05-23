@@ -11,8 +11,8 @@ interface MetricsCardsProps {
 
 export function MetricsCards({ metrics }: MetricsCardsProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <Card>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <Card className="ovo-bento-cell border-0 bg-transparent shadow-none">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Workflow Runs</CardTitle>
           <Phone className="h-4 w-4 text-muted-foreground" />
@@ -25,7 +25,7 @@ export function MetricsCards({ metrics }: MetricsCardsProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="ovo-bento-cell border-0 bg-transparent shadow-none">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Transfer Dispositions</CardTitle>
           <PhoneForwarded className="h-4 w-4 text-muted-foreground" />

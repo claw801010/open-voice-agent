@@ -56,7 +56,7 @@ export function DurationChart({ data }: DurationChartProps) {
   };
 
   return (
-    <Card>
+    <Card className="ovo-glass-panel border-0 bg-transparent shadow-none ring-1 ring-border/30">
       <CardHeader>
         <CardTitle>Call Duration Distribution</CardTitle>
       </CardHeader>

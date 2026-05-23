@@ -1,7 +1,7 @@
 'use client';
 
 import { addDays, format, subDays } from 'date-fns';
-import { Calendar, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { BarChart3, Calendar, ChevronLeft, ChevronRight, Download, Sparkles } from 'lucide-react';
 import { useEffect,useState } from 'react';
 
 import {
@@ -184,69 +184,75 @@ export default function ReportsPage() {
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold">Daily Reports</h1>
+    <div className="container mx-auto max-w-7xl p-6 pb-16 space-y-10">
+      <section
+        className="ovo-usage-hero px-6 py-8 md:px-10 md:py-10"
+        aria-labelledby="reports-dashboard-title"
+      >
+        <div
+          className="ovo-hero-glow -right-12 -top-16 h-48 w-48 bg-primary/20 dark:bg-chart-2/25 ovo-motion-safe-glow"
+          aria-hidden
+        />
+        <div className="relative z-[1] flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3">
+            <p className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground shadow-sm backdrop-blur-sm dark:bg-background/30">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+              Operator reports
+            </p>
+            <h1 id="reports-dashboard-title" className="text-3xl font-bold tracking-tight md:text-4xl">
+              Daily reports
+            </h1>
+            <p className="max-w-xl text-sm text-muted-foreground md:text-base">
+              Disposition and duration breakdowns for workflow runs—filter by day and workflow, then export CSV for QM.
+            </p>
+          </div>
 
-        {/* Date Navigation & Workflow Selector */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          {/* Workflow Selector */}
-          <Select value={selectedWorkflow} onValueChange={setSelectedWorkflow}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select workflow" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Workflows</SelectItem>
-              {workflows.map((workflow) => (
-                <SelectItem key={workflow.id} value={workflow.id.toString()}>
-                  {workflow.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="ovo-glass-panel flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+            <Select value={selectedWorkflow} onValueChange={setSelectedWorkflow}>
+              <SelectTrigger className="w-full sm:w-[200px]">
+                <SelectValue placeholder="Select workflow" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Workflows</SelectItem>
+                {workflows.map((workflow) => (
+                  <SelectItem key={workflow.id} value={workflow.id.toString()}>
+                    {workflow.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          {/* Date Navigation */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handlePreviousDay}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={handlePreviousDay}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[200px]">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  {format(selectedDate, 'MMM dd, yyyy')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <CalendarPicker
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  disabled={(date) => date > new Date()}
-                />
-              </PopoverContent>
-            </Popover>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[200px]">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    {format(selectedDate, 'MMM dd, yyyy')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarPicker
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    disabled={(date) => date > new Date()}
+                  />
+                </PopoverContent>
+              </Popover>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleNextDay}
-              disabled={isToday}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+              <Button variant="outline" size="icon" onClick={handleNextDay} disabled={isToday}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Timezone Display and Download Button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-muted-foreground">
           Showing data for {timezone} timezone
           {selectedWorkflow !== 'all' && (
@@ -254,7 +260,6 @@ export default function ReportsPage() {
           )}
         </div>
 
-        {/* Download CSV Button */}
         {!loading && report && report.metrics.total_runs > 0 && (
           <Button
             variant="outline"
@@ -284,8 +289,8 @@ export default function ReportsPage() {
 
       {/* Error State */}
       {error && !loading && (
-        <Card className="p-6">
-          <p className="text-center text-red-500">{error}</p>
+        <Card className="ovo-glass-panel border-0 bg-transparent p-6 shadow-none ring-1 ring-border/30">
+          <p className="text-center text-destructive">{error}</p>
         </Card>
       )}
 
@@ -303,8 +308,9 @@ export default function ReportsPage() {
 
           {/* No Data Message */}
           {report.metrics.total_runs === 0 && (
-            <Card className="p-6">
-              <p className="text-center text-muted-foreground">
+            <Card className="ovo-glass-panel border-0 bg-transparent p-6 shadow-none ring-1 ring-border/30">
+              <p className="flex items-center justify-center gap-2 text-center text-muted-foreground">
+                <BarChart3 className="h-4 w-4 shrink-0 opacity-60" aria-hidden />
                 No workflow runs found for {format(selectedDate, 'MMMM dd, yyyy')}
                 {selectedWorkflow !== 'all' && ' for the selected workflow'}
               </p>

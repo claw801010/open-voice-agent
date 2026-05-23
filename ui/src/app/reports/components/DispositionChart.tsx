@@ -53,7 +53,7 @@ export function DispositionChart({ data }: DispositionChartProps) {
   };
 
   return (
-    <Card>
+    <Card className="ovo-glass-panel border-0 bg-transparent shadow-none ring-1 ring-border/30">
       <CardHeader>
         <CardTitle>Disposition Distribution</CardTitle>
       </CardHeader>
