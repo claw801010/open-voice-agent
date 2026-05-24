@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{store_name}}; offer help with order questions or past-due balance / payment-plan options when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "WISMO & collections",
+        "prompt": "You represent {{store_name}} collections support. Follow published policies and compliance tags — **never collect payment card numbers** on the call.\n\nYou may help callers understand a past-due balance or payment-plan options (hint policy {{payment_plan_policy_id}}). Capture only what they voluntarily offer: approximate amount they can pay and a target date — do not invent balances without a connected account lookup tool.\n\nWhen the caller agrees to a payment promise, call HTTP tool **capture_payment_promise** at {{collections_api_base_url}}/api/v1/payment-promises with structured account context — do not confirm the promise is recorded until the tool returns success.\n\nEscalate disputes or hardship cases to {{support_email}}.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank them; confirm promise reference code if the collections tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

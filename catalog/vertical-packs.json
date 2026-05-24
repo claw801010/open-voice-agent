@@ -74,7 +74,7 @@
     },
     {
       "slug": "retail-wismo-faq",
-      "pack_semver": "1.3.0",
+      "pack_semver": "1.4.0",
       "industry": "Retail / e-commerce",
       "display_name": "WISMO & store policy FAQ",
       "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk—reduces tier-1 load while staying policy-safe.",
@@ -83,7 +83,8 @@
         "return window FAQ",
         "store hours and pickup",
         "in-store service or pickup-window booking (booking_complex variant + reserve_pickup_slot HTTP tool after install)",
-        "warranty or subscription upsell after WISMO (upsell_complex variant + offer_warranty_addon HTTP tool after install)"
+        "warranty or subscription upsell after WISMO (upsell_complex variant + offer_warranty_addon HTTP tool after install)",
+        "collections / payment promise capture after balance inquiry (collections_complex variant + capture_payment_promise HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -116,6 +117,13 @@
           "complexity": "complex",
           "packaged_definition_ref": "retail-wismo-upsell-complex.json",
           "description": "Resolve WISMO first, then offer add-on; wire HTTP offer_warranty_addon to {{product_api_base_url}}/api/v1/offers/attach after install. See runbook paid upsell happy path."
+        },
+        {
+          "variant_id": "collections_complex",
+          "label": "Collections / payment promise",
+          "complexity": "complex",
+          "packaged_definition_ref": "retail-wismo-collections-complex.json",
+          "description": "Capture voluntary payment-plan intent; wire HTTP capture_payment_promise to {{collections_api_base_url}}/api/v1/payment-promises after install. See runbook collections happy path + PARTNER_REVIEW."
         }
       ],
       "default_template_variables": {
@@ -124,16 +132,17 @@
         "scheduling_api_base_url": "https://appointments.retail.example.com/v1",
         "pickup_location_code": "STORE-DEMO-01",
         "product_api_base_url": "https://catalog.retail.example.com/v1",
-        "upsell_product_sku": "WARRANTY-EXT-12MO"
+        "upsell_product_sku": "WARRANTY-EXT-12MO",
+        "collections_api_base_url": "https://collections.retail.example.com/v1",
+        "payment_plan_policy_id": "RETAIL-PAYPLAN-STD"
       },
       "analytics_hooks": [
         "Filter analytics by catalog_slug retail-wismo-faq after install; compare tool_names (e.g. OMS) across calls.",
         "booking_complex: track reserve_pickup_slot; upsell_complex: filter tool_name offer_warranty_addon and catalog_variant_id=upsell_complex.",
+        "collections_complex: filter tool_name capture_payment_promise and catalog_variant_id=collections_complex.",
         "CSV export on call list supports QM sampling for WISMO vs booking vs upsell funnel experiments."
       ],
-      "roadmap_motions": [
-        "collections / payment promise (roadmap): voice capture of payment-plan intent — strict compliance tags before ship"
-      ]
+      "roadmap_motions": []
     },
     {
       "slug": "b2b-saas-trial-nurture",

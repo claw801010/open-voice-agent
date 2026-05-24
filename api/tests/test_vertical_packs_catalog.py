@@ -204,6 +204,37 @@ def test_runbooks_document_upsell_happy_path(catalog: dict) -> None:
         )
 
 
+_COLLECTIONS_COMPLEX_SECTION = "## Collections / payment promise happy-path test"
+
+
+def test_runbooks_document_collections_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: collections_complex variant documents promise tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "collections_complex" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _COLLECTIONS_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_COLLECTIONS_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_COLLECTIONS_COMPLEX_SECTION)
+        tail = text[idx : idx + 2400]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: collections section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: collections section needs expected outcome"
+        assert "collections_complex" in tail, f"{slug}: collections section must name variant_id"
+        assert "capture_payment_promise" in tail, (
+            f"{slug}: collections section must reference capture_payment_promise tool"
+        )
+        assert "collections_api_base_url" in tail, (
+            f"{slug}: collections section must reference collections_api_base_url"
+        )
+
+
 _RENEWAL_COMPLEX_SECTION = "## Renewal / QBR happy-path test"
 
 

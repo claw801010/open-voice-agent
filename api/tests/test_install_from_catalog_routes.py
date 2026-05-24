@@ -162,6 +162,31 @@ async def test_install_from_catalog_upsell_complex_variant(
 
 
 @pytest.mark.asyncio
+async def test_install_from_catalog_collections_complex_variant(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: retail collections_complex variant installs promise capture prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "retail-wismo-faq",
+                "workflow_name": "Retail collections",
+                "variant_id": "collections_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "collections_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "capture_payment_promise" in blob
+    assert "collections_api_base_url" in blob
+    assert "payment_plan_policy_id" in blob
+
+
+@pytest.mark.asyncio
 async def test_install_from_catalog_renewal_complex_variant(
     test_client_factory, org_user_catalog_install
 ):
