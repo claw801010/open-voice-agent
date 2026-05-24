@@ -6,7 +6,7 @@
 #   2) Ensures api/.env exists (copies api/.env.example once if missing)
 #   3) alembic upgrade head
 #   4) Starts uvicorn (8000) and Next dev (3000) in the background
-#   5) cd ui && npm run perf:lighthouse:auth:full (auto-signup + Lighthouse + dual summary)
+#   5) cd ui && npm run perf:lighthouse:auth:full (default) or auth:operator:full (--operator)
 #
 # Env:
 #   LIGHTHOUSE_OSS_PASSWORD   required for auth:full (≥8 chars)
@@ -17,6 +17,7 @@
 # Usage (repo root):
 #   chmod +x scripts/we01-lighthouse-auth-e2e.sh
 #   LIGHTHOUSE_OSS_PASSWORD='your-long-pass!' ./scripts/we01-lighthouse-auth-e2e.sh
+#   LIGHTHOUSE_OSS_PASSWORD='your-long-pass!' ./scripts/we01-lighthouse-auth-e2e.sh --operator
 #   ./scripts/we01-lighthouse-auth-e2e.sh --help
 
 set -euo pipefail
@@ -42,12 +43,21 @@ UI_PORT="${WE01_UI_PORT:-3000}"
 UI_ORIGIN="http://127.0.0.1:${UI_PORT}"
 # docker-compose-local publishes Postgres on host 5433 (see docker-compose-local.yaml)
 POSTGRES_PORT="${WE01_POSTGRES_PORT:-5433}"
+OPERATOR_MODE=0
+if [[ "${1:-}" == "--operator" ]]; then
+  OPERATOR_MODE=1
+  shift
+fi
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   cat <<'EOF'
 WE-01-VISUAL-DEPTH — one-shot authenticated Lighthouse (READMEPLANTOEXECUTE).
 
   LIGHTHOUSE_OSS_PASSWORD='min8chars!' ./scripts/we01-lighthouse-auth-e2e.sh
+  LIGHTHOUSE_OSS_PASSWORD='min8chars!' ./scripts/we01-lighthouse-auth-e2e.sh --operator
+
+  --operator   Run /overview + /reports (npm run perf:lighthouse:auth:operator:full)
+               instead of default /usage + /workflow/catalog (auth:full).
 
 Env:
   LIGHTHOUSE_OSS_PASSWORD   required (≥8 characters)
@@ -212,18 +222,26 @@ for i in {1..120}; do
   sleep 1
 done
 
-echo "==> Running authenticated Lighthouse (auth:full)"
+echo "==> Running authenticated Lighthouse ($([[ "$OPERATOR_MODE" == "1" ]] && echo 'auth:operator:full' || echo 'auth:full'))"
 export LIGHTHOUSE_OSS_AUTO_SIGNUP=1
 export LIGHTHOUSE_OSS_PASSWORD="$PASS"
 export LIGHTHOUSE_UI_ORIGIN="$UI_ORIGIN"
 export BASE_URL="$UI_ORIGIN"
 (
   cd "$ROOT/ui"
-  npm run perf:lighthouse:auth:full
+  if [[ "$OPERATOR_MODE" == "1" ]]; then
+    npm run perf:lighthouse:auth:operator:full
+  else
+    npm run perf:lighthouse:auth:full
+  fi
 )
 
 echo ""
-echo "==> Done. Paste the two WE-01-VISUAL-DEPTH summary lines into READMENEWRELEASES.md (Unreleased) and [x] READMEPLANTOEXECUTE optional Lighthouse (authenticated)."
+if [[ "$OPERATOR_MODE" == "1" ]]; then
+  echo "==> Done. Paste the two WE-01-VISUAL-DEPTH summary lines into READMENEWRELEASES.md (Unreleased) and [x] READMEPLANTOEXECUTE operator-shell Lighthouse item."
+else
+  echo "==> Done. Paste the two WE-01-VISUAL-DEPTH summary lines into READMENEWRELEASES.md (Unreleased) and [x] READMEPLANTOEXECUTE optional Lighthouse (authenticated)."
+fi
 echo "    API log: ${TMPDIR:-/tmp}/we01-lh-api.log  Next log: ${TMPDIR:-/tmp}/we01-lh-next.log"
 if [[ ${#COMPOSE[@]} -gt 0 ]]; then
   echo "    Docker infra keeps running; stop with: ${COMPOSE[*]} down"

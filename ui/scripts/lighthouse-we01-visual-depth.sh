@@ -20,6 +20,7 @@
 #   LIGHTHOUSE_WAIT_SECS  default 90
 #   LIGHTHOUSE_FORM_FACTOR  default desktop (mobile for perf:lighthouse:mobile)
 #   LIGHTHOUSE_SKIP_WAIT  if 1, skip per-path HTTP wait (e.g. auth routes where curl has no session)
+#   LIGHTHOUSE_AUTH_OPERATOR  if 1 (npm run perf:lighthouse:auth:operator), set /overview + /reports + cookie file
 #   LIGHTHOUSE_AUTH_EXAMPLE  if 1 (npm run perf:lighthouse:auth), set paths + default header file
 #
 # Pure DevTools runs (no cookies in repo) remain valid — see READMENEWRELEASES.md.
@@ -29,7 +30,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-if [[ "${LIGHTHOUSE_AUTH_EXAMPLE:-0}" == "1" ]]; then
+if [[ "${LIGHTHOUSE_AUTH_OPERATOR:-0}" == "1" ]]; then
+  PATHS="${LIGHTHOUSE_PATHS:-/overview /reports}"
+  export LIGHTHOUSE_EXTRA_HEADERS_FILE="${LIGHTHOUSE_EXTRA_HEADERS_FILE:-lighthouse-extra-headers.local.json}"
+  export LIGHTHOUSE_SKIP_WAIT="${LIGHTHOUSE_SKIP_WAIT:-1}"
+elif [[ "${LIGHTHOUSE_AUTH_EXAMPLE:-0}" == "1" ]]; then
   PATHS="${LIGHTHOUSE_PATHS:-/usage /workflow/catalog}"
   export LIGHTHOUSE_EXTRA_HEADERS_FILE="${LIGHTHOUSE_EXTRA_HEADERS_FILE:-lighthouse-extra-headers.local.json}"
   export LIGHTHOUSE_SKIP_WAIT="${LIGHTHOUSE_SKIP_WAIT:-1}"
@@ -66,7 +71,7 @@ auth_warn_for_path() {
   if [[ -n "${HEADER_FILE_ABS}" ]]; then
     return 0
   fi
-  if [[ "$p" == /usage* ]] || [[ "$p" == *workflow/catalog* ]]; then
+  if [[ "$p" == /usage* ]] || [[ "$p" == *workflow/catalog* ]] || [[ "$p" == /overview* ]] || [[ "$p" == /reports* ]]; then
     echo "WARNING: ${p} is usually behind auth. Set LIGHTHOUSE_EXTRA_HEADERS_FILE=... (see lighthouse-extra-headers.example.json) or you may get the sign-in / wrong document."
   fi
 }

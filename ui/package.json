@@ -17,9 +17,12 @@
     "perf:lighthouse": "bash scripts/lighthouse-we01-visual-depth.sh",
     "perf:lighthouse:mobile": "cross-env LIGHTHOUSE_FORM_FACTOR=mobile bash scripts/lighthouse-we01-visual-depth.sh",
     "perf:lighthouse:auth": "cross-env LIGHTHOUSE_AUTH_EXAMPLE=1 bash scripts/lighthouse-we01-visual-depth.sh",
+    "perf:lighthouse:auth:operator": "cross-env LIGHTHOUSE_AUTH_OPERATOR=1 bash scripts/lighthouse-we01-visual-depth.sh",
     "perf:lighthouse:auth:full": "bash scripts/lighthouse-auth-full.sh",
+    "perf:lighthouse:auth:operator:full": "bash scripts/lighthouse-auth-operator-full.sh",
     "perf:lighthouse:summary": "node scripts/lighthouse-summarize.mjs",
     "perf:lighthouse:summary:latest-auth": "node scripts/lighthouse-summarize.mjs --latest-auth",
+    "perf:lighthouse:summary:latest-operator": "node scripts/lighthouse-summarize.mjs --latest-operator",
     "perf:lighthouse:oss-headers": "node scripts/lighthouse-oss-session-headers.mjs"
   },
   "dependencies": {
