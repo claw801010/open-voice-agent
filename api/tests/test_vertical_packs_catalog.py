@@ -204,6 +204,35 @@ def test_runbooks_document_upsell_happy_path(catalog: dict) -> None:
         )
 
 
+_RENEWAL_COMPLEX_SECTION = "## Renewal / QBR happy-path test"
+
+
+def test_runbooks_document_renewal_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: renewal_complex variant documents book_qbr + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "renewal_complex" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _RENEWAL_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_RENEWAL_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_RENEWAL_COMPLEX_SECTION)
+        tail = text[idx : idx + 2400]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: renewal section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: renewal section needs expected outcome"
+        assert "renewal_complex" in tail, f"{slug}: renewal section must name variant_id"
+        assert "book_qbr" in tail, f"{slug}: renewal section must reference book_qbr tool"
+        assert "scheduling_api_base_url" in tail, (
+            f"{slug}: renewal section must reference scheduling_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]

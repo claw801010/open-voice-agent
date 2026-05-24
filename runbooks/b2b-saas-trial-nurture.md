@@ -31,6 +31,20 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 5. **Web test** script: trial goals → request demo → provide timezone + time window → confirm booking.
 6. **Expected:** **`book_demo`** appears in call detail tool spans with **`mapped_data`**; **`/analytics/calls?catalog_slug=b2b-saas-trial-nurture&catalog_variant_id=booking_complex&tool_name=book_demo`**.
 
+## Renewal / QBR happy-path test (QA)
+
+**Goal:** schedule a **QBR** in **≤6 agent turns** after **`book_qbr`** is wired (**renewal_complex** variant).
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+
+1. Install **Trial nurture & PQL voice qual** with variant **`renewal_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"renewal_complex"`).
+2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`, **`crm_api_base_url`** = `http://127.0.0.1:8765` (optional second tool), **`account_health_tier`**, and **`crm_owner_email`** as needed.
+3. HTTP tool **`book_qbr`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `meeting_id` → `appointment.id`, `meeting_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
+4. *(Optional)* HTTP tool **`sync_crm_health`**: `POST {{crm_api_base_url}}/api/v1/accounts/health` with non-sensitive fields only.
+5. Attach **`book_qbr`** to the **Renewal & QBR** agent; **Publish**.
+6. **Web test** script: renewal goals → agree to QBR → provide timezone + window → confirm booking summary.
+7. **Expected:** **`book_qbr`** in call detail with **`mapped_data`**; filter **`/analytics/calls?catalog_slug=b2b-saas-trial-nurture&catalog_variant_id=renewal_complex&tool_name=book_qbr`**.
+
 ## Day 1 checklist
 
 1. **Segments:** define who gets voice vs. email (e.g. high-intent trial only).
@@ -46,6 +60,7 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 
 - **Simple (default install):** [b2b-saas-trial-nurture.json](../catalog/packaged-workflows/b2b-saas-trial-nurture.json).
 - **Complex (demo / CS booking prompts):** [b2b-trial-booking-complex.json](../catalog/packaged-workflows/b2b-trial-booking-complex.json) — import via [import playbook](../catalog/import-packaged-workflow-json.md); wire **book_demo** or calendar HTTP tools using `{{scheduling_api_base_url}}` and pack variables; review calls under **Analytics**.
+- **Complex (renewal / QBR):** [b2b-trial-renewal-complex.json](../catalog/packaged-workflows/b2b-trial-renewal-complex.json) — variant **`renewal_complex`**; wire **book_qbr** (+ optional **sync_crm_health**); see **Renewal / QBR happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -57,9 +72,11 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 
 ## High-revenue motions (roadmap)
 
-See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json). Motions below are **not** in the default or **booking_complex** graphs yet.
+**Shipped:** **Renewal / QBR expansion** — **`renewal_complex`** variant + **`book_qbr`** HTTP tool + runbook happy path above.
 
-| Motion | Buyer value | Prebuild step |
-|--------|-------------|---------------|
-| **Trial → paid upgrade** | Conversion lift after voice PQL | CRM stage update HTTP after qual node; cohort in Analytics **`outcome_key`** |
-| **Renewal / QBR expansion** | LTV and expansion pipeline | Calendar + CRM health-score handoff HTTP tools; filter **`tool_name`** on call list |
+See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) for remaining items.
+
+| Motion | Buyer value | Status |
+|--------|-------------|--------|
+| **Renewal / QBR expansion** | LTV and expansion pipeline | **Shipped** — **`renewal_complex`** + **book_qbr** |
+| **Trial → paid upgrade** | Conversion lift after voice PQL | **Roadmap** — CRM stage update HTTP after qual |

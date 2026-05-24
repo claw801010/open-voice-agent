@@ -10,7 +10,7 @@
 |----------------|-----------------------------------|-----------------------------------------------------|--------------------------------------------------------|-------------------------|
 | `healthcare-clinic-screening` | Triage → **book visit** / provider slot; **confirm / reschedule** reminders | `book_slot`, `reschedule_appointment`, `lookup_availability` (filter `tool_name`; **`catalog_variant_id`** = `booking_complex` or `confirm_remind`) | `scheduling_api_base_url`, `clinic_location_id`, `preferred_visit_type` | `GET /analytics/calls?catalog_slug=…&catalog_variant_id=…&tool_name=…`; call detail `mapped_data`; `outcome_key` in outcomes |
 | `retail-wismo-faq` | WISMO + **pickup / service window**; **warranty upsell** after resolution | `reserve_pickup_slot`, `offer_warranty_addon`, OMS lookup tools | `scheduling_api_base_url`, `pickup_location_code`, `product_api_base_url`, `upsell_product_sku`, `store_name` | Same filters; **`catalog_variant_id`** = `booking_complex` or `upsell_complex` |
-| `b2b-saas-trial-nurture` | Trial → **demo / CS calendar** | `book_demo`, CRM stage tools | `scheduling_api_base_url`, `crm_owner_email`, `demo_duration_minutes` | `tool_name` + outcomes for funnel |
+| `b2b-saas-trial-nurture` | Trial → **demo / CS calendar**; **renewal / QBR** | `book_demo`, `book_qbr`, `sync_crm_health`, CRM stage tools | `scheduling_api_base_url`, `crm_api_base_url`, `crm_owner_email`, `demo_duration_minutes`, `account_health_tier` | `tool_name` + **`catalog_variant_id`** (`booking_complex` or `renewal_complex`) + outcomes |
 
 **Rule:** packaged **complex** graphs (`booking_complex` variant) add scheduling language; **HTTP tools** are attached post-install — rubric + runbooks must describe the happy path *after* tools exist.
 

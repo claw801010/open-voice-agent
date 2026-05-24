@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief intro from {{product_name}} customer success: quarterly business review or renewal planning — respect their time.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Renewal & QBR",
+        "prompt": "Customer success voice assistant for {{product_name}}. Focus on **renewal readiness** and **expansion** for existing accounts (not net-new trial PQL).\n\nDiscuss goals, adoption blockers, and whether a **QBR** is appropriate. Reference CS owner {{crm_owner_email}} when handing off.\n\nWhen the account is ready to schedule a QBR: capture timezone, preferred windows, and duration (default {{demo_duration_minutes}} minutes). Call HTTP tool **book_qbr** at {{scheduling_api_base_url}}/api/v1/appointments once preferences are structured — do not claim the meeting is booked until the tool succeeds.\n\nIf **sync_crm_health** is attached at {{crm_api_base_url}}/api/v1/accounts/health, invoke it after summarizing health tier hint {{account_health_tier}} — only with non-sensitive fields. Keep data minimization in mind.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank them; recap QBR time or CS follow-up.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After intro" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When QBR scheduled or escalated" }
+    }
+  ]
+}
