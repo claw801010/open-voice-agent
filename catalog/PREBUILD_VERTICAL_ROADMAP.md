@@ -21,7 +21,7 @@ Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now sh
 
 | Vertical | Booking story buyers expect | Status |
 |----------|------------------------------|--------|
-| Healthcare | Book **provider / visit type / location**; confirm slot; reschedule | **Complex variants shipped** — **`booking_complex`** (book) + **`confirm_remind`** (reschedule); wire HTTP tools to buyer scheduling backend |
+| Healthcare | Book **provider / visit**; **confirm / reschedule**; **concierge enroll** | **Complex variants shipped** — **`booking_complex`**, **`confirm_remind`**, **`concierge_complex`**; wire scheduling + billing HTTP tools |
 | Retail | Book **in-store service, styling, or pickup window** | **Complex variants shipped** — **`booking_complex`** (slots) + **`upsell_complex`** (warranty attach); wire HTTP tools to buyer APIs |
 | B2B SaaS | Book **demo**; **renewal / QBR**; **trial → paid** | **Complex variants shipped** — **`booking_complex`**, **`renewal_complex`**, **`conversion_complex`**; wire calendar + CRM HTTP tools |
 
@@ -43,7 +43,7 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 | Slug | Roadmap motion | Buyer value | Prebuild gate |
 |------|----------------|-------------|---------------|
 | `healthcare-clinic-screening` | No-show reduction | Fewer empty slots | **Shipped** — **`confirm_remind`** variant + **`reschedule_appointment`** HTTP + runbook happy path |
-| `healthcare-clinic-screening` | Optional concierge / paid visit type | Utilization + revenue | New HTTP billing tool + compliance review ([PARTNER_REVIEW.md](PARTNER_REVIEW.md)) |
+| `healthcare-clinic-screening` | Optional concierge / paid visit type | Utilization + revenue | **Shipped** — **`concierge_complex`** + **`enroll_concierge_visit`** + runbook happy path |
 | `retail-wismo-faq` | Paid upsell (warranty / subscription) | ARR attach after WISMO | **Shipped** — **`upsell_complex`** + **`offer_warranty_addon`** HTTP + runbook happy path |
 | `retail-wismo-faq` | Collections / payment promise | Write-off reduction | Voice capture + strict compliance tags; legal review before ship |
 | `b2b-saas-trial-nurture` | Trial → paid upgrade | Conversion lift | **Shipped** — **`conversion_complex`** + **`update_crm_deal_stage`** + runbook happy path |

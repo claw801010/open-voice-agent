@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Greet briefly for {{clinic_name}}; explain you can help with triage routing or optional priority visit options when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Triage & concierge",
+        "prompt": "After-hours assistant for {{clinic_name}}. Minimize PHI; follow org policies.\n\nStart with safe triage routing only as needed — do not diagnose.\n\nWhen the caller is eligible and interested in a **paid priority / concierge visit** (hint type {{concierge_visit_type}} at location {{clinic_location_id}}), explain it is optional and may have separate billing. If they accept, call HTTP tool **enroll_concierge_visit** at {{billing_api_base_url}}/api/v1/visits/enroll — never claim enrollment until the tool returns success.\n\nEscalate emergencies per policy. Reference {{support_phone}} for human handoff.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm enrollment reference if the billing tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When routed, enrolled, or escalated" }
+    }
+  ]
+}

@@ -19,7 +19,7 @@ docker compose -f docker-compose-local.yaml --profile booking-stub up -d booking
 Default base URL: **`http://127.0.0.1:8765`**
 
 - `GET /health` → `{"status":"ok"}`
-- `POST /api/v1/appointments`, `/api/v1/appointments/reschedule`, `/api/v1/offers/attach`, `/api/v1/accounts/health`, `/api/v1/deals/stage`, `/book_slot`, `/book_demo`, … → **201** with [booking-scheduling-upstream-response.sample.json](../fixtures/booking-scheduling-upstream-response.sample.json)
+- `POST /api/v1/appointments`, `/api/v1/appointments/reschedule`, `/api/v1/offers/attach`, `/api/v1/accounts/health`, `/api/v1/deals/stage`, `/api/v1/visits/enroll`, `/book_slot`, `/book_demo`, … → **201** with [booking-scheduling-upstream-response.sample.json](../fixtures/booking-scheduling-upstream-response.sample.json)
 
 ## Wire into a workflow
 

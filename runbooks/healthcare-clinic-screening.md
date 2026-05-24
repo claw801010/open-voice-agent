@@ -45,6 +45,19 @@ Stand up a **voice** flow for symptom triage, scheduling handoff, or after-hours
 5. **Simulation → Start Web test**. Caller script: reference an upcoming visit → ask to move to a new time window → confirm when agent summarizes.
 6. **Expected:** **`reschedule_appointment`** invoked; call detail shows **`mapped_data`**; filter **`/analytics/calls?catalog_slug=healthcare-clinic-screening&catalog_variant_id=confirm_remind&tool_name=reschedule_appointment`**.
 
+## Concierge / paid visit happy-path test (QA)
+
+**Goal:** offer and **enroll** an optional paid priority visit in **≤6 agent turns** after **`enroll_concierge_visit`** is wired (**concierge_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/visits/enroll` with sample JSON).
+
+1. Install **Patient screening & triage** with variant **`concierge_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"concierge_complex"`).
+2. **Customize**; set **`billing_api_base_url`** = `http://127.0.0.1:8765`, **`concierge_visit_type`**, and **`clinic_location_id`** from pack defaults.
+3. HTTP tool **`enroll_concierge_visit`**: `POST {{billing_api_base_url}}/api/v1/visits/enroll`; **response_mapping** — `enrollment_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
+4. Attach to the **Triage & concierge** agent; **Save** and **Publish**.
+5. **Web test** script: brief triage context → accept optional priority visit when offered → confirm enrollment summary.
+6. **Expected:** **`enroll_concierge_visit`** invoked; **`mapped_data`** on call detail; filter **`/analytics/calls?catalog_slug=healthcare-clinic-screening&catalog_variant_id=concierge_complex&tool_name=enroll_concierge_visit`**.
+
 ## Day 1 checklist
 
 1. **Variables:** map only what the agent needs (e.g. `patient_locale`, `clinic_timezone`)—avoid free-text PHI in tool payloads unless required.
@@ -62,6 +75,7 @@ Stand up a **voice** flow for symptom triage, scheduling handoff, or after-hours
 - **Simple (default install):** [healthcare-clinic-screening.json](../catalog/packaged-workflows/healthcare-clinic-screening.json) — minimal linear triage.
 - **Complex (booking-ready prompts):** [healthcare-triage-booking-complex.json](../catalog/packaged-workflows/healthcare-triage-booking-complex.json) — import via `POST /api/v1/workflow/create/definition` ([import playbook](../catalog/import-packaged-workflow-json.md)); attach an HTTP **book_slot** (or equivalent) tool using `{{scheduling_api_base_url}}` and pack variables from [vertical-packs.json](../catalog/vertical-packs.json). Prove outcomes and tool traces in **Analytics** ([ANALYTICS_VERTICAL_ROADMAP.md](../catalog/ANALYTICS_VERTICAL_ROADMAP.md)).
 - **Complex (confirm / remind / reschedule):** [healthcare-triage-confirm-remind-complex.json](../catalog/packaged-workflows/healthcare-triage-confirm-remind-complex.json) — variant **`confirm_remind`**; wire HTTP **reschedule_appointment**; see **No-show reduction happy-path test** above.
+- **Complex (concierge / paid visit):** [healthcare-triage-concierge-complex.json](../catalog/packaged-workflows/healthcare-triage-concierge-complex.json) — variant **`concierge_complex`**; wire **enroll_concierge_visit**; see **Concierge / paid visit happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -73,11 +87,11 @@ Use **`catalog_slug`** = `healthcare-clinic-screening` to align calls list, CSV 
 
 ## High-revenue motions (roadmap)
 
-**Shipped:** **No-show reduction** — **`confirm_remind`** variant + **`reschedule_appointment`** HTTP tool + runbook happy path above.
-
-Remaining roadmap lines in [vertical-packs.json](../catalog/vertical-packs.json) **`roadmap_motions`**. Before marketing additional motions, each needs a graph delta, runbook happy path, and [TEMPLATE_QUALITY_RUBRIC.md](../catalog/TEMPLATE_QUALITY_RUBRIC.md) row **9** sign-off ([PREBUILD_VERTICAL_ROADMAP.md](../catalog/PREBUILD_VERTICAL_ROADMAP.md)).
+**Shipped:** **No-show reduction** (`confirm_remind` + **reschedule_appointment**) and **Optional concierge / paid visit** (`concierge_complex` + **enroll_concierge_visit**) — see happy-path sections above.
 
 | Motion | Buyer value | Status |
 |--------|-------------|--------|
 | **No-show reduction** | Fewer empty appointment slots | **Shipped** — **`confirm_remind`** + **reschedule_appointment** |
-| **Optional concierge / paid visit type** | Utilization + incremental revenue | **Roadmap** — billing HTTP tool + [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) |
+| **Optional concierge / paid visit type** | Utilization + incremental revenue | **Shipped** — **`concierge_complex`** + **enroll_concierge_visit** (+ [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before GTM) |
+
+**Roadmap tail:** remaining items (if any) in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) — empty when all motions above are shipped.

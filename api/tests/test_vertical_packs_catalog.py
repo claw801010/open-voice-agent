@@ -264,6 +264,37 @@ def test_runbooks_document_conversion_happy_path(catalog: dict) -> None:
         )
 
 
+_CONCIERGE_COMPLEX_SECTION = "## Concierge / paid visit happy-path test"
+
+
+def test_runbooks_document_concierge_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: concierge_complex variant documents billing enroll tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "concierge_complex" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _CONCIERGE_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_CONCIERGE_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_CONCIERGE_COMPLEX_SECTION)
+        tail = text[idx : idx + 2400]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: concierge section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: concierge section needs expected outcome"
+        assert "concierge_complex" in tail, f"{slug}: concierge section must name variant_id"
+        assert "enroll_concierge_visit" in tail, (
+            f"{slug}: concierge section must reference enroll_concierge_visit tool"
+        )
+        assert "billing_api_base_url" in tail, (
+            f"{slug}: concierge section must reference billing_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]

@@ -4,7 +4,7 @@
   "packs": [
     {
       "slug": "healthcare-clinic-screening",
-      "pack_semver": "1.3.0",
+      "pack_semver": "1.4.0",
       "industry": "Healthcare / clinics",
       "display_name": "Patient screening & triage",
       "summary": "After-hours and overflow voice flow for symptom triage, scheduling handoff, and scripted guardrails—designed for PHI minimization in the agent layer.",
@@ -12,7 +12,8 @@
         "screening triage",
         "appointment confirm/remind (confirm_remind variant + reschedule_appointment HTTP tool after install)",
         "post-visit follow-up prompts",
-        "provider or visit booking with scheduling API (booking_complex variant + book_slot HTTP tool after install)"
+        "provider or visit booking with scheduling API (booking_complex variant + book_slot HTTP tool after install)",
+        "optional paid concierge / priority visit (concierge_complex variant + enroll_concierge_visit HTTP tool after install)"
       ],
       "languages": ["en-US", "es-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -45,6 +46,13 @@
           "complexity": "complex",
           "packaged_definition_ref": "healthcare-triage-confirm-remind-complex.json",
           "description": "Reminder-style prompts for upcoming visits; wire HTTP reschedule_appointment to {{scheduling_api_base_url}}/appointments/reschedule after install. See runbook no-show reduction happy path."
+        },
+        {
+          "variant_id": "concierge_complex",
+          "label": "Optional concierge / paid visit",
+          "complexity": "complex",
+          "packaged_definition_ref": "healthcare-triage-concierge-complex.json",
+          "description": "Triage then optional paid priority visit enrollment; wire HTTP enroll_concierge_visit to {{billing_api_base_url}}/api/v1/visits/enroll after install. See runbook concierge happy path + PARTNER_REVIEW."
         }
       ],
       "default_template_variables": {
@@ -52,17 +60,17 @@
         "support_phone": "+1-555-0100",
         "scheduling_api_base_url": "https://scheduling.example.com/api/v1",
         "preferred_visit_type": "primary_care",
-        "clinic_location_id": "demo-location-1"
+        "clinic_location_id": "demo-location-1",
+        "billing_api_base_url": "https://billing.example.com/api/v1",
+        "concierge_visit_type": "priority_primary_care"
       },
       "analytics_hooks": [
         "After catalog install, workflows expose MK-01 catalog_slug — filter /analytics and /analytics/calls by that slug.",
         "Prove triage → handoff with outcome_key in gathered_context and HTTP tool mapped_data on call detail.",
-        "booking_complex: filter tool_name book_slot; confirm_remind: filter tool_name reschedule_appointment and catalog_variant_id=confirm_remind.",
-        "Export CSV for booking / reminder funnel QA."
+        "booking_complex: book_slot; confirm_remind: reschedule_appointment; concierge_complex: enroll_concierge_visit + catalog_variant_id filter.",
+        "Export CSV for booking / reminder / concierge funnel QA."
       ],
-      "roadmap_motions": [
-        "utilization / optional concierge (roadmap): paid visit-type upsell via billing HTTP tool — not in packaged JSON"
-      ]
+      "roadmap_motions": []
     },
     {
       "slug": "retail-wismo-faq",
