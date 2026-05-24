@@ -48,7 +48,7 @@ Suggested filenames under **`docs/images/`** (add files when ready; safe to comm
 | `gtm-mk01-analytics-quality-widget.png` | Overview — **CX & containment** quality rollup widget. |
 | `gtm-mk01-analytics-call-review.png` | Call detail — **AI call review** panel (`E2E_GTM_SAMPLE_CALL_ID`). |
 | `gtm-we01-settings-http-cache-policy.png` | Step **G** — Settings card + optional per-integration table (draft policy). |
-| `gtm-we01-http-tool-happy-path.png` | Step **A** — HTTP tool editor with **Happy path** checklist visible (`E2E_GTM_HTTP_TOOL_UUID`). |
+| `gtm-we01-http-tool-happy-path.png` | Step **A** — HTTP tool editor with **Happy path** checklist visible (auto-seeded **`GTM book_slot demo`** via [gtm_capture_deck.sh](../../scripts/gtm_capture_deck.sh) or set **`E2E_GTM_HTTP_TOOL_UUID`**). |
 | `gtm-we01-workflow-get-started.png` | **Voice Agents** hub — **Get started** cards (catalog / builder / import / blank). |
 | `gtm-mk01-workflow-import-dialog.png` | **Import external flow** dialog on `/workflow`. |
 | `gtm-we01-workflow-editor-outcome-checklist.png` | Workflow editor right rail — **Outcome checklist** + catalog HTTP guide (`E2E_GTM_WORKFLOW_ID`). |

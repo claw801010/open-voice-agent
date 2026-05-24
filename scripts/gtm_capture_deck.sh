@@ -51,6 +51,16 @@ if [[ -z "${E2E_GTM_SAMPLE_CALL_ID:-}" ]]; then
   fi
 fi
 
+if [[ -z "${E2E_GTM_HTTP_TOOL_UUID:-}" ]]; then
+  TOOL_UUID="$(PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/seed_gtm_http_tool.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${TOOL_UUID}" ]]; then
+    export E2E_GTM_HTTP_TOOL_UUID="${TOOL_UUID}"
+    echo "Using E2E_GTM_HTTP_TOOL_UUID=${E2E_GTM_HTTP_TOOL_UUID}"
+  else
+    echo "Could not seed HTTP tool — skipping gtm-we01-http-tool-happy-path.png."
+  fi
+fi
+
 export E2E_GTM_DECK_SCREENSHOTS=1
 export PLAYWRIGHT_SKIP_WEBSERVER=1
 
@@ -60,8 +70,8 @@ if [[ -n "${E2E_GTM_WORKFLOW_ID:-}" ]]; then
     "${E2E_EMAIL}" "${E2E_GTM_WORKFLOW_ID}" || true
 fi
 
-echo "Optional: E2E_GTM_WORKFLOW_ID (voice quick-pick + editor rail), E2E_GTM_HTTP_TOOL_UUID"
-echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset})"
+echo "Optional: E2E_GTM_WORKFLOW_ID (voice quick-pick + editor rail)"
+echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset}, E2E_GTM_HTTP_TOOL_UUID=${E2E_GTM_HTTP_TOOL_UUID:-unset})"
 
 cd ui
 npm run test:e2e -- gtm-deck

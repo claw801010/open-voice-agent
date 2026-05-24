@@ -7,6 +7,6 @@ PNG files in this folder are wired from [voice-agent/tools/http-api.mdx](../voic
 **GTM / deck pack** (MK-01 + WE-01 storyline): filenames and capture targets live in [catalog/recipes/http-api-analytics-redaction-gtm-demo.md](../../catalog/recipes/http-api-analytics-redaction-gtm-demo.md) § *Screenshot pack*. Add real PNGs here when ready (no generator yet):
 
 - **`gtm-mk01-analytics-overview.png`**, **`gtm-mk01-analytics-calls.png`**, **`gtm-mk01-analytics-call-detail.png`**, **`gtm-mk01-analytics-qm-schedule.png`**, **`gtm-mk01-analytics-scorecard-rubric.png`**, **`gtm-mk01-analytics-quality-widget.png`**, **`gtm-mk01-analytics-call-review.png`** (last two need **`E2E_GTM_SAMPLE_CALL_ID`** for call-detail / review)
-- **`gtm-we01-settings-http-cache-policy.png`** (optional second storyline)
+- **`gtm-we01-settings-http-cache-policy.png`**, **`gtm-we01-http-tool-happy-path.png`** (WE-01 HTTP tool **Happy path** checklist; auto-seeded via [seed_gtm_http_tool.py](../../scripts/seed_gtm_http_tool.py) in [gtm_capture_deck.sh](../../scripts/gtm_capture_deck.sh))
 
 **Automated capture (fork):** from the **`ui/`** directory, Playwright can write these filenames when **`E2E_GTM_DECK_SCREENSHOTS=1`** (plus the same auth env vars as analytics E2E). See [ui/AGENTS.md](../../ui/AGENTS.md) and [ui/e2e/gtm-deck-screenshots.spec.ts](../../ui/e2e/gtm-deck-screenshots.spec.ts).
