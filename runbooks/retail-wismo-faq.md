@@ -31,6 +31,19 @@ Reduce **“where is my order”** and basic policy load using voice with option
 5. **Web test** script: ask for in-store pickup window → give date/time preference → confirm when agent summarizes.
 6. **Expected:** tool invoked once preferences are structured; **Analytics** call detail shows **`mapped_data`**; list filter **`catalog_variant_id=booking_complex`** and **`tool_name=reserve_pickup_slot`**.
 
+## Paid upsell happy-path test (QA)
+
+**Goal:** resolve a WISMO-style question, then attach a warranty/subscription add-on in **≤6 agent turns** after **`offer_warranty_addon`** is wired (**upsell_complex** variant).
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/offers/attach` with sample JSON).
+
+1. Install **WISMO & store policy FAQ** with variant **`upsell_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"upsell_complex"`).
+2. **Customize**; set **`product_api_base_url`** = `http://127.0.0.1:8765` and **`upsell_product_sku`** from pack defaults.
+3. HTTP tool **`offer_warranty_addon`**: `POST {{product_api_base_url}}/api/v1/offers/attach`; **response_mapping** — `offer_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `slot_start` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
+4. Attach tool to the **WISMO & upsell** agent; **Publish**.
+5. **Web test** script: ask a generic order-status question → accept warranty offer when prompted → confirm enrollment summary.
+6. **Expected:** **`offer_warranty_addon`** invoked after WISMO resolution; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=retail-wismo-faq&catalog_variant_id=upsell_complex&tool_name=offer_warranty_addon`**.
+
 ## Day 1 checklist
 
 1. **Tool contracts:** define stable JSON fields (`order_id`, `status`) and timeouts.
@@ -46,6 +59,7 @@ Reduce **“where is my order”** and basic policy load using voice with option
 
 - **Simple (default install):** [retail-wismo-faq.json](../catalog/packaged-workflows/retail-wismo-faq.json).
 - **Complex (pickup / service booking):** [retail-wismo-booking-complex.json](../catalog/packaged-workflows/retail-wismo-booking-complex.json) — import via [import playbook](../catalog/import-packaged-workflow-json.md); attach HTTP tools for slots + OMS when credentials exist; filter **Analytics** by `catalog_slug` and `tool_name`.
+- **Complex (WISMO + upsell):** [retail-wismo-upsell-complex.json](../catalog/packaged-workflows/retail-wismo-upsell-complex.json) — variant **`upsell_complex`**; wire HTTP **offer_warranty_addon**; see **Paid upsell happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -57,9 +71,11 @@ Reduce **“where is my order”** and basic policy load using voice with option
 
 ## High-revenue motions (roadmap)
 
-See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json). Motions below are **not** in the default or **booking_complex** graphs yet.
+**Shipped:** **Paid upsell (warranty / subscription)** — **`upsell_complex`** variant + **`offer_warranty_addon`** HTTP tool + runbook happy path above.
 
-| Motion | Buyer value | Prebuild step |
-|--------|-------------|---------------|
-| **Paid upsell (warranty / subscription)** | ARR attach after WISMO resolution | Product catalog HTTP tool + post-resolution agent branch; runbook QA before GTM |
-| **Collections / payment promise** | Write-off reduction | Voice capture of payment-plan intent; legal + [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before ship |
+See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) for remaining items.
+
+| Motion | Buyer value | Status |
+|--------|-------------|--------|
+| **Paid upsell (warranty / subscription)** | ARR attach after WISMO resolution | **Shipped** — **`upsell_complex`** + **offer_warranty_addon** |
+| **Collections / payment promise** | Write-off reduction | **Roadmap** — legal + [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before ship |

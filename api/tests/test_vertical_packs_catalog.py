@@ -173,6 +173,37 @@ def test_runbooks_document_confirm_remind_happy_path(catalog: dict) -> None:
         )
 
 
+_UPSELL_COMPLEX_SECTION = "## Paid upsell happy-path test"
+
+
+def test_runbooks_document_upsell_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: upsell_complex variant documents offer tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "upsell_complex" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _UPSELL_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_UPSELL_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_UPSELL_COMPLEX_SECTION)
+        tail = text[idx : idx + 2200]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: upsell section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: upsell section needs expected outcome"
+        assert "upsell_complex" in tail, f"{slug}: upsell section must name variant_id"
+        assert "offer_warranty_addon" in tail, (
+            f"{slug}: upsell section must reference offer_warranty_addon tool"
+        )
+        assert "product_api_base_url" in tail, (
+            f"{slug}: upsell section must reference product_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]

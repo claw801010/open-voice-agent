@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{store_name}}; offer order status help and mention optional protection or subscription add-ons when relevant.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "WISMO & upsell",
+        "prompt": "You represent {{store_name}}. First resolve WISMO or policy questions with safe, policy-aligned answers — never invent tracking numbers without an OMS tool.\n\nAfter the caller's order question is addressed (or they decline lookup), you may offer a relevant add-on such as extended warranty or subscription (hint SKU {{upsell_product_sku}}). If they accept, call HTTP tool **offer_warranty_addon** at {{product_api_base_url}}/api/v1/offers/attach with structured order context — do not claim enrollment until the tool returns success.\n\nNever collect payment card numbers on the call. Escalate to {{support_email}} when needed.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank them; confirm any add-on enrollment reference if the offer tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

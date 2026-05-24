@@ -22,7 +22,7 @@ Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now sh
 | Vertical | Booking story buyers expect | Status |
 |----------|------------------------------|--------|
 | Healthcare | Book **provider / visit type / location**; confirm slot; reschedule | **Complex variants shipped** — **`booking_complex`** (book) + **`confirm_remind`** (reschedule); wire HTTP tools to buyer scheduling backend |
-| Retail | Book **in-store service, styling, or pickup window** | **Complex variant shipped** — prompts + vars; wire OMS / calendar HTTP tools |
+| Retail | Book **in-store service, styling, or pickup window** | **Complex variants shipped** — **`booking_complex`** (slots) + **`upsell_complex`** (warranty attach); wire HTTP tools to buyer APIs |
 | B2B SaaS | Book **demo, onboarding, or CS escalation** | **Complex variant shipped** — prompts + vars; wire CRM + calendar HTTP tools |
 
 **Next engineering slice:** (1) **Done:** runbook **Booking-complex happy-path test** per variant (≤6 turns after HTTP tool wired) — [runbooks/](../runbooks/) + CI [test_runbooks_document_booking_complex_happy_path](../api/tests/test_vertical_packs_catalog.py); (2) **Done:** install API + UI **variant** — `POST /api/v1/workflow/install-from-catalog` with `variant_id`, `mk01.catalog_variant_id` on the workflow; (3) **Done:** **Analytics** filter by `catalog_variant_id` + **CI chain test** for `response_mapping` → `mapped_data` → tool span ([booking-http-analytics-smoke.md](recipes/booking-http-analytics-smoke.md), [test_booking_http_mapping_analytics_span.py](../api/tests/test_booking_http_mapping_analytics_span.py)); (4) **Done:** **live** HTTP stub — [booking-scheduling-stub-local.md](recipes/booking-scheduling-stub-local.md), [booking_scheduling_stub_server.py](../scripts/booking_scheduling_stub_server.py), Docker Compose profile **`booking-stub`** on **:8765**.
@@ -44,8 +44,8 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 |------|----------------|-------------|---------------|
 | `healthcare-clinic-screening` | No-show reduction | Fewer empty slots | **Shipped** — **`confirm_remind`** variant + **`reschedule_appointment`** HTTP + runbook happy path |
 | `healthcare-clinic-screening` | Optional concierge / paid visit type | Utilization + revenue | New HTTP billing tool + compliance review ([PARTNER_REVIEW.md](PARTNER_REVIEW.md)) |
-| `retail-wismo-faq` | Paid upsell (warranty / subscription) | ARR attach on resolved WISMO | Product catalog HTTP tool + runbook QA before marketing |
-| `retail-wismo-faq` | Collections / payment promise | Write-off reduction | Voice capture + strict tags; legal review before ship |
+| `retail-wismo-faq` | Paid upsell (warranty / subscription) | ARR attach after WISMO | **Shipped** — **`upsell_complex`** + **`offer_warranty_addon`** HTTP + runbook happy path |
+| `retail-wismo-faq` | Collections / payment promise | Write-off reduction | Voice capture + strict compliance tags; legal review before ship |
 | `b2b-saas-trial-nurture` | Trial → paid upgrade | Conversion lift | CRM stage HTTP after PQL qual node |
 | `b2b-saas-trial-nurture` | Renewal / QBR expansion | LTV | Calendar + CRM health-score handoff HTTP tools |
 

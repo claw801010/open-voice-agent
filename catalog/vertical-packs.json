@@ -66,7 +66,7 @@
     },
     {
       "slug": "retail-wismo-faq",
-      "pack_semver": "1.2.1",
+      "pack_semver": "1.3.0",
       "industry": "Retail / e-commerce",
       "display_name": "WISMO & store policy FAQ",
       "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk—reduces tier-1 load while staying policy-safe.",
@@ -74,7 +74,8 @@
         "where is my order (WISMO)",
         "return window FAQ",
         "store hours and pickup",
-        "in-store service or pickup-window booking (complex variant + HTTP tool after install)"
+        "in-store service or pickup-window booking (booking_complex variant + reserve_pickup_slot HTTP tool after install)",
+        "warranty or subscription upsell after WISMO (upsell_complex variant + offer_warranty_addon HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -100,21 +101,29 @@
           "complexity": "complex",
           "packaged_definition_ref": "retail-wismo-booking-complex.json",
           "description": "Adds scheduling language for pickup windows; pair with HTTP reserve_pickup_slot and OMS tools when creds exist."
+        },
+        {
+          "variant_id": "upsell_complex",
+          "label": "WISMO + warranty / subscription upsell",
+          "complexity": "complex",
+          "packaged_definition_ref": "retail-wismo-upsell-complex.json",
+          "description": "Resolve WISMO first, then offer add-on; wire HTTP offer_warranty_addon to {{product_api_base_url}}/api/v1/offers/attach after install. See runbook paid upsell happy path."
         }
       ],
       "default_template_variables": {
         "store_name": "Your Store",
         "support_email": "support@example.com",
         "scheduling_api_base_url": "https://appointments.retail.example.com/v1",
-        "pickup_location_code": "STORE-DEMO-01"
+        "pickup_location_code": "STORE-DEMO-01",
+        "product_api_base_url": "https://catalog.retail.example.com/v1",
+        "upsell_product_sku": "WARRANTY-EXT-12MO"
       },
       "analytics_hooks": [
         "Filter analytics by catalog_slug retail-wismo-faq after install; compare tool_names (e.g. OMS) across calls.",
-        "Complex variant: track reserve_pickup_slot vs pure WISMO in tool_names and outcomes.",
-        "CSV export on call list supports QM sampling for WISMO vs booking funnel experiments."
+        "booking_complex: track reserve_pickup_slot; upsell_complex: filter tool_name offer_warranty_addon and catalog_variant_id=upsell_complex.",
+        "CSV export on call list supports QM sampling for WISMO vs booking vs upsell funnel experiments."
       ],
       "roadmap_motions": [
-        "paid conversion / upsell (roadmap): warranty or subscription attach after WISMO resolution — HTTP product catalog tool",
         "collections / payment promise (roadmap): voice capture of payment-plan intent — strict compliance tags before ship"
       ]
     },
