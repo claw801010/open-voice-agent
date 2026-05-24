@@ -142,6 +142,37 @@ def test_runbooks_document_booking_complex_happy_path(catalog: dict) -> None:
         )
 
 
+_CONFIRM_REMIND_SECTION = "## No-show reduction happy-path test"
+
+
+def test_runbooks_document_confirm_remind_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: confirm_remind variant documents reschedule stub + tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "confirm_remind" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _CONFIRM_REMIND_SECTION in text, (
+            f"{slug}: runbook missing {_CONFIRM_REMIND_SECTION!r} section"
+        )
+        idx = text.index(_CONFIRM_REMIND_SECTION)
+        tail = text[idx : idx + 2200]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: confirm-remind section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: confirm-remind section needs expected outcome"
+        assert "confirm_remind" in tail, f"{slug}: confirm-remind section must name variant_id"
+        assert "reschedule_appointment" in tail, (
+            f"{slug}: confirm-remind section must reference reschedule_appointment tool"
+        )
+        assert "scheduling_api_base_url" in tail, (
+            f"{slug}: confirm-remind section must reference scheduling_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -162,8 +193,8 @@ def test_each_pack_has_roadmap_motions(catalog: dict) -> None:
     for pack in packs:
         slug = pack["slug"]
         motions = pack.get("roadmap_motions")
-        assert isinstance(motions, list) and len(motions) >= 2, (
-            f"{slug!r}: roadmap_motions must be a list with at least two entries"
+        assert isinstance(motions, list) and len(motions) >= 1, (
+            f"{slug!r}: roadmap_motions must be a non-empty list (label remaining roadmap items)"
         )
         assert all(isinstance(m, str) and m.strip() for m in motions), (
             f"{slug!r}: each roadmap_motions entry must be a non-empty string"

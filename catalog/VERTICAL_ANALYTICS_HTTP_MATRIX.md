@@ -8,7 +8,7 @@
 
 | `catalog_slug` | Primary booking / scheduling story | Expected HTTP tool names (after buyer wires APIs) | Template vars to expose (`default_template_variables`) | Analytics: prove with |
 |----------------|-----------------------------------|-----------------------------------------------------|--------------------------------------------------------|-------------------------|
-| `healthcare-clinic-screening` | Triage → **book visit** / provider slot | `book_slot`, `lookup_availability` (names may vary — filter `tool_name` on your shipped tool) | `scheduling_api_base_url`, `clinic_location_id`, `preferred_visit_type` | `GET /analytics/calls?catalog_slug=…&tool_name=…`; call detail `mapped_data`; `outcome_key` in outcomes |
+| `healthcare-clinic-screening` | Triage → **book visit** / provider slot; **confirm / reschedule** reminders | `book_slot`, `reschedule_appointment`, `lookup_availability` (filter `tool_name`; **`catalog_variant_id`** = `booking_complex` or `confirm_remind`) | `scheduling_api_base_url`, `clinic_location_id`, `preferred_visit_type` | `GET /analytics/calls?catalog_slug=…&catalog_variant_id=…&tool_name=…`; call detail `mapped_data`; `outcome_key` in outcomes |
 | `retail-wismo-faq` | WISMO + **pickup / service window** | `reserve_pickup_slot`, OMS lookup tools | `scheduling_api_base_url`, `pickup_location_code`, `store_name` | Same filters; compare complex variant `catalog_variant_id=booking_complex` vs simple |
 | `b2b-saas-trial-nurture` | Trial → **demo / CS calendar** | `book_demo`, CRM stage tools | `scheduling_api_base_url`, `crm_owner_email`, `demo_duration_minutes` | `tool_name` + outcomes for funnel |
 

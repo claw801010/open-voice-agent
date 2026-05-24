@@ -21,7 +21,7 @@ Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now sh
 
 | Vertical | Booking story buyers expect | Status |
 |----------|------------------------------|--------|
-| Healthcare | Book **provider / visit type / location**; confirm slot; reschedule | **Complex variant shipped** — prompts + template vars; wire HTTP tool to buyer scheduling backend |
+| Healthcare | Book **provider / visit type / location**; confirm slot; reschedule | **Complex variants shipped** — **`booking_complex`** (book) + **`confirm_remind`** (reschedule); wire HTTP tools to buyer scheduling backend |
 | Retail | Book **in-store service, styling, or pickup window** | **Complex variant shipped** — prompts + vars; wire OMS / calendar HTTP tools |
 | B2B SaaS | Book **demo, onboarding, or CS escalation** | **Complex variant shipped** — prompts + vars; wire CRM + calendar HTTP tools |
 
@@ -42,7 +42,7 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 
 | Slug | Roadmap motion | Buyer value | Prebuild gate |
 |------|----------------|-------------|---------------|
-| `healthcare-clinic-screening` | No-show reduction | Fewer empty slots | Extend **booking_complex** with confirm/remind + reschedule HTTP; add happy-path section + bump `pack_semver` |
+| `healthcare-clinic-screening` | No-show reduction | Fewer empty slots | **Shipped** — **`confirm_remind`** variant + **`reschedule_appointment`** HTTP + runbook happy path |
 | `healthcare-clinic-screening` | Optional concierge / paid visit type | Utilization + revenue | New HTTP billing tool + compliance review ([PARTNER_REVIEW.md](PARTNER_REVIEW.md)) |
 | `retail-wismo-faq` | Paid upsell (warranty / subscription) | ARR attach on resolved WISMO | Product catalog HTTP tool + runbook QA before marketing |
 | `retail-wismo-faq` | Collections / payment promise | Write-off reduction | Voice capture + strict tags; legal review before ship |

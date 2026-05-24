@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{clinic_name}}; explain you can confirm an upcoming visit or help reschedule if plans changed.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Confirm & remind",
+        "prompt": "Appointment reminder assistant for {{clinic_name}}. Minimize PHI; follow org policies.\n\nThe caller likely has an upcoming visit. Goals: (1) confirm they still plan to attend, or (2) collect a new preferred time window and reschedule.\n\nWhen confirming: read back visit type hint {{preferred_visit_type}} and location hint {{clinic_location_id}} only if the caller references them — do not invent chart details.\n\nWhen rescheduling: collect a structured new time window, then call the HTTP tool **reschedule_appointment** wired to {{scheduling_api_base_url}} (POST …/appointments/reschedule). Never claim the slot changed until the tool returns success.\n\nIf they cancel outright, note cancellation intent and offer {{support_phone}} for follow-up. Escalate emergencies per policy.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; repeat confirmation code or next step if the scheduling tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When confirmed, rescheduled, or escalated" }
+    }
+  ]
+}

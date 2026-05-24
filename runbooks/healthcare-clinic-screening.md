@@ -32,6 +32,19 @@ Stand up a **voice** flow for symptom triage, scheduling handoff, or after-hours
 5. **Simulation → Start Web test**. Caller script (one turn each): state visit type → preferred date/time window → confirm booking when agent offers.
 6. **Expected:** agent invokes **`book_slot`**; call ends with confirmation language; **Analytics → call detail** shows HTTP span with **`mapped_data.appointment_id`** (and **`confirmation_code`**). Filter **`/analytics/calls?catalog_slug=healthcare-clinic-screening&catalog_variant_id=booking_complex&tool_name=book_slot`**.
 
+## No-show reduction happy-path test (QA)
+
+**Goal:** confirm or **reschedule** an upcoming visit in **≤6 agent turns** after **`reschedule_appointment`** is wired (MK-01 prebuild — **confirm_remind** variant).
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+
+1. **Template catalog** → **Patient screening & triage** → install with variant **`confirm_remind`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"confirm_remind"`).
+2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`.
+3. HTTP tool **`reschedule_appointment`**: `POST {{scheduling_api_base_url}}/api/v1/appointments/reschedule`; **response_mapping** — `appointment_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code` ([booking-http-analytics-smoke.md](../catalog/recipes/booking-http-analytics-smoke.md)).
+4. Attach **`reschedule_appointment`** to the **Confirm & remind** agent; **Save** and **Publish**.
+5. **Simulation → Start Web test**. Caller script: reference an upcoming visit → ask to move to a new time window → confirm when agent summarizes.
+6. **Expected:** **`reschedule_appointment`** invoked; call detail shows **`mapped_data`**; filter **`/analytics/calls?catalog_slug=healthcare-clinic-screening&catalog_variant_id=confirm_remind&tool_name=reschedule_appointment`**.
+
 ## Day 1 checklist
 
 1. **Variables:** map only what the agent needs (e.g. `patient_locale`, `clinic_timezone`)—avoid free-text PHI in tool payloads unless required.
@@ -48,6 +61,7 @@ Stand up a **voice** flow for symptom triage, scheduling handoff, or after-hours
 
 - **Simple (default install):** [healthcare-clinic-screening.json](../catalog/packaged-workflows/healthcare-clinic-screening.json) — minimal linear triage.
 - **Complex (booking-ready prompts):** [healthcare-triage-booking-complex.json](../catalog/packaged-workflows/healthcare-triage-booking-complex.json) — import via `POST /api/v1/workflow/create/definition` ([import playbook](../catalog/import-packaged-workflow-json.md)); attach an HTTP **book_slot** (or equivalent) tool using `{{scheduling_api_base_url}}` and pack variables from [vertical-packs.json](../catalog/vertical-packs.json). Prove outcomes and tool traces in **Analytics** ([ANALYTICS_VERTICAL_ROADMAP.md](../catalog/ANALYTICS_VERTICAL_ROADMAP.md)).
+- **Complex (confirm / remind / reschedule):** [healthcare-triage-confirm-remind-complex.json](../catalog/packaged-workflows/healthcare-triage-confirm-remind-complex.json) — variant **`confirm_remind`**; wire HTTP **reschedule_appointment**; see **No-show reduction happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -59,9 +73,11 @@ Use **`catalog_slug`** = `healthcare-clinic-screening` to align calls list, CSV 
 
 ## High-revenue motions (roadmap)
 
-**Not shipped** in packaged JSON — canonical list in [vertical-packs.json](../catalog/vertical-packs.json) **`roadmap_motions`**. Before marketing, each motion needs a graph delta, runbook happy path, and [TEMPLATE_QUALITY_RUBRIC.md](../catalog/TEMPLATE_QUALITY_RUBRIC.md) row **9** sign-off ([PREBUILD_VERTICAL_ROADMAP.md](../catalog/PREBUILD_VERTICAL_ROADMAP.md)).
+**Shipped:** **No-show reduction** — **`confirm_remind`** variant + **`reschedule_appointment`** HTTP tool + runbook happy path above.
 
-| Motion | Buyer value | Prebuild step |
-|--------|-------------|---------------|
-| **No-show reduction** | Fewer empty appointment slots | Extend **booking_complex** with confirm/remind + reschedule HTTP after **book_slot**; prove in Analytics **`tool_name`** filters |
-| **Optional concierge / paid visit type** | Utilization + incremental revenue | Billing HTTP tool + compliance review ([PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md)) |
+Remaining roadmap lines in [vertical-packs.json](../catalog/vertical-packs.json) **`roadmap_motions`**. Before marketing additional motions, each needs a graph delta, runbook happy path, and [TEMPLATE_QUALITY_RUBRIC.md](../catalog/TEMPLATE_QUALITY_RUBRIC.md) row **9** sign-off ([PREBUILD_VERTICAL_ROADMAP.md](../catalog/PREBUILD_VERTICAL_ROADMAP.md)).
+
+| Motion | Buyer value | Status |
+|--------|-------------|--------|
+| **No-show reduction** | Fewer empty appointment slots | **Shipped** — **`confirm_remind`** + **reschedule_appointment** |
+| **Optional concierge / paid visit type** | Utilization + incremental revenue | **Roadmap** — billing HTTP tool + [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) |
