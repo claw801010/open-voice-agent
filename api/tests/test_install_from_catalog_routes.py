@@ -187,6 +187,31 @@ async def test_install_from_catalog_renewal_complex_variant(
 
 
 @pytest.mark.asyncio
+async def test_install_from_catalog_conversion_complex_variant(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: b2b conversion_complex variant installs CRM stage handoff prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "b2b-saas-trial-nurture",
+                "workflow_name": "B2B trial conversion",
+                "variant_id": "conversion_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "conversion_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "update_crm_deal_stage" in blob
+    assert "crm_api_base_url" in blob
+    assert "target_deal_stage" in blob
+
+
+@pytest.mark.asyncio
 async def test_install_from_catalog_cross_org_fetch_404(
     test_client_factory, org_user_catalog_install, async_session
 ):

@@ -45,6 +45,19 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 6. **Web test** script: renewal goals → agree to QBR → provide timezone + window → confirm booking summary.
 7. **Expected:** **`book_qbr`** in call detail with **`mapped_data`**; filter **`/analytics/calls?catalog_slug=b2b-saas-trial-nurture&catalog_variant_id=renewal_complex&tool_name=book_qbr`**.
 
+## Trial-to-paid happy-path test (QA)
+
+**Goal:** qualify trial intent and **update CRM deal stage** in **≤6 agent turns** after **`update_crm_deal_stage`** is wired (**conversion_complex** variant).
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/deals/stage` with sample JSON).
+
+1. Install **Trial nurture & PQL voice qual** with variant **`conversion_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"conversion_complex"`).
+2. **Customize**; set **`crm_api_base_url`** = `http://127.0.0.1:8765` and **`target_deal_stage`** = `closed_won` (or buyer CRM stage id).
+3. HTTP tool **`update_crm_deal_stage`**: `POST {{crm_api_base_url}}/api/v1/deals/stage`; **response_mapping** — `deal_id` → `appointment.id`, `stage_updated_at` → `appointment.slot.start`, `confirmation_code` → `confirmation_code` (reuse stub sample shape for local QA).
+4. Attach to the **PQL & conversion** agent; **Publish**.
+5. **Web test** script: trial goals → express readiness to upgrade → confirm when agent summarizes CRM handoff.
+6. **Expected:** **`update_crm_deal_stage`** invoked; **`mapped_data`** on call detail; filter **`/analytics/calls?catalog_slug=b2b-saas-trial-nurture&catalog_variant_id=conversion_complex&tool_name=update_crm_deal_stage`**. Set **`outcome_key`** in gathered context when your flow writes conversion outcomes for cohort reporting.
+
 ## Day 1 checklist
 
 1. **Segments:** define who gets voice vs. email (e.g. high-intent trial only).
@@ -61,6 +74,7 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 - **Simple (default install):** [b2b-saas-trial-nurture.json](../catalog/packaged-workflows/b2b-saas-trial-nurture.json).
 - **Complex (demo / CS booking prompts):** [b2b-trial-booking-complex.json](../catalog/packaged-workflows/b2b-trial-booking-complex.json) — import via [import playbook](../catalog/import-packaged-workflow-json.md); wire **book_demo** or calendar HTTP tools using `{{scheduling_api_base_url}}` and pack variables; review calls under **Analytics**.
 - **Complex (renewal / QBR):** [b2b-trial-renewal-complex.json](../catalog/packaged-workflows/b2b-trial-renewal-complex.json) — variant **`renewal_complex`**; wire **book_qbr** (+ optional **sync_crm_health**); see **Renewal / QBR happy-path test** above.
+- **Complex (trial → paid):** [b2b-trial-conversion-complex.json](../catalog/packaged-workflows/b2b-trial-conversion-complex.json) — variant **`conversion_complex`**; wire **update_crm_deal_stage**; see **Trial-to-paid happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -72,11 +86,11 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 
 ## High-revenue motions (roadmap)
 
-**Shipped:** **Renewal / QBR expansion** — **`renewal_complex`** variant + **`book_qbr`** HTTP tool + runbook happy path above.
-
-See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) for remaining items.
+**Shipped:** **Renewal / QBR expansion** (`renewal_complex` + **book_qbr**) and **Trial → paid upgrade** (`conversion_complex` + **update_crm_deal_stage**) — see happy-path sections above.
 
 | Motion | Buyer value | Status |
 |--------|-------------|--------|
 | **Renewal / QBR expansion** | LTV and expansion pipeline | **Shipped** — **`renewal_complex`** + **book_qbr** |
-| **Trial → paid upgrade** | Conversion lift after voice PQL | **Roadmap** — CRM stage update HTTP after qual |
+| **Trial → paid upgrade** | Conversion lift after voice PQL | **Shipped** — **`conversion_complex`** + **update_crm_deal_stage** |
+
+**Roadmap tail:** remaining items (if any) live in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) — empty when all motions above are shipped.

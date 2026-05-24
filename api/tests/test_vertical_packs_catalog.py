@@ -233,6 +233,37 @@ def test_runbooks_document_renewal_happy_path(catalog: dict) -> None:
         )
 
 
+_CONVERSION_COMPLEX_SECTION = "## Trial-to-paid happy-path test"
+
+
+def test_runbooks_document_conversion_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: conversion_complex variant documents CRM stage tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "conversion_complex" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _CONVERSION_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_CONVERSION_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_CONVERSION_COMPLEX_SECTION)
+        tail = text[idx : idx + 2400]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: conversion section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: conversion section needs expected outcome"
+        assert "conversion_complex" in tail, f"{slug}: conversion section must name variant_id"
+        assert "update_crm_deal_stage" in tail, (
+            f"{slug}: conversion section must reference update_crm_deal_stage tool"
+        )
+        assert "crm_api_base_url" in tail, (
+            f"{slug}: conversion section must reference crm_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -253,9 +284,7 @@ def test_each_pack_has_roadmap_motions(catalog: dict) -> None:
     for pack in packs:
         slug = pack["slug"]
         motions = pack.get("roadmap_motions")
-        assert isinstance(motions, list) and len(motions) >= 1, (
-            f"{slug!r}: roadmap_motions must be a non-empty list (label remaining roadmap items)"
-        )
+        assert isinstance(motions, list), f"{slug!r}: roadmap_motions must be a list (empty when all motions shipped)"
         assert all(isinstance(m, str) and m.strip() for m in motions), (
             f"{slug!r}: each roadmap_motions entry must be a non-empty string"
         )

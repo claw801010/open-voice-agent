@@ -129,7 +129,7 @@
     },
     {
       "slug": "b2b-saas-trial-nurture",
-      "pack_semver": "1.3.0",
+      "pack_semver": "1.4.0",
       "industry": "B2B SaaS",
       "display_name": "Trial nurture & PQL voice qual",
       "summary": "Short qualification and onboarding check-in calls with CRM-friendly variables—pipeline velocity without full SDR staffing.",
@@ -138,7 +138,8 @@
         "PQL voice qualification",
         "onboarding check-in",
         "demo or customer-success calendar booking (booking_complex variant + book_demo HTTP tool after install)",
-        "renewal / QBR expansion (renewal_complex variant + book_qbr HTTP tool after install)"
+        "renewal / QBR expansion (renewal_complex variant + book_qbr HTTP tool after install)",
+        "trial → paid upgrade handoff (conversion_complex variant + update_crm_deal_stage HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -171,6 +172,13 @@
           "complexity": "complex",
           "packaged_definition_ref": "b2b-trial-renewal-complex.json",
           "description": "CS renewal + QBR scheduling; wire HTTP book_qbr to {{scheduling_api_base_url}} and optional sync_crm_health to {{crm_api_base_url}} after install. See runbook renewal happy path."
+        },
+        {
+          "variant_id": "conversion_complex",
+          "label": "Trial → paid conversion",
+          "complexity": "complex",
+          "packaged_definition_ref": "b2b-trial-conversion-complex.json",
+          "description": "PQL then paid upgrade handoff; wire HTTP update_crm_deal_stage to {{crm_api_base_url}}/api/v1/deals/stage after install. See runbook trial-to-paid happy path."
         }
       ],
       "default_template_variables": {
@@ -179,16 +187,15 @@
         "scheduling_api_base_url": "https://calendar.example.com/api",
         "demo_duration_minutes": "30",
         "crm_api_base_url": "https://crm.example.com/api/v1",
-        "account_health_tier": "green"
+        "account_health_tier": "green",
+        "target_deal_stage": "closed_won"
       },
       "analytics_hooks": [
         "Filter by slug b2b-saas-trial-nurture for PQL → demo narratives; tie CRM stage variables to outcome_key.",
-        "booking_complex: tool_name book_demo; renewal_complex: filter tool_name book_qbr (and optional sync_crm_health) with catalog_variant_id=renewal_complex.",
-        "Export CSV from call list for trial-stage and renewal cohort reviews with disposition and outcome columns."
+        "booking_complex: book_demo; renewal_complex: book_qbr; conversion_complex: filter tool_name update_crm_deal_stage and catalog_variant_id=conversion_complex.",
+        "Export CSV from call list for trial-stage, conversion, and renewal cohort reviews."
       ],
-      "roadmap_motions": [
-        "paid conversion / upsell (roadmap): trial → paid upgrade handoff after PQL voice qual — CRM stage update HTTP"
-      ]
+      "roadmap_motions": []
     }
   ]
 }
