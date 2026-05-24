@@ -31,6 +31,6 @@ Each pack in `vertical-packs.json` includes **`pack_semver`** (`major.minor.patc
 - **Minor** — Additive nodes, new optional variables, or expanded use cases without breaking existing installs.
 - **Patch** — Copy, runbook, or metadata-only updates.
 
-The top-level **`catalog_version`** integer bumps when the **schema or file shape** of the catalog changes (e.g. new required fields across all packs). **`catalog_version` 4** adds optional **`workflow_variants`** (simple vs complex packaged graphs per vertical). Optional per-pack fields such as **`analytics_hooks`** (string array: analytics / QM demo hints; see [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md)) do not require adopters to change installs.
+The top-level **`catalog_version`** integer bumps when the **schema or file shape** of the catalog changes (e.g. new required fields across all packs). **`catalog_version` 4** adds optional **`workflow_variants`** (simple vs complex packaged graphs per vertical). Optional per-pack fields such as **`analytics_hooks`** and **`roadmap_motions`** (high-revenue motions explicitly labeled **roadmap** — see [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md)) do not require adopters to change installs.
 
 **Partner submissions:** bump `pack_semver` on every published update to that pack; document changes in the PR description.

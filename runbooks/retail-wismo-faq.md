@@ -54,3 +54,12 @@ Reduce **“where is my order”** and basic policy load using voice with option
 ## Measure
 
 - Deflection from human agents, CSAT on resolved WISMO, tool error rate.
+
+## High-revenue motions (roadmap)
+
+See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json). Motions below are **not** in the default or **booking_complex** graphs yet.
+
+| Motion | Buyer value | Prebuild step |
+|--------|-------------|---------------|
+| **Paid upsell (warranty / subscription)** | ARR attach after WISMO resolution | Product catalog HTTP tool + post-resolution agent branch; runbook QA before GTM |
+| **Collections / payment promise** | Write-off reduction | Voice capture of payment-plan intent; legal + [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before ship |

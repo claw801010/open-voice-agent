@@ -36,7 +36,20 @@ Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now sh
 | **Renewal / expansion** | LTV | B2B: QBR scheduling + health score handoff |
 | **No-show reduction** | Utilization | Healthcare: confirm/remind + reschedule link |
 
-Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON** supports; add roadmap lines only when runbook + rubric document the gap (see [vertical-packs.json](vertical-packs.json) updates in the same PR).
+Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON** supports; add **`roadmap_motions`** only when this file + the pack runbook document the gap (see [vertical-packs.json](vertical-packs.json)). **Shipped in repo:** each pack now lists **≥2** roadmap lines; runbooks include **High-revenue motions (roadmap)**; CI gates in [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py).
+
+### Per-vertical roadmap (not in packaged JSON yet)
+
+| Slug | Roadmap motion | Buyer value | Prebuild gate |
+|------|----------------|-------------|---------------|
+| `healthcare-clinic-screening` | No-show reduction | Fewer empty slots | Extend **booking_complex** with confirm/remind + reschedule HTTP; add happy-path section + bump `pack_semver` |
+| `healthcare-clinic-screening` | Optional concierge / paid visit type | Utilization + revenue | New HTTP billing tool + compliance review ([PARTNER_REVIEW.md](PARTNER_REVIEW.md)) |
+| `retail-wismo-faq` | Paid upsell (warranty / subscription) | ARR attach on resolved WISMO | Product catalog HTTP tool + runbook QA before marketing |
+| `retail-wismo-faq` | Collections / payment promise | Write-off reduction | Voice capture + strict tags; legal review before ship |
+| `b2b-saas-trial-nurture` | Trial → paid upgrade | Conversion lift | CRM stage HTTP after PQL qual node |
+| `b2b-saas-trial-nurture` | Renewal / QBR expansion | LTV | Calendar + CRM health-score handoff HTTP tools |
+
+**Next engineering slice (when staffed):** pick one motion per vertical, ship packaged graph delta + runbook happy path + analytics **`tool_name`** proof — same bar as **booking_complex**.
 
 ## HTTP tools and context variables (WE-01-DUALMODE)
 

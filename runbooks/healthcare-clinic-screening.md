@@ -56,3 +56,12 @@ Use **`catalog_slug`** = `healthcare-clinic-screening` to align calls list, CSV 
 ## Measure
 
 - Containment vs. handoff rate, average handle time, after-hours coverage hours, zero critical mis-triage (human review sample).
+
+## High-revenue motions (roadmap)
+
+**Not shipped** in packaged JSON — canonical list in [vertical-packs.json](../catalog/vertical-packs.json) **`roadmap_motions`**. Before marketing, each motion needs a graph delta, runbook happy path, and [TEMPLATE_QUALITY_RUBRIC.md](../catalog/TEMPLATE_QUALITY_RUBRIC.md) row **9** sign-off ([PREBUILD_VERTICAL_ROADMAP.md](../catalog/PREBUILD_VERTICAL_ROADMAP.md)).
+
+| Motion | Buyer value | Prebuild step |
+|--------|-------------|---------------|
+| **No-show reduction** | Fewer empty appointment slots | Extend **booking_complex** with confirm/remind + reschedule HTTP after **book_slot**; prove in Analytics **`tool_name`** filters |
+| **Optional concierge / paid visit type** | Utilization + incremental revenue | Billing HTTP tool + compliance review ([PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md)) |

@@ -54,3 +54,12 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 ## Measure
 
 - Meetings booked, trial-to-paid conversion uplift (cohorted), call completion rate.
+
+## High-revenue motions (roadmap)
+
+See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json). Motions below are **not** in the default or **booking_complex** graphs yet.
+
+| Motion | Buyer value | Prebuild step |
+|--------|-------------|---------------|
+| **Trial → paid upgrade** | Conversion lift after voice PQL | CRM stage update HTTP after qual node; cohort in Analytics **`outcome_key`** |
+| **Renewal / QBR expansion** | LTV and expansion pipeline | Calendar + CRM health-score handoff HTTP tools; filter **`tool_name`** on call list |

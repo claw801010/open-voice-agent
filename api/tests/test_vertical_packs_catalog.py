@@ -156,6 +156,41 @@ def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
         )
 
 
+def test_each_pack_has_roadmap_motions(catalog: dict) -> None:
+    """PREBUILD: high-revenue motions documented as roadmap (not shipped in JSON)."""
+    packs = catalog["packs"]
+    for pack in packs:
+        slug = pack["slug"]
+        motions = pack.get("roadmap_motions")
+        assert isinstance(motions, list) and len(motions) >= 2, (
+            f"{slug!r}: roadmap_motions must be a list with at least two entries"
+        )
+        assert all(isinstance(m, str) and m.strip() for m in motions), (
+            f"{slug!r}: each roadmap_motions entry must be a non-empty string"
+        )
+        assert all("(roadmap)" in m for m in motions), (
+            f"{slug!r}: each roadmap_motions entry must include '(roadmap)' per rubric row 9"
+        )
+
+
+_ROADMAP_MOTIONS_SECTION = "## High-revenue motions (roadmap)"
+
+
+def test_runbooks_document_roadmap_motions(catalog: dict) -> None:
+    """PREBUILD: each pack runbook links roadmap motions to vertical-packs.json."""
+    packs = catalog["packs"]
+    for pack in packs:
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _ROADMAP_MOTIONS_SECTION in text, (
+            f"{slug}: runbook missing {_ROADMAP_MOTIONS_SECTION!r} section"
+        )
+        assert "roadmap_motions" in text, (
+            f"{slug}: roadmap section must reference vertical-packs.json roadmap_motions"
+        )
+
+
 _PROMPT_TEMPLATE_TOKEN = re.compile(r"\{\{\s*([^}]+?)\s*\}\}")
 
 

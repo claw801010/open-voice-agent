@@ -4,7 +4,7 @@
   "packs": [
     {
       "slug": "healthcare-clinic-screening",
-      "pack_semver": "1.2.0",
+      "pack_semver": "1.2.1",
       "industry": "Healthcare / clinics",
       "display_name": "Patient screening & triage",
       "summary": "After-hours and overflow voice flow for symptom triage, scheduling handoff, and scripted guardrails—designed for PHI minimization in the agent layer.",
@@ -51,11 +51,15 @@
         "After catalog install, workflows expose MK-01 catalog_slug — filter /analytics and /analytics/calls by that slug.",
         "Prove triage → handoff with outcome_key in gathered_context and HTTP tool mapped_data on call detail.",
         "Complex variant + HTTP tool: filter tool_name for book_slot; export CSV for booking funnel QA."
+      ],
+      "roadmap_motions": [
+        "no-show reduction (roadmap): confirm/remind + reschedule HTTP after book_slot — extend booking_complex graph + runbook happy path before marketing",
+        "utilization / optional concierge (roadmap): paid visit-type upsell via billing HTTP tool — not in packaged JSON"
       ]
     },
     {
       "slug": "retail-wismo-faq",
-      "pack_semver": "1.2.0",
+      "pack_semver": "1.2.1",
       "industry": "Retail / e-commerce",
       "display_name": "WISMO & store policy FAQ",
       "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk—reduces tier-1 load while staying policy-safe.",
@@ -101,11 +105,15 @@
         "Filter analytics by catalog_slug retail-wismo-faq after install; compare tool_names (e.g. OMS) across calls.",
         "Complex variant: track reserve_pickup_slot vs pure WISMO in tool_names and outcomes.",
         "CSV export on call list supports QM sampling for WISMO vs booking funnel experiments."
+      ],
+      "roadmap_motions": [
+        "paid conversion / upsell (roadmap): warranty or subscription attach after WISMO resolution — HTTP product catalog tool",
+        "collections / payment promise (roadmap): voice capture of payment-plan intent — strict compliance tags before ship"
       ]
     },
     {
       "slug": "b2b-saas-trial-nurture",
-      "pack_semver": "1.2.0",
+      "pack_semver": "1.2.1",
       "industry": "B2B SaaS",
       "display_name": "Trial nurture & PQL voice qual",
       "summary": "Short qualification and onboarding check-in calls with CRM-friendly variables—pipeline velocity without full SDR staffing.",
@@ -151,6 +159,10 @@
         "Filter by slug b2b-saas-trial-nurture for PQL → demo narratives; tie CRM stage variables to outcome_key.",
         "Complex variant: tool_names book_demo / calendar tools vs nurture-only calls.",
         "Export CSV from call list for trial-stage cohort reviews with disposition and outcome columns."
+      ],
+      "roadmap_motions": [
+        "paid conversion / upsell (roadmap): trial → paid upgrade handoff after PQL voice qual — CRM stage update HTTP",
+        "renewal / expansion (roadmap): QBR scheduling + customer health score in CS handoff — calendar + CRM HTTP tools"
       ]
     }
   ]
