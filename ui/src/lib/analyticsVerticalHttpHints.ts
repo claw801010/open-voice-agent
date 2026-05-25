@@ -22,8 +22,8 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         suggested_response_mapping_keys: ["meeting_id", "meeting_start", "crm_stage"],
     },
     "insurance-fnol-faq": {
-        example_tool_names: ["schedule_adjuster_callback", "capture_quote_intent"],
-        suggested_response_mapping_keys: ["callback_id", "intent_id", "slot_start", "confirmation_code"],
+        example_tool_names: ["schedule_adjuster_callback", "capture_quote_intent", "lookup_claim_status"],
+        suggested_response_mapping_keys: ["callback_id", "intent_id", "claim_id", "status_code", "confirmation_code"],
     },
 };
 

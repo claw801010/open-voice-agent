@@ -45,6 +45,19 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 5. **Web test** script: ask about new auto coverage → express quote-ready intent → confirm reference when agent summarizes handoff to licensed agent.
 6. **Expected:** **`capture_quote_intent`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=insurance-fnol-faq&catalog_variant_id=quote_complex&tool_name=capture_quote_intent`**.
 
+## Claims status lookup happy-path test (QA)
+
+**Goal:** return **tokenized claim status** in **≤6 agent turns** after **`lookup_claim_status`** is wired (**claims_lookup_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/claims/status` with sample JSON).
+
+1. Install **FNOL guidance & policy FAQ** with variant **`claims_lookup_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"claims_lookup_complex"`).
+2. **Customize**; set **`claims_api_base_url`** = `http://127.0.0.1:8765`, **`carrier_name`**, and **`line_of_business`** from pack defaults.
+3. HTTP tool **`lookup_claim_status`**: `POST {{claims_api_base_url}}/api/v1/claims/status`; **response_mapping** — `claim_id` → `appointment.id`, `status_code` → `confirmation_code`, `last_updated` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
+4. Attach tool to the **FNOL & claims status** agent; **Publish**.
+5. **Web test** script: ask for claim status → provide tokenized claim reference → confirm summary when agent reads back tool result.
+6. **Expected:** **`lookup_claim_status`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=insurance-fnol-faq&catalog_variant_id=claims_lookup_complex&tool_name=lookup_claim_status`**.
+
 ## Day 1 checklist
 
 1. **Scripts:** carrier-approved FNOL and FAQ copy only; no coverage determinations on the call.
@@ -61,6 +74,7 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 - **Simple (default install):** [insurance-fnol-faq.json](../catalog/packaged-workflows/insurance-fnol-faq.json).
 - **Complex (adjuster callback):** [insurance-fnol-booking-complex.json](../catalog/packaged-workflows/insurance-fnol-booking-complex.json) — variant **`booking_complex`**; wire HTTP **schedule_adjuster_callback**; see **Booking-complex happy-path test** above.
 - **Complex (quote intent):** [insurance-fnol-quote-complex.json](../catalog/packaged-workflows/insurance-fnol-quote-complex.json) — variant **`quote_complex`**; wire **capture_quote_intent**; see **Quote intent happy-path test** above.
+- **Complex (claims status lookup):** [insurance-fnol-claims-lookup-complex.json](../catalog/packaged-workflows/insurance-fnol-claims-lookup-complex.json) — variant **`claims_lookup_complex`**; wire **lookup_claim_status**; see **Claims status lookup happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -68,12 +82,12 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 
 ## High-revenue motions (roadmap)
 
-**Shipped:** **Adjuster callback scheduling** — **`booking_complex`** + **`schedule_adjuster_callback`**; **Quote intent qualification** — **`quote_complex`** + **`capture_quote_intent`** (see happy-path sections above; [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before GTM).
+**Shipped:** **Adjuster callback scheduling** — **`booking_complex`** + **`schedule_adjuster_callback`**; **Quote intent qualification** — **`quote_complex`** + **`capture_quote_intent`**; **Live claims status lookup** — **`claims_lookup_complex`** + **`lookup_claim_status`** (see happy-path sections above; [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before GTM).
 
 | Motion | Buyer value | Status |
 |--------|-------------|--------|
 | **Adjuster callback scheduling** | Faster FNOL → inspection path | **Shipped** — **`booking_complex`** + **schedule_adjuster_callback** |
-| **Quote intent qualification** | Hot-lead routing | **Shipped** — **`quote_complex`** + **capture_quote_intent** (+ partner review before GTM) |
-| **Live claims status lookup** | Contain tier-1 status calls | **Roadmap** — tokenized claims core + PII review |
+| **Quote intent qualification** | Hot-lead routing | **Shipped** — **`quote_complex`** + **capture_quote_intent** |
+| **Live claims status lookup** | Contain tier-1 status calls | **Shipped** — **`claims_lookup_complex`** + **lookup_claim_status** (+ PII / partner review before GTM) |
 
-**Roadmap tail:** remaining items in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json).
+**Roadmap tail:** remaining items (if any) in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) — empty when all motions above are shipped.

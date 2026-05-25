@@ -12,7 +12,7 @@ This document answers: *Are our shipped vertical packs ready to clone into **pre
 | [healthcare-clinic-screening](vertical-packs.json) | Healthcare / clinics | **Simple** install + **complex** [healthcare-triage-booking-complex.json](packaged-workflows/healthcare-triage-booking-complex.json) | **Complex** prompts expect `scheduling_api_base_url` + HTTP **book_slot** when buyer connects scheduling |
 | [retail-wismo-faq](vertical-packs.json) | Retail / e-commerce | **Simple** + **complex** [retail-wismo-booking-complex.json](packaged-workflows/retail-wismo-booking-complex.json) | **OMS** + **reserve_pickup_slot** / calendar HTTP tools |
 | [b2b-saas-trial-nurture](vertical-packs.json) | B2B SaaS | **Simple** + **complex** booking, renewal, conversion graphs | **CRM + calendar** HTTP tools (`book_demo`, `book_qbr`, `update_crm_deal_stage`, …) |
-| [insurance-fnol-faq](vertical-packs.json) | Insurance | **Simple** + **complex** [insurance-fnol-booking-complex.json](packaged-workflows/insurance-fnol-booking-complex.json) | **Adjuster callback** HTTP tool (`schedule_adjuster_callback`); claims lookup **roadmap** |
+| [insurance-fnol-faq](vertical-packs.json) | Insurance | **Simple** + **complex** booking, quote, claims lookup graphs | **Adjuster callback**, **quote intent**, **claims status** HTTP tools |
 
 Each row must keep **happy-path QA** in its [runbook](../runbooks/README.md) and pass [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md) before we market it as “revenue-ready.”
 
@@ -25,7 +25,7 @@ Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now sh
 | Healthcare | Book **provider / visit**; **confirm / reschedule**; **concierge enroll** | **Complex variants shipped** — **`booking_complex`**, **`confirm_remind`**, **`concierge_complex`**; wire scheduling + billing HTTP tools |
 | Retail | Book **in-store service, styling, or pickup window**; **upsell**; **collections promise** | **Complex variants shipped** — **`booking_complex`**, **`upsell_complex`**, **`collections_complex`**; wire HTTP tools to buyer APIs |
 | B2B SaaS | Book **demo**; **renewal / QBR**; **trial → paid** | **Complex variants shipped** — **`booking_complex`**, **`renewal_complex`**, **`conversion_complex`**; wire calendar + CRM HTTP tools |
-| Insurance | **Adjuster callback**; **quote intent** after FNOL/FAQ | **Partial** — **`booking_complex`**, **`quote_complex`** shipped; claims lookup **roadmap** |
+| Insurance | **Adjuster callback**; **quote intent**; **claims status lookup** | **Complex variants shipped** — **`booking_complex`**, **`quote_complex`**, **`claims_lookup_complex`**; wire HTTP tools to buyer APIs |
 
 **Next engineering slice:** (1) **Done:** runbook **Booking-complex happy-path test** per variant (≤6 turns after HTTP tool wired) — [runbooks/](../runbooks/) + CI [test_runbooks_document_booking_complex_happy_path](../api/tests/test_vertical_packs_catalog.py); (2) **Done:** install API + UI **variant** — `POST /api/v1/workflow/install-from-catalog` with `variant_id`, `mk01.catalog_variant_id` on the workflow; (3) **Done:** **Analytics** filter by `catalog_variant_id` + **CI chain test** for `response_mapping` → `mapped_data` → tool span ([booking-http-analytics-smoke.md](recipes/booking-http-analytics-smoke.md), [test_booking_http_mapping_analytics_span.py](../api/tests/test_booking_http_mapping_analytics_span.py)); (4) **Done:** **live** HTTP stub — [booking-scheduling-stub-local.md](recipes/booking-scheduling-stub-local.md), [booking_scheduling_stub_server.py](../scripts/booking_scheduling_stub_server.py), Docker Compose profile **`booking-stub`** on **:8765**.
 
@@ -51,7 +51,7 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 | `b2b-saas-trial-nurture` | Trial → paid upgrade | Conversion lift | **Shipped** — **`conversion_complex`** + **`update_crm_deal_stage`** + runbook happy path |
 | `b2b-saas-trial-nurture` | Renewal / QBR expansion | LTV | **Shipped** — **`renewal_complex`** + **`book_qbr`** (+ optional **sync_crm_health**) + runbook happy path |
 | `insurance-fnol-faq` | Quote intent qualification | Hot-lead routing | **Shipped** — **`quote_complex`** + **`capture_quote_intent`** + runbook happy path |
-| `insurance-fnol-faq` | Live claims status lookup | Tier-1 containment | **Roadmap** — tokenized claims core + PII review |
+| `insurance-fnol-faq` | Live claims status lookup | Tier-1 containment | **Shipped** — **`claims_lookup_complex`** + **`lookup_claim_status`** + runbook happy path |
 
 **Next engineering slice (when staffed):** **PREBUILD complete** for all three verticals — next MK-01 depth is **more curated packs** or **fourth vertical row** ([READMEPLANNING.md](../READMEPLANNING.md) §6); use [prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) for GTM demos.
 

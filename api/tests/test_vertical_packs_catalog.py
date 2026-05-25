@@ -357,6 +357,40 @@ def test_runbooks_document_quote_happy_path(catalog: dict) -> None:
         )
 
 
+_CLAIMS_LOOKUP_COMPLEX_SECTION = "## Claims status lookup happy-path test"
+
+
+def test_runbooks_document_claims_lookup_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: claims_lookup_complex variant documents lookup tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "claims_lookup_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _CLAIMS_LOOKUP_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_CLAIMS_LOOKUP_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_CLAIMS_LOOKUP_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: claims lookup section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: claims lookup section needs expected outcome"
+        assert "claims_lookup_complex" in tail, (
+            f"{slug}: claims lookup section must name variant_id"
+        )
+        assert "lookup_claim_status" in tail, (
+            f"{slug}: claims lookup section must reference lookup_claim_status tool"
+        )
+        assert "claims_api_base_url" in tail, (
+            f"{slug}: claims lookup section must reference claims_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -390,7 +424,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "healthcare-clinic-screening": {"booking_complex", "confirm_remind", "concierge_complex"},
     "retail-wismo-faq": {"booking_complex", "upsell_complex", "collections_complex"},
     "b2b-saas-trial-nurture": {"booking_complex", "renewal_complex", "conversion_complex"},
-    "insurance-fnol-faq": {"booking_complex", "quote_complex"},
+    "insurance-fnol-faq": {"booking_complex", "quote_complex", "claims_lookup_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(
@@ -398,18 +432,17 @@ _PREBUILD_COMPLETE_SLUGS = frozenset(
         "healthcare-clinic-screening",
         "retail-wismo-faq",
         "b2b-saas-trial-nurture",
+        "insurance-fnol-faq",
     }
 )
 
 
 def test_prebuild_roadmap_motions_all_shipped(catalog: dict) -> None:
-    """MK-01-PREBUILD-COMPLETE: original three packs have empty roadmap_motions."""
+    """MK-01-PREBUILD-COMPLETE: every vertical pack has empty roadmap_motions."""
     packs = catalog["packs"]
-    assert len(packs) >= 3
+    assert len(packs) >= 4
     for pack in packs:
         slug = pack["slug"]
-        if slug not in _PREBUILD_COMPLETE_SLUGS:
-            continue
         motions = pack.get("roadmap_motions")
         assert motions == [], f"{slug!r}: expected empty roadmap_motions when PREBUILD is complete"
 
