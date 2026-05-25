@@ -10,6 +10,7 @@ One-page **operational** guides for each marketplace vertical pack in [catalog/v
 | `insurance-fnol-faq` | [insurance-fnol-faq.md](insurance-fnol-faq.md) | Insurance |
 | `hospitality-travel-concierge` | [hospitality-travel-concierge.md](hospitality-travel-concierge.md) | Hospitality / travel |
 | `financial-services-banking-faq` | [financial-services-banking-faq.md](financial-services-banking-faq.md) | Financial services |
+| `smb-franchise-location-faq` | [smb-franchise-location-faq.md](smb-franchise-location-faq.md) | SMB / franchises |
 
 **Execution ID:** **MK-01-CATALOG** ([READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md)).
 

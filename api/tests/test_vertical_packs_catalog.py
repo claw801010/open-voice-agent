@@ -41,7 +41,7 @@ def catalog() -> dict:
 def test_catalog_version_and_pack_count(catalog: dict) -> None:
     assert isinstance(catalog.get("catalog_version"), int)
     packs = catalog.get("packs")
-    assert isinstance(packs, list) and len(packs) >= 6
+    assert isinstance(packs, list) and len(packs) >= 7
 
 
 def test_each_vertical_pack_rubric_fields(catalog: dict) -> None:
@@ -533,6 +533,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "insurance-fnol-faq": {"booking_complex", "quote_complex", "claims_lookup_complex"},
     "hospitality-travel-concierge": {"booking_complex", "waiver_complex", "upsell_complex"},
     "financial-services-banking-faq": {"booking_complex", "balance_lookup_complex", "card_block_complex"},
+    "smb-franchise-location-faq": {"booking_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(

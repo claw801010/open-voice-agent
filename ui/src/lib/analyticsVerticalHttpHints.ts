@@ -33,6 +33,10 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         example_tool_names: ["schedule_branch_appointment", "lookup_account_balance", "report_card_lost_stolen"],
         suggested_response_mapping_keys: ["appointment_id", "slot_start", "account_id", "balance_available", "as_of_date", "block_id", "status_code", "blocked_at", "confirmation_code"],
     },
+    "smb-franchise-location-faq": {
+        example_tool_names: ["schedule_lead_callback"],
+        suggested_response_mapping_keys: ["callback_id", "slot_start", "confirmation_code"],
+    },
 };
 
 export function verticalHttpProofHintForSlug(slug: string | null | undefined): VerticalHttpProofHint | null {

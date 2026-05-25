@@ -1,0 +1,65 @@
+# Runbook — SMB / franchises: multi-location FAQ & lead callback
+
+**Pack slug:** `smb-franchise-location-faq`  
+**Catalog:** [catalog/vertical-packs.json](../catalog/vertical-packs.json)
+
+## Purpose
+
+One template × many locations: contain tier-1 **multi-site FAQ** and **lead callback scheduling** for SMB and franchise operators—without building per-store voice flows from scratch.
+
+## Prerequisites
+
+- Brand-approved FAQ copy and location directory links.
+- Optional calendar or CRM HTTP tools for callback scheduling.
+- Partner / ops sign-off before buyer-facing GTM ([PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md)).
+
+## Happy-path test (QA)
+
+1. Install **Multi-location FAQ & lead callback** from **Template catalog**.
+2. **Try (Web only)** with defaults, or run a **Web test** from the editor after **Customize**.
+3. **Expected:** caller can ask a hours-or-services question and receive a coherent, brand-aligned answer; agent offers escalation to {{support_phone}} or {{location_directory_url}} when live routing tools are not wired.
+
+## Booking-complex happy-path test (QA)
+
+**Goal:** schedule a **lead callback** in **≤6 agent turns** after **`schedule_lead_callback`** is wired.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+
+1. Install **Multi-location FAQ & lead callback** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
+2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`, **`brand_name`**, **`default_location_code`**, and **`preferred_callback_window_hours`** from pack defaults.
+3. HTTP tool **`schedule_lead_callback`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `callback_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
+4. Attach tool to the **Location FAQ & lead callback** agent; **Publish**.
+5. **Web test** script: ask about a service → request callback → give timezone + preferred window → confirm summary.
+6. **Expected:** **`schedule_lead_callback`** invoked; call detail shows **`mapped_data`**; filter **`/analytics/calls?catalog_slug=smb-franchise-location-faq&catalog_variant_id=booking_complex&tool_name=schedule_lead_callback`**.
+
+## Day 1 checklist
+
+1. **Copy:** brand FAQ and location directory URLs match published site content.
+2. **Locations:** `default_location_code` and directory link tested for top markets.
+3. **Fallback:** when scheduling fails, offer human callback queue — never invent confirmation numbers.
+4. **Embed or PSTN:** [recipes/embed-widget.md](../recipes/embed-widget.md) for web; [recipes/inbound-pstn.md](../recipes/inbound-pstn.md) for phone.
+
+## Integrations
+
+- Calendar / CRM via HTTP tools; Sheets or directory APIs for location metadata.
+
+## Catalog graph variants (MK-01)
+
+- **Simple (default install):** [smb-franchise-location-faq.json](../catalog/packaged-workflows/smb-franchise-location-faq.json).
+- **Complex (lead callback):** [smb-franchise-booking-complex.json](../catalog/packaged-workflows/smb-franchise-booking-complex.json) — variant **`booking_complex`**; wire HTTP **schedule_lead_callback**; see **Booking-complex happy-path test** above.
+
+## Proof in Analytics (MK-01)
+
+**`catalog_slug`** = `smb-franchise-location-faq`. **Overview:** `/analytics?catalog_slug=smb-franchise-location-faq`. **Calls:** `/analytics/calls` — FAQ resolution and scheduling tool success surface in **tool spans** / **`mapped_data`**. Matrix: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md).
+
+## High-revenue motions (roadmap)
+
+**Shipped:** **Lead callback scheduling** — **`booking_complex`** + **`schedule_lead_callback`** (see **Booking-complex happy-path test** above).
+
+| Motion | Buyer value | Status |
+|--------|-------------|--------|
+| **Lead callback scheduling** | Pipeline velocity per location | **Shipped** — **`booking_complex`** + **schedule_lead_callback** |
+| **Talk-to-location router** | Right-site deflection | **Roadmap** — **`location_router_complex`** + **route_call_to_location** |
+| **CRM lead capture** | One template × many stores | **Roadmap** — **`lead_capture_complex`** + **capture_lead_intent** |
+
+**Roadmap tail:** remaining items in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json).
