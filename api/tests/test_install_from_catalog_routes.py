@@ -358,6 +358,53 @@ async def test_install_from_catalog_insurance_claims_lookup_complex(
 
 
 @pytest.mark.asyncio
+async def test_install_from_catalog_hospitality_default(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-CATALOG: hospitality-travel-concierge default install loads concierge prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "hospitality-travel-concierge",
+                "workflow_name": "Hospitality concierge FAQ",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_slug") == "hospitality-travel-concierge"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "property_name" in blob
+    assert "cancellation_policy_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_hospitality_booking_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-CATALOG: hospitality booking_complex variant installs PMS modify prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "hospitality-travel-concierge",
+                "workflow_name": "Hospitality booking modify",
+                "variant_id": "booking_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "booking_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "modify_reservation" in blob
+    assert "pms_api_base_url" in blob
+
+
+@pytest.mark.asyncio
 async def test_install_from_catalog_cross_org_fetch_404(
     test_client_factory, org_user_catalog_install, async_session
 ):

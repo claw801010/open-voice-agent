@@ -287,6 +287,61 @@
         "CSV export on call list supports QM sampling for FNOL containment experiments."
       ],
       "roadmap_motions": []
+    },
+    {
+      "slug": "hospitality-travel-concierge",
+      "pack_semver": "1.0.0",
+      "industry": "Hospitality / travel",
+      "display_name": "Travel concierge & booking FAQ",
+      "summary": "Concierge FAQ plus reservation modify prompts with PMS-ready HTTP hooks—24/7 guest voice without full front-desk staffing.",
+      "use_cases": [
+        "cancellation policy FAQ",
+        "amenity and property FAQ",
+        "reservation modify (booking_complex variant + modify_reservation HTTP tool after install)"
+      ],
+      "languages": ["en-US"],
+      "supported_modes": ["webrtc", "pstn"],
+      "compliance_tags": ["no-payment-card-in-prompt", "policy-copy-only"],
+      "preview_audio_url": null,
+      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live PMS modify tools add RTT",
+      "runbook_path": "runbooks/hospitality-travel-concierge.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "hospitality-travel-concierge.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Concierge FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "hospitality-travel-concierge.json",
+          "description": "Minimal FAQ flow for quick demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Booking modify prompts",
+          "complexity": "complex",
+          "packaged_definition_ref": "hospitality-travel-booking-complex.json",
+          "description": "Adds PMS modify language; wire HTTP modify_reservation to {{pms_api_base_url}}/api/v1/reservations/modify after install. See runbook booking-complex happy path."
+        }
+      ],
+      "default_template_variables": {
+        "property_name": "Your Hotel or Property",
+        "support_email": "concierge@example.com",
+        "cancellation_policy_url": "https://www.example.com/cancellation-policy",
+        "pms_api_base_url": "https://pms.travel.example.com/v1",
+        "confirmation_prefix": "HTL",
+        "default_room_type": "standard_king"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug hospitality-travel-concierge after install.",
+        "booking_complex: filter tool_name modify_reservation and catalog_variant_id=booking_complex.",
+        "CSV export supports FAQ vs modify funnel QA."
+      ],
+      "roadmap_motions": [
+        "cancellation fee waiver / credit (roadmap): policy-engine HTTP tool — partner review before ship",
+        "loyalty room upgrade offer (roadmap): CRS upsell attach HTTP tool — revenue motion before ship"
+      ]
     }
   ]
 }

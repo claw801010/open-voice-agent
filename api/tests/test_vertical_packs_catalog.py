@@ -41,7 +41,7 @@ def catalog() -> dict:
 def test_catalog_version_and_pack_count(catalog: dict) -> None:
     assert isinstance(catalog.get("catalog_version"), int)
     packs = catalog.get("packs")
-    assert isinstance(packs, list) and len(packs) >= 4
+    assert isinstance(packs, list) and len(packs) >= 5
 
 
 def test_each_vertical_pack_rubric_fields(catalog: dict) -> None:
@@ -137,9 +137,13 @@ def test_runbooks_document_booking_complex_happy_path(catalog: dict) -> None:
         assert re.search(r"\n1\.\s", tail), f"{slug}: booking-complex section needs numbered steps"
         assert "Expected" in tail, f"{slug}: booking-complex section needs expected outcome"
         assert "booking_complex" in tail, f"{slug}: booking-complex section must name variant_id"
-        assert "scheduling_api_base_url" in tail, (
-            f"{slug}: booking-complex section must reference scheduling_api_base_url"
-        )
+        assert any(
+            key in tail
+            for key in (
+                "scheduling_api_base_url",
+                "pms_api_base_url",
+            )
+        ), f"{slug}: booking-complex section must reference scheduling_api_base_url or pms_api_base_url"
 
 
 _CONFIRM_REMIND_SECTION = "## No-show reduction happy-path test"
@@ -425,6 +429,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "retail-wismo-faq": {"booking_complex", "upsell_complex", "collections_complex"},
     "b2b-saas-trial-nurture": {"booking_complex", "renewal_complex", "conversion_complex"},
     "insurance-fnol-faq": {"booking_complex", "quote_complex", "claims_lookup_complex"},
+    "hospitality-travel-concierge": {"booking_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(
@@ -438,11 +443,13 @@ _PREBUILD_COMPLETE_SLUGS = frozenset(
 
 
 def test_prebuild_roadmap_motions_all_shipped(catalog: dict) -> None:
-    """MK-01-PREBUILD-COMPLETE: every vertical pack has empty roadmap_motions."""
+    """MK-01-PREBUILD-COMPLETE: original four packs have empty roadmap_motions."""
     packs = catalog["packs"]
     assert len(packs) >= 4
     for pack in packs:
         slug = pack["slug"]
+        if slug not in _PREBUILD_COMPLETE_SLUGS:
+            continue
         motions = pack.get("roadmap_motions")
         assert motions == [], f"{slug!r}: expected empty roadmap_motions when PREBUILD is complete"
 

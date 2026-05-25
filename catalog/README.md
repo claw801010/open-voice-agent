@@ -4,7 +4,7 @@
 
 | File | Role |
 |------|------|
-| [vertical-packs.json](vertical-packs.json) | Canonical JSON for **≥4** verticals (healthcare, retail, B2B SaaS, insurance); each entry references a **runbook** under [runbooks/](../runbooks/). |
+| [vertical-packs.json](vertical-packs.json) | Canonical JSON for **≥5** verticals (healthcare, retail, B2B SaaS, insurance, hospitality); each entry references a **runbook** under [runbooks/](../runbooks/). |
 | [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md) | **Booking + revenue motions** gap analysis vs shipped graphs; next slices for prebuilt marketplace demos (**MK-01-RUBRIC**). |
 | [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) | **Calls, dashboards, APIs, DB** — analytics companion for vertical prebuilds (**MK-01-ANALYTICS-VERTICAL**). |
 | [ANALYTICS_REDACTION_MATRIX.md](ANALYTICS_REDACTION_MATRIX.md) | **QM / privacy reviewers** — surfaces × v1 redaction × RBAC; deferred RLS / span table called out. |

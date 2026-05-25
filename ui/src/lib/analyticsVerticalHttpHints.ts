@@ -25,6 +25,10 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         example_tool_names: ["schedule_adjuster_callback", "capture_quote_intent", "lookup_claim_status"],
         suggested_response_mapping_keys: ["callback_id", "intent_id", "claim_id", "status_code", "confirmation_code"],
     },
+    "hospitality-travel-concierge": {
+        example_tool_names: ["modify_reservation"],
+        suggested_response_mapping_keys: ["reservation_id", "new_check_in", "confirmation_code"],
+    },
 };
 
 export function verticalHttpProofHintForSlug(slug: string | null | undefined): VerticalHttpProofHint | null {

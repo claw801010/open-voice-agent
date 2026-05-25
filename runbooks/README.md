@@ -8,6 +8,7 @@ One-page **operational** guides for each marketplace vertical pack in [catalog/v
 | `retail-wismo-faq` | [retail-wismo-faq.md](retail-wismo-faq.md) | Retail / e-commerce |
 | `b2b-saas-trial-nurture` | [b2b-saas-trial-nurture.md](b2b-saas-trial-nurture.md) | B2B SaaS |
 | `insurance-fnol-faq` | [insurance-fnol-faq.md](insurance-fnol-faq.md) | Insurance |
+| `hospitality-travel-concierge` | [hospitality-travel-concierge.md](hospitality-travel-concierge.md) | Hospitality / travel |
 
 **Execution ID:** **MK-01-CATALOG** ([READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md)).
 

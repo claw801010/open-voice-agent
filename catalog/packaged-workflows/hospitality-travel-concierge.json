@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Greet the guest briefly for {{property_name}}; offer help with travel FAQ, policies, or reservation changes when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Concierge FAQ",
+        "prompt": "You are the voice concierge for {{property_name}}. Answer **cancellation policy**, amenities, and general travel FAQ using published policy copy — reference {{cancellation_policy_url}} when helpful.\n\nDo not invent reservation details without a connected PMS tool. For changes beyond FAQ scope, offer handoff to {{support_email}}.\n\nNever collect payment card numbers on the call.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank the guest; confirm any documented next step.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}
