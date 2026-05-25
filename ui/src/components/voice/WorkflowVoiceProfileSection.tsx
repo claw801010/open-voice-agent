@@ -116,11 +116,14 @@ export function WorkflowVoiceProfileSection({ workflowConfigurations, onSave, wo
                         {selectedProfile && (
                             <p className="text-sm text-muted-foreground border rounded-md p-3 bg-muted/40">
                                 {selectedProfile.description}
-                                {selectedProfile.speechSettings.enableProfessionalFillers && (
-                                    <span className="block mt-1 text-xs">
-                                        Professional fillers: {selectedProfile.speechSettings.fillerIntensity}
-                                    </span>
-                                )}
+                                <span className="block mt-1 text-xs">
+                                    Tone: {selectedProfile.speechSettings.tone}; behavior:{' '}
+                                    {selectedProfile.speechSettings.behavior}
+                                    {selectedProfile.speechSettings.enableProfessionalFillers &&
+                                        `; fillers: ${selectedProfile.speechSettings.fillerIntensity}`}
+                                    {selectedProfile.speechSettings.enableExtendedFillers &&
+                                        '; extended fillers on'}
+                                </span>
                             </p>
                         )}
                     </>

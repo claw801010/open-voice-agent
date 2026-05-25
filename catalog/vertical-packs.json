@@ -1,5 +1,5 @@
 {
-  "catalog_version": 6,
+  "catalog_version": 7,
   "description": "Canonical vertical pack metadata for MK-01 marketplace work. Packaged graphs live under catalog/packaged-workflows/; install uses POST /api/v1/workflow/install-from-catalog. Each pack has pack_semver (see catalog/README.md). Optional workflow_variants list simple vs complex graphs for the same vertical (complex = booking/API-ready prompts); default install uses workflow_template.packaged_definition_ref.",
   "packs": [
     {
@@ -19,6 +19,7 @@
       "supported_modes": ["webrtc", "pstn"],
       "compliance_tags": ["HIPAA-oriented-design", "PHI-minimization", "no-recording-without-BAA"],
       "preview_audio_url": null,
+      "recommended_voice_profile_id": "builtin:vertical_healthcare",
       "cost_latency_estimate_band": "Medium latency (regional LLM + STT/TTS); cost scales with minutes and model tier",
       "runbook_path": "runbooks/healthcare-clinic-screening.md",
       "workflow_template": {
@@ -90,6 +91,7 @@
       "supported_modes": ["webrtc", "pstn"],
       "compliance_tags": ["no-payment-card-in-prompt"],
       "preview_audio_url": null,
+      "recommended_voice_profile_id": "builtin:vertical_retail",
       "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live order lookup tools add RTT",
       "runbook_path": "runbooks/retail-wismo-faq.md",
       "workflow_template": {
@@ -162,6 +164,7 @@
       "supported_modes": ["webrtc", "pstn"],
       "compliance_tags": ["opt-in-recording-disclosure"],
       "preview_audio_url": null,
+      "recommended_voice_profile_id": "builtin:vertical_b2b",
       "cost_latency_estimate_band": "Medium (conversation + optional tool calls to CRM)",
       "runbook_path": "runbooks/b2b-saas-trial-nurture.md",
       "workflow_template": {
@@ -232,6 +235,7 @@
       "supported_modes": ["webrtc", "pstn"],
       "compliance_tags": ["fnol-scripting-only", "no-payment-card-in-prompt", "recording-disclosure-required"],
       "preview_audio_url": null,
+      "recommended_voice_profile_id": "builtin:vertical_insurance",
       "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live claims lookup tools add RTT",
       "runbook_path": "runbooks/insurance-fnol-faq.md",
       "workflow_template": {
@@ -305,6 +309,7 @@
       "supported_modes": ["webrtc", "pstn"],
       "compliance_tags": ["no-payment-card-in-prompt", "policy-copy-only"],
       "preview_audio_url": null,
+      "recommended_voice_profile_id": "builtin:vertical_hospitality",
       "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live PMS modify tools add RTT",
       "runbook_path": "runbooks/hospitality-travel-concierge.md",
       "workflow_template": {
@@ -380,6 +385,7 @@
       "supported_modes": ["webrtc", "pstn"],
       "compliance_tags": ["no-payment-card-in-prompt", "no-full-pan-in-prompt", "recording-disclosure-required", "tokenized-apis-only"],
       "preview_audio_url": null,
+      "recommended_voice_profile_id": "builtin:vertical_financial",
       "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live tokenized lookup tools add RTT",
       "runbook_path": "runbooks/financial-services-banking-faq.md",
       "workflow_template": {
@@ -453,6 +459,7 @@
       "supported_modes": ["webrtc", "pstn"],
       "compliance_tags": ["no-payment-card-in-prompt", "recording-disclosure-required"],
       "preview_audio_url": null,
+      "recommended_voice_profile_id": "builtin:vertical_smb",
       "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live location directory or CRM tools add RTT",
       "runbook_path": "runbooks/smb-franchise-location-faq.md",
       "workflow_template": {

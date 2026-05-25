@@ -24,6 +24,8 @@ export type VerticalPack = {
     compliance_tags?: string[];
     default_template_variables?: Record<string, string>;
     cost_latency_estimate_band?: string;
+    /** MK-01: built-in vertical voice delivery preset applied on catalog install */
+    recommended_voice_profile_id?: string;
     /** Simple + booking/complex JSON graphs; default install uses workflow_template ref only */
     workflow_variants?: WorkflowVariantMeta[];
 };

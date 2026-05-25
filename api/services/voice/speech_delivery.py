@@ -11,10 +11,23 @@ from api.services.voice.presets import get_builtin_profile, is_builtin_profile_i
 
 def build_speech_style_prompt_block(settings: SpeechDeliverySettings) -> str:
     """LLM instructions appended to agent system prompts for spoken (▸) replies."""
+    tone_guidance = {
+        "formal": "Use formal, precise phrasing suitable for regulated or enterprise callers.",
+        "neutral": "Use clear, professional neutral phrasing.",
+        "warm": "Sound welcoming and approachable without being casual or slangy.",
+        "empathetic": "Acknowledge caller concerns briefly before answering; stay calm and supportive.",
+    }
+    behavior_guidance = {
+        "concise": "Keep replies short; lead with the answer, then one clarifying question if needed.",
+        "balanced": "Balance clarity with enough context; avoid rambling.",
+        "consultative": "Guide the caller step-by-step; confirm understanding before advancing.",
+    }
     lines = [
         "VOICE DELIVERY (spoken responses in ▸ mode only):",
         f"- Target authenticity level: {settings.authenticity_level:.0%} "
         "(0 = polished, 1 = conversational).",
+        f"- Tone: {settings.tone} — {tone_guidance.get(settings.tone, tone_guidance['neutral'])}",
+        f"- Behavior: {settings.behavior} — {behavior_guidance.get(settings.behavior, behavior_guidance['balanced'])}",
     ]
     if settings.enable_breath_pauses:
         lines.append(
@@ -31,6 +44,23 @@ def build_speech_style_prompt_block(settings: SpeechDeliverySettings) -> str:
         lines.append(
             "- Do not use filler words (um, uh, like); keep speech clean and professional."
         )
+    if settings.enable_extended_fillers and settings.extended_filler_phrases:
+        sample = ", ".join(f'"{p}"' for p in settings.extended_filler_phrases[:6])
+        lines.append(
+            f"- Extended transition phrases (use sparingly): {sample}."
+        )
+    if settings.multilingual_fillers:
+        locale_bits = []
+        for locale, phrases in list(settings.multilingual_fillers.items())[:4]:
+            if phrases:
+                locale_bits.append(f"{locale}: {', '.join(phrases[:3])}")
+        if locale_bits:
+            lines.append(
+                "- Multilingual fillers: when the caller's language matches a locale below, "
+                "prefer these approved phrases over literal translation of English fillers: "
+                + "; ".join(locale_bits)
+                + "."
+            )
     if settings.authenticity_level >= 0.75:
         lines.append(
             "- Prefer contractions and plain language where appropriate; sound like a real person, not a script."

@@ -42,6 +42,7 @@ import {
     type VerticalPack,
 } from '@/lib/catalog/filterVerticalPacks';
 import logger from '@/lib/logger';
+import { VERTICAL_VOICE_PROFILE_LABELS } from '@/lib/voiceProfiles';
 import { cn, getRandomId } from '@/lib/utils';
 
 type MarketplaceCatalogProps = {
@@ -410,6 +411,15 @@ export function MarketplaceCatalog({
                                     <p>
                                         <span className="font-medium text-foreground">Compliance: </span>
                                         {pack.compliance_tags.join(', ')}
+                                    </p>
+                                )}
+                                {pack.recommended_voice_profile_id && (
+                                    <p>
+                                        <span className="font-medium text-foreground">Voice profile: </span>
+                                        {VERTICAL_VOICE_PROFILE_LABELS[pack.recommended_voice_profile_id] ??
+                                            pack.recommended_voice_profile_id}
+                                        {' '}
+                                        <span className="text-xs">(applied on install; clone &amp; save under Voice profiles)</span>
                                     </p>
                                 )}
                                 {pack.default_template_variables &&

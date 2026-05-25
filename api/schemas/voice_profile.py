@@ -7,6 +7,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 VoiceProfileSource = Literal["builtin", "custom", "clone"]
+DeliveryTone = Literal["formal", "neutral", "warm", "empathetic"]
+DeliveryBehavior = Literal["concise", "balanced", "consultative"]
 
 
 class SpeechDeliverySettings(BaseModel):
@@ -18,6 +20,14 @@ class SpeechDeliverySettings(BaseModel):
         le=1.0,
         description="0 = polished/broadcast, 1 = most conversational/natural",
     )
+    tone: DeliveryTone = Field(
+        default="neutral",
+        description="Overall spoken tone (formal through empathetic)",
+    )
+    behavior: DeliveryBehavior = Field(
+        default="balanced",
+        description="Response shape: concise vs consultative",
+    )
     enable_professional_fillers: bool = Field(
         default=False,
         description="When true, agent may use brief professional fillers (um, let me check) in spoken replies",
@@ -25,6 +35,19 @@ class SpeechDeliverySettings(BaseModel):
     filler_intensity: Literal["off", "low", "medium"] = Field(
         default="off",
         description="How often fillers appear when enable_professional_fillers is true",
+    )
+    enable_extended_fillers: bool = Field(
+        default=False,
+        description="Allow longer approved transition phrases from extended_filler_phrases",
+    )
+    extended_filler_phrases: list[str] = Field(
+        default_factory=list,
+        max_length=24,
+        description="Approved extended filler / transition phrases for spoken replies",
+    )
+    multilingual_fillers: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="Locale-keyed filler phrase lists (e.g. en-US, es-US)",
     )
     enable_breath_pauses: bool = Field(
         default=False,

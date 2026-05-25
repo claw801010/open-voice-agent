@@ -44,6 +44,21 @@ def test_catalog_version_and_pack_count(catalog: dict) -> None:
     assert isinstance(packs, list) and len(packs) >= 7
 
 
+def test_each_pack_recommends_valid_voice_profile(catalog: dict) -> None:
+    """MK-01 depth: every vertical pack binds a built-in vertical voice profile."""
+    from api.services.voice.presets import get_builtin_profile
+
+    for pack in catalog["packs"]:
+        slug = pack["slug"]
+        profile_id = pack.get("recommended_voice_profile_id")
+        assert isinstance(profile_id, str) and profile_id.strip(), (
+            f"{slug!r}: missing recommended_voice_profile_id"
+        )
+        assert get_builtin_profile(profile_id), (
+            f"{slug!r}: unknown voice profile {profile_id!r}"
+        )
+
+
 def test_each_vertical_pack_rubric_fields(catalog: dict) -> None:
     packs = catalog["packs"]
     for index, pack in enumerate(packs):

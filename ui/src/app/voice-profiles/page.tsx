@@ -9,8 +9,9 @@ export default function VoiceProfilesPage() {
                 <div>
                     <h1 className="text-2xl font-bold">Voice profiles</h1>
                     <p className="text-muted-foreground">
-                        Tune how agents sound: authenticity, professional fillers, breath pauses, and TTS
-                        stability. Assign a profile per workflow in agent settings.
+                        Tune how agents sound: tone, behavior, fillers (including extended and multilingual),
+                        breath pauses, and TTS stability. Vertical built-ins ship with MK-01 catalog packs — clone
+                        any preset to customize and save as your own profile.
                     </p>
                 </div>
                 <VoiceProfilesManager />

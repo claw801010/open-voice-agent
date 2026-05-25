@@ -97,6 +97,8 @@ def builtin_slug_from_id(profile_id: str) -> str | None:
 
 
 def list_builtin_profiles() -> list[dict[str, Any]]:
+    from api.services.voice.vertical_presets import list_vertical_builtin_profiles
+
     out: list[dict[str, Any]] = []
     for slug in BUILTIN_PROFILE_SLUGS:
         meta = _BUILTIN_META[slug]
@@ -115,10 +117,16 @@ def list_builtin_profiles() -> list[dict[str, Any]]:
                 "tags": list(meta.get("tags") or []),
             }
         )
+    out.extend(list_vertical_builtin_profiles())
     return out
 
 
 def get_builtin_profile(profile_id: str) -> dict[str, Any] | None:
+    from api.services.voice.vertical_presets import get_vertical_builtin_profile
+
+    vertical = get_vertical_builtin_profile(profile_id)
+    if vertical:
+        return vertical
     slug = builtin_slug_from_id(profile_id)
     if not slug or slug not in _BUILTIN_SPEECH:
         return None

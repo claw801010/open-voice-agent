@@ -78,6 +78,9 @@ async def test_install_from_catalog_default_happy_path(
     assert mk01.get("source") == "packaged_definition"
     assert mk01.get("catalog_variant_id") in (None, "")
 
+    wf_cfg = data.get("workflow_configurations") or {}
+    assert wf_cfg.get("voice_profile_id") == "builtin:vertical_healthcare"
+
     dtv = data.get("template_context_variables") or {}
     assert dtv.get("clinic_name")
 

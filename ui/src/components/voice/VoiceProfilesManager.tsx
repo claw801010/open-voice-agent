@@ -37,6 +37,8 @@ import {
     updateVoiceProfile,
     type FillerIntensity,
     type SpeechDeliverySettings,
+    type DeliveryBehavior,
+    type DeliveryTone,
     type VoiceProfile,
 } from "@/lib/voiceProfiles";
 
@@ -70,6 +72,43 @@ function SpeechSettingsEditor({
                 <p className="text-xs text-muted-foreground">
                     Lower = polished broadcast; higher = conversational and natural.
                 </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                    <Label>Tone</Label>
+                    <Select
+                        disabled={disabled}
+                        value={value.tone}
+                        onValueChange={(v) => onChange({ ...value, tone: v as DeliveryTone })}
+                    >
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="formal">Formal</SelectItem>
+                            <SelectItem value="neutral">Neutral</SelectItem>
+                            <SelectItem value="warm">Warm</SelectItem>
+                            <SelectItem value="empathetic">Empathetic</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label>Behavior</Label>
+                    <Select
+                        disabled={disabled}
+                        value={value.behavior}
+                        onValueChange={(v) => onChange({ ...value, behavior: v as DeliveryBehavior })}
+                    >
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="concise">Concise</SelectItem>
+                            <SelectItem value="balanced">Balanced</SelectItem>
+                            <SelectItem value="consultative">Consultative</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
             <div className="flex items-center justify-between gap-4">
                 <div>
@@ -108,6 +147,61 @@ function SpeechSettingsEditor({
                     </Select>
                 </div>
             )}
+            <div className="flex items-center justify-between gap-4">
+                <div>
+                    <Label>Extended fillers</Label>
+                    <p className="text-xs text-muted-foreground">
+                        Longer approved transition phrases (one per line) for vertical / brand scripts.
+                    </p>
+                </div>
+                <Switch
+                    disabled={disabled}
+                    checked={value.enableExtendedFillers}
+                    onCheckedChange={(c) => onChange({ ...value, enableExtendedFillers: c })}
+                />
+            </div>
+            {value.enableExtendedFillers && (
+                <div className="space-y-2">
+                    <Label>Extended filler phrases</Label>
+                    <Textarea
+                        disabled={disabled}
+                        rows={4}
+                        placeholder="One moment while I check that for you"
+                        value={value.extendedFillerPhrases.join("\n")}
+                        onChange={(e) =>
+                            onChange({
+                                ...value,
+                                extendedFillerPhrases: e.target.value
+                                    .split("\n")
+                                    .map((s) => s.trim())
+                                    .filter(Boolean)
+                                    .slice(0, 24),
+                            })
+                        }
+                    />
+                </div>
+            )}
+            <div className="space-y-2">
+                <Label>Multilingual fillers (JSON)</Label>
+                <p className="text-xs text-muted-foreground">
+                    Locale → phrase list, e.g. {`{"en-US":["One moment"],"es-US":["Un momento"]}`}
+                </p>
+                <Textarea
+                    disabled={disabled}
+                    rows={3}
+                    value={JSON.stringify(value.multilingualFillers, null, 2)}
+                    onChange={(e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.value || "{}") as Record<string, string[]>;
+                            if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+                                onChange({ ...value, multilingualFillers: parsed });
+                            }
+                        } catch {
+                            /* ignore invalid JSON while typing */
+                        }
+                    }}
+                />
+            </div>
             <div className="flex items-center justify-between gap-4">
                 <div>
                     <Label>Breath pauses</Label>

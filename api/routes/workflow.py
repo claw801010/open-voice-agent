@@ -1646,13 +1646,23 @@ async def install_workflow_from_catalog(
         }
         if catalog_variant_id:
             mk01["catalog_variant_id"] = catalog_variant_id
+        workflow_configurations: dict[str, Any] = {"mk01": mk01}
+        from api.services.voice.vertical_presets import (
+            recommended_voice_profile_id_for_catalog_slug,
+        )
+
+        voice_profile_id = pack.get("recommended_voice_profile_id") or (
+            recommended_voice_profile_id_for_catalog_slug(pack["slug"])
+        )
+        if voice_profile_id:
+            workflow_configurations["voice_profile_id"] = voice_profile_id
         workflow = await db_client.create_workflow(
             request.workflow_name,
             workflow_def,
             user.id,
             user.selected_organization_id,
             template_context_variables=default_vars,
-            workflow_configurations={"mk01": mk01},
+            workflow_configurations=workflow_configurations,
         )
         if workflow_def:
             trigger_paths = extract_trigger_paths(workflow_def)

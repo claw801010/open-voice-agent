@@ -103,6 +103,34 @@ def test_apply_voice_profile_merges_elevenlabs_tts():
     assert effective.tts.similarity_boost == pytest.approx(0.9)
 
 
+def test_vertical_builtin_profiles_present():
+    profiles = list_builtin_profiles()
+    ids = {p["id"] for p in profiles}
+    assert "builtin:vertical_healthcare" in ids
+    assert "builtin:vertical_smb" in ids
+    healthcare = next(p for p in profiles if p["id"] == "builtin:vertical_healthcare")
+    ss = healthcare["speech_settings"]
+    assert ss["tone"] == "empathetic"
+    assert ss["enable_extended_fillers"] is True
+    assert "es-US" in ss.get("multilingual_fillers", {})
+
+
+def test_build_speech_style_prompt_extended_and_multilingual():
+    block = build_speech_style_prompt_block(
+        SpeechDeliverySettings(
+            tone="warm",
+            behavior="consultative",
+            enable_extended_fillers=True,
+            extended_filler_phrases=["One moment please"],
+            multilingual_fillers={"es-US": ["Un momento"]},
+        )
+    )
+    assert "Tone: warm" in block
+    assert "Extended transition phrases" in block
+    assert "Multilingual fillers" in block
+    assert "es-US" in block
+
+
 def test_resolve_voice_profile_workflow_override():
     doc, custom = create_custom_profile(None, name="Workflow voice")
     pid = custom["id"]

@@ -1,11 +1,18 @@
 import { getBackendPublicBaseUrl } from '@/lib/apiClient';
 
 export type FillerIntensity = 'off' | 'low' | 'medium';
+export type DeliveryTone = 'formal' | 'neutral' | 'warm' | 'empathetic';
+export type DeliveryBehavior = 'concise' | 'balanced' | 'consultative';
 
 export type SpeechDeliverySettings = {
     authenticityLevel: number;
+    tone: DeliveryTone;
+    behavior: DeliveryBehavior;
     enableProfessionalFillers: boolean;
     fillerIntensity: FillerIntensity;
+    enableExtendedFillers: boolean;
+    extendedFillerPhrases: string[];
+    multilingualFillers: Record<string, string[]>;
     enableBreathPauses: boolean;
     stability: number | null;
     similarityBoost: number | null;
@@ -43,13 +50,31 @@ function formatDetail(detail: unknown): string {
 
 type SpeechSettingsApi = {
     authenticity_level?: number;
+    tone?: string;
+    behavior?: string;
     enable_professional_fillers?: boolean;
     filler_intensity?: string;
+    enable_extended_fillers?: boolean;
+    extended_filler_phrases?: string[];
+    multilingual_fillers?: Record<string, string[]>;
     enable_breath_pauses?: boolean;
     stability?: number | null;
     similarity_boost?: number | null;
     speed?: number | null;
 };
+
+const TONE_VALUES: DeliveryTone[] = ['formal', 'neutral', 'warm', 'empathetic'];
+const BEHAVIOR_VALUES: DeliveryBehavior[] = ['concise', 'balanced', 'consultative'];
+
+function parseTone(raw: string | undefined): DeliveryTone {
+    return TONE_VALUES.includes(raw as DeliveryTone) ? (raw as DeliveryTone) : 'neutral';
+}
+
+function parseBehavior(raw: string | undefined): DeliveryBehavior {
+    return BEHAVIOR_VALUES.includes(raw as DeliveryBehavior)
+        ? (raw as DeliveryBehavior)
+        : 'balanced';
+}
 
 type ProfileApi = {
     id?: string;
@@ -70,8 +95,23 @@ function mapSpeechSettings(raw: SpeechSettingsApi | undefined): SpeechDeliverySe
         intensity === 'low' || intensity === 'medium' ? intensity : 'off';
     return {
         authenticityLevel: Number(raw?.authenticity_level ?? 0.65),
+        tone: parseTone(raw?.tone),
+        behavior: parseBehavior(raw?.behavior),
         enableProfessionalFillers: Boolean(raw?.enable_professional_fillers),
         fillerIntensity,
+        enableExtendedFillers: Boolean(raw?.enable_extended_fillers),
+        extendedFillerPhrases: Array.isArray(raw?.extended_filler_phrases)
+            ? raw!.extended_filler_phrases!.map(String)
+            : [],
+        multilingualFillers:
+            raw?.multilingual_fillers && typeof raw.multilingual_fillers === 'object'
+                ? Object.fromEntries(
+                      Object.entries(raw.multilingual_fillers).map(([k, v]) => [
+                          k,
+                          Array.isArray(v) ? v.map(String) : [],
+                      ]),
+                  )
+                : {},
         enableBreathPauses: Boolean(raw?.enable_breath_pauses),
         stability: raw?.stability ?? null,
         similarityBoost: raw?.similarity_boost ?? null,
@@ -104,8 +144,13 @@ function mapListApi(data: { profiles?: ProfileApi[]; default_profile_id?: string
 function speechSettingsToApi(s: SpeechDeliverySettings): SpeechSettingsApi {
     return {
         authenticity_level: s.authenticityLevel,
+        tone: s.tone,
+        behavior: s.behavior,
         enable_professional_fillers: s.enableProfessionalFillers,
         filler_intensity: s.fillerIntensity,
+        enable_extended_fillers: s.enableExtendedFillers,
+        extended_filler_phrases: s.extendedFillerPhrases,
+        multilingual_fillers: s.multilingualFillers,
         enable_breath_pauses: s.enableBreathPauses,
         stability: s.stability,
         similarity_boost: s.similarityBoost,
@@ -239,10 +284,26 @@ export async function setOrgDefaultVoiceProfile(
 
 export const DEFAULT_SPEECH_SETTINGS: SpeechDeliverySettings = {
     authenticityLevel: 0.65,
+    tone: 'neutral',
+    behavior: 'balanced',
     enableProfessionalFillers: false,
     fillerIntensity: 'off',
+    enableExtendedFillers: false,
+    extendedFillerPhrases: [],
+    multilingualFillers: {},
     enableBreathPauses: false,
     stability: null,
     similarityBoost: null,
     speed: null,
+};
+
+/** Short labels for MK-01 vertical built-in voice profile ids (catalog cards). */
+export const VERTICAL_VOICE_PROFILE_LABELS: Record<string, string> = {
+    'builtin:vertical_healthcare': 'Healthcare voice',
+    'builtin:vertical_retail': 'Retail voice',
+    'builtin:vertical_b2b': 'B2B voice',
+    'builtin:vertical_insurance': 'Insurance voice',
+    'builtin:vertical_hospitality': 'Hospitality voice',
+    'builtin:vertical_financial': 'Financial voice',
+    'builtin:vertical_smb': 'SMB / franchise voice',
 };
