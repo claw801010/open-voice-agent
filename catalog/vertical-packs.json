@@ -290,14 +290,15 @@
     },
     {
       "slug": "hospitality-travel-concierge",
-      "pack_semver": "1.0.0",
+      "pack_semver": "1.1.0",
       "industry": "Hospitality / travel",
       "display_name": "Travel concierge & booking FAQ",
       "summary": "Concierge FAQ plus reservation modify prompts with PMS-ready HTTP hooks—24/7 guest voice without full front-desk staffing.",
       "use_cases": [
         "cancellation policy FAQ",
         "amenity and property FAQ",
-        "reservation modify (booking_complex variant + modify_reservation HTTP tool after install)"
+        "reservation modify (booking_complex variant + modify_reservation HTTP tool after install)",
+        "cancellation fee waiver / credit (waiver_complex variant + apply_cancellation_waiver HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -323,6 +324,13 @@
           "complexity": "complex",
           "packaged_definition_ref": "hospitality-travel-booking-complex.json",
           "description": "Adds PMS modify language; wire HTTP modify_reservation to {{pms_api_base_url}}/api/v1/reservations/modify after install. See runbook booking-complex happy path."
+        },
+        {
+          "variant_id": "waiver_complex",
+          "label": "Cancellation fee waiver / credit",
+          "complexity": "complex",
+          "packaged_definition_ref": "hospitality-travel-waiver-complex.json",
+          "description": "Policy-engine waiver or credit intent; wire HTTP apply_cancellation_waiver to {{policy_api_base_url}}/api/v1/cancellations/waiver after install. See runbook waiver happy path + PARTNER_REVIEW."
         }
       ],
       "default_template_variables": {
@@ -331,15 +339,17 @@
         "cancellation_policy_url": "https://www.example.com/cancellation-policy",
         "pms_api_base_url": "https://pms.travel.example.com/v1",
         "confirmation_prefix": "HTL",
-        "default_room_type": "standard_king"
+        "default_room_type": "standard_king",
+        "policy_api_base_url": "https://policy.travel.example.com/v1",
+        "waiver_policy_code": "CXL-WAIVER-GUEST-RECOVERY"
       },
       "analytics_hooks": [
         "Filter analytics by catalog_slug hospitality-travel-concierge after install.",
         "booking_complex: filter tool_name modify_reservation and catalog_variant_id=booking_complex.",
+        "waiver_complex: filter tool_name apply_cancellation_waiver and catalog_variant_id=waiver_complex.",
         "CSV export supports FAQ vs modify funnel QA."
       ],
       "roadmap_motions": [
-        "cancellation fee waiver / credit (roadmap): policy-engine HTTP tool — partner review before ship",
         "loyalty room upgrade offer (roadmap): CRS upsell attach HTTP tool — revenue motion before ship"
       ]
     }

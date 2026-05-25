@@ -32,6 +32,19 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 5. **Web test** script: ask to move check-in date → provide confirmation ref + new dates → confirm summary when agent reads back tool result.
 6. **Expected:** **`modify_reservation`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=hospitality-travel-concierge&catalog_variant_id=booking_complex&tool_name=modify_reservation`**.
 
+## Cancellation fee waiver happy-path test (QA)
+
+**Goal:** apply a **documented cancellation fee waiver or credit** in **≤6 agent turns** after **`apply_cancellation_waiver`** is wired (**waiver_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/cancellations/waiver` with sample JSON).
+
+1. Install **Travel concierge & booking FAQ** with variant **`waiver_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"waiver_complex"`).
+2. **Customize**; set **`policy_api_base_url`** = `http://127.0.0.1:8765`, **`waiver_policy_code`**, and **`confirmation_prefix`** from pack defaults.
+3. HTTP tool **`apply_cancellation_waiver`**: `POST {{policy_api_base_url}}/api/v1/cancellations/waiver`; **response_mapping** — `waiver_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `credit_amount` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
+4. Attach tool to the **Concierge & waiver** agent; **Publish**.
+5. **Web test** script: ask about cancellation fee → provide confirmation ref + reason → confirm waiver reference when agent summarizes.
+6. **Expected:** **`apply_cancellation_waiver`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=hospitality-travel-concierge&catalog_variant_id=waiver_complex&tool_name=apply_cancellation_waiver`**.
+
 ## Day 1 checklist
 
 1. **Policy copy:** cancellation and fee language matches published guest-facing terms.
@@ -47,6 +60,7 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 - **Simple (default install):** [hospitality-travel-concierge.json](../catalog/packaged-workflows/hospitality-travel-concierge.json).
 - **Complex (booking modify):** [hospitality-travel-booking-complex.json](../catalog/packaged-workflows/hospitality-travel-booking-complex.json) — variant **`booking_complex`**; wire HTTP **modify_reservation**; see **Booking-complex happy-path test** above.
+- **Complex (cancellation waiver):** [hospitality-travel-waiver-complex.json](../catalog/packaged-workflows/hospitality-travel-waiver-complex.json) — variant **`waiver_complex`**; wire **apply_cancellation_waiver**; see **Cancellation fee waiver happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -54,12 +68,12 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 ## High-revenue motions (roadmap)
 
-**Shipped:** **Booking modify** — **`booking_complex`** + **`modify_reservation`** HTTP tool + runbook happy path above.
-
-See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) for remaining items.
+**Shipped:** **Booking modify** — **`booking_complex`** + **`modify_reservation`**; **Cancellation fee waiver / credit** — **`waiver_complex`** + **`apply_cancellation_waiver`** (see happy-path sections above; [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before GTM).
 
 | Motion | Buyer value | Status |
 |--------|-------------|--------|
 | **Booking modify (dates / room)** | 24/7 self-serve changes | **Shipped** — **`booking_complex`** + **modify_reservation** |
-| **Cancellation fee waiver / credit** | Guest recovery | **Roadmap** — policy engine + partner review |
+| **Cancellation fee waiver / credit** | Guest recovery | **Shipped** — **`waiver_complex`** + **apply_cancellation_waiver** (+ partner review before GTM) |
 | **Loyalty room upgrade offer** | Incremental revenue | **Roadmap** — CRS upsell HTTP tool |
+
+**Roadmap tail:** remaining items in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json).

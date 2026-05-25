@@ -361,6 +361,37 @@ def test_runbooks_document_quote_happy_path(catalog: dict) -> None:
         )
 
 
+_WAIVER_COMPLEX_SECTION = "## Cancellation fee waiver happy-path test"
+
+
+def test_runbooks_document_waiver_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: waiver_complex variant documents waiver tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "waiver_complex" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _WAIVER_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_WAIVER_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_WAIVER_COMPLEX_SECTION)
+        tail = text[idx : idx + 2400]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: waiver section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: waiver section needs expected outcome"
+        assert "waiver_complex" in tail, f"{slug}: waiver section must name variant_id"
+        assert "apply_cancellation_waiver" in tail, (
+            f"{slug}: waiver section must reference apply_cancellation_waiver tool"
+        )
+        assert "policy_api_base_url" in tail, (
+            f"{slug}: waiver section must reference policy_api_base_url"
+        )
+
+
 _CLAIMS_LOOKUP_COMPLEX_SECTION = "## Claims status lookup happy-path test"
 
 
@@ -429,7 +460,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "retail-wismo-faq": {"booking_complex", "upsell_complex", "collections_complex"},
     "b2b-saas-trial-nurture": {"booking_complex", "renewal_complex", "conversion_complex"},
     "insurance-fnol-faq": {"booking_complex", "quote_complex", "claims_lookup_complex"},
-    "hospitality-travel-concierge": {"booking_complex"},
+    "hospitality-travel-concierge": {"booking_complex", "waiver_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(

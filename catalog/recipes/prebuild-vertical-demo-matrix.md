@@ -31,6 +31,7 @@ curl -sS -X POST "$API/api/v1/workflow/install-from-catalog" \
 | `insurance-fnol-faq` | `quote_complex` | `capture_quote_intent` | `/api/v1/quotes/intent` | Quote intent happy-path test |
 | `insurance-fnol-faq` | `claims_lookup_complex` | `lookup_claim_status` | `/api/v1/claims/status` | Claims status lookup happy-path test |
 | `hospitality-travel-concierge` | `booking_complex` | `modify_reservation` | `/api/v1/reservations/modify` | Booking-complex happy-path test |
+| `hospitality-travel-concierge` | `waiver_complex` | `apply_cancellation_waiver` | `/api/v1/cancellations/waiver` | Cancellation fee waiver happy-path test |
 
 Runbooks: [runbooks/](../runbooks/). Field alignment: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../VERTICAL_ANALYTICS_HTTP_MATRIX.md).
 
