@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{institution_name}}; offer card safety FAQ, branch information, or tokenized balance help when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Banking FAQ & balance lookup",
+        "prompt": "Assistant for {{institution_name}}. Provide **scripted card lost/stolen guidance** and **non-PCI payment redirect FAQ** — never collect full PAN, PIN, or SSN.\n\nWhen the caller asks for an **account balance**, collect only tokenized identifiers they voluntarily provide (e.g. last-four account token — never full account number or card). If a balance lookup HTTP tool is attached, call **lookup_account_balance** at {{banking_api_base_url}}/api/v1/accounts/balance — do not invent balances until the tool returns. If lookup is unavailable, direct to {{support_phone}} or {{branch_locator_url}}.\n\nMinimize PII in spoken responses; follow org redaction policy on tool results.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm balance summary or handoff reference if the lookup tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

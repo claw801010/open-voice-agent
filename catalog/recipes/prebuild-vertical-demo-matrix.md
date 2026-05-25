@@ -34,6 +34,7 @@ curl -sS -X POST "$API/api/v1/workflow/install-from-catalog" \
 | `hospitality-travel-concierge` | `waiver_complex` | `apply_cancellation_waiver` | `/api/v1/cancellations/waiver` | Cancellation fee waiver happy-path test |
 | `hospitality-travel-concierge` | `upsell_complex` | `offer_room_upgrade` | `/api/v1/offers/attach` | Loyalty room upgrade happy-path test |
 | `financial-services-banking-faq` | `booking_complex` | `schedule_branch_appointment` | `/api/v1/appointments` | Booking-complex happy-path test |
+| `financial-services-banking-faq` | `balance_lookup_complex` | `lookup_account_balance` | `/api/v1/accounts/balance` | Tokenized balance lookup happy-path test |
 
 Runbooks: [runbooks/](../runbooks/). Field alignment: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../VERTICAL_ANALYTICS_HTTP_MATRIX.md).
 

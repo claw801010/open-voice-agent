@@ -429,6 +429,40 @@ def test_runbooks_document_claims_lookup_happy_path(catalog: dict) -> None:
         )
 
 
+_BALANCE_LOOKUP_COMPLEX_SECTION = "## Tokenized balance lookup happy-path test"
+
+
+def test_runbooks_document_balance_lookup_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: balance_lookup_complex variant documents lookup tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "balance_lookup_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _BALANCE_LOOKUP_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_BALANCE_LOOKUP_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_BALANCE_LOOKUP_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: balance lookup section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: balance lookup section needs expected outcome"
+        assert "balance_lookup_complex" in tail, (
+            f"{slug}: balance lookup section must name variant_id"
+        )
+        assert "lookup_account_balance" in tail, (
+            f"{slug}: balance lookup section must reference lookup_account_balance tool"
+        )
+        assert "banking_api_base_url" in tail, (
+            f"{slug}: balance lookup section must reference banking_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -464,7 +498,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "b2b-saas-trial-nurture": {"booking_complex", "renewal_complex", "conversion_complex"},
     "insurance-fnol-faq": {"booking_complex", "quote_complex", "claims_lookup_complex"},
     "hospitality-travel-concierge": {"booking_complex", "waiver_complex", "upsell_complex"},
-    "financial-services-banking-faq": {"booking_complex"},
+    "financial-services-banking-faq": {"booking_complex", "balance_lookup_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(

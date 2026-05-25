@@ -364,7 +364,7 @@
     },
     {
       "slug": "financial-services-banking-faq",
-      "pack_semver": "1.0.0",
+      "pack_semver": "1.1.0",
       "industry": "Financial services",
       "display_name": "Card & branch banking FAQ",
       "summary": "Scripted card lost/stolen guidance, non-PCI balance and payment redirect FAQ, and branch appointment scheduling with fraud guardrails—not full account servicing or PCI capture on the call.",
@@ -372,7 +372,8 @@
         "card lost/stolen scripted flow",
         "balance and payment redirect FAQ (non-PCI)",
         "branch hours and location FAQ",
-        "branch appointment scheduling (booking_complex variant + schedule_branch_appointment HTTP tool after install)"
+        "branch appointment scheduling (booking_complex variant + schedule_branch_appointment HTTP tool after install)",
+        "tokenized balance lookup after identity verify (balance_lookup_complex variant + lookup_account_balance HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -398,6 +399,13 @@
           "complexity": "complex",
           "packaged_definition_ref": "financial-services-booking-complex.json",
           "description": "Adds branch appointment scheduling language; wire HTTP schedule_branch_appointment to {{scheduling_api_base_url}}/api/v1/appointments after install. See runbook booking-complex happy path."
+        },
+        {
+          "variant_id": "balance_lookup_complex",
+          "label": "Tokenized balance lookup",
+          "complexity": "complex",
+          "packaged_definition_ref": "financial-services-balance-lookup-complex.json",
+          "description": "Tokenized account balance lookup after identity verify; wire HTTP lookup_account_balance to {{banking_api_base_url}}/api/v1/accounts/balance after install. See runbook balance lookup happy path + PARTNER_REVIEW."
         }
       ],
       "default_template_variables": {
@@ -406,15 +414,16 @@
         "branch_locator_url": "https://branches.example.com/locator",
         "card_block_portal_url": "https://cards.example.com/block",
         "scheduling_api_base_url": "https://scheduling.banking.example.com/v1",
-        "preferred_branch_code": "BR-DEMO-01"
+        "preferred_branch_code": "BR-DEMO-01",
+        "banking_api_base_url": "https://core.banking.example.com/v1"
       },
       "analytics_hooks": [
         "Filter analytics by catalog_slug financial-services-banking-faq after install; compare FAQ vs branch booking funnel.",
         "booking_complex: filter tool_name schedule_branch_appointment and catalog_variant_id=booking_complex.",
+        "balance_lookup_complex: filter tool_name lookup_account_balance and catalog_variant_id=balance_lookup_complex.",
         "CSV export on call list supports QM sampling for card-safety vs scheduling experiments."
       ],
       "roadmap_motions": [
-        "tokenized balance lookup after identity verify (balance_lookup_complex variant + lookup_account_balance HTTP tool after install) (roadmap)",
         "card block / fraud report API handoff (card_block_complex variant + report_card_lost_stolen HTTP tool after install) (roadmap)"
       ]
     }

@@ -14,7 +14,7 @@ This document answers: *Are our shipped vertical packs ready to clone into **pre
 | [b2b-saas-trial-nurture](vertical-packs.json) | B2B SaaS | **Simple** + **complex** booking, renewal, conversion graphs | **CRM + calendar** HTTP tools (`book_demo`, `book_qbr`, `update_crm_deal_stage`, …) |
 | [insurance-fnol-faq](vertical-packs.json) | Insurance | **Simple** + **complex** booking, quote, claims lookup graphs | **Adjuster callback**, **quote intent**, **claims status** HTTP tools |
 | [hospitality-travel-concierge](vertical-packs.json) | Hospitality / travel | **Simple** + **complex** [hospitality-travel-booking-complex.json](packaged-workflows/hospitality-travel-booking-complex.json) | **PMS modify** HTTP tool (`modify_reservation`); waiver / upsell shipped |
-| [financial-services-banking-faq](vertical-packs.json) | Financial services | **Simple** + **complex** [financial-services-booking-complex.json](packaged-workflows/financial-services-booking-complex.json) | **Branch appointment** HTTP tool (`schedule_branch_appointment`); balance / card block **roadmap** |
+| [financial-services-banking-faq](vertical-packs.json) | Financial services | **Simple** + **complex** booking + balance lookup graphs | **Branch appointment** + **tokenized balance** HTTP tools; card block **roadmap** |
 
 Each row must keep **happy-path QA** in its [runbook](../runbooks/README.md) and pass [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md) before we market it as “revenue-ready.”
 
@@ -29,7 +29,7 @@ Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now sh
 | B2B SaaS | Book **demo**; **renewal / QBR**; **trial → paid** | **Complex variants shipped** — **`booking_complex`**, **`renewal_complex`**, **`conversion_complex`**; wire calendar + CRM HTTP tools |
 | Insurance | **Adjuster callback**; **quote intent**; **claims status lookup** | **Complex variants shipped** — **`booking_complex`**, **`quote_complex`**, **`claims_lookup_complex`**; wire HTTP tools to buyer APIs |
 | Hospitality / travel | **Modify reservation**; **cancellation waiver**; **loyalty upgrade** | **Complex variants shipped** — **`booking_complex`**, **`waiver_complex`**, **`upsell_complex`**; wire HTTP tools to buyer APIs |
-| Financial services | **Branch appointment**; **tokenized balance**; **card block API** | **Partial** — **`booking_complex`** shipped; **`balance_lookup_complex`**, **`card_block_complex`** on **`roadmap_motions`** |
+| Financial services | **Branch appointment**; **tokenized balance**; **card block API** | **Partial** — **`booking_complex`**, **`balance_lookup_complex`** shipped; **`card_block_complex`** on **`roadmap_motions`** |
 
 **Next engineering slice:** (1) **Done:** runbook **Booking-complex happy-path test** per variant (≤6 turns after HTTP tool wired) — [runbooks/](../runbooks/) + CI [test_runbooks_document_booking_complex_happy_path](../api/tests/test_vertical_packs_catalog.py); (2) **Done:** install API + UI **variant** — `POST /api/v1/workflow/install-from-catalog` with `variant_id`, `mk01.catalog_variant_id` on the workflow; (3) **Done:** **Analytics** filter by `catalog_variant_id` + **CI chain test** for `response_mapping` → `mapped_data` → tool span ([booking-http-analytics-smoke.md](recipes/booking-http-analytics-smoke.md), [test_booking_http_mapping_analytics_span.py](../api/tests/test_booking_http_mapping_analytics_span.py)); (4) **Done:** **live** HTTP stub — [booking-scheduling-stub-local.md](recipes/booking-scheduling-stub-local.md), [booking_scheduling_stub_server.py](../scripts/booking_scheduling_stub_server.py), Docker Compose profile **`booking-stub`** on **:8765**.
 
@@ -59,10 +59,10 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 | `hospitality-travel-concierge` | Cancellation fee waiver / credit | Guest recovery | **Shipped** — **`waiver_complex`** + **`apply_cancellation_waiver`** + runbook happy path |
 | `hospitality-travel-concierge` | Loyalty room upgrade offer | Incremental revenue | **Shipped** — **`upsell_complex`** + **`offer_room_upgrade`** + runbook happy path |
 | `financial-services-banking-faq` | Branch appointment scheduling | Self-serve branch visits | **Shipped** — **`booking_complex`** + **`schedule_branch_appointment`** + runbook happy path |
-| `financial-services-banking-faq` | Tokenized balance lookup | Tier-1 containment | **Roadmap** — **`balance_lookup_complex`** + **`lookup_account_balance`** |
+| `financial-services-banking-faq` | Tokenized balance lookup | Tier-1 containment | **Shipped** — **`balance_lookup_complex`** + **`lookup_account_balance`** + runbook happy path |
 | `financial-services-banking-faq` | Card block / fraud report API | Faster card safety | **Roadmap** — **`card_block_complex`** + **`report_card_lost_stolen`** |
 
-**Next engineering slice (when staffed):** **Financial services PREBUILD tail** (balance lookup, card block) or **seventh vertical row** ([READMEPLANNING.md](../READMEPLANNING.md) §6); use [prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) for GTM demos.
+**Next engineering slice (when staffed):** **Financial services PREBUILD tail** (card block) or **seventh vertical row** ([READMEPLANNING.md](../READMEPLANNING.md) §6); use [prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) for GTM demos.
 
 ## HTTP tools and context variables (WE-01-DUALMODE)
 
