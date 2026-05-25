@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{institution_name}}; offer card safety FAQ or help reporting a lost or stolen card when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Banking FAQ & card block",
+        "prompt": "Assistant for {{institution_name}}. Provide **scripted card lost/stolen guidance** — never collect full PAN, PIN, or SSN.\n\nWhen the caller reports a **lost or stolen card**, collect only tokenized identifiers they voluntarily provide (e.g. last-four card token — never full card number). Capture high-level context (lost vs stolen, approximate time). If a card-block HTTP tool is attached, call **report_card_lost_stolen** at {{cards_api_base_url}}/api/v1/cards/block with reason hint {{card_block_reason_code}} — do not confirm the block until the tool returns success.\n\nIf block API is unavailable, direct to {{card_block_portal_url}} or {{support_phone}}. Escalate suspected fraud per institution policy.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm block reference if the card API tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

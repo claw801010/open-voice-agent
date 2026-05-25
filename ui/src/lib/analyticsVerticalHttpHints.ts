@@ -30,8 +30,8 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         suggested_response_mapping_keys: ["reservation_id", "new_check_in", "waiver_id", "offer_id", "confirmation_code"],
     },
     "financial-services-banking-faq": {
-        example_tool_names: ["schedule_branch_appointment", "lookup_account_balance"],
-        suggested_response_mapping_keys: ["appointment_id", "slot_start", "account_id", "balance_available", "as_of_date", "confirmation_code"],
+        example_tool_names: ["schedule_branch_appointment", "lookup_account_balance", "report_card_lost_stolen"],
+        suggested_response_mapping_keys: ["appointment_id", "slot_start", "account_id", "balance_available", "as_of_date", "block_id", "status_code", "blocked_at", "confirmation_code"],
     },
 };
 
