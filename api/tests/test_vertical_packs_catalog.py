@@ -41,7 +41,24 @@ def catalog() -> dict:
 def test_catalog_version_and_pack_count(catalog: dict) -> None:
     assert isinstance(catalog.get("catalog_version"), int)
     packs = catalog.get("packs")
-    assert isinstance(packs, list) and len(packs) >= 8
+    assert isinstance(packs, list) and len(packs) >= 10
+
+
+def test_each_pack_has_preview_audio_url_when_wav_on_disk(catalog: dict) -> None:
+    """MK-01 depth: preview_audio_url points at hosted audio route when WAV exists."""
+    from api.services.voice.profile_preview import (
+        hosted_preview_audio_api_path,
+        preview_audio_file_available,
+    )
+
+    for pack in catalog["packs"]:
+        slug = pack["slug"]
+        url = pack.get("preview_audio_url")
+        if preview_audio_file_available(slug):
+            assert isinstance(url, str) and url.strip(), f"{slug}: missing preview_audio_url"
+            assert hosted_preview_audio_api_path(slug) in url, (
+                f"{slug}: preview_audio_url must reference voice-preview/audio route"
+            )
 
 
 def test_each_pack_recommends_valid_voice_profile(catalog: dict) -> None:
@@ -648,6 +665,142 @@ def test_runbooks_document_payment_redirect_happy_path(catalog: dict) -> None:
         )
 
 
+_PERMIT_STATUS_COMPLEX_SECTION = "## Permit status lookup happy-path test"
+
+
+def test_runbooks_document_permit_status_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: permit_status_complex variant documents permit lookup tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "permit_status_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _PERMIT_STATUS_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_PERMIT_STATUS_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_PERMIT_STATUS_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: permit status section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: permit status section needs expected outcome"
+        assert "permit_status_complex" in tail, (
+            f"{slug}: permit status section must name variant_id"
+        )
+        assert "lookup_permit_status" in tail, (
+            f"{slug}: permit status section must reference lookup_permit_status tool"
+        )
+        assert "records_api_base_url" in tail, (
+            f"{slug}: permit status section must reference records_api_base_url"
+        )
+
+
+_LANGUAGE_ROUTER_COMPLEX_SECTION = "## Multilingual routing happy-path test"
+
+
+def test_runbooks_document_language_router_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: language_router_complex variant documents routing tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "language_router_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _LANGUAGE_ROUTER_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_LANGUAGE_ROUTER_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_LANGUAGE_ROUTER_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: language router section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: language router section needs expected outcome"
+        assert "language_router_complex" in tail, (
+            f"{slug}: language router section must name variant_id"
+        )
+        assert "route_by_language" in tail, (
+            f"{slug}: language router section must reference route_by_language tool"
+        )
+        assert "routing_api_base_url" in tail, (
+            f"{slug}: language router section must reference routing_api_base_url"
+        )
+
+
+_APPLICATION_STATUS_COMPLEX_SECTION = "## Application status lookup happy-path test"
+
+
+def test_runbooks_document_application_status_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: application_status_complex variant documents ATS lookup tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "application_status_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _APPLICATION_STATUS_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_APPLICATION_STATUS_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_APPLICATION_STATUS_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: application status section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: application status section needs expected outcome"
+        assert "application_status_complex" in tail, (
+            f"{slug}: application status section must name variant_id"
+        )
+        assert "lookup_application_status" in tail, (
+            f"{slug}: application status section must reference lookup_application_status tool"
+        )
+        assert "ats_api_base_url" in tail, (
+            f"{slug}: application status section must reference ats_api_base_url"
+        )
+
+
+_INTERVIEW_CONFIRM_COMPLEX_SECTION = "## Interview confirm / reschedule happy-path test"
+
+
+def test_runbooks_document_interview_confirm_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: interview_confirm_complex variant documents reschedule tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "interview_confirm_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _INTERVIEW_CONFIRM_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_INTERVIEW_CONFIRM_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_INTERVIEW_CONFIRM_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: interview confirm section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: interview confirm section needs expected outcome"
+        assert "interview_confirm_complex" in tail, (
+            f"{slug}: interview confirm section must name variant_id"
+        )
+        assert "confirm_or_reschedule_interview" in tail, (
+            f"{slug}: interview confirm section must reference confirm_or_reschedule_interview tool"
+        )
+        assert "scheduling_api_base_url" in tail, (
+            f"{slug}: interview confirm section must reference scheduling_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -686,6 +839,8 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "financial-services-banking-faq": {"booking_complex", "balance_lookup_complex", "card_block_complex"},
     "smb-franchise-location-faq": {"booking_complex", "location_router_complex", "lead_capture_complex"},
     "telecom-utilities-outage-faq": {"booking_complex", "outage_status_complex", "payment_redirect_complex"},
+    "public-sector-civic-services-faq": {"booking_complex", "permit_status_complex", "language_router_complex"},
+    "hr-staffing-recruiting-faq": {"booking_complex", "application_status_complex", "interview_confirm_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(
@@ -698,6 +853,8 @@ _PREBUILD_COMPLETE_SLUGS = frozenset(
         "financial-services-banking-faq",
         "smb-franchise-location-faq",
         "telecom-utilities-outage-faq",
+        "public-sector-civic-services-faq",
+        "hr-staffing-recruiting-faq",
     }
 )
 

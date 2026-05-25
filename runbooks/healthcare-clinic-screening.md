@@ -26,7 +26,7 @@ Stand up a **voice** flow for symptom triage, scheduling handoff, or after-hours
 **Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (or buyer scheduling API).
 
 1. **Template catalog** → **Patient screening & triage** → install with variant **`booking_complex`** (or `POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
-2. **Customize** the installed workflow; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765` under template variables.
+2. Confirm **`scheduling_api_base_url`** points at **`/api/v1/local-scheduling`** (set on install) or click **Wire local calendar** on the workflow guide.
 3. Create HTTP tool **`book_slot`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `appointment_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code` ([booking-http-analytics-smoke.md](../catalog/recipes/booking-http-analytics-smoke.md)).
 4. Attach **`book_slot`** to the main **Agent** node; **Save** and **Publish** when validation passes.
 5. **Simulation → Start Web test**. Caller script (one turn each): state visit type → preferred date/time window → confirm booking when agent offers.
@@ -39,7 +39,7 @@ Stand up a **voice** flow for symptom triage, scheduling handoff, or after-hours
 **Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
 
 1. **Template catalog** → **Patient screening & triage** → install with variant **`confirm_remind`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"confirm_remind"`).
-2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`.
+2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set .
 3. HTTP tool **`reschedule_appointment`**: `POST {{scheduling_api_base_url}}/api/v1/appointments/reschedule`; **response_mapping** — `appointment_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code` ([booking-http-analytics-smoke.md](../catalog/recipes/booking-http-analytics-smoke.md)).
 4. Attach **`reschedule_appointment`** to the **Confirm & remind** agent; **Save** and **Publish**.
 5. **Simulation → Start Web test**. Caller script: reference an upcoming visit → ask to move to a new time window → confirm when agent summarizes.

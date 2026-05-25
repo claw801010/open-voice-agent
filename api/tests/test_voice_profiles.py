@@ -109,6 +109,8 @@ def test_vertical_builtin_profiles_present():
     assert "builtin:vertical_healthcare" in ids
     assert "builtin:vertical_smb" in ids
     assert "builtin:vertical_telecom" in ids
+    assert "builtin:vertical_gov" in ids
+    assert "builtin:vertical_hr" in ids
     healthcare = next(p for p in profiles if p["id"] == "builtin:vertical_healthcare")
     ss = healthcare["speech_settings"]
     assert ss["tone"] == "empathetic"

@@ -23,10 +23,10 @@ Deflect repeat **outage status**, **plan compare (non-binding)**, and **payment 
 
 **Goal:** schedule a **field service callback** in **≤6 agent turns** after **`schedule_service_callback`** is wired.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`). Optional: [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765`.
 
 1. Install **Outage & billing FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
-2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`, **`utility_name`**, and **`default_service_area_code`** from pack defaults.
+2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`utility_name`**, and **`default_service_area_code`** from pack defaults.
 3. HTTP tool **`schedule_service_callback`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `callback_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
 4. Attach tool to the **Outage FAQ & service callback** agent; **Publish**.
 5. **Web test** script: report service issue → request callback → give timezone + preferred window → confirm summary.
@@ -36,7 +36,7 @@ Deflect repeat **outage status**, **plan compare (non-binding)**, and **payment 
 
 **Goal:** return **tokenized outage status** in **≤6 agent turns** after **`lookup_outage_status`** is wired (**outage_status_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/outages/status` with sample JSON).
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/outages/status` with sample JSON).
 
 1. Install **Outage & billing FAQ** with variant **`outage_status_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"outage_status_complex"`).
 2. **Customize**; set **`oss_api_base_url`** = `http://127.0.0.1:8765`, **`utility_name`**, and **`default_service_area_code`** from pack defaults.
@@ -49,7 +49,7 @@ Deflect repeat **outage status**, **plan compare (non-binding)**, and **payment 
 
 **Goal:** submit a **tokenized payment redirect confirm** in **≤6 agent turns** after **`confirm_payment_redirect`** is wired (**payment_redirect_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/payments/redirect/confirm` with sample JSON).
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/payments/redirect/confirm` with sample JSON).
 
 1. Install **Outage & billing FAQ** with variant **`payment_redirect_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"payment_redirect_complex"`).
 2. **Customize**; set **`billing_api_base_url`** = `http://127.0.0.1:8765`, **`utility_name`**, and **`payment_redirect_reason_code`** from pack defaults.

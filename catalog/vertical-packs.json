@@ -1,5 +1,5 @@
 {
-  "catalog_version": 8,
+  "catalog_version": 10,
   "description": "Canonical vertical pack metadata for MK-01 marketplace work. Packaged graphs live under catalog/packaged-workflows/; install uses POST /api/v1/workflow/install-from-catalog. Each pack has pack_semver (see catalog/README.md). Optional workflow_variants list simple vs complex graphs for the same vertical (complex = booking/API-ready prompts); default install uses workflow_template.packaged_definition_ref.",
   "packs": [
     {
@@ -7,7 +7,7 @@
       "pack_semver": "1.4.0",
       "industry": "Healthcare / clinics",
       "display_name": "Patient screening & triage",
-      "summary": "After-hours and overflow voice flow for symptom triage, scheduling handoff, and scripted guardrails—designed for PHI minimization in the agent layer.",
+      "summary": "After-hours and overflow voice flow for symptom triage, scheduling handoff, and scripted guardrails\u2014designed for PHI minimization in the agent layer.",
       "use_cases": [
         "screening triage",
         "appointment confirm/remind (confirm_remind variant + reschedule_appointment HTTP tool after install)",
@@ -15,10 +15,20 @@
         "provider or visit booking with scheduling API (booking_complex variant + book_slot HTTP tool after install)",
         "optional paid concierge / priority visit (concierge_complex variant + enroll_concierge_visit HTTP tool after install)"
       ],
-      "languages": ["en-US", "es-US"],
-      "supported_modes": ["webrtc", "pstn"],
-      "compliance_tags": ["HIPAA-oriented-design", "PHI-minimization", "no-recording-without-BAA"],
-      "preview_audio_url": null,
+      "languages": [
+        "en-US",
+        "es-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "HIPAA-oriented-design",
+        "PHI-minimization",
+        "no-recording-without-BAA"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/healthcare-clinic-screening/voice-preview/audio",
       "recommended_voice_profile_id": "builtin:vertical_healthcare",
       "cost_latency_estimate_band": "Medium latency (regional LLM + STT/TTS); cost scales with minutes and model tier",
       "runbook_path": "runbooks/healthcare-clinic-screening.md",
@@ -32,7 +42,7 @@
           "label": "Linear triage (default install)",
           "complexity": "simple",
           "packaged_definition_ref": "healthcare-clinic-screening.json",
-          "description": "Minimal start → triage → end graph for fast compliance demos."
+          "description": "Minimal start \u2192 triage \u2192 end graph for fast compliance demos."
         },
         {
           "variant_id": "booking_complex",
@@ -66,8 +76,8 @@
         "concierge_visit_type": "priority_primary_care"
       },
       "analytics_hooks": [
-        "After catalog install, workflows expose MK-01 catalog_slug — filter /analytics and /analytics/calls by that slug.",
-        "Prove triage → handoff with outcome_key in gathered_context and HTTP tool mapped_data on call detail.",
+        "After catalog install, workflows expose MK-01 catalog_slug \u2014 filter /analytics and /analytics/calls by that slug.",
+        "Prove triage \u2192 handoff with outcome_key in gathered_context and HTTP tool mapped_data on call detail.",
         "booking_complex: book_slot; confirm_remind: reschedule_appointment; concierge_complex: enroll_concierge_visit + catalog_variant_id filter.",
         "Export CSV for booking / reminder / concierge funnel QA."
       ],
@@ -78,7 +88,7 @@
       "pack_semver": "1.4.0",
       "industry": "Retail / e-commerce",
       "display_name": "WISMO & store policy FAQ",
-      "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk—reduces tier-1 load while staying policy-safe.",
+      "summary": "Order status, return windows, and store hours with HTTP tool hooks to OMS or helpdesk\u2014reduces tier-1 load while staying policy-safe.",
       "use_cases": [
         "where is my order (WISMO)",
         "return window FAQ",
@@ -87,12 +97,19 @@
         "warranty or subscription upsell after WISMO (upsell_complex variant + offer_warranty_addon HTTP tool after install)",
         "collections / payment promise capture after balance inquiry (collections_complex variant + capture_payment_promise HTTP tool after install)"
       ],
-      "languages": ["en-US"],
-      "supported_modes": ["webrtc", "pstn"],
-      "compliance_tags": ["no-payment-card-in-prompt"],
-      "preview_audio_url": null,
+      "languages": [
+        "en-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/retail-wismo-faq/voice-preview/audio",
       "recommended_voice_profile_id": "builtin:vertical_retail",
-      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live order lookup tools add RTT",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher if live order lookup tools add RTT",
       "runbook_path": "runbooks/retail-wismo-faq.md",
       "workflow_template": {
         "source": "packaged_definition",
@@ -151,19 +168,26 @@
       "pack_semver": "1.4.0",
       "industry": "B2B SaaS",
       "display_name": "Trial nurture & PQL voice qual",
-      "summary": "Short qualification and onboarding check-in calls with CRM-friendly variables—pipeline velocity without full SDR staffing.",
+      "summary": "Short qualification and onboarding check-in calls with CRM-friendly variables\u2014pipeline velocity without full SDR staffing.",
       "use_cases": [
         "trial nurture",
         "PQL voice qualification",
         "onboarding check-in",
         "demo or customer-success calendar booking (booking_complex variant + book_demo HTTP tool after install)",
         "renewal / QBR expansion (renewal_complex variant + book_qbr HTTP tool after install)",
-        "trial → paid upgrade handoff (conversion_complex variant + update_crm_deal_stage HTTP tool after install)"
+        "trial \u2192 paid upgrade handoff (conversion_complex variant + update_crm_deal_stage HTTP tool after install)"
       ],
-      "languages": ["en-US"],
-      "supported_modes": ["webrtc", "pstn"],
-      "compliance_tags": ["opt-in-recording-disclosure"],
-      "preview_audio_url": null,
+      "languages": [
+        "en-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "opt-in-recording-disclosure"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/b2b-saas-trial-nurture/voice-preview/audio",
       "recommended_voice_profile_id": "builtin:vertical_b2b",
       "cost_latency_estimate_band": "Medium (conversation + optional tool calls to CRM)",
       "runbook_path": "runbooks/b2b-saas-trial-nurture.md",
@@ -195,7 +219,7 @@
         },
         {
           "variant_id": "conversion_complex",
-          "label": "Trial → paid conversion",
+          "label": "Trial \u2192 paid conversion",
           "complexity": "complex",
           "packaged_definition_ref": "b2b-trial-conversion-complex.json",
           "description": "PQL then paid upgrade handoff; wire HTTP update_crm_deal_stage to {{crm_api_base_url}}/api/v1/deals/stage after install. See runbook trial-to-paid happy path."
@@ -211,7 +235,7 @@
         "target_deal_stage": "closed_won"
       },
       "analytics_hooks": [
-        "Filter by slug b2b-saas-trial-nurture for PQL → demo narratives; tie CRM stage variables to outcome_key.",
+        "Filter by slug b2b-saas-trial-nurture for PQL \u2192 demo narratives; tie CRM stage variables to outcome_key.",
         "booking_complex: book_demo; renewal_complex: book_qbr; conversion_complex: filter tool_name update_crm_deal_stage and catalog_variant_id=conversion_complex.",
         "Export CSV from call list for trial-stage, conversion, and renewal cohort reviews."
       ],
@@ -222,7 +246,7 @@
       "pack_semver": "1.2.0",
       "industry": "Insurance",
       "display_name": "FNOL guidance & policy FAQ",
-      "summary": "First-notice-of-loss scripting, policy FAQ, and adjuster callback scheduling with compliance-first guardrails—not legal advice or coverage determinations.",
+      "summary": "First-notice-of-loss scripting, policy FAQ, and adjuster callback scheduling with compliance-first guardrails\u2014not legal advice or coverage determinations.",
       "use_cases": [
         "FNOL guidance (scripted intake)",
         "policy FAQ",
@@ -231,12 +255,21 @@
         "quote intent qualification (quote_complex variant + capture_quote_intent HTTP tool after install)",
         "live claims status lookup (claims_lookup_complex variant + lookup_claim_status HTTP tool after install)"
       ],
-      "languages": ["en-US"],
-      "supported_modes": ["webrtc", "pstn"],
-      "compliance_tags": ["fnol-scripting-only", "no-payment-card-in-prompt", "recording-disclosure-required"],
-      "preview_audio_url": null,
+      "languages": [
+        "en-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "fnol-scripting-only",
+        "no-payment-card-in-prompt",
+        "recording-disclosure-required"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/insurance-fnol-faq/voice-preview/audio",
       "recommended_voice_profile_id": "builtin:vertical_insurance",
-      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live claims lookup tools add RTT",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher if live claims lookup tools add RTT",
       "runbook_path": "runbooks/insurance-fnol-faq.md",
       "workflow_template": {
         "source": "packaged_definition",
@@ -297,7 +330,7 @@
       "pack_semver": "1.2.0",
       "industry": "Hospitality / travel",
       "display_name": "Travel concierge & booking FAQ",
-      "summary": "Concierge FAQ plus reservation modify prompts with PMS-ready HTTP hooks—24/7 guest voice without full front-desk staffing.",
+      "summary": "Concierge FAQ plus reservation modify prompts with PMS-ready HTTP hooks\u201424/7 guest voice without full front-desk staffing.",
       "use_cases": [
         "cancellation policy FAQ",
         "amenity and property FAQ",
@@ -305,12 +338,20 @@
         "cancellation fee waiver / credit (waiver_complex variant + apply_cancellation_waiver HTTP tool after install)",
         "loyalty room upgrade offer (upsell_complex variant + offer_room_upgrade HTTP tool after install)"
       ],
-      "languages": ["en-US"],
-      "supported_modes": ["webrtc", "pstn"],
-      "compliance_tags": ["no-payment-card-in-prompt", "policy-copy-only"],
-      "preview_audio_url": null,
+      "languages": [
+        "en-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt",
+        "policy-copy-only"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/hospitality-travel-concierge/voice-preview/audio",
       "recommended_voice_profile_id": "builtin:vertical_hospitality",
-      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live PMS modify tools add RTT",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher if live PMS modify tools add RTT",
       "runbook_path": "runbooks/hospitality-travel-concierge.md",
       "workflow_template": {
         "source": "packaged_definition",
@@ -372,7 +413,7 @@
       "pack_semver": "1.2.0",
       "industry": "Financial services",
       "display_name": "Card & branch banking FAQ",
-      "summary": "Scripted card lost/stolen guidance, non-PCI balance and payment redirect FAQ, and branch appointment scheduling with fraud guardrails—not full account servicing or PCI capture on the call.",
+      "summary": "Scripted card lost/stolen guidance, non-PCI balance and payment redirect FAQ, and branch appointment scheduling with fraud guardrails\u2014not full account servicing or PCI capture on the call.",
       "use_cases": [
         "card lost/stolen scripted flow",
         "balance and payment redirect FAQ (non-PCI)",
@@ -381,12 +422,22 @@
         "tokenized balance lookup after identity verify (balance_lookup_complex variant + lookup_account_balance HTTP tool after install)",
         "card block / fraud report API handoff (card_block_complex variant + report_card_lost_stolen HTTP tool after install)"
       ],
-      "languages": ["en-US"],
-      "supported_modes": ["webrtc", "pstn"],
-      "compliance_tags": ["no-payment-card-in-prompt", "no-full-pan-in-prompt", "recording-disclosure-required", "tokenized-apis-only"],
-      "preview_audio_url": null,
+      "languages": [
+        "en-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt",
+        "no-full-pan-in-prompt",
+        "recording-disclosure-required",
+        "tokenized-apis-only"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/financial-services-banking-faq/voice-preview/audio",
       "recommended_voice_profile_id": "builtin:vertical_financial",
-      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live tokenized lookup tools add RTT",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher if live tokenized lookup tools add RTT",
       "runbook_path": "runbooks/financial-services-banking-faq.md",
       "workflow_template": {
         "source": "packaged_definition",
@@ -455,12 +506,20 @@
         "talk-to-location call routing (location_router_complex variant + route_call_to_location HTTP tool after install)",
         "CRM lead capture after FAQ (lead_capture_complex variant + capture_lead_intent HTTP tool after install)"
       ],
-      "languages": ["en-US"],
-      "supported_modes": ["webrtc", "pstn"],
-      "compliance_tags": ["no-payment-card-in-prompt", "recording-disclosure-required"],
-      "preview_audio_url": null,
+      "languages": [
+        "en-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt",
+        "recording-disclosure-required"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/smb-franchise-location-faq/voice-preview/audio",
       "recommended_voice_profile_id": "builtin:vertical_smb",
-      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live location directory or CRM tools add RTT",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher if live location directory or CRM tools add RTT",
       "runbook_path": "runbooks/smb-franchise-location-faq.md",
       "workflow_template": {
         "source": "packaged_definition",
@@ -522,7 +581,7 @@
       "pack_semver": "1.2.0",
       "industry": "Telecom / utilities",
       "display_name": "Outage & billing FAQ",
-      "summary": "Scripted outage status FAQ, non-binding plan compare guidance, and payment redirect flows with field service callback scheduling—no card capture on the call.",
+      "summary": "Scripted outage status FAQ, non-binding plan compare guidance, and payment redirect flows with field service callback scheduling\u2014no card capture on the call.",
       "use_cases": [
         "outage status and restoration FAQ",
         "plan compare (non-binding) guidance",
@@ -531,12 +590,22 @@
         "live outage status lookup (outage_status_complex variant + lookup_outage_status HTTP tool after install)",
         "payment redirect confirm (payment_redirect_complex variant + confirm_payment_redirect HTTP tool after install)"
       ],
-      "languages": ["en-US", "es-US"],
-      "supported_modes": ["webrtc", "pstn"],
-      "compliance_tags": ["no-payment-card-in-prompt", "recording-disclosure-required", "life-safety-escalation-required"],
-      "preview_audio_url": null,
+      "languages": [
+        "en-US",
+        "es-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt",
+        "recording-disclosure-required",
+        "life-safety-escalation-required"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/telecom-utilities-outage-faq/voice-preview/audio",
       "recommended_voice_profile_id": "builtin:vertical_telecom",
-      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live outage feeds add RTT",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher if live outage feeds add RTT",
       "runbook_path": "runbooks/telecom-utilities-outage-faq.md",
       "workflow_template": {
         "source": "packaged_definition",
@@ -589,6 +658,172 @@
         "outage_status_complex: filter tool_name lookup_outage_status and catalog_variant_id=outage_status_complex.",
         "payment_redirect_complex: filter tool_name confirm_payment_redirect and catalog_variant_id=payment_redirect_complex.",
         "CSV export supports QM sampling for outage deflection experiments."
+      ],
+      "roadmap_motions": []
+    },
+    {
+      "slug": "public-sector-civic-services-faq",
+      "pack_semver": "1.2.0",
+      "industry": "Public sector / government",
+      "display_name": "Civic services & permits FAQ",
+      "summary": "Scripted office hours, permit and licensing FAQ, and case-worker callback scheduling with PII minimization\u2014designed for accessible public-sector voice deflection.",
+      "use_cases": [
+        "office hours and department routing FAQ",
+        "permit and licensing FAQ (non-binding)",
+        "case worker callback scheduling (booking_complex variant + schedule_civic_callback HTTP tool after install)",
+        "permit status lookup (permit_status_complex variant + lookup_permit_status HTTP tool after install)",
+        "multilingual routing (language_router_complex variant + route_by_language HTTP tool after install)"
+      ],
+      "languages": [
+        "en-US",
+        "es-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "PII-minimization",
+        "recording-disclosure-required",
+        "accessibility-oriented-design"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/public-sector-civic-services-faq/voice-preview/audio",
+      "recommended_voice_profile_id": "builtin:vertical_gov",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher if live records tools add RTT",
+      "runbook_path": "runbooks/public-sector-civic-services-faq.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "public-sector-civic-services-faq.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Civic FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "public-sector-civic-services-faq.json",
+          "description": "Minimal civic services FAQ flow for public-sector demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Case worker callback scheduling",
+          "complexity": "complex",
+          "packaged_definition_ref": "public-sector-booking-complex.json",
+          "description": "Adds case worker callback scheduling language; wire HTTP schedule_civic_callback to {{scheduling_api_base_url}}/api/v1/appointments after install. See runbook booking-complex happy path."
+        },
+        {
+          "variant_id": "permit_status_complex",
+          "label": "Permit status lookup",
+          "complexity": "complex",
+          "packaged_definition_ref": "public-sector-permit-status-complex.json",
+          "description": "Tokenized permit status lookup; wire HTTP lookup_permit_status to {{records_api_base_url}}/api/v1/permits/status after install. See runbook permit status happy path + PARTNER_REVIEW."
+        },
+        {
+          "variant_id": "language_router_complex",
+          "label": "Multilingual routing",
+          "complexity": "complex",
+          "packaged_definition_ref": "public-sector-language-router-complex.json",
+          "description": "Route callers to language-appropriate queues; wire HTTP route_by_language to {{routing_api_base_url}}/api/v1/calls/route-by-language after install. See runbook language router happy path + PARTNER_REVIEW."
+        }
+      ],
+      "default_template_variables": {
+        "agency_name": "Your City Services",
+        "support_phone": "+1-555-0199",
+        "services_directory_url": "https://services.example.gov/directory",
+        "default_department_code": "DEPT-DEMO-01",
+        "scheduling_api_base_url": "https://scheduling.civic.example.gov/v1",
+        "records_api_base_url": "https://records.civic.example.gov/v1",
+        "routing_api_base_url": "https://routing.civic.example.gov/v1",
+        "language_routing_policy_code": "CIVIC-LANG-ROUTE-STD",
+        "supported_language_codes": "en-US,es-US"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug public-sector-civic-services-faq after install; compare FAQ vs callback funnel.",
+        "booking_complex: filter tool_name schedule_civic_callback and catalog_variant_id=booking_complex.",
+        "permit_status_complex: filter tool_name lookup_permit_status and catalog_variant_id=permit_status_complex.",
+        "language_router_complex: filter tool_name route_by_language and catalog_variant_id=language_router_complex.",
+        "CSV export supports QM sampling for civic deflection experiments."
+      ],
+      "roadmap_motions": []
+    },
+    {
+      "slug": "hr-staffing-recruiting-faq",
+      "pack_semver": "1.2.0",
+      "industry": "HR / staffing",
+      "display_name": "Candidate FAQ & interview scheduling",
+      "summary": "Scripted careers FAQ, tokenized application status lookup, and interview scheduling with calendar invites\u2014designed for candidate experience without ATS required on day one.",
+      "use_cases": [
+        "application process and interview prep FAQ",
+        "interview scheduling (booking_complex variant + schedule_interview HTTP tool after install)",
+        "application status lookup (application_status_complex variant + lookup_application_status HTTP tool after install)",
+        "interview confirm / reschedule (interview_confirm_complex variant + confirm_or_reschedule_interview HTTP tool after install)"
+      ],
+      "languages": [
+        "en-US",
+        "es-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "PII-minimization",
+        "no-SSN-on-call",
+        "recording-disclosure-required"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/hr-staffing-recruiting-faq/voice-preview/audio",
+      "recommended_voice_profile_id": "builtin:vertical_hr",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher if live ATS tools add RTT",
+      "runbook_path": "runbooks/hr-staffing-recruiting-faq.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "hr-staffing-recruiting-faq.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Candidate FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "hr-staffing-recruiting-faq.json",
+          "description": "Minimal careers FAQ flow for HR and staffing demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Interview scheduling",
+          "complexity": "complex",
+          "packaged_definition_ref": "hr-staffing-booking-complex.json",
+          "description": "Adds interview scheduling language; wire HTTP schedule_interview to {{scheduling_api_base_url}}/api/v1/appointments after install. See runbook booking-complex happy path."
+        },
+        {
+          "variant_id": "application_status_complex",
+          "label": "Application status lookup",
+          "complexity": "complex",
+          "packaged_definition_ref": "hr-staffing-application-status-complex.json",
+          "description": "Tokenized application status lookup; wire HTTP lookup_application_status to {{ats_api_base_url}}/api/v1/applications/status after install. See runbook application status happy path + PARTNER_REVIEW."
+        },
+        {
+          "variant_id": "interview_confirm_complex",
+          "label": "Interview confirm / reschedule",
+          "complexity": "complex",
+          "packaged_definition_ref": "hr-staffing-interview-confirm-complex.json",
+          "description": "Confirm or reschedule upcoming interviews; wire HTTP confirm_or_reschedule_interview to {{scheduling_api_base_url}}/api/v1/appointments/reschedule after install. See runbook interview confirm happy path + PARTNER_REVIEW."
+        }
+      ],
+      "default_template_variables": {
+        "company_name": "Your Company",
+        "careers_portal_url": "https://careers.example.com/status",
+        "support_phone": "+1-555-0177",
+        "default_requisition_code": "REQ-DEMO-01",
+        "interview_type_default": "phone_screen",
+        "preferred_interview_window_hours": "48",
+        "scheduling_api_base_url": "https://scheduling.example.com/api/v1",
+        "ats_api_base_url": "https://ats.example.com/v1"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug hr-staffing-recruiting-faq after install; compare FAQ vs interview funnel.",
+        "booking_complex: filter tool_name schedule_interview and catalog_variant_id=booking_complex.",
+        "application_status_complex: filter tool_name lookup_application_status and catalog_variant_id=application_status_complex.",
+        "interview_confirm_complex: filter tool_name confirm_or_reschedule_interview and catalog_variant_id=interview_confirm_complex.",
+        "CSV export supports QM sampling for candidate experience experiments."
       ],
       "roadmap_motions": []
     }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -53,11 +54,35 @@ CATALOG_VOICE_PREVIEW_SCRIPTS: dict[str, str] = {
         "I can help with outage information for your area. "
         "One moment while I check the latest service status."
     ),
+    "public-sector-civic-services-faq": (
+        "I can help with permit and licensing questions. "
+        "One moment while I look up the information for you."
+    ),
+    "hr-staffing-recruiting-faq": (
+        "Thanks for your interest in joining our team. "
+        "I can help with your application or schedule an interview."
+    ),
 }
 
 _DEFAULT_PREVIEW_SCRIPT = (
     "Thanks for calling. One moment while I look that up for you."
 )
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+VOICE_PREVIEWS_DIR = _REPO_ROOT / "catalog" / "voice-previews"
+
+
+def hosted_preview_audio_api_path(slug: str) -> str:
+    return f"/api/v1/catalog/vertical-packs/{slug}/voice-preview/audio"
+
+
+def catalog_voice_preview_audio_path(slug: str) -> Path:
+    return VOICE_PREVIEWS_DIR / f"{slug}.wav"
+
+
+def preview_audio_file_available(slug: str) -> bool:
+    path = catalog_voice_preview_audio_path(slug)
+    return path.is_file() and path.stat().st_size > 0
 
 
 def preview_script_for_catalog_slug(slug: str) -> str:
@@ -77,6 +102,11 @@ def preview_script_for_profile(profile: dict[str, Any], *, override_text: str | 
         ("financial", "financial-services-banking-faq"),
         ("smb", "smb-franchise-location-faq"),
         ("telecom", "telecom-utilities-outage-faq"),
+        ("gov", "public-sector-civic-services-faq"),
+        ("public", "public-sector-civic-services-faq"),
+        ("hr", "hr-staffing-recruiting-faq"),
+        ("staffing", "hr-staffing-recruiting-faq"),
+        ("recruiting", "hr-staffing-recruiting-faq"),
         ("vertical", None),
     ):
         if tag in tags and slug:
@@ -98,6 +128,9 @@ def build_catalog_voice_preview(slug: str, profile: dict[str, Any]) -> dict[str,
         "script": preview_script_for_catalog_slug(slug),
         "speech_settings": settings.model_dump(),
         "recommended_voice_profile_id": recommended_voice_profile_id_for_catalog_slug(slug),
+        "preview_audio_url": hosted_preview_audio_api_path(slug)
+        if preview_audio_file_available(slug)
+        else None,
     }
 
 

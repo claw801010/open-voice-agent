@@ -11,7 +11,7 @@ from httpx import HTTPStatusError
 from loguru import logger
 from pydantic import BaseModel, Field, ValidationError
 
-from api.constants import DEPLOYMENT_MODE
+from api.constants import BACKEND_API_ENDPOINT, DEPLOYMENT_MODE, ENABLE_LOCAL_PAYMENTS, ENABLE_LOCAL_SCHEDULING
 from api.db import db_client
 from api.db.models import UserModel
 from api.db.workflow_template_client import WorkflowTemplateClient
@@ -1626,7 +1626,15 @@ async def install_workflow_from_catalog(
         raise HTTPException(status_code=404, detail="Unknown catalog slug")
 
     wt = pack.get("workflow_template") or {}
-    default_vars = pack.get("default_template_variables") or {}
+    default_vars = dict(pack.get("default_template_variables") or {})
+    if ENABLE_LOCAL_SCHEDULING and "scheduling_api_base_url" in default_vars:
+        default_vars["scheduling_api_base_url"] = (
+            f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-scheduling"
+        )
+    if ENABLE_LOCAL_PAYMENTS and "collections_api_base_url" in default_vars:
+        default_vars["collections_api_base_url"] = (
+            f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-payments"
+        )
 
     if wt.get("source") == "packaged_definition" and wt.get("packaged_definition_ref"):
         try:
@@ -1656,6 +1664,24 @@ async def install_workflow_from_catalog(
         )
         if voice_profile_id:
             workflow_configurations["voice_profile_id"] = voice_profile_id
+        if ENABLE_LOCAL_SCHEDULING and "scheduling_api_base_url" in (
+            pack.get("default_template_variables") or {}
+        ):
+            workflow_configurations["local_scheduling"] = {
+                "enabled": True,
+                "scheduling_api_base_url": default_vars["scheduling_api_base_url"],
+                "book_url": f"{default_vars['scheduling_api_base_url']}/api/v1/appointments",
+            }
+        if ENABLE_LOCAL_PAYMENTS and "collections_api_base_url" in (
+            pack.get("default_template_variables") or {}
+        ):
+            workflow_configurations["local_payments"] = {
+                "enabled": True,
+                "collections_api_base_url": default_vars["collections_api_base_url"],
+                "payment_promises_url": (
+                    f"{default_vars['collections_api_base_url']}/api/v1/payment-promises"
+                ),
+            }
         workflow = await db_client.create_workflow(
             request.workflow_name,
             workflow_def,
@@ -1715,13 +1741,32 @@ async def install_workflow_from_catalog(
             "source": "workflow_templates",
             "source_template_id": template.id,
         }
+        workflow_configurations: dict[str, Any] = {"mk01": mk01}
+        if ENABLE_LOCAL_SCHEDULING and "scheduling_api_base_url" in (
+            pack.get("default_template_variables") or {}
+        ):
+            workflow_configurations["local_scheduling"] = {
+                "enabled": True,
+                "scheduling_api_base_url": default_vars["scheduling_api_base_url"],
+                "book_url": f"{default_vars['scheduling_api_base_url']}/api/v1/appointments",
+            }
+        if ENABLE_LOCAL_PAYMENTS and "collections_api_base_url" in (
+            pack.get("default_template_variables") or {}
+        ):
+            workflow_configurations["local_payments"] = {
+                "enabled": True,
+                "collections_api_base_url": default_vars["collections_api_base_url"],
+                "payment_promises_url": (
+                    f"{default_vars['collections_api_base_url']}/api/v1/payment-promises"
+                ),
+            }
         workflow = await db_client.create_workflow(
             request.workflow_name,
             workflow_def,
             user.id,
             user.selected_organization_id,
             template_context_variables=default_vars,
-            workflow_configurations={"mk01": mk01},
+            workflow_configurations=workflow_configurations,
         )
         if workflow_def:
             trigger_paths = extract_trigger_paths(workflow_def)

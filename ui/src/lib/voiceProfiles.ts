@@ -307,6 +307,8 @@ export const VERTICAL_VOICE_PROFILE_LABELS: Record<string, string> = {
     'builtin:vertical_financial': 'Financial voice',
     'builtin:vertical_smb': 'SMB / franchise voice',
     'builtin:vertical_telecom': 'Telecom / utilities voice',
+    'builtin:vertical_gov': 'Public sector voice',
+    'builtin:vertical_hr': 'HR / staffing voice',
 };
 
 export type CatalogVoicePreview = {
@@ -315,6 +317,7 @@ export type CatalogVoicePreview = {
     profileName: string;
     script: string;
     recommendedVoiceProfileId: string | null;
+    previewAudioUrl: string | null;
 };
 
 export type VoiceProfilePreviewResult = {
@@ -333,6 +336,7 @@ type CatalogVoicePreviewApi = {
     profile_name?: string;
     script?: string;
     recommended_voice_profile_id?: string | null;
+    preview_audio_url?: string | null;
 };
 
 type VoiceProfilePreviewApi = {
@@ -360,6 +364,7 @@ export async function fetchCatalogVoicePreview(slug: string): Promise<CatalogVoi
             profileName: String(data.profile_name ?? ''),
             script: String(data.script ?? ''),
             recommendedVoiceProfileId: data.recommended_voice_profile_id ?? null,
+            previewAudioUrl: data.preview_audio_url ?? null,
         };
     } catch {
         return null;

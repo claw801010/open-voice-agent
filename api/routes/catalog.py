@@ -4,10 +4,16 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 
 from api.schemas.voice_profile import CatalogVoicePreviewResponse
 from api.services.voice.presets import get_builtin_profile
-from api.services.voice.profile_preview import build_catalog_voice_preview
+from api.services.voice.profile_preview import (
+    build_catalog_voice_preview,
+    catalog_voice_preview_audio_path,
+    hosted_preview_audio_api_path,
+    preview_audio_file_available,
+)
 from api.services.voice.vertical_presets import recommended_voice_profile_id_for_catalog_slug
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
@@ -27,9 +33,7 @@ async def get_vertical_packs_catalog():
         return json.load(f)
 
 
-@router.get("/vertical-packs/{slug}/voice-preview", response_model=CatalogVoicePreviewResponse)
-async def get_vertical_pack_voice_preview(slug: str):
-    """MK-01 depth: industry sample script + recommended voice profile (no auth)."""
+def _pack_for_slug(slug: str) -> dict:
     path = _repo_root() / "catalog" / "vertical-packs.json"
     if not path.is_file():
         raise HTTPException(status_code=500, detail="Catalog file not found on server")
@@ -38,6 +42,13 @@ async def get_vertical_pack_voice_preview(slug: str):
     pack = next((p for p in catalog.get("packs", []) if p.get("slug") == slug), None)
     if not pack:
         raise HTTPException(status_code=404, detail="Unknown catalog slug")
+    return pack
+
+
+@router.get("/vertical-packs/{slug}/voice-preview", response_model=CatalogVoicePreviewResponse)
+async def get_vertical_pack_voice_preview(slug: str):
+    """MK-01 depth: industry sample script + recommended voice profile (no auth)."""
+    pack = _pack_for_slug(slug)
     profile_id = pack.get("recommended_voice_profile_id") or (
         recommended_voice_profile_id_for_catalog_slug(slug)
     )
@@ -47,4 +58,20 @@ async def get_vertical_pack_voice_preview(slug: str):
     if not profile:
         raise HTTPException(status_code=404, detail="Voice profile not found")
     data = build_catalog_voice_preview(slug, profile)
+    if not data.get("preview_audio_url"):
+        data["preview_audio_url"] = pack.get("preview_audio_url") or hosted_preview_audio_api_path(slug)
     return CatalogVoicePreviewResponse(**data)
+
+
+@router.get("/vertical-packs/{slug}/voice-preview/audio")
+async def get_vertical_pack_voice_preview_audio(slug: str):
+    """MK-01 depth: hosted WAV sample for marketplace cards (no auth)."""
+    _pack_for_slug(slug)
+    audio_path = catalog_voice_preview_audio_path(slug)
+    if not preview_audio_file_available(slug):
+        raise HTTPException(status_code=404, detail="Preview audio not available for slug")
+    return FileResponse(
+        audio_path,
+        media_type="audio/wav",
+        filename=f"{slug}-voice-preview.wav",
+    )

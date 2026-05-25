@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarPlus, ExternalLink, Wrench } from 'lucide-react';
+import { CalendarPlus, Download, ExternalLink, Wrench } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -24,6 +24,8 @@ import {
     cancelLocalAppointment,
     fetchLocalAppointments,
     fetchLocalSchedulingConfig,
+    fetchOpenSchedule,
+    saveOpenSchedule,
     type LocalAppointmentRow,
     type LocalSchedulingConfig,
 } from '@/lib/localSchedulingApi';
@@ -35,6 +37,9 @@ export function LocalSchedulingSection() {
     const [loading, setLoading] = useState(true);
     const [creatingTool, setCreatingTool] = useState(false);
     const [demoPatient, setDemoPatient] = useState('Demo patient');
+    const [demoEmail, setDemoEmail] = useState('');
+    const [openScheduleTimes, setOpenScheduleTimes] = useState('');
+    const [savingSchedule, setSavingSchedule] = useState(false);
     const [demoSlot, setDemoSlot] = useState(() => {
         const d = new Date();
         d.setUTCHours(15, 0, 0, 0);
@@ -50,6 +55,8 @@ export function LocalSchedulingSection() {
                 const token = await getAccessToken();
                 const rows = await fetchLocalAppointments(token);
                 setAppointments(rows);
+                const schedule = await fetchOpenSchedule(token);
+                setOpenScheduleTimes(schedule.slot_times_utc.join(', '));
             } else {
                 setAppointments([]);
             }
@@ -95,12 +102,17 @@ export function LocalSchedulingSection() {
     const handleDemoBook = async () => {
         try {
             const token = await getAccessToken();
-            await bookLocalAppointmentDemo(token, {
+            const result = await bookLocalAppointmentDemo(token, {
                 slot_start: demoSlot,
                 patient_name: demoPatient,
                 visit_type: 'general',
+                attendee_email: demoEmail.trim() || undefined,
             });
-            toast.success('Demo appointment booked');
+            toast.success(
+                result.invite_download_url
+                    ? 'Booked — download the calendar invite from the table below'
+                    : 'Demo appointment booked',
+            );
             await refresh();
         } catch (e) {
             toast.error(e instanceof Error ? e.message : 'Booking failed');
@@ -125,14 +137,24 @@ export function LocalSchedulingSection() {
     return (
         <div className="space-y-4 text-sm">
             <p className="text-muted-foreground leading-snug">
-                Run booking demos without an external scheduler. Point catalog template variables at{' '}
-                <code className="rounded bg-muted px-1 text-xs">scheduling_api_base_url</code> = base URL above,
-                attach the <strong className="text-foreground">book_slot</strong> tool, and map responses for analytics.
+                All-in-one booking: appointments persist under{' '}
+                <code className="rounded bg-muted px-1 text-xs">run/local_scheduling/</code>, callers get
+                confirmation codes, and each booking includes a downloadable{' '}
+                <strong className="text-foreground">.ics</strong> calendar invite — no external CRM or calendar
+                required. Connect your live systems later for real-time availability and payments.
             </p>
             <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-xs font-mono break-all">
                 <p>
+                    <span className="text-muted-foreground">Base </span>
+                    {config.scheduling_api_base_url}
+                </p>
+                <p>
                     <span className="text-muted-foreground">POST </span>
                     {config.book_slot_url}
+                </p>
+                <p>
+                    <span className="text-muted-foreground">POST </span>
+                    {config.appointments_url}
                 </p>
                 <p>
                     <span className="text-muted-foreground">GET </span>
@@ -151,6 +173,52 @@ export function LocalSchedulingSection() {
                     </Link>
                 </Button>
             </div>
+            <div className="border-t border-border pt-4 space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Open schedule (UTC)
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                    Comma-separated slot start times used by{' '}
+                    <code className="rounded bg-muted px-1">lookup_availability</code> — e.g.{' '}
+                    {config.default_open_slot_times_utc.join(', ')}
+                </p>
+                <div className="flex flex-wrap gap-2 items-end">
+                    <div className="flex-1 min-w-[200px] space-y-1.5">
+                        <Label htmlFor="open-schedule">Slot times (HH:MM UTC)</Label>
+                        <Input
+                            id="open-schedule"
+                            value={openScheduleTimes}
+                            onChange={(e) => setOpenScheduleTimes(e.target.value)}
+                            placeholder="09:00, 11:30, 14:00, 16:30"
+                        />
+                    </div>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={savingSchedule}
+                        onClick={async () => {
+                            setSavingSchedule(true);
+                            try {
+                                const token = await getAccessToken();
+                                const times = openScheduleTimes
+                                    .split(',')
+                                    .map((t) => t.trim())
+                                    .filter(Boolean);
+                                const saved = await saveOpenSchedule(token, times);
+                                setOpenScheduleTimes(saved.slot_times_utc.join(', '));
+                                toast.success('Open schedule saved');
+                            } catch (e) {
+                                toast.error(e instanceof Error ? e.message : 'Save failed');
+                            } finally {
+                                setSavingSchedule(false);
+                            }
+                        }}
+                    >
+                        {savingSchedule ? 'Saving…' : 'Save schedule'}
+                    </Button>
+                </div>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2 border-t border-border pt-4">
                 <div className="space-y-1.5">
                     <Label htmlFor="demo-slot">Demo slot (ISO UTC)</Label>
@@ -159,6 +227,16 @@ export function LocalSchedulingSection() {
                 <div className="space-y-1.5">
                     <Label htmlFor="demo-patient">Patient name</Label>
                     <Input id="demo-patient" value={demoPatient} onChange={(e) => setDemoPatient(e.target.value)} />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="demo-email">Attendee email (optional, for .ics invite)</Label>
+                    <Input
+                        id="demo-email"
+                        type="email"
+                        placeholder="guest@example.com"
+                        value={demoEmail}
+                        onChange={(e) => setDemoEmail(e.target.value)}
+                    />
                 </div>
                 <div className="sm:col-span-2">
                     <Button type="button" variant="outline" size="sm" onClick={handleDemoBook}>
@@ -179,6 +257,7 @@ export function LocalSchedulingSection() {
                                 <TableHead>When</TableHead>
                                 <TableHead>Patient</TableHead>
                                 <TableHead>Code</TableHead>
+                                <TableHead>Invite</TableHead>
                                 <TableHead />
                             </TableRow>
                         </TableHeader>
@@ -188,6 +267,20 @@ export function LocalSchedulingSection() {
                                     <TableCell className="font-mono text-xs">{a.slot_start}</TableCell>
                                     <TableCell>{a.patient_name}</TableCell>
                                     <TableCell>{a.confirmation_code}</TableCell>
+                                    <TableCell>
+                                        {a.invite_download_url ? (
+                                            <a
+                                                href={a.invite_download_url}
+                                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                                                download
+                                            >
+                                                <Download className="h-3 w-3" aria-hidden />
+                                                .ics
+                                            </a>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">—</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <Button
                                             type="button"

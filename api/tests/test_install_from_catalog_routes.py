@@ -114,6 +114,10 @@ async def test_install_from_catalog_complex_variant(
     assert mk01.get("catalog_variant_id") == "booking_complex"
     blob = json.dumps(data.get("workflow_definition") or {})
     assert "scheduling_api_base_url" in blob or "book_slot" in blob.lower()
+    dtv = data.get("template_context_variables") or {}
+    assert "/api/v1/local-scheduling" in str(dtv.get("scheduling_api_base_url") or "")
+    ls = (data.get("workflow_configurations") or {}).get("local_scheduling") or {}
+    assert ls.get("enabled") is True
 
 
 @pytest.mark.asyncio
@@ -187,6 +191,10 @@ async def test_install_from_catalog_collections_complex_variant(
     assert "capture_payment_promise" in blob
     assert "collections_api_base_url" in blob
     assert "payment_plan_policy_id" in blob
+    dtv = data.get("template_context_variables") or {}
+    assert "/api/v1/local-payments" in str(dtv.get("collections_api_base_url") or "")
+    lp = (data.get("workflow_configurations") or {}).get("local_payments") or {}
+    assert lp.get("enabled") is True
 
 
 @pytest.mark.asyncio
@@ -671,6 +679,202 @@ async def test_install_from_catalog_telecom_payment_redirect_complex(
     blob = json.dumps(data.get("workflow_definition") or {})
     assert "confirm_payment_redirect" in blob
     assert "billing_api_base_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_public_sector_default(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-CATALOG-GOV: public-sector-civic-services-faq default install loads civic FAQ prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "public-sector-civic-services-faq",
+                "workflow_name": "Public sector civic FAQ",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_slug") == "public-sector-civic-services-faq"
+    wf_cfg = data.get("workflow_configurations") or {}
+    assert wf_cfg.get("voice_profile_id") == "builtin:vertical_gov"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "agency_name" in blob
+    assert "services_directory_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_public_sector_booking_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-CATALOG-GOV: public sector booking_complex variant installs case callback prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "public-sector-civic-services-faq",
+                "workflow_name": "Public sector case callback",
+                "variant_id": "booking_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "booking_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "schedule_civic_callback" in blob
+    assert "scheduling_api_base_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_public_sector_permit_status_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: public sector permit_status_complex variant installs permit lookup prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "public-sector-civic-services-faq",
+                "workflow_name": "Public sector permit status",
+                "variant_id": "permit_status_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "permit_status_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "lookup_permit_status" in blob
+    assert "records_api_base_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_public_sector_language_router_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: public sector language_router_complex variant installs routing prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "public-sector-civic-services-faq",
+                "workflow_name": "Public sector language router",
+                "variant_id": "language_router_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "language_router_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "route_by_language" in blob
+    assert "routing_api_base_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_hr_default(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-CATALOG-HR: hr-staffing-recruiting-faq default install loads candidate FAQ prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "hr-staffing-recruiting-faq",
+                "workflow_name": "HR candidate FAQ",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_slug") == "hr-staffing-recruiting-faq"
+    wf_cfg = data.get("workflow_configurations") or {}
+    assert wf_cfg.get("voice_profile_id") == "builtin:vertical_hr"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "company_name" in blob
+    assert "careers_portal_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_hr_booking_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-CATALOG-HR: hr booking_complex variant installs interview scheduling prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "hr-staffing-recruiting-faq",
+                "workflow_name": "HR interview scheduling",
+                "variant_id": "booking_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "booking_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "schedule_interview" in blob
+    assert "scheduling_api_base_url" in blob
+    dtv = data.get("template_context_variables") or {}
+    assert "/api/v1/local-scheduling" in str(dtv.get("scheduling_api_base_url") or "")
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_hr_application_status_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: hr application_status_complex variant installs ATS lookup prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "hr-staffing-recruiting-faq",
+                "workflow_name": "HR application status",
+                "variant_id": "application_status_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "application_status_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "lookup_application_status" in blob
+    assert "ats_api_base_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_hr_interview_confirm_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: hr interview_confirm_complex variant installs confirm/reschedule prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "hr-staffing-recruiting-faq",
+                "workflow_name": "HR interview confirm",
+                "variant_id": "interview_confirm_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "interview_confirm_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "confirm_or_reschedule_interview" in blob
+    assert "scheduling_api_base_url" in blob
 
 
 @pytest.mark.asyncio

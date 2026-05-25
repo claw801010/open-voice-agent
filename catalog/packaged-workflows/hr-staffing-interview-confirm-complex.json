@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{company_name}}; explain you can confirm an upcoming interview or help reschedule if plans changed.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Confirm & remind",
+        "prompt": "Interview reminder assistant for **{{company_name}}**. The caller likely has an upcoming interview. Goals: (1) confirm they still plan to attend, or (2) collect a new preferred time window and reschedule.\n\nWhen confirming: read back interview type hint {{interview_type_default}} and requisition hint {{default_requisition_code}} only if the caller references them — do not invent ATS details.\n\nWhen rescheduling: collect a structured new time window, then call the HTTP tool **confirm_or_reschedule_interview** wired to {{scheduling_api_base_url}} (POST …/api/v1/appointments/reschedule). Never claim the slot changed until the tool returns success.\n\nIf they cancel outright, note cancellation intent and offer {{support_phone}} for follow-up.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; repeat confirmation code or next step if the scheduling tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When confirmed, rescheduled, or escalated" }
+    }
+  ]
+}

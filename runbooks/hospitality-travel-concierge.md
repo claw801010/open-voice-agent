@@ -23,7 +23,7 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 **Goal:** modify a reservation in **≤6 agent turns** after **`modify_reservation`** is wired.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`). Optional: [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765`.
 
 1. Install **Travel concierge & booking FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
 2. **Customize**; set **`pms_api_base_url`** = `http://127.0.0.1:8765`, **`property_name`**, **`confirmation_prefix`**, and **`default_room_type`** from pack defaults.
@@ -36,7 +36,7 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 **Goal:** apply a **documented cancellation fee waiver or credit** in **≤6 agent turns** after **`apply_cancellation_waiver`** is wired (**waiver_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/cancellations/waiver` with sample JSON).
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/cancellations/waiver` with sample JSON).
 
 1. Install **Travel concierge & booking FAQ** with variant **`waiver_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"waiver_complex"`).
 2. **Customize**; set **`policy_api_base_url`** = `http://127.0.0.1:8765`, **`waiver_policy_code`**, and **`confirmation_prefix`** from pack defaults.
@@ -49,7 +49,7 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 **Goal:** offer and attach a **loyalty room upgrade** in **≤6 agent turns** after **`offer_room_upgrade`** is wired (**upsell_complex** variant).
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/offers/attach` with sample JSON).
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/offers/attach` with sample JSON).
 
 1. Install **Travel concierge & booking FAQ** with variant **`upsell_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"upsell_complex"`).
 2. **Customize**; set **`crs_api_base_url`** = `http://127.0.0.1:8765`, **`upgrade_room_type`**, and **`confirmation_prefix`** from pack defaults.

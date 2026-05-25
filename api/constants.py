@@ -80,6 +80,11 @@ ENABLE_LOCAL_SCHEDULING = (
     os.getenv("ENABLE_LOCAL_SCHEDULING", _default_local_scheduling).lower() == "true"
 )
 
+# Local in-process demo payments (payment promises / redirect confirm for GTM).
+ENABLE_LOCAL_PAYMENTS = (
+    os.getenv("ENABLE_LOCAL_PAYMENTS", _default_local_scheduling).lower() == "true"
+)
+
 
 def _get_version() -> str:
     """Read version from pyproject.toml."""

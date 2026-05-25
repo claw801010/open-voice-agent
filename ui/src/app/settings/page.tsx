@@ -3,6 +3,7 @@
 import { ExternalLink } from "lucide-react";
 
 import { HttpIntegrationCachePolicySection } from "@/components/HttpIntegrationCachePolicySection";
+import { LocalPaymentsSection } from "@/components/settings/LocalPaymentsSection";
 import { LocalSchedulingSection } from "@/components/settings/LocalSchedulingSection";
 import { MCPSection } from "@/components/MCPSection";
 import { TelemetrySection } from "@/components/TelemetrySection";
@@ -57,6 +58,18 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <LocalSchedulingSection />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Local demo payments</CardTitle>
+            <CardDescription>
+              Record payment promises and redirect confirms in-process for retail collections and telecom billing demos — no payment processor required.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LocalPaymentsSection />
           </CardContent>
         </Card>
 

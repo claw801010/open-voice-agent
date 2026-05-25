@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Greet the caller warmly for {{company_name}}; offer help with careers FAQ, application status, or interview scheduling.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Candidate FAQ",
+        "prompt": "You are the voice assistant for **{{company_name}}** recruiting and staffing. Answer **application process**, **interview prep**, and **careers FAQ** using published copy — reference {{careers_portal_url}} when callers need self-service status or documents.\n\nDefault requisition hint: {{default_requisition_code}}. Do not invent hiring decisions, compensation, or offer details without an connected ATS tool. For interview scheduling or status lookups, offer to connect HTTP tools after install or hand off to {{support_phone}}.\n\nNever collect SSN, payment card, or full government ID numbers on the call.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank the candidate; confirm any documented next step.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{company_name}}; offer careers FAQ or interview scheduling when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Candidate FAQ & interview scheduling",
+        "prompt": "Recruiting assistant for **{{company_name}}**. Answer **careers and interview prep FAQ** using published copy — cite {{careers_portal_url}} for self-service when no ATS tool is connected.\n\nWhen the caller wants to **schedule an interview**, capture role hint (default requisition {{default_requisition_code}}), interview type hint {{interview_type_default}}, timezone, and preferred window within {{preferred_interview_window_hours}} hours. If they accept a slot, call HTTP tool **schedule_interview** at {{scheduling_api_base_url}}/api/v1/appointments — optionally include attendee email for calendar invite — do not confirm until the tool returns success.\n\nEscalate to {{support_phone}} when decisions exceed script scope. Never collect SSN or payment data on the call.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm interview reference and invite link if the scheduling tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When guided, scheduled, or escalated" }
+    }
+  ]
+}

@@ -26,6 +26,8 @@ export type VerticalPack = {
     cost_latency_estimate_band?: string;
     /** MK-01: built-in vertical voice delivery preset applied on catalog install */
     recommended_voice_profile_id?: string;
+    /** MK-01 depth: hosted voice sample (API path or absolute URL) */
+    preview_audio_url?: string | null;
     /** Simple + booking/complex JSON graphs; default install uses workflow_template ref only */
     workflow_variants?: WorkflowVariantMeta[];
 };

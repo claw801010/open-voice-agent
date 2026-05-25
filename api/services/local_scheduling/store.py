@@ -1,4 +1,4 @@
-"""In-memory + optional file-backed local demo calendar (LOCAL / GTM only)."""
+"""Local demo calendar store + booking JSON shape (MK-01 GTM)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from api.constants import APP_ROOT_DIR
+from api.constants import APP_ROOT_DIR, BACKEND_API_ENDPOINT
+
+from api.services.local_scheduling import schedule_config
 
 _LOCK = threading.Lock()
 _STORE: dict[int, list[dict[str, Any]]] = {}
@@ -29,8 +31,12 @@ class LocalAppointment:
     created_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat(),
     )
+    attendee_email: str | None = None
+    duration_minutes: int = 30
 
     def to_booking_response(self) -> dict[str, Any]:
+        invite_path = f"/api/v1/local-scheduling/appointments/{self.id}/invite.ics"
+        base = BACKEND_API_ENDPOINT.rstrip("/")
         return {
             "appointment": {
                 "id": self.id,
@@ -41,6 +47,8 @@ class LocalAppointment:
                 },
             },
             "confirmation_code": self.confirmation_code,
+            "invite_download_url": f"{base}{invite_path}",
+            "invite_ics_path": invite_path,
         }
 
     def to_row(self) -> dict[str, Any]:
@@ -70,11 +78,34 @@ def _save_org(org_id: int, rows: list[dict[str, Any]]) -> None:
         json.dump(rows, f, indent=2)
 
 
+def _rows_for_org(org_id: int) -> list[dict[str, Any]]:
+    if org_id not in _STORE:
+        _STORE[org_id] = _load_org(org_id)
+    return list(_STORE[org_id])
+
+
 def list_appointments(org_id: int) -> list[dict[str, Any]]:
     with _LOCK:
-        if org_id not in _STORE:
-            _STORE[org_id] = _load_org(org_id)
-        return list(_STORE[org_id])
+        return _rows_for_org(org_id)
+
+
+def get_appointment(org_id: int, appointment_id: str) -> dict[str, Any] | None:
+    for row in list_appointments(org_id):
+        if row.get("id") == appointment_id and row.get("status") != "cancelled":
+            return row
+    return None
+
+
+def _booked_slot_starts(org_id: int, date_yyyy_mm_dd: str) -> set[str]:
+    prefix = f"{date_yyyy_mm_dd}T"
+    booked: set[str] = set()
+    for row in list_appointments(org_id):
+        if row.get("status") == "cancelled":
+            continue
+        slot = str(row.get("slot_start") or "")
+        if slot.startswith(prefix):
+            booked.add(slot)
+    return booked
 
 
 def book_appointment(
@@ -83,18 +114,24 @@ def book_appointment(
     slot_start: str,
     patient_name: str = "Demo patient",
     visit_type: str = "general",
+    attendee_email: str | None = None,
+    duration_minutes: int = 30,
 ) -> dict[str, Any]:
+    if slot_start in _booked_slot_starts(org_id, slot_start[:10]):
+        raise ValueError(f"Slot already booked: {slot_start}")
     appt = LocalAppointment(
         id=f"local-appt-{uuid.uuid4().hex[:12]}",
         slot_start=slot_start,
         patient_name=patient_name,
         visit_type=visit_type,
+        attendee_email=attendee_email,
+        duration_minutes=max(5, min(duration_minutes, 240)),
     )
     row = appt.to_row()
     with _LOCK:
         if org_id not in _STORE:
             _STORE[org_id] = _load_org(org_id)
-        rows = list(_STORE[org_id])
+        rows = _rows_for_org(org_id)
         rows.append(row)
         _STORE[org_id] = rows
         _save_org(org_id, rows)
@@ -103,20 +140,37 @@ def book_appointment(
 
 def cancel_appointment(org_id: int, appointment_id: str) -> bool:
     with _LOCK:
-        rows = list_appointments(org_id)
-        next_rows = [r for r in rows if r.get("id") != appointment_id]
-        if len(next_rows) == len(rows):
+        rows = _rows_for_org(org_id)
+        found = False
+        next_rows: list[dict[str, Any]] = []
+        for r in rows:
+            if r.get("id") == appointment_id:
+                found = True
+                updated = dict(r)
+                updated["status"] = "cancelled"
+                next_rows.append(updated)
+            else:
+                next_rows.append(r)
+        if not found:
             return False
         _STORE[org_id] = next_rows
         _save_org(org_id, next_rows)
     return True
 
 
-def default_open_slots(date_yyyy_mm_dd: str) -> list[dict[str, str]]:
-    """Return a small set of demo slots for a calendar day (UTC ISO start)."""
-    return [
-        {"start": f"{date_yyyy_mm_dd}T09:00:00Z", "available": "true"},
-        {"start": f"{date_yyyy_mm_dd}T11:30:00Z", "available": "true"},
-        {"start": f"{date_yyyy_mm_dd}T14:00:00Z", "available": "true"},
-        {"start": f"{date_yyyy_mm_dd}T16:30:00Z", "available": "true"},
-    ]
+def default_open_slots(date_yyyy_mm_dd: str, org_id: int = 1) -> list[dict[str, str]]:
+    """Return open slots for a calendar day (UTC ISO start), using org schedule when set."""
+    return schedule_config.open_slots_for_day(org_id, date_yyyy_mm_dd)
+
+
+def available_open_slots(org_id: int, date_yyyy_mm_dd: str) -> list[dict[str, str]]:
+    """Open slots minus already-booked times for this org/day."""
+    booked = _booked_slot_starts(org_id, date_yyyy_mm_dd)
+    out: list[dict[str, str]] = []
+    for slot in default_open_slots(date_yyyy_mm_dd, org_id):
+        start = slot["start"]
+        if start in booked:
+            out.append({"start": start, "available": "false"})
+        else:
+            out.append({"start": start, "available": "true"})
+    return out

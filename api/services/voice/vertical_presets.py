@@ -15,6 +15,8 @@ VERTICAL_BUILTIN_SLUGS = (
     "vertical_financial",
     "vertical_smb",
     "vertical_telecom",
+    "vertical_gov",
+    "vertical_hr",
 )
 
 # Catalog slug → built-in vertical profile id
@@ -27,6 +29,8 @@ CATALOG_SLUG_TO_VOICE_PROFILE_ID: dict[str, str] = {
     "financial-services-banking-faq": "builtin:vertical_financial",
     "smb-franchise-location-faq": "builtin:vertical_smb",
     "telecom-utilities-outage-faq": "builtin:vertical_telecom",
+    "public-sector-civic-services-faq": "builtin:vertical_gov",
+    "hr-staffing-recruiting-faq": "builtin:vertical_hr",
 }
 
 _COMMON_EXTENDED_EN = (
@@ -204,6 +208,50 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
         similarity_boost=0.82,
         speed=0.98,
     ),
+    "vertical_gov": SpeechDeliverySettings(
+        authenticity_level=0.72,
+        tone="neutral",
+        behavior="concise",
+        enable_professional_fillers=True,
+        filler_intensity="low",
+        enable_extended_fillers=True,
+        extended_filler_phrases=[
+            "One moment while I look that up",
+            "Let me confirm the department for you",
+            "Thank you for your patience",
+            *_COMMON_EXTENDED_EN,
+        ],
+        multilingual_fillers={
+            "en-US": ["One moment please", "Let me find that information"],
+            "es-US": ["Un momento por favor", "Permítame buscar esa información"],
+        },
+        enable_breath_pauses=False,
+        stability=0.84,
+        similarity_boost=0.84,
+        speed=0.97,
+    ),
+    "vertical_hr": SpeechDeliverySettings(
+        authenticity_level=0.74,
+        tone="warm",
+        behavior="consultative",
+        enable_professional_fillers=True,
+        filler_intensity="low",
+        enable_extended_fillers=True,
+        extended_filler_phrases=[
+            "Thanks for your interest in joining us",
+            "Let me check that for you",
+            "One moment while I look up your application",
+            *_COMMON_EXTENDED_EN,
+        ],
+        multilingual_fillers={
+            "en-US": ["Thanks for calling", "One moment", "Let me check your application status"],
+            "es-US": ["Gracias por llamar", "Un momento", "Permítame revisar su solicitud"],
+        },
+        enable_breath_pauses=True,
+        stability=0.76,
+        similarity_boost=0.86,
+        speed=0.98,
+    ),
 }
 
 _VERTICAL_META: dict[str, dict[str, Any]] = {
@@ -246,6 +294,16 @@ _VERTICAL_META: dict[str, dict[str, Any]] = {
         "name": "Vertical — telecom & utilities",
         "description": "Formal, concise outage and billing FAQ delivery; minimal disfluency for status updates.",
         "tags": ["vertical", "telecom", "mk01"],
+    },
+    "vertical_gov": {
+        "name": "Vertical — public sector & civic services",
+        "description": "Neutral, accessible delivery for permits, office hours, and civic FAQ.",
+        "tags": ["vertical", "gov", "public", "mk01"],
+    },
+    "vertical_hr": {
+        "name": "Vertical — HR & staffing",
+        "description": "Warm, encouraging delivery for candidate FAQ, application status, and interview scheduling.",
+        "tags": ["vertical", "hr", "staffing", "recruiting", "mk01"],
     },
 }
 

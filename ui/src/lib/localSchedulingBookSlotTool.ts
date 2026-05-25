@@ -14,6 +14,8 @@ export function buildLocalBookSlotToolDefinition(bookSlotUrl: string): HttpApiTo
                     slot_start: '{{slot_start}}',
                     patient_name: '{{patient_name}}',
                     visit_type: '{{preferred_visit_type}}',
+                    attendee_email: '{{attendee_email}}',
+                    duration_minutes: 30,
                 },
                 null,
                 2,
@@ -22,6 +24,7 @@ export function buildLocalBookSlotToolDefinition(bookSlotUrl: string): HttpApiTo
                 appointment_id: 'appointment.id',
                 slot_start: 'appointment.slot.start',
                 confirmation_code: 'confirmation_code',
+                invite_download_url: 'invite_download_url',
             },
         },
     };

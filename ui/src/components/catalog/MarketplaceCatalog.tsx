@@ -42,6 +42,7 @@ import {
     type VerticalPack,
 } from '@/lib/catalog/filterVerticalPacks';
 import logger from '@/lib/logger';
+import { getBackendPublicBaseUrl } from '@/lib/apiClient';
 import {
     fetchCatalogVoicePreview,
     previewVoiceProfile,
@@ -141,6 +142,13 @@ export function MarketplaceCatalog({
         void fetchCatalogVoicePreview(voicePreviewPack.slug).then((data) => {
             if (!cancelled) {
                 setVoicePreview(data);
+                if (data?.previewAudioUrl) {
+                    const path = data.previewAudioUrl;
+                    const url = path.startsWith('http')
+                        ? path
+                        : `${getBackendPublicBaseUrl()}${path}`;
+                    setVoicePreviewAudioUrl(url);
+                }
                 setVoicePreviewLoading(false);
             }
         });
@@ -827,8 +835,8 @@ export function MarketplaceCatalog({
                         <DialogTitle>Voice preview</DialogTitle>
                         <DialogDescription>
                             Industry sample line for{' '}
-                            <strong className="text-foreground">{voicePreviewPack?.display_name}</strong>. Audio
-                            requires ElevenLabs TTS on your account.
+                            <strong className="text-foreground">{voicePreviewPack?.display_name}</strong>.
+                            Hosted sample plays below when available; ElevenLabs uses your account TTS.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-3 py-2 text-sm">
@@ -857,7 +865,7 @@ export function MarketplaceCatalog({
                         <Button type="button" variant="outline" onClick={() => setVoicePreviewPack(null)}>
                             Close
                         </Button>
-                        {installable && voicePreview ? (
+                        {installable && voicePreview && !voicePreviewAudioUrl ? (
                             <Button
                                 type="button"
                                 onClick={() => void playVoicePreviewAudio()}

@@ -36,6 +36,21 @@ async def test_catalog_voice_preview_handler_healthcare():
 
 
 @pytest.mark.asyncio
+async def test_catalog_voice_preview_handler_includes_hosted_audio_url():
+    result = await get_vertical_pack_voice_preview("healthcare-clinic-screening")
+    assert result.preview_audio_url
+    assert "voice-preview/audio" in result.preview_audio_url
+
+
+@pytest.mark.asyncio
+async def test_catalog_voice_preview_audio_route_serves_wav():
+    from api.routes.catalog import get_vertical_pack_voice_preview_audio
+
+    response = await get_vertical_pack_voice_preview_audio("healthcare-clinic-screening")
+    assert response.media_type == "audio/wav"
+
+
+@pytest.mark.asyncio
 async def test_catalog_voice_preview_handler_unknown_slug():
     from fastapi import HTTPException
 

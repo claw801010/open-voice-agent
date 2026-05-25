@@ -41,6 +41,14 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         example_tool_names: ["schedule_service_callback", "lookup_outage_status", "confirm_payment_redirect"],
         suggested_response_mapping_keys: ["callback_id", "slot_start", "outage_id", "restoration_eta", "status_code", "redirect_id", "portal_url", "expires_at", "confirmation_code"],
     },
+    "public-sector-civic-services-faq": {
+        example_tool_names: ["schedule_civic_callback", "lookup_permit_status", "route_by_language"],
+        suggested_response_mapping_keys: ["callback_id", "slot_start", "permit_id", "status_code", "last_updated", "route_id", "target_queue", "language_code", "confirmation_code"],
+    },
+    "hr-staffing-recruiting-faq": {
+        example_tool_names: ["schedule_interview", "lookup_application_status", "confirm_or_reschedule_interview"],
+        suggested_response_mapping_keys: ["interview_id", "slot_start", "application_id", "status_code", "last_updated", "confirmation_code", "invite_download_url"],
+    },
 };
 
 export function verticalHttpProofHintForSlug(slug: string | null | undefined): VerticalHttpProofHint | null {

@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{agency_name}}; offer civic FAQ or language-appropriate routing when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Civic FAQ & language router",
+        "prompt": "Assistant for **{{agency_name}}**. Answer **office hours and permit FAQ** using published copy — cite {{services_directory_url}} when helpful.\n\nWhen the caller prefers **Spanish or another supported language**, confirm their preference (supported hints: {{supported_language_codes}}). If a language-routing HTTP tool is attached, call **route_by_language** at {{routing_api_base_url}}/api/v1/calls/route-by-language with policy hint {{language_routing_policy_code}} — do not promise a bilingual agent until the tool returns a queue or handoff target.\n\nIf routing is unavailable, offer callback scheduling or direct to {{support_phone}}.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm language route or handoff reference if the routing tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}
