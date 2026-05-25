@@ -26,8 +26,8 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         suggested_response_mapping_keys: ["callback_id", "intent_id", "claim_id", "status_code", "confirmation_code"],
     },
     "hospitality-travel-concierge": {
-        example_tool_names: ["modify_reservation", "apply_cancellation_waiver"],
-        suggested_response_mapping_keys: ["reservation_id", "new_check_in", "waiver_id", "confirmation_code"],
+        example_tool_names: ["modify_reservation", "apply_cancellation_waiver", "offer_room_upgrade"],
+        suggested_response_mapping_keys: ["reservation_id", "new_check_in", "waiver_id", "offer_id", "confirmation_code"],
     },
 };
 

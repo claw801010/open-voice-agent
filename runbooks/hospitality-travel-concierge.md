@@ -45,6 +45,19 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 5. **Web test** script: ask about cancellation fee → provide confirmation ref + reason → confirm waiver reference when agent summarizes.
 6. **Expected:** **`apply_cancellation_waiver`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=hospitality-travel-concierge&catalog_variant_id=waiver_complex&tool_name=apply_cancellation_waiver`**.
 
+## Loyalty room upgrade happy-path test (QA)
+
+**Goal:** offer and attach a **loyalty room upgrade** in **≤6 agent turns** after **`offer_room_upgrade`** is wired (**upsell_complex** variant).
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/offers/attach` with sample JSON).
+
+1. Install **Travel concierge & booking FAQ** with variant **`upsell_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"upsell_complex"`).
+2. **Customize**; set **`crs_api_base_url`** = `http://127.0.0.1:8765`, **`upgrade_room_type`**, and **`confirmation_prefix`** from pack defaults.
+3. HTTP tool **`offer_room_upgrade`**: `POST {{crs_api_base_url}}/api/v1/offers/attach`; **response_mapping** — `offer_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `upgrade_effective` → `appointment.slot.start`.
+4. Attach tool to the **Concierge & upsell** agent; **Publish**.
+5. **Web test** script: ask an amenity question → accept room upgrade when offered → confirm reference when agent summarizes.
+6. **Expected:** **`offer_room_upgrade`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=hospitality-travel-concierge&catalog_variant_id=upsell_complex&tool_name=offer_room_upgrade`**.
+
 ## Day 1 checklist
 
 1. **Policy copy:** cancellation and fee language matches published guest-facing terms.
@@ -61,6 +74,7 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 - **Simple (default install):** [hospitality-travel-concierge.json](../catalog/packaged-workflows/hospitality-travel-concierge.json).
 - **Complex (booking modify):** [hospitality-travel-booking-complex.json](../catalog/packaged-workflows/hospitality-travel-booking-complex.json) — variant **`booking_complex`**; wire HTTP **modify_reservation**; see **Booking-complex happy-path test** above.
 - **Complex (cancellation waiver):** [hospitality-travel-waiver-complex.json](../catalog/packaged-workflows/hospitality-travel-waiver-complex.json) — variant **`waiver_complex`**; wire **apply_cancellation_waiver**; see **Cancellation fee waiver happy-path test** above.
+- **Complex (loyalty room upgrade):** [hospitality-travel-upsell-complex.json](../catalog/packaged-workflows/hospitality-travel-upsell-complex.json) — variant **`upsell_complex`**; wire **offer_room_upgrade**; see **Loyalty room upgrade happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -68,12 +82,12 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 ## High-revenue motions (roadmap)
 
-**Shipped:** **Booking modify** — **`booking_complex`** + **`modify_reservation`**; **Cancellation fee waiver / credit** — **`waiver_complex`** + **`apply_cancellation_waiver`** (see happy-path sections above; [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before GTM).
+**Shipped:** **Booking modify** — **`booking_complex`** + **`modify_reservation`**; **Cancellation fee waiver / credit** — **`waiver_complex`** + **`apply_cancellation_waiver`**; **Loyalty room upgrade** — **`upsell_complex`** + **`offer_room_upgrade`** (see happy-path sections above).
 
 | Motion | Buyer value | Status |
 |--------|-------------|--------|
 | **Booking modify (dates / room)** | 24/7 self-serve changes | **Shipped** — **`booking_complex`** + **modify_reservation** |
-| **Cancellation fee waiver / credit** | Guest recovery | **Shipped** — **`waiver_complex`** + **apply_cancellation_waiver** (+ partner review before GTM) |
-| **Loyalty room upgrade offer** | Incremental revenue | **Roadmap** — CRS upsell HTTP tool |
+| **Cancellation fee waiver / credit** | Guest recovery | **Shipped** — **`waiver_complex`** + **apply_cancellation_waiver** |
+| **Loyalty room upgrade offer** | Incremental revenue | **Shipped** — **`upsell_complex`** + **offer_room_upgrade** |
 
-**Roadmap tail:** remaining items in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json).
+**Roadmap tail:** remaining items (if any) in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) — empty when all motions above are shipped.

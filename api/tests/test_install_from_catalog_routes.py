@@ -430,6 +430,31 @@ async def test_install_from_catalog_hospitality_waiver_complex(
 
 
 @pytest.mark.asyncio
+async def test_install_from_catalog_hospitality_upsell_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: hospitality upsell_complex variant installs room upgrade prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "hospitality-travel-concierge",
+                "workflow_name": "Hospitality room upgrade",
+                "variant_id": "upsell_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "upsell_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "offer_room_upgrade" in blob
+    assert "crs_api_base_url" in blob
+    assert "upgrade_room_type" in blob
+
+
+@pytest.mark.asyncio
 async def test_install_from_catalog_cross_org_fetch_404(
     test_client_factory, org_user_catalog_install, async_session
 ):

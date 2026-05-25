@@ -177,7 +177,10 @@ def test_runbooks_document_confirm_remind_happy_path(catalog: dict) -> None:
         )
 
 
-_UPSELL_COMPLEX_SECTION = "## Paid upsell happy-path test"
+_UPSELL_COMPLEX_SECTIONS = (
+    "## Paid upsell happy-path test",
+    "## Loyalty room upgrade happy-path test",
+)
 
 
 def test_runbooks_document_upsell_happy_path(catalog: dict) -> None:
@@ -192,19 +195,19 @@ def test_runbooks_document_upsell_happy_path(catalog: dict) -> None:
         slug = pack["slug"]
         path = REPO_ROOT / Path(pack["runbook_path"])
         text = path.read_text(encoding="utf-8")
-        assert _UPSELL_COMPLEX_SECTION in text, (
-            f"{slug}: runbook missing {_UPSELL_COMPLEX_SECTION!r} section"
+        section = next((m for m in _UPSELL_COMPLEX_SECTIONS if m in text), None)
+        assert section is not None, (
+            f"{slug}: runbook missing upsell happy-path section (one of {_UPSELL_COMPLEX_SECTIONS!r})"
         )
-        idx = text.index(_UPSELL_COMPLEX_SECTION)
+        idx = text.index(section)
         tail = text[idx : idx + 2200]
         assert re.search(r"\n1\.\s", tail), f"{slug}: upsell section needs numbered steps"
         assert "Expected" in tail, f"{slug}: upsell section needs expected outcome"
         assert "upsell_complex" in tail, f"{slug}: upsell section must name variant_id"
-        assert "offer_warranty_addon" in tail, (
-            f"{slug}: upsell section must reference offer_warranty_addon tool"
-        )
-        assert "product_api_base_url" in tail, (
-            f"{slug}: upsell section must reference product_api_base_url"
+        retail_upsell = "offer_warranty_addon" in tail and "product_api_base_url" in tail
+        hospitality_upsell = "offer_room_upgrade" in tail and "crs_api_base_url" in tail
+        assert retail_upsell or hospitality_upsell, (
+            f"{slug}: upsell section must reference retail or hospitality upsell tool + API base URL"
         )
 
 
@@ -460,7 +463,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "retail-wismo-faq": {"booking_complex", "upsell_complex", "collections_complex"},
     "b2b-saas-trial-nurture": {"booking_complex", "renewal_complex", "conversion_complex"},
     "insurance-fnol-faq": {"booking_complex", "quote_complex", "claims_lookup_complex"},
-    "hospitality-travel-concierge": {"booking_complex", "waiver_complex"},
+    "hospitality-travel-concierge": {"booking_complex", "waiver_complex", "upsell_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(
@@ -469,18 +472,17 @@ _PREBUILD_COMPLETE_SLUGS = frozenset(
         "retail-wismo-faq",
         "b2b-saas-trial-nurture",
         "insurance-fnol-faq",
+        "hospitality-travel-concierge",
     }
 )
 
 
 def test_prebuild_roadmap_motions_all_shipped(catalog: dict) -> None:
-    """MK-01-PREBUILD-COMPLETE: original four packs have empty roadmap_motions."""
+    """MK-01-PREBUILD-COMPLETE: every vertical pack has empty roadmap_motions."""
     packs = catalog["packs"]
-    assert len(packs) >= 4
+    assert len(packs) >= 5
     for pack in packs:
         slug = pack["slug"]
-        if slug not in _PREBUILD_COMPLETE_SLUGS:
-            continue
         motions = pack.get("roadmap_motions")
         assert motions == [], f"{slug!r}: expected empty roadmap_motions when PREBUILD is complete"
 

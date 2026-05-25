@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{property_name}}; offer concierge FAQ and mention optional loyalty room upgrades when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Concierge & upsell",
+        "prompt": "Voice concierge for {{property_name}}. Answer amenity and policy FAQ using published copy.\n\nAfter the guest's question is addressed (or they decline further help), you may offer an optional **loyalty room upgrade** (hint category {{upgrade_room_type}}) when eligible. If they accept, call HTTP tool **offer_room_upgrade** at {{crs_api_base_url}}/api/v1/offers/attach with tokenized reservation context (confirmation hint {{confirmation_prefix}}) — do not claim the upgrade is confirmed until the tool returns success.\n\nNever collect payment card numbers on the call. Escalate to {{support_email}} when needed.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank the guest; confirm upgrade reference if the CRS offer tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

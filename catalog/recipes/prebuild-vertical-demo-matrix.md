@@ -1,6 +1,6 @@
 # PREBUILD vertical demo matrix (MK-01)
 
-**Goal:** one-page GTM / QA reference for **shipped** complex variants. Four original verticals have **`roadmap_motions: []`**; **`hospitality-travel-concierge`** is seeded with **`booking_complex`** and revenue motions on the roadmap.
+**Goal:** one-page GTM / QA reference for **shipped** complex variants. All five vertical packs have **`roadmap_motions: []`** when PREBUILD motions are complete.
 
 **Prerequisites:** [booking-scheduling-stub-local.md](booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for local HTTP tool QA.
 
@@ -32,6 +32,7 @@ curl -sS -X POST "$API/api/v1/workflow/install-from-catalog" \
 | `insurance-fnol-faq` | `claims_lookup_complex` | `lookup_claim_status` | `/api/v1/claims/status` | Claims status lookup happy-path test |
 | `hospitality-travel-concierge` | `booking_complex` | `modify_reservation` | `/api/v1/reservations/modify` | Booking-complex happy-path test |
 | `hospitality-travel-concierge` | `waiver_complex` | `apply_cancellation_waiver` | `/api/v1/cancellations/waiver` | Cancellation fee waiver happy-path test |
+| `hospitality-travel-concierge` | `upsell_complex` | `offer_room_upgrade` | `/api/v1/offers/attach` | Loyalty room upgrade happy-path test |
 
 Runbooks: [runbooks/](../runbooks/). Field alignment: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../VERTICAL_ANALYTICS_HTTP_MATRIX.md).
 
