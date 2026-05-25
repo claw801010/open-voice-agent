@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{brand_name}}; offer multi-location FAQ or help connecting to the right store when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Location FAQ & router",
+        "prompt": "Assistant for **{{brand_name}}** (multi-location SMB / franchise). Answer **hours and services FAQ** using published copy — cite {{location_directory_url}} when helpful.\n\nWhen the caller needs to **talk to a specific location**, capture city, ZIP, or store name at a high level (default hint {{default_location_code}}). If a location-routing HTTP tool is attached, call **route_call_to_location** at {{locations_api_base_url}}/api/v1/locations/route with policy hint {{routing_policy_code}} — do not promise a transfer until the tool returns a target site or handoff reference.\n\nIf routing is unavailable, direct to {{location_directory_url}} or {{support_phone}}.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm routed location or handoff reference if the routing tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

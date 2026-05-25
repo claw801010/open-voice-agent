@@ -497,6 +497,40 @@ def test_runbooks_document_card_block_happy_path(catalog: dict) -> None:
         )
 
 
+_LOCATION_ROUTER_COMPLEX_SECTION = "## Talk-to-location router happy-path test"
+
+
+def test_runbooks_document_location_router_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: location_router_complex variant documents routing tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "location_router_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _LOCATION_ROUTER_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_LOCATION_ROUTER_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_LOCATION_ROUTER_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: location router section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: location router section needs expected outcome"
+        assert "location_router_complex" in tail, (
+            f"{slug}: location router section must name variant_id"
+        )
+        assert "route_call_to_location" in tail, (
+            f"{slug}: location router section must reference route_call_to_location tool"
+        )
+        assert "locations_api_base_url" in tail, (
+            f"{slug}: location router section must reference locations_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -533,7 +567,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "insurance-fnol-faq": {"booking_complex", "quote_complex", "claims_lookup_complex"},
     "hospitality-travel-concierge": {"booking_complex", "waiver_complex", "upsell_complex"},
     "financial-services-banking-faq": {"booking_complex", "balance_lookup_complex", "card_block_complex"},
-    "smb-franchise-location-faq": {"booking_complex"},
+    "smb-franchise-location-faq": {"booking_complex", "location_router_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(

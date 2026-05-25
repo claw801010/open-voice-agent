@@ -438,14 +438,15 @@
     },
     {
       "slug": "smb-franchise-location-faq",
-      "pack_semver": "1.0.0",
+      "pack_semver": "1.1.0",
       "industry": "SMB / franchises",
       "display_name": "Multi-location FAQ & lead callback",
       "summary": "One voice template for multi-site SMB and franchise brands: location FAQ, hours and services answers, and lead callback scheduling with optional CRM hooks.",
       "use_cases": [
         "multi-location hours and services FAQ",
         "location directory handoff",
-        "lead callback scheduling (booking_complex variant + schedule_lead_callback HTTP tool after install)"
+        "lead callback scheduling (booking_complex variant + schedule_lead_callback HTTP tool after install)",
+        "talk-to-location call routing (location_router_complex variant + route_call_to_location HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -471,6 +472,13 @@
           "complexity": "complex",
           "packaged_definition_ref": "smb-franchise-booking-complex.json",
           "description": "Adds lead callback scheduling language; wire HTTP schedule_lead_callback to {{scheduling_api_base_url}}/api/v1/appointments after install. See runbook booking-complex happy path."
+        },
+        {
+          "variant_id": "location_router_complex",
+          "label": "Talk-to-location router",
+          "complexity": "complex",
+          "packaged_definition_ref": "smb-franchise-location-router-complex.json",
+          "description": "Route callers to the right store or handoff target; wire HTTP route_call_to_location to {{locations_api_base_url}}/api/v1/locations/route after install. See runbook location router happy path + PARTNER_REVIEW."
         }
       ],
       "default_template_variables": {
@@ -479,15 +487,17 @@
         "location_directory_url": "https://locations.example.com/directory",
         "default_location_code": "STORE-DEMO-01",
         "scheduling_api_base_url": "https://scheduling.smb.example.com/v1",
-        "preferred_callback_window_hours": "24"
+        "preferred_callback_window_hours": "24",
+        "locations_api_base_url": "https://locations.smb.example.com/v1",
+        "routing_policy_code": "SMB-VOICE-ROUTE-STD"
       },
       "analytics_hooks": [
         "Filter analytics by catalog_slug smb-franchise-location-faq after install; compare FAQ vs callback funnel.",
         "booking_complex: filter tool_name schedule_lead_callback and catalog_variant_id=booking_complex.",
+        "location_router_complex: filter tool_name route_call_to_location and catalog_variant_id=location_router_complex.",
         "CSV export supports QM sampling for multi-location deflection experiments."
       ],
       "roadmap_motions": [
-        "talk-to-location call routing (location_router_complex variant + route_call_to_location HTTP tool after install) (roadmap)",
         "CRM lead capture after FAQ (lead_capture_complex variant + capture_lead_intent HTTP tool after install) (roadmap)"
       ]
     }

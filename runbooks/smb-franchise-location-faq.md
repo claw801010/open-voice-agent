@@ -32,6 +32,19 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 5. **Web test** script: ask about a service → request callback → give timezone + preferred window → confirm summary.
 6. **Expected:** **`schedule_lead_callback`** invoked; call detail shows **`mapped_data`**; filter **`/analytics/calls?catalog_slug=smb-franchise-location-faq&catalog_variant_id=booking_complex&tool_name=schedule_lead_callback`**.
 
+## Talk-to-location router happy-path test (QA)
+
+**Goal:** resolve **store routing** in **≤6 agent turns** after **`route_call_to_location`** is wired (**location_router_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/locations/route` with sample JSON).
+
+1. Install **Multi-location FAQ & lead callback** with variant **`location_router_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"location_router_complex"`).
+2. **Customize**; set **`locations_api_base_url`** = `http://127.0.0.1:8765`, **`brand_name`**, and **`routing_policy_code`** from pack defaults.
+3. HTTP tool **`route_call_to_location`**: `POST {{locations_api_base_url}}/api/v1/locations/route`; **response_mapping** — `route_id` → `appointment.id`, `target_location_code` → `confirmation_code`, `transfer_extension` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
+4. Attach tool to the **Location FAQ & router** agent; **Publish**.
+5. **Web test** script: ask to speak with a nearby store → give city or ZIP → confirm summary when agent reads back routing result.
+6. **Expected:** **`route_call_to_location`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=smb-franchise-location-faq&catalog_variant_id=location_router_complex&tool_name=route_call_to_location`**.
+
 ## Day 1 checklist
 
 1. **Copy:** brand FAQ and location directory URLs match published site content.
@@ -47,6 +60,7 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 
 - **Simple (default install):** [smb-franchise-location-faq.json](../catalog/packaged-workflows/smb-franchise-location-faq.json).
 - **Complex (lead callback):** [smb-franchise-booking-complex.json](../catalog/packaged-workflows/smb-franchise-booking-complex.json) — variant **`booking_complex`**; wire HTTP **schedule_lead_callback**; see **Booking-complex happy-path test** above.
+- **Complex (location router):** [smb-franchise-location-router-complex.json](../catalog/packaged-workflows/smb-franchise-location-router-complex.json) — variant **`location_router_complex`**; wire **route_call_to_location**; see **Talk-to-location router happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -54,12 +68,12 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 
 ## High-revenue motions (roadmap)
 
-**Shipped:** **Lead callback scheduling** — **`booking_complex`** + **`schedule_lead_callback`** (see **Booking-complex happy-path test** above).
+**Shipped:** **Lead callback scheduling** — **`booking_complex`** + **`schedule_lead_callback`**; **Talk-to-location router** — **`location_router_complex`** + **`route_call_to_location`** (see happy-path sections above).
 
 | Motion | Buyer value | Status |
 |--------|-------------|--------|
 | **Lead callback scheduling** | Pipeline velocity per location | **Shipped** — **`booking_complex`** + **schedule_lead_callback** |
-| **Talk-to-location router** | Right-site deflection | **Roadmap** — **`location_router_complex`** + **route_call_to_location** |
+| **Talk-to-location router** | Right-site deflection | **Shipped** — **`location_router_complex`** + **route_call_to_location** |
 | **CRM lead capture** | One template × many stores | **Roadmap** — **`lead_capture_complex`** + **capture_lead_intent** |
 
 **Roadmap tail:** remaining items in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json).

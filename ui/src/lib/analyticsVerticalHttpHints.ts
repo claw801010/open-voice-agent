@@ -34,8 +34,8 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         suggested_response_mapping_keys: ["appointment_id", "slot_start", "account_id", "balance_available", "as_of_date", "block_id", "status_code", "blocked_at", "confirmation_code"],
     },
     "smb-franchise-location-faq": {
-        example_tool_names: ["schedule_lead_callback"],
-        suggested_response_mapping_keys: ["callback_id", "slot_start", "confirmation_code"],
+        example_tool_names: ["schedule_lead_callback", "route_call_to_location"],
+        suggested_response_mapping_keys: ["callback_id", "slot_start", "route_id", "target_location_code", "transfer_extension", "confirmation_code"],
     },
 };
 

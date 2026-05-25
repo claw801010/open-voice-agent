@@ -15,7 +15,7 @@ This document answers: *Are our shipped vertical packs ready to clone into **pre
 | [insurance-fnol-faq](vertical-packs.json) | Insurance | **Simple** + **complex** booking, quote, claims lookup graphs | **Adjuster callback**, **quote intent**, **claims status** HTTP tools |
 | [hospitality-travel-concierge](vertical-packs.json) | Hospitality / travel | **Simple** + **complex** [hospitality-travel-booking-complex.json](packaged-workflows/hospitality-travel-booking-complex.json) | **PMS modify** HTTP tool (`modify_reservation`); waiver / upsell shipped |
 | [financial-services-banking-faq](vertical-packs.json) | Financial services | **Simple** + **complex** booking, balance, card block graphs | **Branch appointment**, **tokenized balance**, **card block** HTTP tools |
-| [smb-franchise-location-faq](vertical-packs.json) | SMB / franchises | **Simple** + **complex** [smb-franchise-booking-complex.json](packaged-workflows/smb-franchise-booking-complex.json) | **Lead callback** HTTP tool (`schedule_lead_callback`); location router / CRM **roadmap** |
+| [smb-franchise-location-faq](vertical-packs.json) | SMB / franchises | **Simple** + **complex** booking + location router graphs | **Lead callback** + **talk-to-location** HTTP tools; CRM **roadmap** |
 
 Each row must keep **happy-path QA** in its [runbook](../runbooks/README.md) and pass [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md) before we market it as “revenue-ready.”
 
@@ -31,7 +31,7 @@ Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now sh
 | Insurance | **Adjuster callback**; **quote intent**; **claims status lookup** | **Complex variants shipped** — **`booking_complex`**, **`quote_complex`**, **`claims_lookup_complex`**; wire HTTP tools to buyer APIs |
 | Hospitality / travel | **Modify reservation**; **cancellation waiver**; **loyalty upgrade** | **Complex variants shipped** — **`booking_complex`**, **`waiver_complex`**, **`upsell_complex`**; wire HTTP tools to buyer APIs |
 | Financial services | **Branch appointment**; **tokenized balance**; **card block API** | **Complex variants shipped** — **`booking_complex`**, **`balance_lookup_complex`**, **`card_block_complex`**; wire HTTP tools to buyer APIs |
-| SMB / franchises | **Lead callback**; **location router**; **CRM lead capture** | **Partial** — **`booking_complex`** shipped; **`location_router_complex`**, **`lead_capture_complex`** on **`roadmap_motions`** |
+| SMB / franchises | **Lead callback**; **location router**; **CRM lead capture** | **Partial** — **`booking_complex`**, **`location_router_complex`** shipped; **`lead_capture_complex`** on **`roadmap_motions`** |
 
 **Next engineering slice:** (1) **Done:** runbook **Booking-complex happy-path test** per variant (≤6 turns after HTTP tool wired) — [runbooks/](../runbooks/) + CI [test_runbooks_document_booking_complex_happy_path](../api/tests/test_vertical_packs_catalog.py); (2) **Done:** install API + UI **variant** — `POST /api/v1/workflow/install-from-catalog` with `variant_id`, `mk01.catalog_variant_id` on the workflow; (3) **Done:** **Analytics** filter by `catalog_variant_id` + **CI chain test** for `response_mapping` → `mapped_data` → tool span ([booking-http-analytics-smoke.md](recipes/booking-http-analytics-smoke.md), [test_booking_http_mapping_analytics_span.py](../api/tests/test_booking_http_mapping_analytics_span.py)); (4) **Done:** **live** HTTP stub — [booking-scheduling-stub-local.md](recipes/booking-scheduling-stub-local.md), [booking_scheduling_stub_server.py](../scripts/booking_scheduling_stub_server.py), Docker Compose profile **`booking-stub`** on **:8765**.
 
@@ -63,8 +63,11 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 | `financial-services-banking-faq` | Branch appointment scheduling | Self-serve branch visits | **Shipped** — **`booking_complex`** + **`schedule_branch_appointment`** + runbook happy path |
 | `financial-services-banking-faq` | Tokenized balance lookup | Tier-1 containment | **Shipped** — **`balance_lookup_complex`** + **`lookup_account_balance`** + runbook happy path |
 | `financial-services-banking-faq` | Card block / fraud report API | Faster card safety | **Shipped** — **`card_block_complex`** + **`report_card_lost_stolen`** + runbook happy path |
+| `smb-franchise-location-faq` | Lead callback scheduling | Pipeline velocity per location | **Shipped** — **`booking_complex`** + **`schedule_lead_callback`** + runbook happy path |
+| `smb-franchise-location-faq` | Talk-to-location router | Right-site deflection | **Shipped** — **`location_router_complex`** + **`route_call_to_location`** + runbook happy path |
+| `smb-franchise-location-faq` | CRM lead capture | One template × many stores | **Roadmap** — **`lead_capture_complex`** + **`capture_lead_intent`** |
 
-**Next engineering slice (when staffed):** **SMB PREBUILD tail** (location router, CRM lead capture) or **MK-01 depth** (preview audio / try-flow polish); use [prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) for GTM demos.
+**Next engineering slice (when staffed):** **SMB PREBUILD tail** (CRM lead capture) or **MK-01 depth** (preview audio / try-flow polish); use [prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) for GTM demos.
 
 ## HTTP tools and context variables (WE-01-DUALMODE)
 

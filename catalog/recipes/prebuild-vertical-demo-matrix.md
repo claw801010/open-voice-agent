@@ -37,6 +37,7 @@ curl -sS -X POST "$API/api/v1/workflow/install-from-catalog" \
 | `financial-services-banking-faq` | `balance_lookup_complex` | `lookup_account_balance` | `/api/v1/accounts/balance` | Tokenized balance lookup happy-path test |
 | `financial-services-banking-faq` | `card_block_complex` | `report_card_lost_stolen` | `/api/v1/cards/block` | Card block / fraud report happy-path test |
 | `smb-franchise-location-faq` | `booking_complex` | `schedule_lead_callback` | `/api/v1/appointments` | Booking-complex happy-path test |
+| `smb-franchise-location-faq` | `location_router_complex` | `route_call_to_location` | `/api/v1/locations/route` | Talk-to-location router happy-path test |
 
 Runbooks: [runbooks/](../runbooks/). Field alignment: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../VERTICAL_ANALYTICS_HTTP_MATRIX.md).
 
