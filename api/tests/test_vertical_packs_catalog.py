@@ -41,7 +41,7 @@ def catalog() -> dict:
 def test_catalog_version_and_pack_count(catalog: dict) -> None:
     assert isinstance(catalog.get("catalog_version"), int)
     packs = catalog.get("packs")
-    assert isinstance(packs, list) and len(packs) >= 7
+    assert isinstance(packs, list) and len(packs) >= 8
 
 
 def test_each_pack_recommends_valid_voice_profile(catalog: dict) -> None:
@@ -580,6 +580,74 @@ def test_runbooks_document_lead_capture_happy_path(catalog: dict) -> None:
         )
 
 
+_OUTAGE_STATUS_COMPLEX_SECTION = "## Live outage status lookup happy-path test"
+
+
+def test_runbooks_document_outage_status_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: outage_status_complex variant documents outage lookup tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "outage_status_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _OUTAGE_STATUS_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_OUTAGE_STATUS_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_OUTAGE_STATUS_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: outage status section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: outage status section needs expected outcome"
+        assert "outage_status_complex" in tail, (
+            f"{slug}: outage status section must name variant_id"
+        )
+        assert "lookup_outage_status" in tail, (
+            f"{slug}: outage status section must reference lookup_outage_status tool"
+        )
+        assert "oss_api_base_url" in tail, (
+            f"{slug}: outage status section must reference oss_api_base_url"
+        )
+
+
+_PAYMENT_REDIRECT_COMPLEX_SECTION = "## Payment redirect confirm happy-path test"
+
+
+def test_runbooks_document_payment_redirect_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: payment_redirect_complex variant documents redirect confirm tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "payment_redirect_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _PAYMENT_REDIRECT_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_PAYMENT_REDIRECT_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_PAYMENT_REDIRECT_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: payment redirect section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: payment redirect section needs expected outcome"
+        assert "payment_redirect_complex" in tail, (
+            f"{slug}: payment redirect section must name variant_id"
+        )
+        assert "confirm_payment_redirect" in tail, (
+            f"{slug}: payment redirect section must reference confirm_payment_redirect tool"
+        )
+        assert "billing_api_base_url" in tail, (
+            f"{slug}: payment redirect section must reference billing_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -617,6 +685,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "hospitality-travel-concierge": {"booking_complex", "waiver_complex", "upsell_complex"},
     "financial-services-banking-faq": {"booking_complex", "balance_lookup_complex", "card_block_complex"},
     "smb-franchise-location-faq": {"booking_complex", "location_router_complex", "lead_capture_complex"},
+    "telecom-utilities-outage-faq": {"booking_complex", "outage_status_complex", "payment_redirect_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(
@@ -628,6 +697,7 @@ _PREBUILD_COMPLETE_SLUGS = frozenset(
         "hospitality-travel-concierge",
         "financial-services-banking-faq",
         "smb-franchise-location-faq",
+        "telecom-utilities-outage-faq",
     }
 )
 

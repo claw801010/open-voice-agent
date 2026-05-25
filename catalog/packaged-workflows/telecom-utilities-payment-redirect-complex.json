@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{utility_name}}; offer billing FAQ or payment redirect confirmation when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Billing FAQ & payment redirect",
+        "prompt": "Assistant for {{utility_name}}. Provide **payment redirect FAQ** — never collect full card numbers, CVV, or bank account details on the call.\n\nWhen the caller wants to **confirm a payment redirect** to the secure portal, collect only tokenized account hints they voluntarily provide (e.g. last-four account token). Capture high-level intent (pay bill, update autopay). If a payment redirect HTTP tool is attached, call **confirm_payment_redirect** at {{billing_api_base_url}}/api/v1/payments/redirect/confirm with reason hint {{payment_redirect_reason_code}} — do not confirm redirect until the tool returns success.\n\nIf redirect API is unavailable, direct to {{payment_portal_url}} or {{support_phone}}. Plan compare remains non-binding without approved catalog tools.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm redirect reference if the billing API tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When guided, redirected, or escalated" }
+    }
+  ]
+}

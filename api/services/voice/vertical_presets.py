@@ -14,6 +14,7 @@ VERTICAL_BUILTIN_SLUGS = (
     "vertical_hospitality",
     "vertical_financial",
     "vertical_smb",
+    "vertical_telecom",
 )
 
 # Catalog slug → built-in vertical profile id
@@ -25,6 +26,7 @@ CATALOG_SLUG_TO_VOICE_PROFILE_ID: dict[str, str] = {
     "hospitality-travel-concierge": "builtin:vertical_hospitality",
     "financial-services-banking-faq": "builtin:vertical_financial",
     "smb-franchise-location-faq": "builtin:vertical_smb",
+    "telecom-utilities-outage-faq": "builtin:vertical_telecom",
 }
 
 _COMMON_EXTENDED_EN = (
@@ -180,6 +182,28 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
         similarity_boost=0.86,
         speed=1.0,
     ),
+    "vertical_telecom": SpeechDeliverySettings(
+        authenticity_level=0.68,
+        tone="formal",
+        behavior="concise",
+        enable_professional_fillers=True,
+        filler_intensity="low",
+        enable_extended_fillers=True,
+        extended_filler_phrases=[
+            "One moment while I check outage status",
+            "Let me look up your service area",
+            "Thanks for your patience during the outage",
+            *_COMMON_EXTENDED_EN,
+        ],
+        multilingual_fillers={
+            "en-US": ["One moment while I check", "Let me verify your service address"],
+            "es-US": ["Un momento mientras verifico", "Permítame revisar su zona de servicio"],
+        },
+        enable_breath_pauses=False,
+        stability=0.85,
+        similarity_boost=0.82,
+        speed=0.98,
+    ),
 }
 
 _VERTICAL_META: dict[str, dict[str, Any]] = {
@@ -217,6 +241,11 @@ _VERTICAL_META: dict[str, dict[str, Any]] = {
         "name": "Vertical — SMB & franchises",
         "description": "Friendly multi-location FAQ with location-routing extended fillers.",
         "tags": ["vertical", "smb", "mk01"],
+    },
+    "vertical_telecom": {
+        "name": "Vertical — telecom & utilities",
+        "description": "Formal, concise outage and billing FAQ delivery; minimal disfluency for status updates.",
+        "tags": ["vertical", "telecom", "mk01"],
     },
 }
 

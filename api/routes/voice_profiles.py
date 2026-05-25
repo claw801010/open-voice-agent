@@ -5,15 +5,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from api.db import db_client
 from api.db.models import UserModel
 from api.enums import OrganizationConfigurationKey
+from api.db import db_client
 from api.schemas.voice_profile import (
     SetDefaultVoiceProfileBody,
     VoiceProfileCloneBody,
     VoiceProfileCreateBody,
     VoiceProfileListResponse,
+    VoiceProfilePreviewBody,
+    VoiceProfilePreviewResponse,
     VoiceProfileResponse,
     VoiceProfileUpdateBody,
 )
 from api.services.auth.depends import get_user
+from api.services.voice.profile_preview import build_voice_profile_preview
 from api.services.voice.voice_profiles import (
     clone_profile,
     create_custom_profile,
@@ -83,6 +87,28 @@ async def get_voice_profile(profile_id: str, user: UserModel = Depends(get_user)
     if not profile:
         raise HTTPException(status_code=404, detail="Voice profile not found")
     return VoiceProfileResponse(**profile)
+
+
+@router.post("/{profile_id}/preview", response_model=VoiceProfilePreviewResponse)
+async def preview_voice_profile(
+    profile_id: str,
+    body: VoiceProfilePreviewBody,
+    user: UserModel = Depends(get_user),
+):
+    """MK-01 depth: industry sample script; optional ElevenLabs MP3 when user TTS is configured."""
+    org_id = _require_org(user)
+    doc = await _load_org_document(org_id)
+    profile = get_profile(doc, profile_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Voice profile not found")
+    user_config = await db_client.get_user_configurations(user.id)
+    data = await build_voice_profile_preview(
+        profile,
+        user_config,
+        override_text=body.text,
+        include_audio=body.include_audio,
+    )
+    return VoiceProfilePreviewResponse(**data)
 
 
 @router.post("", response_model=VoiceProfileResponse, status_code=201)

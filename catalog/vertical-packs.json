@@ -1,5 +1,5 @@
 {
-  "catalog_version": 7,
+  "catalog_version": 8,
   "description": "Canonical vertical pack metadata for MK-01 marketplace work. Packaged graphs live under catalog/packaged-workflows/; install uses POST /api/v1/workflow/install-from-catalog. Each pack has pack_semver (see catalog/README.md). Optional workflow_variants list simple vs complex graphs for the same vertical (complex = booking/API-ready prompts); default install uses workflow_template.packaged_definition_ref.",
   "packs": [
     {
@@ -514,6 +514,81 @@
         "location_router_complex: filter tool_name route_call_to_location and catalog_variant_id=location_router_complex.",
         "lead_capture_complex: filter tool_name capture_lead_intent and catalog_variant_id=lead_capture_complex.",
         "CSV export supports QM sampling for multi-location deflection experiments."
+      ],
+      "roadmap_motions": []
+    },
+    {
+      "slug": "telecom-utilities-outage-faq",
+      "pack_semver": "1.2.0",
+      "industry": "Telecom / utilities",
+      "display_name": "Outage & billing FAQ",
+      "summary": "Scripted outage status FAQ, non-binding plan compare guidance, and payment redirect flows with field service callback scheduling—no card capture on the call.",
+      "use_cases": [
+        "outage status and restoration FAQ",
+        "plan compare (non-binding) guidance",
+        "payment redirect FAQ (no card capture)",
+        "field service callback scheduling (booking_complex variant + schedule_service_callback HTTP tool after install)",
+        "live outage status lookup (outage_status_complex variant + lookup_outage_status HTTP tool after install)",
+        "payment redirect confirm (payment_redirect_complex variant + confirm_payment_redirect HTTP tool after install)"
+      ],
+      "languages": ["en-US", "es-US"],
+      "supported_modes": ["webrtc", "pstn"],
+      "compliance_tags": ["no-payment-card-in-prompt", "recording-disclosure-required", "life-safety-escalation-required"],
+      "preview_audio_url": null,
+      "recommended_voice_profile_id": "builtin:vertical_telecom",
+      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live outage feeds add RTT",
+      "runbook_path": "runbooks/telecom-utilities-outage-faq.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "telecom-utilities-outage-faq.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Outage FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "telecom-utilities-outage-faq.json",
+          "description": "Minimal outage and billing FAQ flow for utility demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Field service callback scheduling",
+          "complexity": "complex",
+          "packaged_definition_ref": "telecom-utilities-booking-complex.json",
+          "description": "Adds field service callback scheduling language; wire HTTP schedule_service_callback to {{scheduling_api_base_url}}/api/v1/appointments after install. See runbook booking-complex happy path."
+        },
+        {
+          "variant_id": "outage_status_complex",
+          "label": "Live outage status lookup",
+          "complexity": "complex",
+          "packaged_definition_ref": "telecom-utilities-outage-status-complex.json",
+          "description": "Tokenized service-area outage status lookup; wire HTTP lookup_outage_status to {{oss_api_base_url}}/api/v1/outages/status after install. See runbook outage status happy path + PARTNER_REVIEW."
+        },
+        {
+          "variant_id": "payment_redirect_complex",
+          "label": "Payment redirect confirm",
+          "complexity": "complex",
+          "packaged_definition_ref": "telecom-utilities-payment-redirect-complex.json",
+          "description": "Tokenized payment redirect confirmation; wire HTTP confirm_payment_redirect to {{billing_api_base_url}}/api/v1/payments/redirect/confirm after install. See runbook payment redirect happy path + PARTNER_REVIEW."
+        }
+      ],
+      "default_template_variables": {
+        "utility_name": "Your Utility Co",
+        "support_phone": "+1-555-0188",
+        "outage_status_portal_url": "https://outages.example.com/status",
+        "payment_portal_url": "https://billing.example.com/pay",
+        "default_service_area_code": "SVC-AREA-DEMO-01",
+        "scheduling_api_base_url": "https://field.utility.example.com/v1",
+        "oss_api_base_url": "https://oss.utility.example.com/v1",
+        "billing_api_base_url": "https://billing.utility.example.com/v1",
+        "payment_redirect_reason_code": "VOICE-PAY-REDIRECT-STD"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug telecom-utilities-outage-faq after install; compare FAQ vs callback funnel.",
+        "booking_complex: filter tool_name schedule_service_callback and catalog_variant_id=booking_complex.",
+        "outage_status_complex: filter tool_name lookup_outage_status and catalog_variant_id=outage_status_complex.",
+        "payment_redirect_complex: filter tool_name confirm_payment_redirect and catalog_variant_id=payment_redirect_complex.",
+        "CSV export supports QM sampling for outage deflection experiments."
       ],
       "roadmap_motions": []
     }

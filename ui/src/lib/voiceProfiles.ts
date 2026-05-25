@@ -306,4 +306,90 @@ export const VERTICAL_VOICE_PROFILE_LABELS: Record<string, string> = {
     'builtin:vertical_hospitality': 'Hospitality voice',
     'builtin:vertical_financial': 'Financial voice',
     'builtin:vertical_smb': 'SMB / franchise voice',
+    'builtin:vertical_telecom': 'Telecom / utilities voice',
 };
+
+export type CatalogVoicePreview = {
+    catalogSlug: string;
+    profileId: string;
+    profileName: string;
+    script: string;
+    recommendedVoiceProfileId: string | null;
+};
+
+export type VoiceProfilePreviewResult = {
+    profileId: string;
+    profileName: string;
+    script: string;
+    audioAvailable: boolean;
+    audioBase64: string | null;
+    audioContentType: string | null;
+    audioSkipReason: string | null;
+};
+
+type CatalogVoicePreviewApi = {
+    catalog_slug?: string;
+    profile_id?: string;
+    profile_name?: string;
+    script?: string;
+    recommended_voice_profile_id?: string | null;
+};
+
+type VoiceProfilePreviewApi = {
+    profile_id?: string;
+    profile_name?: string;
+    script?: string;
+    audio_available?: boolean;
+    audio_base64?: string | null;
+    audio_content_type?: string | null;
+    audio_skip_reason?: string | null;
+};
+
+export async function fetchCatalogVoicePreview(slug: string): Promise<CatalogVoicePreview | null> {
+    const base = getBackendPublicBaseUrl();
+    try {
+        const res = await fetch(
+            `${base}/api/v1/catalog/vertical-packs/${encodeURIComponent(slug)}/voice-preview`,
+            { headers: { Accept: 'application/json' } },
+        );
+        if (!res.ok) return null;
+        const data = (await res.json()) as CatalogVoicePreviewApi;
+        return {
+            catalogSlug: String(data.catalog_slug ?? slug),
+            profileId: String(data.profile_id ?? ''),
+            profileName: String(data.profile_name ?? ''),
+            script: String(data.script ?? ''),
+            recommendedVoiceProfileId: data.recommended_voice_profile_id ?? null,
+        };
+    } catch {
+        return null;
+    }
+}
+
+export async function previewVoiceProfile(
+    getAccessToken: () => Promise<string>,
+    profileId: string,
+    options?: { text?: string; includeAudio?: boolean },
+): Promise<{ ok: true; preview: VoiceProfilePreviewResult } | { ok: false; error: string }> {
+    const res = await apiFetch(getAccessToken, `/${encodeURIComponent(profileId)}/preview`, {
+        method: 'POST',
+        body: JSON.stringify({
+            text: options?.text,
+            include_audio: options?.includeAudio ?? true,
+        }),
+    });
+    if (!res.ok) return res;
+    const data = res.data as VoiceProfilePreviewApi;
+    return {
+        ok: true,
+        preview: {
+            profileId: String(data.profile_id ?? profileId),
+            profileName: String(data.profile_name ?? ''),
+            script: String(data.script ?? ''),
+            audioAvailable: Boolean(data.audio_available),
+            audioBase64: data.audio_base64 ?? null,
+            audioContentType: data.audio_content_type ?? null,
+            audioSkipReason: data.audio_skip_reason ?? null,
+        },
+    };
+}

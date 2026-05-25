@@ -37,6 +37,10 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         example_tool_names: ["schedule_lead_callback", "route_call_to_location", "capture_lead_intent"],
         suggested_response_mapping_keys: ["callback_id", "slot_start", "route_id", "target_location_code", "transfer_extension", "intent_id", "follow_up_by", "confirmation_code"],
     },
+    "telecom-utilities-outage-faq": {
+        example_tool_names: ["schedule_service_callback", "lookup_outage_status", "confirm_payment_redirect"],
+        suggested_response_mapping_keys: ["callback_id", "slot_start", "outage_id", "restoration_eta", "status_code", "redirect_id", "portal_url", "expires_at", "confirmation_code"],
+    },
 };
 
 export function verticalHttpProofHintForSlug(slug: string | null | undefined): VerticalHttpProofHint | null {

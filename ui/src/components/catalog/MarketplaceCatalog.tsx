@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { type ReactNode, useCallback, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
@@ -42,7 +42,12 @@ import {
     type VerticalPack,
 } from '@/lib/catalog/filterVerticalPacks';
 import logger from '@/lib/logger';
-import { VERTICAL_VOICE_PROFILE_LABELS } from '@/lib/voiceProfiles';
+import {
+    fetchCatalogVoicePreview,
+    previewVoiceProfile,
+    VERTICAL_VOICE_PROFILE_LABELS,
+    type CatalogVoicePreview,
+} from '@/lib/voiceProfiles';
 import { cn, getRandomId } from '@/lib/utils';
 
 type MarketplaceCatalogProps = {
@@ -88,9 +93,16 @@ export function MarketplaceCatalog({
     const [installName, setInstallName] = useState('');
     const [installing, setInstalling] = useState(false);
     const [tryPack, setTryPack] = useState<VerticalPack | null>(null);
+    const [tryVariantId, setTryVariantId] = useState('');
     const [tryLoading, setTryLoading] = useState(false);
     const [loopTalkPack, setLoopTalkPack] = useState<VerticalPack | null>(null);
+    const [loopTalkVariantId, setLoopTalkVariantId] = useState('');
     const [loopTalkLoading, setLoopTalkLoading] = useState(false);
+    const [voicePreviewPack, setVoicePreviewPack] = useState<VerticalPack | null>(null);
+    const [voicePreview, setVoicePreview] = useState<CatalogVoicePreview | null>(null);
+    const [voicePreviewLoading, setVoicePreviewLoading] = useState(false);
+    const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState<string | null>(null);
+    const [voicePreviewAudioLoading, setVoicePreviewAudioLoading] = useState(false);
 
     const packs = catalog?.packs ?? [];
     const facets = useMemo(() => catalogFacets(packs), [packs]);
@@ -105,6 +117,63 @@ export function MarketplaceCatalog({
         setInstallName(pack.display_name);
         setInstallVariantId(defaultCatalogVariantId(pack));
     }, []);
+
+    const openTry = useCallback((pack: VerticalPack) => {
+        setTryPack(pack);
+        setTryVariantId(defaultCatalogVariantId(pack));
+    }, []);
+
+    const openLoopTalk = useCallback((pack: VerticalPack) => {
+        setLoopTalkPack(pack);
+        setLoopTalkVariantId(defaultCatalogVariantId(pack));
+    }, []);
+
+    const openVoicePreview = useCallback((pack: VerticalPack) => {
+        setVoicePreviewPack(pack);
+        setVoicePreview(null);
+        setVoicePreviewAudioUrl(null);
+    }, []);
+
+    useEffect(() => {
+        if (!voicePreviewPack) return;
+        let cancelled = false;
+        setVoicePreviewLoading(true);
+        void fetchCatalogVoicePreview(voicePreviewPack.slug).then((data) => {
+            if (!cancelled) {
+                setVoicePreview(data);
+                setVoicePreviewLoading(false);
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [voicePreviewPack]);
+
+    const playVoicePreviewAudio = useCallback(async () => {
+        if (!voicePreview?.profileId) return;
+        setVoicePreviewAudioLoading(true);
+        try {
+            const res = await previewVoiceProfile(getAccessToken, voicePreview.profileId, {
+                text: voicePreview.script,
+                includeAudio: true,
+            });
+            if (!res.ok) {
+                toast.error(res.error || 'Audio preview unavailable');
+                return;
+            }
+            if (res.preview.audioAvailable && res.preview.audioBase64) {
+                const mime = res.preview.audioContentType || 'audio/mpeg';
+                setVoicePreviewAudioUrl(`data:${mime};base64,${res.preview.audioBase64}`);
+            } else {
+                toast.message('Script preview only — configure ElevenLabs TTS for audio');
+            }
+        } catch (e) {
+            logger.error(`Voice preview audio failed: ${e}`);
+            toast.error('Audio preview failed');
+        } finally {
+            setVoicePreviewAudioLoading(false);
+        }
+    }, [voicePreview, getAccessToken]);
 
     const confirmInstall = useCallback(async () => {
         if (!installTarget || !installName.trim()) {
@@ -144,8 +213,13 @@ export function MarketplaceCatalog({
         try {
             const token = await getAccessToken();
             const workflowName = `Try · ${tryPack.display_name}`.slice(0, 200);
+            const hasVariants = (tryPack.workflow_variants?.length ?? 0) > 0;
             const installRes = await installWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPost({
-                body: { slug: tryPack.slug, workflow_name: workflowName },
+                body: {
+                    slug: tryPack.slug,
+                    workflow_name: workflowName,
+                    ...(hasVariants && tryVariantId ? { variant_id: tryVariantId } : {}),
+                },
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             const wfId = installRes.data?.id;
@@ -177,7 +251,7 @@ export function MarketplaceCatalog({
         } finally {
             setTryLoading(false);
         }
-    }, [tryPack, getAccessToken, router]);
+    }, [tryPack, tryVariantId, getAccessToken, router]);
 
     const confirmLoopTalkTry = useCallback(async () => {
         if (!loopTalkPack) return;
@@ -185,8 +259,13 @@ export function MarketplaceCatalog({
         try {
             const token = await getAccessToken();
             const workflowName = `Try · ${loopTalkPack.display_name}`.slice(0, 200);
+            const hasVariants = (loopTalkPack.workflow_variants?.length ?? 0) > 0;
             const installRes = await installWorkflowFromCatalogApiV1WorkflowInstallFromCatalogPost({
-                body: { slug: loopTalkPack.slug, workflow_name: workflowName },
+                body: {
+                    slug: loopTalkPack.slug,
+                    workflow_name: workflowName,
+                    ...(hasVariants && loopTalkVariantId ? { variant_id: loopTalkVariantId } : {}),
+                },
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             const wfId = installRes.data?.id;
@@ -216,7 +295,7 @@ export function MarketplaceCatalog({
         } finally {
             setLoopTalkLoading(false);
         }
-    }, [loopTalkPack, getAccessToken, router]);
+    }, [loopTalkPack, loopTalkVariantId, getAccessToken, router]);
 
     const hasActiveFilters =
         filters.industry !== 'all' ||
@@ -454,7 +533,7 @@ export function MarketplaceCatalog({
                                             type="button"
                                             variant="outline"
                                             className="w-full"
-                                            onClick={() => setTryPack(pack)}
+                                            onClick={() => openTry(pack)}
                                         >
                                             Try (Web only)
                                         </Button>
@@ -462,9 +541,17 @@ export function MarketplaceCatalog({
                                             type="button"
                                             variant="outline"
                                             className="w-full"
-                                            onClick={() => setLoopTalkPack(pack)}
+                                            onClick={() => openLoopTalk(pack)}
                                         >
                                             Try (LoopTalk persona)
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            className="w-full text-muted-foreground"
+                                            onClick={() => openVoicePreview(pack)}
+                                        >
+                                            Preview voice script
                                         </Button>
                                         <Button type="button" className="w-full" onClick={() => openInstall(pack)}>
                                             Install into my org
@@ -600,14 +687,46 @@ export function MarketplaceCatalog({
                                         template vs a system caller), use <strong className="text-foreground">Try
                                         (LoopTalk persona)</strong> on the card.
                                     </p>
+                                    {tryPack?.recommended_voice_profile_id && (
+                                        <p className="text-xs">
+                                            <strong className="text-foreground">Voice profile:</strong>{' '}
+                                            {VERTICAL_VOICE_PROFILE_LABELS[tryPack.recommended_voice_profile_id] ??
+                                                tryPack.recommended_voice_profile_id}
+                                            {' '}(applied on install)
+                                        </p>
+                                    )}
                                 </div>
                             </DialogDescription>
                         </DialogHeader>
+                        {tryPack?.workflow_variants && tryPack.workflow_variants.length > 0 && (
+                            <div className="space-y-2 px-1">
+                                <Label htmlFor="try-variant">Graph variant</Label>
+                                <Select value={tryVariantId} onValueChange={setTryVariantId}>
+                                    <SelectTrigger id="try-variant" className="w-full">
+                                        <SelectValue placeholder="Choose variant" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {tryPack.workflow_variants.map((v) => (
+                                            <SelectItem key={v.variant_id} value={v.variant_id}>
+                                                {v.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                         <DialogFooter className="gap-2 sm:gap-0">
                             <Button type="button" variant="outline" onClick={() => setTryPack(null)}>
                                 Cancel
                             </Button>
-                            <Button type="button" onClick={confirmTryWeb} disabled={tryLoading}>
+                            <Button
+                                type="button"
+                                onClick={confirmTryWeb}
+                                disabled={
+                                    tryLoading ||
+                                    (!!(tryPack?.workflow_variants?.length) && !tryVariantId)
+                                }
+                            >
                                 {tryLoading ? 'Starting…' : 'Start Web try'}
                             </Button>
                         </DialogFooter>
@@ -646,20 +765,110 @@ export function MarketplaceCatalog({
                                             <strong className="text-foreground">Try (Web only)</strong> instead.
                                         </li>
                                     </ul>
+                                    {loopTalkPack?.recommended_voice_profile_id && (
+                                        <p className="text-xs">
+                                            <strong className="text-foreground">Voice profile:</strong>{' '}
+                                            {VERTICAL_VOICE_PROFILE_LABELS[loopTalkPack.recommended_voice_profile_id] ??
+                                                loopTalkPack.recommended_voice_profile_id}
+                                            {' '}(applied on install)
+                                        </p>
+                                    )}
                                 </div>
                             </DialogDescription>
                         </DialogHeader>
+                        {loopTalkPack?.workflow_variants && loopTalkPack.workflow_variants.length > 0 && (
+                            <div className="space-y-2 px-1">
+                                <Label htmlFor="looptalk-variant">Graph variant</Label>
+                                <Select value={loopTalkVariantId} onValueChange={setLoopTalkVariantId}>
+                                    <SelectTrigger id="looptalk-variant" className="w-full">
+                                        <SelectValue placeholder="Choose variant" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {loopTalkPack.workflow_variants.map((v) => (
+                                            <SelectItem key={v.variant_id} value={v.variant_id}>
+                                                {v.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                         <DialogFooter className="gap-2 sm:gap-0">
                             <Button type="button" variant="outline" onClick={() => setLoopTalkPack(null)}>
                                 Cancel
                             </Button>
-                            <Button type="button" onClick={confirmLoopTalkTry} disabled={loopTalkLoading}>
+                            <Button
+                                type="button"
+                                onClick={confirmLoopTalkTry}
+                                disabled={
+                                    loopTalkLoading ||
+                                    (!!(loopTalkPack?.workflow_variants?.length) && !loopTalkVariantId)
+                                }
+                            >
                                 {loopTalkLoading ? 'Creating…' : 'Create LoopTalk session'}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
             )}
+
+            <Dialog
+                open={voicePreviewPack !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setVoicePreviewPack(null);
+                        setVoicePreview(null);
+                        setVoicePreviewAudioUrl(null);
+                    }
+                }}
+            >
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Voice preview</DialogTitle>
+                        <DialogDescription>
+                            Industry sample line for{' '}
+                            <strong className="text-foreground">{voicePreviewPack?.display_name}</strong>. Audio
+                            requires ElevenLabs TTS on your account.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3 py-2 text-sm">
+                        {voicePreviewLoading ? (
+                            <p className="text-muted-foreground">Loading preview…</p>
+                        ) : voicePreview ? (
+                            <>
+                                <p>
+                                    <span className="font-medium text-foreground">Profile: </span>
+                                    {VERTICAL_VOICE_PROFILE_LABELS[voicePreview.profileId] ??
+                                        voicePreview.profileName}
+                                </p>
+                                <blockquote className="rounded-md border bg-muted/40 px-3 py-2 italic text-foreground">
+                                    &ldquo;{voicePreview.script}&rdquo;
+                                </blockquote>
+                                {voicePreviewAudioUrl ? (
+                                    // eslint-disable-next-line jsx-a11y/media-has-caption -- TTS preview clip
+                                    <audio controls src={voicePreviewAudioUrl} className="w-full" />
+                                ) : null}
+                            </>
+                        ) : (
+                            <p className="text-muted-foreground">Preview unavailable — check that the API is running.</p>
+                        )}
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button type="button" variant="outline" onClick={() => setVoicePreviewPack(null)}>
+                            Close
+                        </Button>
+                        {installable && voicePreview ? (
+                            <Button
+                                type="button"
+                                onClick={() => void playVoicePreviewAudio()}
+                                disabled={voicePreviewAudioLoading}
+                            >
+                                {voicePreviewAudioLoading ? 'Synthesizing…' : 'Play audio (ElevenLabs)'}
+                            </Button>
+                        ) : null}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

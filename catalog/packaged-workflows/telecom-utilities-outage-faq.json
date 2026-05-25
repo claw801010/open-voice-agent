@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Greet the caller briefly on behalf of {{utility_name}}; offer help with outage status, plan FAQ, or payment redirect guidance.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Outage & billing FAQ",
+        "prompt": "You assist {{utility_name}} callers with **scripted outage FAQ**, **non-binding plan compare guidance**, and **payment redirect** — never collect full card numbers or bank account details on the call.\n\nFor outages, reference published status copy and {{outage_status_portal_url}}; default service area hint: {{default_service_area_code}}. Do not invent restoration ETAs without a connected outage feed tool.\n\nFor billing or payment, direct callers to {{payment_portal_url}} or {{support_phone}} — explain redirect-only flows. Plan compare is informational only; do not quote binding rates without approved plan catalog tools.\n\nEscalate life-safety or downed-line reports immediately per utility policy.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank the caller; confirm any documented next step or reference number if provided by a tool.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

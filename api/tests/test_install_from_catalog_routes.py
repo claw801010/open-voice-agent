@@ -577,6 +577,103 @@ async def test_install_from_catalog_smb_default(
 
 
 @pytest.mark.asyncio
+async def test_install_from_catalog_telecom_default(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-CATALOG: telecom-utilities-outage-faq default install loads outage FAQ prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "telecom-utilities-outage-faq",
+                "workflow_name": "Telecom outage FAQ",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_slug") == "telecom-utilities-outage-faq"
+    wf_cfg = data.get("workflow_configurations") or {}
+    assert wf_cfg.get("voice_profile_id") == "builtin:vertical_telecom"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "utility_name" in blob
+    assert "outage_status_portal_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_telecom_booking_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-CATALOG: telecom booking_complex variant installs service callback prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "telecom-utilities-outage-faq",
+                "workflow_name": "Telecom service callback",
+                "variant_id": "booking_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "booking_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "schedule_service_callback" in blob
+    assert "scheduling_api_base_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_telecom_outage_status_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: telecom outage_status_complex variant installs outage lookup prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "telecom-utilities-outage-faq",
+                "workflow_name": "Telecom outage status",
+                "variant_id": "outage_status_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "outage_status_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "lookup_outage_status" in blob
+    assert "oss_api_base_url" in blob
+
+
+@pytest.mark.asyncio
+async def test_install_from_catalog_telecom_payment_redirect_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: telecom payment_redirect_complex variant installs redirect confirm prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "telecom-utilities-outage-faq",
+                "workflow_name": "Telecom payment redirect",
+                "variant_id": "payment_redirect_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "payment_redirect_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "confirm_payment_redirect" in blob
+    assert "billing_api_base_url" in blob
+
+
+@pytest.mark.asyncio
 async def test_install_from_catalog_smb_booking_complex(
     test_client_factory, org_user_catalog_install
 ):

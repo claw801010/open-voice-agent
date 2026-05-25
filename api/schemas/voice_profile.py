@@ -118,3 +118,35 @@ class VoiceProfileCloneBody(BaseModel):
 
 class SetDefaultVoiceProfileBody(BaseModel):
     profile_id: str = Field(min_length=1)
+
+
+class VoiceProfilePreviewBody(BaseModel):
+    text: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Optional override sample line; default is vertical/industry script",
+    )
+    include_audio: bool = Field(
+        default=True,
+        description="When true and user has ElevenLabs TTS, synthesize MP3 preview",
+    )
+
+
+class VoiceProfilePreviewResponse(BaseModel):
+    profile_id: str
+    profile_name: str
+    script: str
+    speech_settings: SpeechDeliverySettings
+    audio_available: bool = False
+    audio_base64: str | None = None
+    audio_content_type: str | None = None
+    audio_skip_reason: str | None = None
+
+
+class CatalogVoicePreviewResponse(BaseModel):
+    catalog_slug: str
+    profile_id: str
+    profile_name: str
+    script: str
+    speech_settings: SpeechDeliverySettings
+    recommended_voice_profile_id: str | None = None

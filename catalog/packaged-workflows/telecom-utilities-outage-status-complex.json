@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{utility_name}}; offer outage FAQ or live status lookup when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Outage FAQ & status lookup",
+        "prompt": "Assistant for {{utility_name}}. Provide **scripted outage FAQ** and **non-binding plan guidance** — never collect payment card or bank account numbers.\n\nWhen the caller asks for **live outage status** for their service area, collect only tokenized or high-level location hints they voluntarily provide (e.g. service area code — default hint {{default_service_area_code}}). If an outage lookup HTTP tool is attached, call **lookup_outage_status** at {{oss_api_base_url}}/api/v1/outages/status — do not invent restoration ETAs until the tool returns. If lookup is unavailable, direct to {{outage_status_portal_url}} or {{support_phone}}.\n\nEscalate life-safety or downed-line reports immediately per utility policy.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm outage summary or handoff reference if the lookup tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

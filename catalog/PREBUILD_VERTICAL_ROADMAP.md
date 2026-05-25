@@ -16,6 +16,7 @@ This document answers: *Are our shipped vertical packs ready to clone into **pre
 | [hospitality-travel-concierge](vertical-packs.json) | Hospitality / travel | **Simple** + **complex** [hospitality-travel-booking-complex.json](packaged-workflows/hospitality-travel-booking-complex.json) | **PMS modify** HTTP tool (`modify_reservation`); waiver / upsell shipped |
 | [financial-services-banking-faq](vertical-packs.json) | Financial services | **Simple** + **complex** booking, balance, card block graphs | **Branch appointment**, **tokenized balance**, **card block** HTTP tools |
 | [smb-franchise-location-faq](vertical-packs.json) | SMB / franchises | **Simple** + **complex** booking, router, lead capture graphs | **Lead callback**, **talk-to-location**, **CRM lead capture** HTTP tools |
+| [telecom-utilities-outage-faq](vertical-packs.json) | Telecom / utilities | **Simple** + **complex** booking, outage status, payment redirect graphs | **Field callback**, **outage lookup**, **payment redirect confirm** HTTP tools |
 
 Each row must keep **happy-path QA** in its [runbook](../runbooks/README.md) and pass [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md) before we market it as “revenue-ready.”
 
@@ -66,6 +67,9 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 | `smb-franchise-location-faq` | Lead callback scheduling | Pipeline velocity per location | **Shipped** — **`booking_complex`** + **`schedule_lead_callback`** + runbook happy path |
 | `smb-franchise-location-faq` | Talk-to-location router | Right-site deflection | **Shipped** — **`location_router_complex`** + **`route_call_to_location`** + runbook happy path |
 | `smb-franchise-location-faq` | CRM lead capture | One template × many stores | **Shipped** — **`lead_capture_complex`** + **`capture_lead_intent`** + runbook happy path |
+| `telecom-utilities-outage-faq` | Field service callback scheduling | Self-serve outage follow-up | **Shipped** — **`booking_complex`** + **`schedule_service_callback`** + runbook happy path |
+| `telecom-utilities-outage-faq` | Live outage status lookup | Real-time ETAs from OSS/BSS | **Shipped** — **`outage_status_complex`** + **`lookup_outage_status`** + runbook happy path |
+| `telecom-utilities-outage-faq` | Payment redirect confirm | Safer billing handoff | **Shipped** — **`payment_redirect_complex`** + **`confirm_payment_redirect`** + runbook happy path |
 
 **Next engineering slice (when staffed):** **MK-01 depth** (preview audio / try-flow polish) or **eighth vertical row** ([READMEPLANNING.md](../READMEPLANNING.md) §6); use [prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) for GTM demos.
 
