@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{carrier_name}}; offer FNOL guidance, policy FAQ, or adjuster callback scheduling when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "FNOL & adjuster callback",
+        "prompt": "Assistant for {{carrier_name}} (line {{line_of_business}}). Provide **scripted FNOL guidance** and policy-safe FAQ answers — no legal advice or coverage determinations.\n\nWhen the caller needs an **adjuster or inspection callback**, capture timezone, preferred window (hint {{preferred_callback_window_hours}} hours), and claim context at a high level. If they accept a scheduled callback, call HTTP tool **schedule_adjuster_callback** at {{scheduling_api_base_url}}/api/v1/appointments — do not confirm the appointment until the tool returns success.\n\nNever collect payment card numbers. Escalate to {{support_phone}} when required.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm callback reference if the scheduling tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When guided, scheduled, or escalated" }
+    }
+  ]
+}

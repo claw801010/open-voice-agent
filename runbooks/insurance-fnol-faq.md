@@ -1,0 +1,65 @@
+# Runbook — Insurance: FNOL guidance & policy FAQ
+
+**Pack slug:** `insurance-fnol-faq`  
+**Catalog:** [catalog/vertical-packs.json](../catalog/vertical-packs.json)
+
+## Purpose
+
+Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scripted guardrails—routing hot leads and scheduling adjuster callbacks without replacing licensed adjusters or legal review.
+
+## Prerequisites
+
+- Carrier-approved FNOL scripts and disclosure copy (recording, not legal advice).
+- Optional claims core or CRM HTTP tools (tokenized; no full card data in prompts).
+- Legal / compliance sign-off before outbound or buyer-facing GTM ([PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md)).
+
+## Happy-path test (QA)
+
+1. Install **FNOL guidance & policy FAQ** from **Template catalog**.
+2. **Try (Web only)** with defaults, or run a **Web test** from the editor after **Customize**.
+3. **Expected:** caller can ask a policy-style question and receive a coherent, script-aligned answer; agent offers escalation to {{support_phone}} or {{claims_portal_url}} when status lookup is not wired.
+
+## Booking-complex happy-path test (QA)
+
+**Goal:** schedule an **adjuster callback** in **≤6 agent turns** after **`schedule_adjuster_callback`** is wired.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+
+1. Install **FNOL guidance & policy FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
+2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`, **`carrier_name`**, **`line_of_business`**, and **`preferred_callback_window_hours`** from pack defaults.
+3. HTTP tool **`schedule_adjuster_callback`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `callback_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
+4. Attach tool to the **FNOL & adjuster callback** agent; **Publish**.
+5. **Web test** script: brief FNOL context → request adjuster callback → give timezone + preferred window → confirm summary.
+6. **Expected:** **`schedule_adjuster_callback`** invoked; call detail shows **`mapped_data`**; filter **`/analytics/calls?catalog_slug=insurance-fnol-faq&catalog_variant_id=booking_complex&tool_name=schedule_adjuster_callback`**.
+
+## Day 1 checklist
+
+1. **Scripts:** carrier-approved FNOL and FAQ copy only; no coverage determinations on the call.
+2. **Disclosures:** recording and “not legal advice” per compliance tags.
+3. **Handoff:** licensed adjuster queue or portal when complexity exceeds script scope.
+4. **Embed or PSTN:** [recipes/embed-widget.md](../recipes/embed-widget.md) for web; [recipes/inbound-pstn.md](../recipes/inbound-pstn.md) for phone.
+
+## Integrations
+
+- Claims core / CRM via HTTP tools; document portal deep links in template variables.
+
+## Catalog graph variants (MK-01)
+
+- **Simple (default install):** [insurance-fnol-faq.json](../catalog/packaged-workflows/insurance-fnol-faq.json).
+- **Complex (adjuster callback):** [insurance-fnol-booking-complex.json](../catalog/packaged-workflows/insurance-fnol-booking-complex.json) — variant **`booking_complex`**; wire HTTP **schedule_adjuster_callback**; see **Booking-complex happy-path test** above.
+
+## Proof in Analytics (MK-01)
+
+**`catalog_slug`** = `insurance-fnol-faq`. **Overview:** `/analytics?catalog_slug=insurance-fnol-faq`. **Calls:** `/analytics/calls` — FNOL resolution and scheduling tool success surface in **tool spans** / **`mapped_data`** on call detail. HTTP field alignment: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md).
+
+## High-revenue motions (roadmap)
+
+**Shipped:** **Adjuster callback scheduling** — **`booking_complex`** + **`schedule_adjuster_callback`** HTTP tool + runbook happy path above.
+
+See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) for remaining items.
+
+| Motion | Buyer value | Status |
+|--------|-------------|--------|
+| **Adjuster callback scheduling** | Faster FNOL → inspection path | **Shipped** — **`booking_complex`** + **schedule_adjuster_callback** |
+| **Quote intent qualification** | Hot-lead routing | **Roadmap** — partner review before ship |
+| **Live claims status lookup** | Contain tier-1 status calls | **Roadmap** — tokenized claims core + PII review |

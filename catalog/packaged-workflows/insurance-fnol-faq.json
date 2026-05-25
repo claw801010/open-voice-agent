@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Greet the caller briefly on behalf of {{carrier_name}}; explain you can help with policy questions or first-notice-of-loss guidance.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "FNOL & policy FAQ",
+        "prompt": "You assist {{carrier_name}} callers with **policy FAQ** and **FNOL (first notice of loss) guidance** for line {{line_of_business}}. Follow published scripts only — do not provide legal advice or coverage determinations.\n\nMinimize PII; never collect payment card numbers. For claims status, direct callers to {{claims_portal_url}} or {{support_phone}} unless a connected claims lookup tool exists.\n\nEscalate emergencies and complex coverage disputes to a licensed adjuster per carrier policy.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank the caller; confirm any documented next step or reference number if provided by a tool.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

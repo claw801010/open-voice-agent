@@ -41,7 +41,7 @@ def catalog() -> dict:
 def test_catalog_version_and_pack_count(catalog: dict) -> None:
     assert isinstance(catalog.get("catalog_version"), int)
     packs = catalog.get("packs")
-    assert isinstance(packs, list) and len(packs) >= 3
+    assert isinstance(packs, list) and len(packs) >= 4
 
 
 def test_each_vertical_pack_rubric_fields(catalog: dict) -> None:
@@ -359,15 +359,26 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "healthcare-clinic-screening": {"booking_complex", "confirm_remind", "concierge_complex"},
     "retail-wismo-faq": {"booking_complex", "upsell_complex", "collections_complex"},
     "b2b-saas-trial-nurture": {"booking_complex", "renewal_complex", "conversion_complex"},
+    "insurance-fnol-faq": {"booking_complex"},
 }
+
+_PREBUILD_COMPLETE_SLUGS = frozenset(
+    {
+        "healthcare-clinic-screening",
+        "retail-wismo-faq",
+        "b2b-saas-trial-nurture",
+    }
+)
 
 
 def test_prebuild_roadmap_motions_all_shipped(catalog: dict) -> None:
-    """MK-01-PREBUILD-COMPLETE: every pack has empty roadmap_motions (all revenue motions shipped)."""
+    """MK-01-PREBUILD-COMPLETE: original three packs have empty roadmap_motions."""
     packs = catalog["packs"]
     assert len(packs) >= 3
     for pack in packs:
         slug = pack["slug"]
+        if slug not in _PREBUILD_COMPLETE_SLUGS:
+            continue
         motions = pack.get("roadmap_motions")
         assert motions == [], f"{slug!r}: expected empty roadmap_motions when PREBUILD is complete"
 

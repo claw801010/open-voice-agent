@@ -213,6 +213,62 @@
         "Export CSV from call list for trial-stage, conversion, and renewal cohort reviews."
       ],
       "roadmap_motions": []
+    },
+    {
+      "slug": "insurance-fnol-faq",
+      "pack_semver": "1.0.0",
+      "industry": "Insurance",
+      "display_name": "FNOL guidance & policy FAQ",
+      "summary": "First-notice-of-loss scripting, policy FAQ, and adjuster callback scheduling with compliance-first guardrails—not legal advice or coverage determinations.",
+      "use_cases": [
+        "FNOL guidance (scripted intake)",
+        "policy FAQ",
+        "claims portal / phone handoff",
+        "adjuster or inspection callback (booking_complex variant + schedule_adjuster_callback HTTP tool after install)"
+      ],
+      "languages": ["en-US"],
+      "supported_modes": ["webrtc", "pstn"],
+      "compliance_tags": ["fnol-scripting-only", "no-payment-card-in-prompt", "recording-disclosure-required"],
+      "preview_audio_url": null,
+      "cost_latency_estimate_band": "Low–medium latency for FAQ; higher if live claims lookup tools add RTT",
+      "runbook_path": "runbooks/insurance-fnol-faq.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "insurance-fnol-faq.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "FNOL FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "insurance-fnol-faq.json",
+          "description": "Minimal FNOL + policy FAQ flow for quick compliance demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Adjuster callback scheduling",
+          "complexity": "complex",
+          "packaged_definition_ref": "insurance-fnol-booking-complex.json",
+          "description": "Adds adjuster callback scheduling language; wire HTTP schedule_adjuster_callback to {{scheduling_api_base_url}}/api/v1/appointments after install. See runbook booking-complex happy path."
+        }
+      ],
+      "default_template_variables": {
+        "carrier_name": "Your Insurance Carrier",
+        "support_phone": "+1-555-0199",
+        "claims_portal_url": "https://claims.example.com/status",
+        "line_of_business": "auto",
+        "scheduling_api_base_url": "https://scheduling.insurance.example.com/v1",
+        "preferred_callback_window_hours": "24"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug insurance-fnol-faq after install; compare FNOL vs callback funnel.",
+        "booking_complex: filter tool_name schedule_adjuster_callback and catalog_variant_id=booking_complex.",
+        "CSV export on call list supports QM sampling for FNOL containment experiments."
+      ],
+      "roadmap_motions": [
+        "quote intent qualification (roadmap): voice capture of quote-ready intent — partner review before ship",
+        "live claims status lookup (roadmap): tokenized claims core HTTP tool — PII minimization review before ship"
+      ]
     }
   ]
 }
