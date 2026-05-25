@@ -1,6 +1,6 @@
 # PREBUILD vertical demo matrix (MK-01)
 
-**Goal:** one-page GTM / QA reference for **shipped** complex variants. Six original vertical packs have **`roadmap_motions: []`** when PREBUILD motions are complete; newer packs may list roadmap tail in [vertical-packs.json](../vertical-packs.json).
+**Goal:** one-page GTM / QA reference for **shipped** complex variants. All **seven** vertical packs have **`roadmap_motions: []`** when PREBUILD motions are complete.
 
 **Prerequisites:** [booking-scheduling-stub-local.md](booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for local HTTP tool QA.
 
@@ -38,6 +38,7 @@ curl -sS -X POST "$API/api/v1/workflow/install-from-catalog" \
 | `financial-services-banking-faq` | `card_block_complex` | `report_card_lost_stolen` | `/api/v1/cards/block` | Card block / fraud report happy-path test |
 | `smb-franchise-location-faq` | `booking_complex` | `schedule_lead_callback` | `/api/v1/appointments` | Booking-complex happy-path test |
 | `smb-franchise-location-faq` | `location_router_complex` | `route_call_to_location` | `/api/v1/locations/route` | Talk-to-location router happy-path test |
+| `smb-franchise-location-faq` | `lead_capture_complex` | `capture_lead_intent` | `/api/v1/leads/intent` | CRM lead capture happy-path test |
 
 Runbooks: [runbooks/](../runbooks/). Field alignment: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../VERTICAL_ANALYTICS_HTTP_MATRIX.md).
 

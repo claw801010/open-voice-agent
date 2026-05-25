@@ -45,6 +45,19 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 5. **Web test** script: ask to speak with a nearby store → give city or ZIP → confirm summary when agent reads back routing result.
 6. **Expected:** **`route_call_to_location`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=smb-franchise-location-faq&catalog_variant_id=location_router_complex&tool_name=route_call_to_location`**.
 
+## CRM lead capture happy-path test (QA)
+
+**Goal:** capture **sales or service lead intent** in **≤6 agent turns** after **`capture_lead_intent`** is wired (**lead_capture_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/leads/intent` with sample JSON).
+
+1. Install **Multi-location FAQ & lead callback** with variant **`lead_capture_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"lead_capture_complex"`).
+2. **Customize**; set **`crm_api_base_url`** = `http://127.0.0.1:8765`, **`crm_lead_source_code`**, and **`brand_name`** from pack defaults.
+3. HTTP tool **`capture_lead_intent`**: `POST {{crm_api_base_url}}/api/v1/leads/intent`; **response_mapping** — `intent_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `follow_up_by` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
+4. Attach tool to the **Location FAQ & lead capture** agent; **Publish**.
+5. **Web test** script: ask about a service → express interest in a quote or visit → confirm reference when agent summarizes CRM handoff.
+6. **Expected:** **`capture_lead_intent`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=smb-franchise-location-faq&catalog_variant_id=lead_capture_complex&tool_name=capture_lead_intent`**.
+
 ## Day 1 checklist
 
 1. **Copy:** brand FAQ and location directory URLs match published site content.
@@ -61,6 +74,7 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 - **Simple (default install):** [smb-franchise-location-faq.json](../catalog/packaged-workflows/smb-franchise-location-faq.json).
 - **Complex (lead callback):** [smb-franchise-booking-complex.json](../catalog/packaged-workflows/smb-franchise-booking-complex.json) — variant **`booking_complex`**; wire HTTP **schedule_lead_callback**; see **Booking-complex happy-path test** above.
 - **Complex (location router):** [smb-franchise-location-router-complex.json](../catalog/packaged-workflows/smb-franchise-location-router-complex.json) — variant **`location_router_complex`**; wire **route_call_to_location**; see **Talk-to-location router happy-path test** above.
+- **Complex (CRM lead capture):** [smb-franchise-lead-capture-complex.json](../catalog/packaged-workflows/smb-franchise-lead-capture-complex.json) — variant **`lead_capture_complex`**; wire **capture_lead_intent**; see **CRM lead capture happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -68,12 +82,12 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 
 ## High-revenue motions (roadmap)
 
-**Shipped:** **Lead callback scheduling** — **`booking_complex`** + **`schedule_lead_callback`**; **Talk-to-location router** — **`location_router_complex`** + **`route_call_to_location`** (see happy-path sections above).
+**Shipped:** **Lead callback scheduling** — **`booking_complex`** + **`schedule_lead_callback`**; **Talk-to-location router** — **`location_router_complex`** + **`route_call_to_location`**; **CRM lead capture** — **`lead_capture_complex`** + **`capture_lead_intent`** (see happy-path sections above).
 
 | Motion | Buyer value | Status |
 |--------|-------------|--------|
 | **Lead callback scheduling** | Pipeline velocity per location | **Shipped** — **`booking_complex`** + **schedule_lead_callback** |
 | **Talk-to-location router** | Right-site deflection | **Shipped** — **`location_router_complex`** + **route_call_to_location** |
-| **CRM lead capture** | One template × many stores | **Roadmap** — **`lead_capture_complex`** + **capture_lead_intent** |
+| **CRM lead capture** | One template × many stores | **Shipped** — **`lead_capture_complex`** + **capture_lead_intent** |
 
-**Roadmap tail:** remaining items in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json).
+**Roadmap tail:** remaining items (if any) in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) — empty when all motions above are shipped.

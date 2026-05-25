@@ -531,6 +531,40 @@ def test_runbooks_document_location_router_happy_path(catalog: dict) -> None:
         )
 
 
+_LEAD_CAPTURE_COMPLEX_SECTION = "## CRM lead capture happy-path test"
+
+
+def test_runbooks_document_lead_capture_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: lead_capture_complex variant documents CRM lead tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "lead_capture_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _LEAD_CAPTURE_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_LEAD_CAPTURE_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_LEAD_CAPTURE_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: lead capture section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: lead capture section needs expected outcome"
+        assert "lead_capture_complex" in tail, (
+            f"{slug}: lead capture section must name variant_id"
+        )
+        assert "capture_lead_intent" in tail, (
+            f"{slug}: lead capture section must reference capture_lead_intent tool"
+        )
+        assert "crm_api_base_url" in tail, (
+            f"{slug}: lead capture section must reference crm_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -567,7 +601,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "insurance-fnol-faq": {"booking_complex", "quote_complex", "claims_lookup_complex"},
     "hospitality-travel-concierge": {"booking_complex", "waiver_complex", "upsell_complex"},
     "financial-services-banking-faq": {"booking_complex", "balance_lookup_complex", "card_block_complex"},
-    "smb-franchise-location-faq": {"booking_complex", "location_router_complex"},
+    "smb-franchise-location-faq": {"booking_complex", "location_router_complex", "lead_capture_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(
@@ -578,6 +612,7 @@ _PREBUILD_COMPLETE_SLUGS = frozenset(
         "insurance-fnol-faq",
         "hospitality-travel-concierge",
         "financial-services-banking-faq",
+        "smb-franchise-location-faq",
     }
 )
 

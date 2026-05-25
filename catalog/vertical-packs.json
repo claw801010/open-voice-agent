@@ -438,7 +438,7 @@
     },
     {
       "slug": "smb-franchise-location-faq",
-      "pack_semver": "1.1.0",
+      "pack_semver": "1.2.0",
       "industry": "SMB / franchises",
       "display_name": "Multi-location FAQ & lead callback",
       "summary": "One voice template for multi-site SMB and franchise brands: location FAQ, hours and services answers, and lead callback scheduling with optional CRM hooks.",
@@ -446,7 +446,8 @@
         "multi-location hours and services FAQ",
         "location directory handoff",
         "lead callback scheduling (booking_complex variant + schedule_lead_callback HTTP tool after install)",
-        "talk-to-location call routing (location_router_complex variant + route_call_to_location HTTP tool after install)"
+        "talk-to-location call routing (location_router_complex variant + route_call_to_location HTTP tool after install)",
+        "CRM lead capture after FAQ (lead_capture_complex variant + capture_lead_intent HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -479,6 +480,13 @@
           "complexity": "complex",
           "packaged_definition_ref": "smb-franchise-location-router-complex.json",
           "description": "Route callers to the right store or handoff target; wire HTTP route_call_to_location to {{locations_api_base_url}}/api/v1/locations/route after install. See runbook location router happy path + PARTNER_REVIEW."
+        },
+        {
+          "variant_id": "lead_capture_complex",
+          "label": "CRM lead capture",
+          "complexity": "complex",
+          "packaged_definition_ref": "smb-franchise-lead-capture-complex.json",
+          "description": "Capture sales or service lead intent for CRM follow-up; wire HTTP capture_lead_intent to {{crm_api_base_url}}/api/v1/leads/intent after install. See runbook lead capture happy path + PARTNER_REVIEW."
         }
       ],
       "default_template_variables": {
@@ -489,17 +497,18 @@
         "scheduling_api_base_url": "https://scheduling.smb.example.com/v1",
         "preferred_callback_window_hours": "24",
         "locations_api_base_url": "https://locations.smb.example.com/v1",
-        "routing_policy_code": "SMB-VOICE-ROUTE-STD"
+        "routing_policy_code": "SMB-VOICE-ROUTE-STD",
+        "crm_api_base_url": "https://crm.smb.example.com/v1",
+        "crm_lead_source_code": "VOICE-INBOUND-FAQ"
       },
       "analytics_hooks": [
         "Filter analytics by catalog_slug smb-franchise-location-faq after install; compare FAQ vs callback funnel.",
         "booking_complex: filter tool_name schedule_lead_callback and catalog_variant_id=booking_complex.",
         "location_router_complex: filter tool_name route_call_to_location and catalog_variant_id=location_router_complex.",
+        "lead_capture_complex: filter tool_name capture_lead_intent and catalog_variant_id=lead_capture_complex.",
         "CSV export supports QM sampling for multi-location deflection experiments."
       ],
-      "roadmap_motions": [
-        "CRM lead capture after FAQ (lead_capture_complex variant + capture_lead_intent HTTP tool after install) (roadmap)"
-      ]
+      "roadmap_motions": []
     }
   ]
 }

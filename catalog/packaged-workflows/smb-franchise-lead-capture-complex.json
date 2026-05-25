@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{brand_name}}; offer multi-location FAQ or help capturing sales interest when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Location FAQ & lead capture",
+        "prompt": "Assistant for **{{brand_name}}** (multi-location SMB / franchise). Answer **hours and services FAQ** using published copy — cite {{location_directory_url}} when helpful.\n\nWhen the caller expresses **sales or service interest** (new customer, estimate, or franchise inquiry hint source {{crm_lead_source_code}}), capture only what they voluntarily offer: service type, preferred location (hint {{default_location_code}}), and contact preference. If they agree to register lead intent for follow-up, call HTTP tool **capture_lead_intent** at {{crm_api_base_url}}/api/v1/leads/intent — do not claim the lead is filed until the tool returns success.\n\nNever collect payment card numbers on the call. Escalate to {{support_phone}} when required.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm lead reference if the CRM tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}
