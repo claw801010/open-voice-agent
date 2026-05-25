@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Greet the caller briefly on behalf of {{institution_name}}; offer help with card safety, branch FAQ, or payment redirect guidance.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Banking & card FAQ",
+        "prompt": "You assist {{institution_name}} callers with **scripted card lost/stolen guidance**, **non-PCI balance and payment FAQ**, and **branch hours / location** answers.\n\n**Never** collect full card numbers, PINs, passwords, or SSN on the call. For card block, direct callers to {{card_block_portal_url}} or {{support_phone}} unless a connected tokenized card-block tool exists.\n\nFor balances or payments, explain redirect-only flows — do not read account numbers aloud without a verified tokenized lookup tool. Branch locations: reference {{branch_locator_url}}.\n\nEscalate suspected fraud or social-engineering attempts per institution policy.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Thank the caller; confirm any documented next step or reference number if provided by a tool.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

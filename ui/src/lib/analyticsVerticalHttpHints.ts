@@ -29,6 +29,10 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         example_tool_names: ["modify_reservation", "apply_cancellation_waiver", "offer_room_upgrade"],
         suggested_response_mapping_keys: ["reservation_id", "new_check_in", "waiver_id", "offer_id", "confirmation_code"],
     },
+    "financial-services-banking-faq": {
+        example_tool_names: ["schedule_branch_appointment"],
+        suggested_response_mapping_keys: ["appointment_id", "slot_start", "confirmation_code"],
+    },
 };
 
 export function verticalHttpProofHintForSlug(slug: string | null | undefined): VerticalHttpProofHint | null {

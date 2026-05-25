@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{institution_name}}; offer card safety FAQ, branch information, or branch appointment scheduling when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Banking FAQ & branch booking",
+        "prompt": "Assistant for {{institution_name}}. Provide **scripted card lost/stolen guidance** and **non-PCI payment redirect FAQ** — never collect full PAN, PIN, or SSN.\n\nWhen the caller needs an **in-branch appointment** (e.g. notary, safe deposit, new account), capture preferred branch (hint {{preferred_branch_code}}), timezone, and reason at a high level. If they accept a scheduled slot, call HTTP tool **schedule_branch_appointment** at {{scheduling_api_base_url}}/api/v1/appointments — do not confirm until the tool returns success.\n\nFor card block without a connected tool, direct to {{card_block_portal_url}} or {{support_phone}}. Branch locator: {{branch_locator_url}}.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm appointment reference if the scheduling tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When guided, scheduled, or escalated" }
+    }
+  ]
+}

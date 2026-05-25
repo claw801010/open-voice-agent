@@ -1,0 +1,65 @@
+# Runbook — Financial services: card & branch banking FAQ
+
+**Pack slug:** `financial-services-banking-faq`  
+**Catalog:** [catalog/vertical-packs.json](../catalog/vertical-packs.json)
+
+## Purpose
+
+Contain tier-1 **card lost/stolen**, **non-PCI balance/payment redirect**, and **branch FAQ** calls with fraud guardrails—scheduling branch appointments without collecting full PAN or credentials on the call.
+
+## Prerequisites
+
+- Institution-approved scripts and disclosure copy (recording, not account servicing).
+- Optional core banking HTTP tools (tokenized only; no full card data in prompts).
+- Legal / compliance sign-off before outbound or buyer-facing GTM ([PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md)).
+
+## Happy-path test (QA)
+
+1. Install **Card & branch banking FAQ** from **Template catalog**.
+2. **Try (Web only)** with defaults, or run a **Web test** from the editor after **Customize**.
+3. **Expected:** caller can ask a branch-hours or card-safety question and receive a coherent, script-aligned answer; agent offers escalation to {{support_phone}} or {{card_block_portal_url}} when live tools are not wired.
+
+## Booking-complex happy-path test (QA)
+
+**Goal:** schedule a **branch appointment** in **≤6 agent turns** after **`schedule_branch_appointment`** is wired.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+
+1. Install **Card & branch banking FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
+2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`, **`institution_name`**, and **`preferred_branch_code`** from pack defaults.
+3. HTTP tool **`schedule_branch_appointment`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `appointment_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
+4. Attach tool to the **Banking FAQ & branch booking** agent; **Publish**.
+5. **Web test** script: ask about branch services → request appointment → give timezone + preferred window → confirm summary.
+6. **Expected:** **`schedule_branch_appointment`** invoked; call detail shows **`mapped_data`**; filter **`/analytics/calls?catalog_slug=financial-services-banking-faq&catalog_variant_id=booking_complex&tool_name=schedule_branch_appointment`**.
+
+## Day 1 checklist
+
+1. **Scripts:** institution-approved card and FAQ copy only; no balance reads without tokenized lookup tool.
+2. **Disclosures:** recording and fraud-awareness per compliance tags.
+3. **Handoff:** fraud desk or branch queue when complexity exceeds script scope.
+4. **Embed or PSTN:** [recipes/embed-widget.md](../recipes/embed-widget.md) for web; [recipes/inbound-pstn.md](../recipes/inbound-pstn.md) for phone.
+
+## Integrations
+
+- Core banking / branch scheduling via HTTP tools; branch locator deep links in template variables.
+
+## Catalog graph variants (MK-01)
+
+- **Simple (default install):** [financial-services-banking-faq.json](../catalog/packaged-workflows/financial-services-banking-faq.json).
+- **Complex (branch appointment):** [financial-services-booking-complex.json](../catalog/packaged-workflows/financial-services-booking-complex.json) — variant **`booking_complex`**; wire HTTP **schedule_branch_appointment**; see **Booking-complex happy-path test** above.
+
+## Proof in Analytics (MK-01)
+
+**`catalog_slug`** = `financial-services-banking-faq`. **Overview:** `/analytics?catalog_slug=financial-services-banking-faq`. **Calls:** `/analytics/calls` — FAQ resolution and scheduling tool success surface in **tool spans** / **`mapped_data`** on call detail. HTTP field alignment: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md).
+
+## High-revenue motions (roadmap)
+
+**Shipped:** **Branch appointment scheduling** — **`booking_complex`** + **`schedule_branch_appointment`** (see **Booking-complex happy-path test** above).
+
+| Motion | Buyer value | Status |
+|--------|-------------|--------|
+| **Branch appointment scheduling** | Self-serve branch visits | **Shipped** — **`booking_complex`** + **schedule_branch_appointment** |
+| **Tokenized balance lookup** | Tier-1 containment after verify | **Roadmap** — **`balance_lookup_complex`** + **lookup_account_balance** |
+| **Card block / fraud report API** | Faster card safety resolution | **Roadmap** — **`card_block_complex`** + **report_card_lost_stolen** |
+
+**Roadmap tail:** remaining items in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json).
