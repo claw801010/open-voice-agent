@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{carrier_name}}; offer policy FAQ, FNOL guidance, or quote intent capture when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "FNOL & quote intent",
+        "prompt": "Assistant for {{carrier_name}} (line {{line_of_business}}). Answer **policy FAQ** with script-safe language — no legal advice or binding quotes on the call.\n\nWhen the caller expresses **quote-ready intent** (new policy, renewal, or add coverage hint product {{quote_product_code}}), capture only what they voluntarily offer: coverage type, timeline, and contact preference. If they agree to register intent for a licensed agent follow-up, call HTTP tool **capture_quote_intent** at {{quoting_api_base_url}}/api/v1/quotes/intent — do not claim the quote is filed until the tool returns success.\n\nNever collect payment card numbers or SSN on the call unless your org's compliance program explicitly allows tokenized capture via a connected tool. Escalate to {{support_phone}} when required.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm intent reference if the quoting tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

@@ -25,7 +25,7 @@ Buyers often evaluate voice AI on **scheduling** first. Each catalog pack now sh
 | Healthcare | Book **provider / visit**; **confirm / reschedule**; **concierge enroll** | **Complex variants shipped** — **`booking_complex`**, **`confirm_remind`**, **`concierge_complex`**; wire scheduling + billing HTTP tools |
 | Retail | Book **in-store service, styling, or pickup window**; **upsell**; **collections promise** | **Complex variants shipped** — **`booking_complex`**, **`upsell_complex`**, **`collections_complex`**; wire HTTP tools to buyer APIs |
 | B2B SaaS | Book **demo**; **renewal / QBR**; **trial → paid** | **Complex variants shipped** — **`booking_complex`**, **`renewal_complex`**, **`conversion_complex`**; wire calendar + CRM HTTP tools |
-| Insurance | **Adjuster callback** after FNOL guidance | **Partial** — **`booking_complex`** shipped; quote qual + claims lookup **roadmap** |
+| Insurance | **Adjuster callback**; **quote intent** after FNOL/FAQ | **Partial** — **`booking_complex`**, **`quote_complex`** shipped; claims lookup **roadmap** |
 
 **Next engineering slice:** (1) **Done:** runbook **Booking-complex happy-path test** per variant (≤6 turns after HTTP tool wired) — [runbooks/](../runbooks/) + CI [test_runbooks_document_booking_complex_happy_path](../api/tests/test_vertical_packs_catalog.py); (2) **Done:** install API + UI **variant** — `POST /api/v1/workflow/install-from-catalog` with `variant_id`, `mk01.catalog_variant_id` on the workflow; (3) **Done:** **Analytics** filter by `catalog_variant_id` + **CI chain test** for `response_mapping` → `mapped_data` → tool span ([booking-http-analytics-smoke.md](recipes/booking-http-analytics-smoke.md), [test_booking_http_mapping_analytics_span.py](../api/tests/test_booking_http_mapping_analytics_span.py)); (4) **Done:** **live** HTTP stub — [booking-scheduling-stub-local.md](recipes/booking-scheduling-stub-local.md), [booking_scheduling_stub_server.py](../scripts/booking_scheduling_stub_server.py), Docker Compose profile **`booking-stub`** on **:8765**.
 
@@ -50,7 +50,7 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 | `retail-wismo-faq` | Collections / payment promise | Write-off reduction | **Shipped** — **`collections_complex`** + **`capture_payment_promise`** + runbook happy path |
 | `b2b-saas-trial-nurture` | Trial → paid upgrade | Conversion lift | **Shipped** — **`conversion_complex`** + **`update_crm_deal_stage`** + runbook happy path |
 | `b2b-saas-trial-nurture` | Renewal / QBR expansion | LTV | **Shipped** — **`renewal_complex`** + **`book_qbr`** (+ optional **sync_crm_health**) + runbook happy path |
-| `insurance-fnol-faq` | Quote intent qualification | Hot-lead routing | **Roadmap** — partner review before ship |
+| `insurance-fnol-faq` | Quote intent qualification | Hot-lead routing | **Shipped** — **`quote_complex`** + **`capture_quote_intent`** + runbook happy path |
 | `insurance-fnol-faq` | Live claims status lookup | Tier-1 containment | **Roadmap** — tokenized claims core + PII review |
 
 **Next engineering slice (when staffed):** **PREBUILD complete** for all three verticals — next MK-01 depth is **more curated packs** or **fourth vertical row** ([READMEPLANNING.md](../READMEPLANNING.md) §6); use [prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) for GTM demos.

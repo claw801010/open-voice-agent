@@ -28,6 +28,7 @@ curl -sS -X POST "$API/api/v1/workflow/install-from-catalog" \
 | `b2b-saas-trial-nurture` | `renewal_complex` | `book_qbr` | `/api/v1/appointments` | Renewal / QBR happy-path test |
 | `b2b-saas-trial-nurture` | `conversion_complex` | `update_crm_deal_stage` | `/api/v1/deals/stage` | Trial-to-paid happy-path test |
 | `insurance-fnol-faq` | `booking_complex` | `schedule_adjuster_callback` | `/api/v1/appointments` | Booking-complex happy-path test |
+| `insurance-fnol-faq` | `quote_complex` | `capture_quote_intent` | `/api/v1/quotes/intent` | Quote intent happy-path test |
 
 Runbooks: [runbooks/](../runbooks/). Field alignment: [VERTICAL_ANALYTICS_HTTP_MATRIX.md](../VERTICAL_ANALYTICS_HTTP_MATRIX.md).
 

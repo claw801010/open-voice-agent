@@ -216,7 +216,7 @@
     },
     {
       "slug": "insurance-fnol-faq",
-      "pack_semver": "1.0.0",
+      "pack_semver": "1.1.0",
       "industry": "Insurance",
       "display_name": "FNOL guidance & policy FAQ",
       "summary": "First-notice-of-loss scripting, policy FAQ, and adjuster callback scheduling with compliance-first guardrails—not legal advice or coverage determinations.",
@@ -224,7 +224,8 @@
         "FNOL guidance (scripted intake)",
         "policy FAQ",
         "claims portal / phone handoff",
-        "adjuster or inspection callback (booking_complex variant + schedule_adjuster_callback HTTP tool after install)"
+        "adjuster or inspection callback (booking_complex variant + schedule_adjuster_callback HTTP tool after install)",
+        "quote intent qualification (quote_complex variant + capture_quote_intent HTTP tool after install)"
       ],
       "languages": ["en-US"],
       "supported_modes": ["webrtc", "pstn"],
@@ -250,6 +251,13 @@
           "complexity": "complex",
           "packaged_definition_ref": "insurance-fnol-booking-complex.json",
           "description": "Adds adjuster callback scheduling language; wire HTTP schedule_adjuster_callback to {{scheduling_api_base_url}}/api/v1/appointments after install. See runbook booking-complex happy path."
+        },
+        {
+          "variant_id": "quote_complex",
+          "label": "Quote intent qualification",
+          "complexity": "complex",
+          "packaged_definition_ref": "insurance-fnol-quote-complex.json",
+          "description": "Capture quote-ready intent for licensed agent follow-up; wire HTTP capture_quote_intent to {{quoting_api_base_url}}/api/v1/quotes/intent after install. See runbook quote happy path + PARTNER_REVIEW."
         }
       ],
       "default_template_variables": {
@@ -258,15 +266,17 @@
         "claims_portal_url": "https://claims.example.com/status",
         "line_of_business": "auto",
         "scheduling_api_base_url": "https://scheduling.insurance.example.com/v1",
-        "preferred_callback_window_hours": "24"
+        "preferred_callback_window_hours": "24",
+        "quoting_api_base_url": "https://quoting.insurance.example.com/v1",
+        "quote_product_code": "AUTO-PERSONAL-STD"
       },
       "analytics_hooks": [
         "Filter analytics by catalog_slug insurance-fnol-faq after install; compare FNOL vs callback funnel.",
         "booking_complex: filter tool_name schedule_adjuster_callback and catalog_variant_id=booking_complex.",
+        "quote_complex: filter tool_name capture_quote_intent and catalog_variant_id=quote_complex.",
         "CSV export on call list supports QM sampling for FNOL containment experiments."
       ],
       "roadmap_motions": [
-        "quote intent qualification (roadmap): voice capture of quote-ready intent — partner review before ship",
         "live claims status lookup (roadmap): tokenized claims core HTTP tool — PII minimization review before ship"
       ]
     }

@@ -32,6 +32,19 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 5. **Web test** script: brief FNOL context → request adjuster callback → give timezone + preferred window → confirm summary.
 6. **Expected:** **`schedule_adjuster_callback`** invoked; call detail shows **`mapped_data`**; filter **`/analytics/calls?catalog_slug=insurance-fnol-faq&catalog_variant_id=booking_complex&tool_name=schedule_adjuster_callback`**.
 
+## Quote intent happy-path test (QA)
+
+**Goal:** capture **quote-ready intent** in **≤6 agent turns** after **`capture_quote_intent`** is wired (**quote_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
+
+**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/quotes/intent` with sample JSON).
+
+1. Install **FNOL guidance & policy FAQ** with variant **`quote_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"quote_complex"`).
+2. **Customize**; set **`quoting_api_base_url`** = `http://127.0.0.1:8765`, **`quote_product_code`**, and **`line_of_business`** from pack defaults.
+3. HTTP tool **`capture_quote_intent`**: `POST {{quoting_api_base_url}}/api/v1/quotes/intent`; **response_mapping** — `intent_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `follow_up_by` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
+4. Attach tool to the **FNOL & quote intent** agent; **Publish**.
+5. **Web test** script: ask about new auto coverage → express quote-ready intent → confirm reference when agent summarizes handoff to licensed agent.
+6. **Expected:** **`capture_quote_intent`** invoked; call detail **`mapped_data`** present; filter **`/analytics/calls?catalog_slug=insurance-fnol-faq&catalog_variant_id=quote_complex&tool_name=capture_quote_intent`**.
+
 ## Day 1 checklist
 
 1. **Scripts:** carrier-approved FNOL and FAQ copy only; no coverage determinations on the call.
@@ -47,6 +60,7 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 
 - **Simple (default install):** [insurance-fnol-faq.json](../catalog/packaged-workflows/insurance-fnol-faq.json).
 - **Complex (adjuster callback):** [insurance-fnol-booking-complex.json](../catalog/packaged-workflows/insurance-fnol-booking-complex.json) — variant **`booking_complex`**; wire HTTP **schedule_adjuster_callback**; see **Booking-complex happy-path test** above.
+- **Complex (quote intent):** [insurance-fnol-quote-complex.json](../catalog/packaged-workflows/insurance-fnol-quote-complex.json) — variant **`quote_complex`**; wire **capture_quote_intent**; see **Quote intent happy-path test** above.
 
 ## Proof in Analytics (MK-01)
 
@@ -54,12 +68,12 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 
 ## High-revenue motions (roadmap)
 
-**Shipped:** **Adjuster callback scheduling** — **`booking_complex`** + **`schedule_adjuster_callback`** HTTP tool + runbook happy path above.
-
-See **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json) for remaining items.
+**Shipped:** **Adjuster callback scheduling** — **`booking_complex`** + **`schedule_adjuster_callback`**; **Quote intent qualification** — **`quote_complex`** + **`capture_quote_intent`** (see happy-path sections above; [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before GTM).
 
 | Motion | Buyer value | Status |
 |--------|-------------|--------|
 | **Adjuster callback scheduling** | Faster FNOL → inspection path | **Shipped** — **`booking_complex`** + **schedule_adjuster_callback** |
-| **Quote intent qualification** | Hot-lead routing | **Roadmap** — partner review before ship |
+| **Quote intent qualification** | Hot-lead routing | **Shipped** — **`quote_complex`** + **capture_quote_intent** (+ partner review before GTM) |
 | **Live claims status lookup** | Contain tier-1 status calls | **Roadmap** — tokenized claims core + PII review |
+
+**Roadmap tail:** remaining items in **`roadmap_motions`** in [vertical-packs.json](../catalog/vertical-packs.json).

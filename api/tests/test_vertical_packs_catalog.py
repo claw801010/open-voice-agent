@@ -326,6 +326,37 @@ def test_runbooks_document_concierge_happy_path(catalog: dict) -> None:
         )
 
 
+_QUOTE_COMPLEX_SECTION = "## Quote intent happy-path test"
+
+
+def test_runbooks_document_quote_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: quote_complex variant documents quoting tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "quote_complex" for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _QUOTE_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_QUOTE_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_QUOTE_COMPLEX_SECTION)
+        tail = text[idx : idx + 2400]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: quote section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: quote section needs expected outcome"
+        assert "quote_complex" in tail, f"{slug}: quote section must name variant_id"
+        assert "capture_quote_intent" in tail, (
+            f"{slug}: quote section must reference capture_quote_intent tool"
+        )
+        assert "quoting_api_base_url" in tail, (
+            f"{slug}: quote section must reference quoting_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -359,7 +390,7 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "healthcare-clinic-screening": {"booking_complex", "confirm_remind", "concierge_complex"},
     "retail-wismo-faq": {"booking_complex", "upsell_complex", "collections_complex"},
     "b2b-saas-trial-nurture": {"booking_complex", "renewal_complex", "conversion_complex"},
-    "insurance-fnol-faq": {"booking_complex"},
+    "insurance-fnol-faq": {"booking_complex", "quote_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(

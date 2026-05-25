@@ -309,6 +309,31 @@ async def test_install_from_catalog_insurance_booking_complex(
 
 
 @pytest.mark.asyncio
+async def test_install_from_catalog_insurance_quote_complex(
+    test_client_factory, org_user_catalog_install
+):
+    """MK-01-PREBUILD: insurance quote_complex variant installs quote intent prompts."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={
+                "slug": "insurance-fnol-faq",
+                "workflow_name": "Insurance quote intent",
+                "variant_id": "quote_complex",
+            },
+        )
+    assert res.status_code == 200
+    data = res.json()
+    mk01 = (data.get("workflow_configurations") or {}).get("mk01") or {}
+    assert mk01.get("catalog_variant_id") == "quote_complex"
+    blob = json.dumps(data.get("workflow_definition") or {})
+    assert "capture_quote_intent" in blob
+    assert "quoting_api_base_url" in blob
+    assert "quote_product_code" in blob
+
+
+@pytest.mark.asyncio
 async def test_install_from_catalog_cross_org_fetch_404(
     test_client_factory, org_user_catalog_install, async_session
 ):
