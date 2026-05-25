@@ -104,3 +104,42 @@ test.describe("Install from catalog → editor (authenticated + API)", () => {
         }
     });
 });
+
+test.describe("Install complex variant from catalog → editor", () => {
+    test.beforeEach(async ({ page }) => {
+        await loginAnalyticsE2E(page);
+    });
+
+    test("installs retail collections_complex variant with graph agent label", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: variant install flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const packCard = page.locator("article").filter({ hasText: "WISMO & store policy FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await expect(dialog.getByRole("heading", { name: "Name your workflow" })).toBeVisible();
+
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Collections \/ payment promise/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E retail collections ${suffix}`);
+
+        const installSubmit = dialog.getByRole("button", { name: "Install", exact: true });
+        await expect(installSubmit).toBeEnabled({ timeout: 15_000 });
+        await installSubmit.click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await expect(page.getByText("Installed from catalog")).toBeVisible({ timeout: 30_000 });
+        await expect(page.getByText("WISMO & collections")).toBeVisible({ timeout: 30_000 });
+    });
+});

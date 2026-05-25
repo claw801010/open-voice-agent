@@ -49,7 +49,7 @@ Catalog metadata: keep **`use_cases`** honest—list motions the **current JSON*
 | `b2b-saas-trial-nurture` | Trial → paid upgrade | Conversion lift | **Shipped** — **`conversion_complex`** + **`update_crm_deal_stage`** + runbook happy path |
 | `b2b-saas-trial-nurture` | Renewal / QBR expansion | LTV | **Shipped** — **`renewal_complex`** + **`book_qbr`** (+ optional **sync_crm_health**) + runbook happy path |
 
-**Next engineering slice (when staffed):** pick one motion per vertical, ship packaged graph delta + runbook happy path + analytics **`tool_name`** proof — same bar as **booking_complex**.
+**Next engineering slice (when staffed):** **PREBUILD complete** for all three verticals — next MK-01 depth is **more curated packs** or **fourth vertical row** ([READMEPLANNING.md](../READMEPLANNING.md) §6); use [prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) for GTM demos.
 
 ## HTTP tools and context variables (WE-01-DUALMODE)
 
@@ -72,11 +72,15 @@ Buyer demos need **observability**: filterable **calls**, **call detail** (outco
 
 ## Checklist before marketing “prebuild for {vertical}”
 
-- [ ] Runbook happy path matches the graph (rubric row 3).  
-- [ ] `use_cases` and `summary` match what the graph does (rubric row 8).  
-- [ ] Revenue or booking claims are **either** implemented in JSON **or** explicitly labeled roadmap in this file + runbook.  
-- [ ] PARTNER_REVIEW + compliance tags reviewed for new tools or PII.  
-- [ ] `pack_semver` bumped per [catalog/README.md](README.md).
-- [ ] Runbook or pack PR links **metrics / analytics** expectations to [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) when claiming buyer-visible insights.
+**Status (2026-05-23):** all three shipped packs pass this checklist for booking + high-revenue motions; **`roadmap_motions`** is empty on every pack.
+
+- [x] Runbook happy path matches the graph (rubric row 3).  
+- [x] `use_cases` and `summary` match what the graph does (rubric row 8).  
+- [x] Revenue or booking claims are **either** implemented in JSON **or** explicitly labeled roadmap in this file + runbook.  
+- [x] PARTNER_REVIEW + compliance tags reviewed for new tools or PII (collections + concierge: review before external GTM).  
+- [x] `pack_semver` bumped per [catalog/README.md](README.md) (**1.4.0** on all three packs).
+- [x] Runbook or pack PR links **metrics / analytics** expectations to [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) when claiming buyer-visible insights.
+
+**GTM demo index:** [recipes/prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md).
 
 **Maintainers:** when a new packaged graph ships, add a row to the first table and shrink the booking gap column to **Shipped**.

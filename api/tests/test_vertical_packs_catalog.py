@@ -355,6 +355,38 @@ def test_each_pack_has_roadmap_motions(catalog: dict) -> None:
         )
 
 
+_PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
+    "healthcare-clinic-screening": {"booking_complex", "confirm_remind", "concierge_complex"},
+    "retail-wismo-faq": {"booking_complex", "upsell_complex", "collections_complex"},
+    "b2b-saas-trial-nurture": {"booking_complex", "renewal_complex", "conversion_complex"},
+}
+
+
+def test_prebuild_roadmap_motions_all_shipped(catalog: dict) -> None:
+    """MK-01-PREBUILD-COMPLETE: every pack has empty roadmap_motions (all revenue motions shipped)."""
+    packs = catalog["packs"]
+    assert len(packs) >= 3
+    for pack in packs:
+        slug = pack["slug"]
+        motions = pack.get("roadmap_motions")
+        assert motions == [], f"{slug!r}: expected empty roadmap_motions when PREBUILD is complete"
+
+
+def test_prebuild_complex_variants_present(catalog: dict) -> None:
+    """MK-01-PREBUILD-COMPLETE: each vertical ships the expected complex variant_ids."""
+    packs = {p["slug"]: p for p in catalog["packs"]}
+    for slug, expected in _PREBUILD_COMPLEX_VARIANTS.items():
+        pack = packs.get(slug)
+        assert pack is not None, f"missing pack {slug!r}"
+        variant_ids = {
+            v.get("variant_id")
+            for v in (pack.get("workflow_variants") or [])
+            if isinstance(v, dict)
+        }
+        missing = expected - variant_ids
+        assert not missing, f"{slug!r}: missing complex variants {sorted(missing)}"
+
+
 _ROADMAP_MOTIONS_SECTION = "## High-revenue motions (roadmap)"
 
 
