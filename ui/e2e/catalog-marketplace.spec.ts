@@ -80,12 +80,44 @@ test.describe("Template catalog (authenticated)", () => {
         await expect(settingsLink).toHaveText("Local demo payments");
     });
 
+    test("retail pack card links analytics proof for collections variant", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-retail-wismo-faq");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        await expect(proofLink).toHaveAttribute("href", /\/analytics\/calls\?/);
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=retail-wismo-faq");
+        expect(href).toContain("catalog_variant_id=collections_complex");
+        expect(href).toContain("tool_name=capture_payment_promise");
+    });
+
     test("telecom pack card links local integrations settings", async ({ page }) => {
         await page.goto("/workflow/catalog");
 
         const settingsLink = page.getByTestId("catalog-settings-local-telecom-utilities-outage-faq");
         await expect(settingsLink).toBeVisible({ timeout: 15_000 });
         await expect(settingsLink).toHaveAttribute("href", "/settings#local-integrations");
+    });
+
+    test("telecom pack card links analytics proof for outage variant", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-telecom-utilities-outage-faq");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        await expect(proofLink).toHaveAttribute("href", /\/analytics\/calls\?/);
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=telecom-utilities-outage-faq");
+        expect(href).toContain("catalog_variant_id=outage_status_complex");
+        expect(href).toContain("tool_name=lookup_outage_status");
     });
 });
 
@@ -306,7 +338,11 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
         await page.getByRole("button", { name: "Customize" }).click();
 
-        const wireIntegrations = page.getByRole("button", { name: "Wire local integrations" });
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("outage_status_complex")).toBeVisible();
+
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
         await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
         await wireIntegrations.click();
 
@@ -336,7 +372,11 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
         await page.getByRole("button", { name: "Customize" }).click();
 
-        const wirePayments = page.getByRole("button", { name: "Wire local payments" });
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("collections_complex")).toBeVisible();
+
+        const wirePayments = page.getByTestId("wire-local-payments-button");
         await expect(wirePayments).toBeVisible({ timeout: 30_000 });
         await wirePayments.click();
 
@@ -366,9 +406,11 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
         await page.getByRole("button", { name: "Customize" }).click();
 
-        await expect(page.getByRole("button", { name: "Wire local payments" })).toBeVisible({
+        await expect(page.getByTestId("wire-local-payments-button")).toBeVisible({
             timeout: 30_000,
         });
+        await expect(page.getByTestId("wire-local-integrations-button")).not.toBeVisible();
+        await expect(page.getByTestId("wire-local-ehr-button")).not.toBeVisible();
         await expect(page.getByRole("button", { name: "Wire local calendar" })).not.toBeVisible();
     });
 
@@ -395,11 +437,40 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
         await page.getByRole("button", { name: "Customize" }).click();
 
-        await expect(page.getByRole("button", { name: "Wire local integrations" })).toBeVisible({
+        await expect(page.getByTestId("wire-local-integrations-button")).toBeVisible({
             timeout: 30_000,
         });
+        await expect(page.getByTestId("wire-local-payments-button")).not.toBeVisible();
+        await expect(page.getByTestId("wire-local-ehr-button")).not.toBeVisible();
         await expect(page.getByRole("button", { name: "Wire local calendar" })).not.toBeVisible();
-        await expect(page.getByRole("button", { name: "Wire local payments" })).not.toBeVisible();
+    });
+
+    test("outage variant shows catalog_variant_id on guide card", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: catalog guide variant badge not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Outage & billing FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Live outage status lookup/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E telecom variant badge ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("outage_status_complex")).toBeVisible();
     });
 
     test("catalog guide Preview analytics link includes variant and tool filters", async ({ page }) => {
