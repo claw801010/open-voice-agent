@@ -33,6 +33,15 @@ async def test_catalog_voice_preview_handler_healthcare():
     assert result.catalog_slug == "healthcare-clinic-screening"
     assert result.profile_id == "builtin:vertical_healthcare"
     assert len(result.script) >= 10
+    assert result.speech_settings.authenticity_layer.enabled is True
+    assert "Maria" in result.script
+    assert "prior auth" in result.script.lower()
+
+
+def test_preview_scripts_use_natural_delivery_openers():
+    assert preview_script_for_catalog_slug("healthcare-clinic-screening").startswith("Hi Maria")
+    assert "payment plan" in preview_script_for_catalog_slug("retail-wismo-faq").lower()
+    assert preview_script_for_catalog_slug("telecom-utilities-outage-faq").startswith("Right")
 
 
 @pytest.mark.asyncio

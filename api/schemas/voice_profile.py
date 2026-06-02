@@ -9,6 +9,58 @@ from pydantic import BaseModel, Field
 VoiceProfileSource = Literal["builtin", "custom", "clone"]
 DeliveryTone = Literal["formal", "neutral", "warm", "empathetic"]
 DeliveryBehavior = Literal["concise", "balanced", "consultative"]
+FillerIntensity = Literal["off", "low", "medium"]
+SoftBreathIntensity = Literal["subtle", "natural"]
+KeyProjectionIntensity = Literal["light", "moderate"]
+
+
+class AuthenticityLayerSettings(BaseModel):
+    """Natural delivery — short 1/2/3-word fillers, soft breath, key projection."""
+
+    enabled: bool = Field(
+        default=False,
+        description="When true, stack natural-delivery instructions on the base profile",
+    )
+    filler_intensity: FillerIntensity = Field(
+        default="off",
+        description="How often short 1–3 word fillers appear when layer is enabled",
+    )
+    one_word_fillers: list[str] = Field(
+        default_factory=list,
+        max_length=12,
+        description="Approved single-word fillers (e.g. Sure, Okay)",
+    )
+    two_word_fillers: list[str] = Field(
+        default_factory=list,
+        max_length=12,
+        description="Approved two-word fillers (e.g. Got it, Let me)",
+    )
+    three_word_fillers: list[str] = Field(
+        default_factory=list,
+        max_length=12,
+        description="Approved three-word fillers (e.g. Just a moment)",
+    )
+    enable_soft_breath: bool = Field(
+        default=False,
+        description="Encourage soft in-breath micro-pauses for human cadence (prompt + light TTS tuning)",
+    )
+    soft_breath_intensity: SoftBreathIntensity = Field(
+        default="subtle",
+        description="subtle = micro-pauses; natural = slightly longer clause breaks",
+    )
+    enable_key_projection: bool = Field(
+        default=False,
+        description="Emphasize key facts (dates, amounts, codes) with clear vocal weight",
+    )
+    key_projection_intensity: KeyProjectionIntensity = Field(
+        default="light",
+        description="light = clearer key words; moderate = brief pause after each key fact",
+    )
+    key_projection_terms: list[str] = Field(
+        default_factory=list,
+        max_length=16,
+        description="Optional brand or domain terms to emphasize when spoken",
+    )
 
 
 class SpeechDeliverySettings(BaseModel):
@@ -70,6 +122,10 @@ class SpeechDeliverySettings(BaseModel):
         ge=0.5,
         le=2.0,
         description="TTS speed multiplier when supported by provider",
+    )
+    authenticity_layer: AuthenticityLayerSettings = Field(
+        default_factory=AuthenticityLayerSettings,
+        description="Natural delivery: short fillers, soft breath, key projection",
     )
 
 

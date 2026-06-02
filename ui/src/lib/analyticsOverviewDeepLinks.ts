@@ -1,6 +1,7 @@
 /**
  * MK-01 Analytics Overview → call list exploration (same filters as insights roll-up).
  */
+import { verticalHttpProofHintForSlug } from '@/lib/analyticsVerticalHttpHints';
 
 export function isoRangeToUtcDateParams(sinceIso: string, untilIso: string): { since?: string; until?: string } {
     const s = new Date(sinceIso);
@@ -36,6 +37,55 @@ export function buildAnalyticsCallsExploreHref(opts: {
     }
     const s = q.toString();
     return s ? `/analytics/calls?${s}` : "/analytics/calls";
+}
+
+/** Catalog guide card → filtered call list (variant + primary HTTP proof tool when known). */
+export function buildCatalogGuideAnalyticsHref(opts: {
+    catalogSlug: string;
+    catalogVariantId?: string | null;
+    exampleToolNames: readonly string[];
+}): string {
+    const skipToolFilter = new Set(["lookup_availability", "reserve_pickup_slot"]);
+    const primaryTool =
+        opts.exampleToolNames.find((n) => !skipToolFilter.has(n)) ?? opts.exampleToolNames[0];
+    return buildAnalyticsCallsExploreHref({
+        catalogSlug: opts.catalogSlug,
+        catalogVariantId: opts.catalogVariantId ?? undefined,
+        toolName: primaryTool,
+    });
+}
+
+/** Marketplace / GTM → filtered Analytics Overview for a vertical pack. */
+export function buildAnalyticsOverviewHref(opts: {
+    catalogSlug: string;
+    catalogVariantId?: string | null;
+    days?: number;
+}): string {
+    const q = new URLSearchParams();
+    const slug = opts.catalogSlug.trim();
+    if (slug) q.set("catalog_slug", slug);
+    const cv = opts.catalogVariantId?.trim();
+    if (cv) q.set("catalog_variant_id", cv);
+    const days = opts.days ?? 7;
+    if (days !== 7) q.set("days", String(days));
+    const s = q.toString();
+    return s ? `/analytics?${s}` : "/analytics";
+}
+
+/** Pack card / sales deck → primary HTTP proof call list (variant-aware when set). */
+export function buildMarketplaceAnalyticsProofHref(opts: {
+    catalogSlug: string;
+    catalogVariantId?: string | null;
+}): string | null {
+    const slug = opts.catalogSlug.trim();
+    if (!slug) return null;
+    const hint = verticalHttpProofHintForSlug(slug, opts.catalogVariantId);
+    if (!hint?.example_tool_names.length) return null;
+    return buildCatalogGuideAnalyticsHref({
+        catalogSlug: slug,
+        catalogVariantId: opts.catalogVariantId,
+        exampleToolNames: hint.example_tool_names,
+    });
 }
 
 const NO_OUTCOME_BUCKET = "(no outcome key)";

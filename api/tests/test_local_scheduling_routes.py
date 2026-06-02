@@ -10,6 +10,7 @@ from api.routes.local_scheduling import (
     download_appointment_invite,
     get_config,
     lookup_availability,
+    reschedule_appointment_alias,
 )
 from api.schemas.user_configuration import UserConfiguration  # noqa: F401 — ensure imports load
 from api.services.local_scheduling import store
@@ -106,3 +107,20 @@ async def test_lookup_availability_marks_booked_slots():
     out = await lookup_availability(on="2026-09-03", organization_id=org)
     nine = next(s for s in out["slots"] if s["start"] == "2026-09-03T09:00:00Z")
     assert nine["available"] == "false"
+
+
+@pytest.mark.asyncio
+async def test_reschedule_appointment_route():
+    from api.routes.local_scheduling import BookSlotRequest, RescheduleAppointmentRequest
+
+    booked = await book_slot_catalog_alias(
+        BookSlotRequest(slot_start="2026-10-01T09:00:00Z", organization_id=701)
+    )
+    res = await reschedule_appointment_alias(
+        RescheduleAppointmentRequest(
+            appointment_id=booked.appointment["id"],
+            slot_start="2026-10-01T11:30:00Z",
+            organization_id=701,
+        )
+    )
+    assert res.appointment["slot"]["start"] == "2026-10-01T11:30:00Z"

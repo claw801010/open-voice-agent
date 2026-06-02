@@ -55,6 +55,24 @@ test.describe("Analytics authenticated (OSS / Stack)", () => {
             await expect(page.getByLabel("Vertical slug (optional)")).toHaveValue(slug);
         });
 
+        test("revenue motions widget links example tools when variant set", async ({ page }) => {
+            await page.goto(
+                `/analytics?catalog_slug=${slug}&catalog_variant_id=booking_complex&days=7`,
+            );
+
+            await expect(page.getByRole("heading", { name: "Analytics", exact: true })).toBeVisible();
+            await expect(page.getByRole("heading", { name: "Revenue & booking (roadmap vs shipped)" })).toBeVisible({
+                timeout: 30_000,
+            });
+
+            const bookSlot = page.getByRole("link", { name: "book_slot" });
+            await expect(bookSlot).toBeVisible();
+            await expect(bookSlot).toHaveAttribute(
+                "href",
+                /\/analytics\/calls\?.*tool_name=book_slot.*catalog_slug=healthcare-clinic-screening.*catalog_variant_id=booking_complex/,
+            );
+        });
+
         test("PII redaction switch is interactive when role may disable", async ({ page }) => {
             test.skip(
                 process.env.E2E_STRICT_REDACTION_RBAC === "1" &&

@@ -3,6 +3,21 @@ import { getBackendPublicBaseUrl } from '@/lib/apiClient';
 export type FillerIntensity = 'off' | 'low' | 'medium';
 export type DeliveryTone = 'formal' | 'neutral' | 'warm' | 'empathetic';
 export type DeliveryBehavior = 'concise' | 'balanced' | 'consultative';
+export type SoftBreathIntensity = 'subtle' | 'natural';
+export type KeyProjectionIntensity = 'light' | 'moderate';
+
+export type AuthenticityLayerSettings = {
+    enabled: boolean;
+    fillerIntensity: FillerIntensity;
+    oneWordFillers: string[];
+    twoWordFillers: string[];
+    threeWordFillers: string[];
+    enableSoftBreath: boolean;
+    softBreathIntensity: SoftBreathIntensity;
+    enableKeyProjection: boolean;
+    keyProjectionIntensity: KeyProjectionIntensity;
+    keyProjectionTerms: string[];
+};
 
 export type SpeechDeliverySettings = {
     authenticityLevel: number;
@@ -17,6 +32,7 @@ export type SpeechDeliverySettings = {
     stability: number | null;
     similarityBoost: number | null;
     speed: number | null;
+    authenticityLayer: AuthenticityLayerSettings;
 };
 
 export type VoiceProfile = {
@@ -48,6 +64,19 @@ function formatDetail(detail: unknown): string {
     return 'Request failed';
 }
 
+type AuthenticityLayerApi = {
+    enabled?: boolean;
+    filler_intensity?: string;
+    one_word_fillers?: string[];
+    two_word_fillers?: string[];
+    three_word_fillers?: string[];
+    enable_soft_breath?: boolean;
+    soft_breath_intensity?: string;
+    enable_key_projection?: boolean;
+    key_projection_intensity?: string;
+    key_projection_terms?: string[];
+};
+
 type SpeechSettingsApi = {
     authenticity_level?: number;
     tone?: string;
@@ -61,6 +90,7 @@ type SpeechSettingsApi = {
     stability?: number | null;
     similarity_boost?: number | null;
     speed?: number | null;
+    authenticity_layer?: AuthenticityLayerApi;
 };
 
 const TONE_VALUES: DeliveryTone[] = ['formal', 'neutral', 'warm', 'empathetic'];
@@ -89,6 +119,61 @@ type ProfileApi = {
     tags?: string[];
 };
 
+function parseFillerIntensity(raw: string | undefined): FillerIntensity {
+    return raw === 'low' || raw === 'medium' ? raw : 'off';
+}
+
+function parseSoftBreath(raw: string | undefined): SoftBreathIntensity {
+    return raw === 'natural' ? 'natural' : 'subtle';
+}
+
+function parseKeyProjection(raw: string | undefined): KeyProjectionIntensity {
+    return raw === 'moderate' ? 'moderate' : 'light';
+}
+
+export const DEFAULT_ONE_WORD_FILLERS = ['Sure', 'Okay', 'Right', 'Yes', 'Gotcha'];
+export const DEFAULT_TWO_WORD_FILLERS = ['Got it', 'Let me', 'One moment', 'Of course', 'Fair enough'];
+export const DEFAULT_THREE_WORD_FILLERS = [
+    'Let me see',
+    'One sec here',
+    'Just a moment',
+    'Thanks for waiting',
+    'Bear with me',
+];
+
+export const DEFAULT_AUTHENTICITY_LAYER: AuthenticityLayerSettings = {
+    enabled: false,
+    fillerIntensity: 'off',
+    oneWordFillers: [],
+    twoWordFillers: [],
+    threeWordFillers: [],
+    enableSoftBreath: false,
+    softBreathIntensity: 'subtle',
+    enableKeyProjection: false,
+    keyProjectionIntensity: 'light',
+    keyProjectionTerms: [],
+};
+
+function mapAuthenticityLayer(raw: AuthenticityLayerApi | undefined): AuthenticityLayerSettings {
+    if (!raw || typeof raw !== 'object') {
+        return { ...DEFAULT_AUTHENTICITY_LAYER };
+    }
+    return {
+        enabled: Boolean(raw.enabled),
+        fillerIntensity: parseFillerIntensity(raw.filler_intensity),
+        oneWordFillers: Array.isArray(raw.one_word_fillers) ? raw.one_word_fillers.map(String) : [],
+        twoWordFillers: Array.isArray(raw.two_word_fillers) ? raw.two_word_fillers.map(String) : [],
+        threeWordFillers: Array.isArray(raw.three_word_fillers) ? raw.three_word_fillers.map(String) : [],
+        enableSoftBreath: Boolean(raw.enable_soft_breath),
+        softBreathIntensity: parseSoftBreath(raw.soft_breath_intensity),
+        enableKeyProjection: Boolean(raw.enable_key_projection),
+        keyProjectionIntensity: parseKeyProjection(raw.key_projection_intensity),
+        keyProjectionTerms: Array.isArray(raw.key_projection_terms)
+            ? raw.key_projection_terms.map(String)
+            : [],
+    };
+}
+
 function mapSpeechSettings(raw: SpeechSettingsApi | undefined): SpeechDeliverySettings {
     const intensity = raw?.filler_intensity;
     const fillerIntensity: FillerIntensity =
@@ -116,6 +201,7 @@ function mapSpeechSettings(raw: SpeechSettingsApi | undefined): SpeechDeliverySe
         stability: raw?.stability ?? null,
         similarityBoost: raw?.similarity_boost ?? null,
         speed: raw?.speed ?? null,
+        authenticityLayer: mapAuthenticityLayer(raw?.authenticity_layer),
     };
 }
 
@@ -141,6 +227,21 @@ function mapListApi(data: { profiles?: ProfileApi[]; default_profile_id?: string
     };
 }
 
+function authenticityLayerToApi(layer: AuthenticityLayerSettings): AuthenticityLayerApi {
+    return {
+        enabled: layer.enabled,
+        filler_intensity: layer.fillerIntensity,
+        one_word_fillers: layer.oneWordFillers,
+        two_word_fillers: layer.twoWordFillers,
+        three_word_fillers: layer.threeWordFillers,
+        enable_soft_breath: layer.enableSoftBreath,
+        soft_breath_intensity: layer.softBreathIntensity,
+        enable_key_projection: layer.enableKeyProjection,
+        key_projection_intensity: layer.keyProjectionIntensity,
+        key_projection_terms: layer.keyProjectionTerms,
+    };
+}
+
 function speechSettingsToApi(s: SpeechDeliverySettings): SpeechSettingsApi {
     return {
         authenticity_level: s.authenticityLevel,
@@ -155,6 +256,7 @@ function speechSettingsToApi(s: SpeechDeliverySettings): SpeechSettingsApi {
         stability: s.stability,
         similarity_boost: s.similarityBoost,
         speed: s.speed,
+        authenticity_layer: authenticityLayerToApi(s.authenticityLayer),
     };
 }
 
@@ -295,6 +397,7 @@ export const DEFAULT_SPEECH_SETTINGS: SpeechDeliverySettings = {
     stability: null,
     similarityBoost: null,
     speed: null,
+    authenticityLayer: { ...DEFAULT_AUTHENTICITY_LAYER },
 };
 
 /** Short labels for MK-01 vertical built-in voice profile ids (catalog cards). */
@@ -310,6 +413,25 @@ export const VERTICAL_VOICE_PROFILE_LABELS: Record<string, string> = {
     'builtin:vertical_gov': 'Public sector voice',
     'builtin:vertical_hr': 'HR / staffing voice',
 };
+
+/** Built-in profile ids that ship with natural delivery enabled (catalog card hint). */
+export const VOICE_PROFILES_WITH_NATURAL_DELIVERY = new Set([
+    'builtin:warm_conversational',
+    'builtin:authentic_natural',
+    'builtin:vertical_healthcare',
+    'builtin:vertical_retail',
+    'builtin:vertical_insurance',
+    'builtin:vertical_hospitality',
+    'builtin:vertical_smb',
+    'builtin:vertical_telecom',
+    'builtin:vertical_gov',
+    'builtin:vertical_hr',
+]);
+
+export function naturalDeliveryCatalogHint(profileId: string | null | undefined): string | null {
+    const id = (profileId || '').trim();
+    return id && VOICE_PROFILES_WITH_NATURAL_DELIVERY.has(id) ? 'natural delivery' : null;
+}
 
 export type CatalogVoicePreview = {
     catalogSlug: string;

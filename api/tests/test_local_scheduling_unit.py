@@ -68,6 +68,31 @@ def test_double_book_same_slot_raises():
         store.book_appointment(org, slot_start="2026-07-01T14:00:00Z")
 
 
+def test_reschedule_appointment_updates_slot():
+    org = 103
+    booked = store.book_appointment(org, slot_start="2026-09-01T09:00:00Z")
+    appt_id = booked["appointment"]["id"]
+    rescheduled = store.reschedule_appointment(
+        org,
+        appointment_id=appt_id,
+        slot_start="2026-09-01T11:30:00Z",
+    )
+    assert rescheduled["appointment"]["id"] == appt_id
+    assert rescheduled["appointment"]["slot"]["start"] == "2026-09-01T11:30:00Z"
+
+
+def test_reschedule_to_booked_slot_raises():
+    org = 104
+    first = store.book_appointment(org, slot_start="2026-09-02T09:00:00Z")
+    store.book_appointment(org, slot_start="2026-09-02T11:30:00Z")
+    with pytest.raises(ValueError, match="already booked"):
+        store.reschedule_appointment(
+            org,
+            appointment_id=first["appointment"]["id"],
+            slot_start="2026-09-02T11:30:00Z",
+        )
+
+
 def test_build_appointment_ics_contains_vevent():
     row = {
         "id": "local-appt-demo",

@@ -33,6 +33,7 @@ def _load_org(org_id: int) -> list[dict[str, Any]]:
 
 
 def _save_org(org_id: int, rows: list[dict[str, Any]]) -> None:
+    _PERSIST_DIR.mkdir(parents=True, exist_ok=True)
     path = _PERSIST_DIR / f"org_{org_id}.json"
     with path.open("w", encoding="utf-8") as f:
         json.dump(rows, f, indent=2)
@@ -129,3 +130,31 @@ def confirm_payment_redirect(
     payload["portal_url"] = redirect_url or "https://pay.local.dograh.demo/redirect"
     payload["expires_at"] = slot
     return payload
+
+
+def enroll_concierge_visit(
+    org_id: int,
+    *,
+    visit_type: str | None = None,
+    slot_start: str | None = None,
+    patient_name: str | None = None,
+) -> dict[str, Any]:
+    record_id = f"local-enroll-{uuid.uuid4().hex[:12]}"
+    code = uuid.uuid4().hex[:6].upper()
+    slot = slot_start or datetime.now(timezone.utc).isoformat()
+    row = {
+        "id": record_id,
+        "type": "concierge_enroll",
+        "visit_type": visit_type,
+        "slot_start": slot,
+        "patient_name": patient_name,
+        "confirmation_code": code,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "status": "enrolled",
+    }
+    with _LOCK:
+        rows = _rows_for_org(org_id)
+        rows.append(row)
+        _STORE[org_id] = rows
+        _save_org(org_id, rows)
+    return _booking_compatible_response(record_id, slot_start=slot, confirmation_code=code)

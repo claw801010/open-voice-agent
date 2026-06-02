@@ -4,6 +4,7 @@ export type LocalPaymentsConfig = {
     enabled: boolean;
     payment_promises_url: string;
     payment_redirect_confirm_url: string;
+    visits_enroll_url: string;
     local_payments_base_url: string;
     message: string;
 };

@@ -23,7 +23,7 @@ Contain tier-1 **card lost/stolen**, **non-PCI balance/payment redirect**, and *
 
 **Goal:** schedule a **branch appointment** in **≤6 agent turns** after **`schedule_branch_appointment`** is wired.
 
-**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`). Optional: [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **Card & branch banking FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
 2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`institution_name`**, and **`preferred_branch_code`** from pack defaults.
@@ -36,10 +36,10 @@ Contain tier-1 **card lost/stolen**, **non-PCI balance/payment redirect**, and *
 
 **Goal:** return **tokenized account balance** in **≤6 agent turns** after **`lookup_account_balance`** is wired (**balance_lookup_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/accounts/balance` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`banking_api_base_url`**).
 
 1. Install **Card & branch banking FAQ** with variant **`balance_lookup_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"balance_lookup_complex"`).
-2. **Customize**; set **`banking_api_base_url`** = `http://127.0.0.1:8765`, **`institution_name`**, and **`support_phone`** from pack defaults.
+2. **Customize**; confirm **`banking_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`institution_name`** and **`support_phone`** from pack defaults.
 3. HTTP tool **`lookup_account_balance`**: `POST {{banking_api_base_url}}/api/v1/accounts/balance`; **response_mapping** — `account_id` → `appointment.id`, `balance_available` → `confirmation_code`, `as_of_date` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Banking FAQ & balance lookup** agent; **Publish**.
 5. **Web test** script: ask for account balance → provide tokenized account reference → confirm summary when agent reads back tool result.
@@ -49,10 +49,10 @@ Contain tier-1 **card lost/stolen**, **non-PCI balance/payment redirect**, and *
 
 **Goal:** submit a **tokenized card block** in **≤6 agent turns** after **`report_card_lost_stolen`** is wired (**card_block_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/cards/block` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`cards_api_base_url`**).
 
 1. Install **Card & branch banking FAQ** with variant **`card_block_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"card_block_complex"`).
-2. **Customize**; set **`cards_api_base_url`** = `http://127.0.0.1:8765`, **`institution_name`**, and **`card_block_reason_code`** from pack defaults.
+2. **Customize**; confirm **`cards_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`institution_name`** and **`card_block_reason_code`** from pack defaults.
 3. HTTP tool **`report_card_lost_stolen`**: `POST {{cards_api_base_url}}/api/v1/cards/block`; **response_mapping** — `block_id` → `appointment.id`, `status_code` → `confirmation_code`, `blocked_at` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Banking FAQ & card block** agent; **Publish**.
 5. **Web test** script: report lost card → provide tokenized last-four reference → confirm summary when agent reads back tool result.

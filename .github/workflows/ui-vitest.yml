@@ -6,12 +6,14 @@ on:
     paths:
       - "ui/**"
       - "catalog/fixtures/**"
+      - "catalog/catalog-variant-http-tools.json"
       - "catalog/scripts/validate-n8n-workflow-export.mjs"
       - ".github/workflows/ui-vitest.yml"
   pull_request:
     paths:
       - "ui/**"
       - "catalog/fixtures/**"
+      - "catalog/catalog-variant-http-tools.json"
       - "catalog/scripts/validate-n8n-workflow-export.mjs"
       - ".github/workflows/ui-vitest.yml"
 

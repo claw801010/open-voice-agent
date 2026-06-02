@@ -14,7 +14,7 @@ import type {
     CreateFollowUpBody,
     FollowUpItemResponse,
 } from '@/client/types.gen';
-import { createClientConfig, setupAuthInterceptor } from '@/lib/apiClient';
+import { createClientConfig, getBackendPublicBaseUrl, setupAuthInterceptor } from '@/lib/apiClient';
 
 export type FollowUpActionType = CreateFollowUpBody['action_type'];
 
@@ -113,4 +113,52 @@ export async function applyWorkflowImprovement(
         throw new Error(apiErrorMessage(error, response?.status));
     }
     return data;
+}
+
+export type ReviewInboxItem = {
+    call_id: string;
+    workflow_id?: number | null;
+    workflow_name?: string | null;
+    catalog_slug?: string | null;
+    follow_up: FollowUpItem;
+    ai_summary?: string | null;
+};
+
+export async function fetchReviewInbox(
+    getAccessToken: () => Promise<string>,
+    status: 'pending' | 'approved' | 'edited' | 'dismissed' = 'pending',
+): Promise<{ items: ReviewInboxItem[]; pending_count: number }> {
+    const token = await getAccessToken();
+    const res = await fetch(
+        `${getBackendPublicBaseUrl()}/api/v1/analytics/review-inbox?status=${encodeURIComponent(status)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!res.ok) {
+        throw new Error('Failed to load review inbox');
+    }
+    return res.json() as Promise<{ items: ReviewInboxItem[]; pending_count: number }>;
+}
+
+export async function patchCallFollowUp(
+    getAccessToken: () => Promise<string>,
+    callId: string,
+    followUpId: string,
+    body: { status?: string; notes?: string; suggested_message?: string },
+): Promise<FollowUpItem> {
+    const token = await getAccessToken();
+    const res = await fetch(
+        `${getBackendPublicBaseUrl()}/api/v1/analytics/calls/${encodeURIComponent(callId)}/follow-ups/${encodeURIComponent(followUpId)}`,
+        {
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        },
+    );
+    if (!res.ok) {
+        throw new Error('Failed to update follow-up');
+    }
+    return res.json() as Promise<FollowUpItem>;
 }

@@ -6,6 +6,10 @@ from typing import Any
 
 from api.schemas.user_configuration import UserConfiguration
 from api.schemas.voice_profile import SpeechDeliverySettings
+from api.services.voice.authenticity_layer import (
+    build_authenticity_layer_prompt_block,
+    soft_breath_stability_delta,
+)
 from api.services.voice.presets import get_builtin_profile, is_builtin_profile_id
 
 
@@ -69,6 +73,10 @@ def build_speech_style_prompt_block(settings: SpeechDeliverySettings) -> str:
         lines.append(
             "- Prefer formal, concise phrasing; avoid casual filler and slang."
         )
+    layer_block = build_authenticity_layer_prompt_block(settings.authenticity_layer)
+    if layer_block:
+        lines.append("")
+        lines.append(layer_block)
     return "\n".join(lines)
 
 
@@ -91,6 +99,11 @@ def apply_speech_settings_to_tts_overrides(
         merged["similarity_boost"] = settings.similarity_boost
     if settings.speed is not None:
         merged["speed"] = settings.speed
+    delta = soft_breath_stability_delta(settings.authenticity_layer)
+    if delta and "stability" in merged:
+        merged["stability"] = max(0.0, float(merged["stability"]) - delta)
+    elif delta and settings.stability is not None:
+        merged["stability"] = max(0.0, float(settings.stability) - delta)
     return merged
 
 

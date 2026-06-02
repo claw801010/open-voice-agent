@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
     buildAnalyticsCallsExploreHref,
     buildAnalyticsCallsOutcomeExploreHref,
+    buildAnalyticsOverviewHref,
+    buildCatalogGuideAnalyticsHref,
+    buildMarketplaceAnalyticsProofHref,
     isoRangeToUtcDateParams,
 } from "./analyticsOverviewDeepLinks";
 
@@ -39,6 +42,27 @@ describe("analyticsOverviewDeepLinks", () => {
         expect(href).toBe("/analytics/calls?catalog_slug=healthcare-clinic-screening");
     });
 
+    it("buildCatalogGuideAnalyticsHref includes variant and primary tool from catalog guide", () => {
+        const href = buildCatalogGuideAnalyticsHref({
+            catalogSlug: "retail-wismo-faq",
+            catalogVariantId: "collections_complex",
+            exampleToolNames: ["capture_payment_promise"],
+        });
+        expect(href).toContain("catalog_slug=retail-wismo-faq");
+        expect(href).toContain("catalog_variant_id=collections_complex");
+        expect(href).toContain("tool_name=capture_payment_promise");
+    });
+
+    it("buildCatalogGuideAnalyticsHref skips lookup_availability for tool filter", () => {
+        const href = buildCatalogGuideAnalyticsHref({
+            catalogSlug: "healthcare-clinic-screening",
+            catalogVariantId: "booking_complex",
+            exampleToolNames: ["book_slot", "lookup_availability"],
+        });
+        expect(href).toContain("tool_name=book_slot");
+        expect(href).not.toContain("lookup_availability");
+    });
+
     it("buildAnalyticsCallsOutcomeExploreHref returns null for empty bucket", () => {
         expect(buildAnalyticsCallsOutcomeExploreHref({ outcomeLabel: "(no outcome key)" })).toBeNull();
     });
@@ -52,5 +76,26 @@ describe("analyticsOverviewDeepLinks", () => {
         });
         expect(href).toContain("outcome_key=booked");
         expect(href).toContain("catalog_slug=retail-wismo-faq");
+    });
+
+    it("buildAnalyticsOverviewHref includes slug, variant, and days", () => {
+        const href = buildAnalyticsOverviewHref({
+            catalogSlug: "healthcare-clinic-screening",
+            catalogVariantId: "booking_complex",
+            days: 14,
+        });
+        expect(href).toContain("catalog_slug=healthcare-clinic-screening");
+        expect(href).toContain("catalog_variant_id=booking_complex");
+        expect(href).toContain("days=14");
+    });
+
+    it("buildMarketplaceAnalyticsProofHref uses variant tools from catalog JSON", () => {
+        const href = buildMarketplaceAnalyticsProofHref({
+            catalogSlug: "retail-wismo-faq",
+            catalogVariantId: "collections_complex",
+        });
+        expect(href).toContain("catalog_slug=retail-wismo-faq");
+        expect(href).toContain("catalog_variant_id=collections_complex");
+        expect(href).toContain("tool_name=capture_payment_promise");
     });
 });

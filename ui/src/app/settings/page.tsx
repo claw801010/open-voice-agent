@@ -1,8 +1,12 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
+import { useEffect } from "react";
 
 import { HttpIntegrationCachePolicySection } from "@/components/HttpIntegrationCachePolicySection";
+import { LocalEhrSection } from "@/components/settings/LocalEhrSection";
+import { LocalIntegrationsSection } from "@/components/settings/LocalIntegrationsSection";
+import { LocalMessagingSection } from "@/components/settings/LocalMessagingSection";
 import { LocalPaymentsSection } from "@/components/settings/LocalPaymentsSection";
 import { LocalSchedulingSection } from "@/components/settings/LocalSchedulingSection";
 import { MCPSection } from "@/components/MCPSection";
@@ -16,6 +20,13 @@ import {
 } from "@/components/ui/card";
 
 export default function SettingsPage() {
+  useEffect(() => {
+    const hash = window.location.hash.replace(/^#/, "").trim();
+    if (!hash) return;
+    const el = document.querySelector(`[data-settings-section="${hash}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
     <div className="flex justify-center py-12 px-4">
       <div className="w-full max-w-2xl space-y-6">
@@ -47,7 +58,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-settings-section="local-calendar">
           <CardHeader>
             <CardTitle>Local demo calendar</CardTitle>
             <CardDescription>
@@ -61,7 +72,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-settings-section="local-payments">
           <CardHeader>
             <CardTitle>Local demo payments</CardTitle>
             <CardDescription>
@@ -70,6 +81,44 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <LocalPaymentsSection />
+          </CardContent>
+        </Card>
+
+        <Card data-settings-section="local-ehr">
+          <CardHeader>
+            <CardTitle>Local demo EHR</CardTitle>
+            <CardDescription>
+              Compliant local chart storage per org — local-only mode or local + sync to athenaHealth, Epic,
+              Cerner, or eCW. Wire <strong className="font-medium text-foreground">lookup_patient_context</strong>{' '}
+              and <strong className="font-medium text-foreground">sync_chart_to_ehr</strong> on catalog agents.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LocalEhrSection />
+          </CardContent>
+        </Card>
+
+        <Card data-settings-section="local-messaging">
+          <CardHeader>
+            <CardTitle>Local demo messaging</CardTitle>
+            <CardDescription>
+              SMS and email outreach log for confirm/remind flows — no Twilio or SendGrid required.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LocalMessagingSection />
+          </CardContent>
+        </Card>
+
+        <Card data-settings-section="local-integrations">
+          <CardHeader>
+            <CardTitle>Local demo integrations</CardTitle>
+            <CardDescription>
+              Record CRM, OSS, ATS, banking, and civic lookup actions in-process for vertical complex variants — no external buyer APIs required.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LocalIntegrationsSection />
           </CardContent>
         </Card>
 

@@ -5,6 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from api.schemas.voice_profile import SpeechDeliverySettings
+from api.services.voice.authenticity_layer import (
+    layer_off,
+    layer_projection_only,
+    layer_subtle,
+    layer_warm,
+)
 
 VERTICAL_BUILTIN_SLUGS = (
     "vertical_healthcare",
@@ -62,6 +68,9 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             ],
         },
         enable_breath_pauses=True,
+        authenticity_layer=layer_subtle().model_copy(
+            update={"key_projection_terms": ["appointment", "confirmation"]}
+        ),
         stability=0.74,
         similarity_boost=0.88,
         speed=0.96,
@@ -84,6 +93,7 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             "es-US": ["Claro", "Un momento", "Déjeme revisar su pedido"],
         },
         enable_breath_pauses=True,
+        authenticity_layer=layer_warm(),
         stability=0.66,
         similarity_boost=0.9,
         speed=1.0,
@@ -98,6 +108,7 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
         extended_filler_phrases=["Let me confirm", "One moment"],
         multilingual_fillers={},
         enable_breath_pauses=False,
+        authenticity_layer=layer_off(),
         stability=0.86,
         similarity_boost=0.8,
         speed=1.02,
@@ -119,6 +130,9 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             "en-US": ["One moment", "Let me review that", "Thank you for calling"],
         },
         enable_breath_pauses=True,
+        authenticity_layer=layer_projection_only().model_copy(
+            update={"key_projection_terms": ["claim", "policy", "confirmation"]}
+        ),
         stability=0.8,
         similarity_boost=0.82,
         speed=0.98,
@@ -141,6 +155,7 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             "es-US": ["Con gusto", "Un momento", "Permítame revisar"],
         },
         enable_breath_pauses=True,
+        authenticity_layer=layer_warm(),
         stability=0.7,
         similarity_boost=0.87,
         speed=0.97,
@@ -160,6 +175,9 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             "en-US": ["One moment while I verify", "For your security"],
         },
         enable_breath_pauses=False,
+        authenticity_layer=layer_projection_only().model_copy(
+            update={"key_projection_terms": ["account", "balance", "confirmation"]}
+        ),
         stability=0.88,
         similarity_boost=0.78,
         speed=0.99,
@@ -182,6 +200,7 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             "es-US": ["Buena pregunta", "Un momento", "Déjeme buscar esa sucursal"],
         },
         enable_breath_pauses=True,
+        authenticity_layer=layer_subtle(),
         stability=0.72,
         similarity_boost=0.86,
         speed=1.0,
@@ -204,6 +223,12 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             "es-US": ["Un momento mientras verifico", "Permítame revisar su zona de servicio"],
         },
         enable_breath_pauses=False,
+        authenticity_layer=layer_subtle().model_copy(
+            update={
+                "enable_soft_breath": False,
+                "key_projection_terms": ["outage", "restoration", "ETA"],
+            }
+        ),
         stability=0.85,
         similarity_boost=0.82,
         speed=0.98,
@@ -226,6 +251,9 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             "es-US": ["Un momento por favor", "Permítame buscar esa información"],
         },
         enable_breath_pauses=False,
+        authenticity_layer=layer_subtle().model_copy(
+            update={"enable_soft_breath": False, "filler_intensity": "low"}
+        ),
         stability=0.84,
         similarity_boost=0.84,
         speed=0.97,
@@ -248,6 +276,9 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
             "es-US": ["Gracias por llamar", "Un momento", "Permítame revisar su solicitud"],
         },
         enable_breath_pauses=True,
+        authenticity_layer=layer_subtle().model_copy(
+            update={"key_projection_terms": ["interview", "application"]}
+        ),
         stability=0.76,
         similarity_boost=0.86,
         speed=0.98,

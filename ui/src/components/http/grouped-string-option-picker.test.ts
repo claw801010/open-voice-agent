@@ -58,12 +58,12 @@ describe("filterGroupedStringOptions", () => {
         ]);
     });
 
-    it("matches custom-group tokens by fallback hint text (e.g. search “browser”)", () => {
+    it("matches custom-group tokens by fallback hint text (e.g. search “body”)", () => {
         const groups = [
             { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: ["{{acme.segment}}", "{{other}}"] },
         ];
         const lookup = buildGroupedPickerFilterSubtitleLookup(groups, [], GROUPED_PICKER_BUILTIN_OPTION_SUBTITLES);
-        expect(filterGroupedStringOptions(groups, [], "browser", lookup)).toEqual([
+        expect(filterGroupedStringOptions(groups, [], "body", lookup)).toEqual([
             { label: HTTP_VARIABLE_GROUP_LABELS.custom, options: ["{{acme.segment}}", "{{other}}"] },
         ]);
     });

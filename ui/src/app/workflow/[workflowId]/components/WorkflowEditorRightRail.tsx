@@ -120,6 +120,7 @@ export type WorkflowEditorRightRailProps = {
     hasPublishedVersion?: boolean;
     toolNamesByUuid?: ReadonlyMap<string, string>;
     catalogSlug?: string | null;
+    catalogVariantId?: string | null;
     catalogDisplayName?: string | null;
 };
 
@@ -164,6 +165,7 @@ export function WorkflowEditorRightRail({
     hasPublishedVersion = false,
     toolNamesByUuid = new Map(),
     catalogSlug = null,
+    catalogVariantId = null,
     catalogDisplayName = null,
 }: WorkflowEditorRightRailProps) {
     const guidanceBlock =
@@ -182,6 +184,7 @@ export function WorkflowEditorRightRail({
                 {catalogSlug ? (
                     <WorkflowVerticalGuideCard
                         catalogSlug={catalogSlug}
+                        catalogVariantId={catalogVariantId}
                         catalogDisplayName={catalogDisplayName}
                         workflowId={workflowId}
                         templateContextVariables={templateContextVariables}

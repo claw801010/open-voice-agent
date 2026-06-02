@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { CallLiveTracePanel } from '@/components/analytics/CallLiveTracePanel';
 import { CallReviewPanel } from '@/components/analytics/CallReviewPanel';
+import { LiveWorkflowTimeline } from '@/components/analytics/LiveWorkflowTimeline';
 import { CallScorecardPanel, type CallScorecard } from '@/components/analytics/CallScorecardPanel';
 import type { CallLiveTrace, CallQualityReport } from '@/lib/callLiveTraceTypes';
 import { type AnalyticsCallDetail, fetchAnalyticsCallDetail } from "@/lib/analyticsCallsApi";
@@ -177,6 +178,8 @@ export default function AnalyticsCallDetailPage() {
                             </CardContent>
                         </Card>
                     </div>
+
+                    <LiveWorkflowTimeline detail={detail} />
 
                     <Card>
                         <CardHeader>

@@ -24,7 +24,7 @@ Improve **candidate experience** with scripted careers FAQ, **tokenized applicat
 
 **Goal:** schedule an **interview** in **≤6 agent turns** after **`schedule_interview`** is wired.
 
-**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`). Optional: [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **Candidate FAQ & interview scheduling** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
 2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`company_name`**, **`default_requisition_code`**, and **`interview_type_default`** from pack defaults.
@@ -37,10 +37,10 @@ Improve **candidate experience** with scripted careers FAQ, **tokenized applicat
 
 **Goal:** return **tokenized application status** in **≤6 agent turns** after **`lookup_application_status`** is wired (**application_status_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/applications/status` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`ats_api_base_url`**).
 
 1. Install **Candidate FAQ & interview scheduling** with variant **`application_status_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"application_status_complex"`).
-2. **Customize**; set **`ats_api_base_url`** = `http://127.0.0.1:8765`, **`company_name`**, and **`default_requisition_code`** from pack defaults.
+2. **Customize**; confirm **`ats_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`company_name`** and **`default_requisition_code`** from pack defaults.
 3. HTTP tool **`lookup_application_status`**: `POST {{ats_api_base_url}}/api/v1/applications/status`; **response_mapping** — `application_id` → `appointment.id`, `status_code` → `confirmation_code`, `last_updated` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Candidate FAQ & application status** agent; **Publish**.
 5. **Web test** script: ask about application status → provide tokenized application reference → confirm summary when agent reads back tool result.
@@ -50,10 +50,10 @@ Improve **candidate experience** with scripted careers FAQ, **tokenized applicat
 
 **Goal:** confirm or **reschedule** an upcoming interview in **≤6 agent turns** after **`confirm_or_reschedule_interview`** is wired (**interview_confirm_complex** variant).
 
-**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) for persisted slots; optional [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765` for static reschedule JSON (`POST /api/v1/appointments/reschedule`).
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) for persisted slots and reschedule (`POST …/api/v1/appointments/reschedule`).
 
 1. Install **Candidate FAQ & interview scheduling** with variant **`interview_confirm_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"interview_confirm_complex"`).
-2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**).
+2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar** with `confirm_or_reschedule_interview`).
 3. HTTP tool **`confirm_or_reschedule_interview`**: `POST {{scheduling_api_base_url}}/api/v1/appointments/reschedule`; **response_mapping** — `interview_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
 4. Attach tool to the **Confirm & remind** agent; **Publish**.
 5. **Web test** script: reference an upcoming interview → ask to move to a new time window → confirm when agent summarizes.

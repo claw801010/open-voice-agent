@@ -11,7 +11,18 @@ from httpx import HTTPStatusError
 from loguru import logger
 from pydantic import BaseModel, Field, ValidationError
 
-from api.constants import BACKEND_API_ENDPOINT, DEPLOYMENT_MODE, ENABLE_LOCAL_PAYMENTS, ENABLE_LOCAL_SCHEDULING
+from api.constants import (
+    BACKEND_API_ENDPOINT,
+    DEPLOYMENT_MODE,
+    ENABLE_LOCAL_EHR,
+    ENABLE_LOCAL_INTEGRATIONS,
+    ENABLE_LOCAL_MESSAGING,
+    ENABLE_LOCAL_PAYMENTS,
+    ENABLE_LOCAL_SCHEDULING,
+    LOCAL_EHR_TEMPLATE_VARS,
+    LOCAL_INTEGRATION_TEMPLATE_VARS,
+    LOCAL_MESSAGING_TEMPLATE_VARS,
+)
 from api.db import db_client
 from api.db.models import UserModel
 from api.db.workflow_template_client import WorkflowTemplateClient
@@ -1635,6 +1646,28 @@ async def install_workflow_from_catalog(
         default_vars["collections_api_base_url"] = (
             f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-payments"
         )
+    if ENABLE_LOCAL_PAYMENTS and "billing_api_base_url" in default_vars:
+        default_vars["billing_api_base_url"] = (
+            f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-payments"
+        )
+    if ENABLE_LOCAL_INTEGRATIONS:
+        li_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-integrations"
+        pack_defaults = pack.get("default_template_variables") or {}
+        for var in LOCAL_INTEGRATION_TEMPLATE_VARS:
+            if var in pack_defaults:
+                default_vars[var] = li_base
+    if ENABLE_LOCAL_EHR:
+        ehr_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-ehr"
+        pack_defaults = pack.get("default_template_variables") or {}
+        for var in LOCAL_EHR_TEMPLATE_VARS:
+            if var in pack_defaults:
+                default_vars[var] = ehr_base
+    if ENABLE_LOCAL_MESSAGING:
+        msg_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-messaging"
+        pack_defaults = pack.get("default_template_variables") or {}
+        for var in LOCAL_MESSAGING_TEMPLATE_VARS:
+            if var in pack_defaults:
+                default_vars[var] = msg_base
 
     if wt.get("source") == "packaged_definition" and wt.get("packaged_definition_ref"):
         try:
@@ -1672,15 +1705,51 @@ async def install_workflow_from_catalog(
                 "scheduling_api_base_url": default_vars["scheduling_api_base_url"],
                 "book_url": f"{default_vars['scheduling_api_base_url']}/api/v1/appointments",
             }
-        if ENABLE_LOCAL_PAYMENTS and "collections_api_base_url" in (
-            pack.get("default_template_variables") or {}
+        if ENABLE_LOCAL_PAYMENTS and (
+            "collections_api_base_url" in (pack.get("default_template_variables") or {})
+            or "billing_api_base_url" in (pack.get("default_template_variables") or {})
         ):
-            workflow_configurations["local_payments"] = {
+            lp_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-payments"
+            lp_cfg: dict[str, Any] = {
                 "enabled": True,
-                "collections_api_base_url": default_vars["collections_api_base_url"],
-                "payment_promises_url": (
-                    f"{default_vars['collections_api_base_url']}/api/v1/payment-promises"
-                ),
+                "local_payments_base_url": lp_base,
+                "payment_promises_url": f"{lp_base}/api/v1/payment-promises",
+                "payment_redirect_confirm_url": f"{lp_base}/api/v1/payments/redirect/confirm",
+                "visits_enroll_url": f"{lp_base}/api/v1/visits/enroll",
+            }
+            if "collections_api_base_url" in (pack.get("default_template_variables") or {}):
+                lp_cfg["collections_api_base_url"] = default_vars["collections_api_base_url"]
+            if "billing_api_base_url" in (pack.get("default_template_variables") or {}):
+                lp_cfg["billing_api_base_url"] = default_vars["billing_api_base_url"]
+            workflow_configurations["local_payments"] = lp_cfg
+        pack_defaults = pack.get("default_template_variables") or {}
+        if ENABLE_LOCAL_INTEGRATIONS and any(
+            v in pack_defaults for v in LOCAL_INTEGRATION_TEMPLATE_VARS
+        ):
+            li_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-integrations"
+            li_cfg: dict[str, Any] = {
+                "enabled": True,
+                "local_integrations_base_url": li_base,
+            }
+            for var in LOCAL_INTEGRATION_TEMPLATE_VARS:
+                if var in pack_defaults:
+                    li_cfg[var] = default_vars[var]
+            workflow_configurations["local_integrations"] = li_cfg
+        if ENABLE_LOCAL_EHR and any(v in pack_defaults for v in LOCAL_EHR_TEMPLATE_VARS):
+            ehr_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-ehr"
+            workflow_configurations["local_ehr"] = {
+                "enabled": True,
+                "local_ehr_base_url": ehr_base,
+                "ehr_api_base_url": default_vars.get("ehr_api_base_url", ehr_base),
+            }
+        if ENABLE_LOCAL_MESSAGING and any(
+            v in pack_defaults for v in LOCAL_MESSAGING_TEMPLATE_VARS
+        ):
+            msg_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-messaging"
+            workflow_configurations["local_messaging"] = {
+                "enabled": True,
+                "local_messaging_base_url": msg_base,
+                "messaging_api_base_url": default_vars.get("messaging_api_base_url", msg_base),
             }
         workflow = await db_client.create_workflow(
             request.workflow_name,
@@ -1750,15 +1819,51 @@ async def install_workflow_from_catalog(
                 "scheduling_api_base_url": default_vars["scheduling_api_base_url"],
                 "book_url": f"{default_vars['scheduling_api_base_url']}/api/v1/appointments",
             }
-        if ENABLE_LOCAL_PAYMENTS and "collections_api_base_url" in (
-            pack.get("default_template_variables") or {}
+        if ENABLE_LOCAL_PAYMENTS and (
+            "collections_api_base_url" in (pack.get("default_template_variables") or {})
+            or "billing_api_base_url" in (pack.get("default_template_variables") or {})
         ):
-            workflow_configurations["local_payments"] = {
+            lp_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-payments"
+            lp_cfg: dict[str, Any] = {
                 "enabled": True,
-                "collections_api_base_url": default_vars["collections_api_base_url"],
-                "payment_promises_url": (
-                    f"{default_vars['collections_api_base_url']}/api/v1/payment-promises"
-                ),
+                "local_payments_base_url": lp_base,
+                "payment_promises_url": f"{lp_base}/api/v1/payment-promises",
+                "payment_redirect_confirm_url": f"{lp_base}/api/v1/payments/redirect/confirm",
+                "visits_enroll_url": f"{lp_base}/api/v1/visits/enroll",
+            }
+            if "collections_api_base_url" in (pack.get("default_template_variables") or {}):
+                lp_cfg["collections_api_base_url"] = default_vars["collections_api_base_url"]
+            if "billing_api_base_url" in (pack.get("default_template_variables") or {}):
+                lp_cfg["billing_api_base_url"] = default_vars["billing_api_base_url"]
+            workflow_configurations["local_payments"] = lp_cfg
+        pack_defaults = pack.get("default_template_variables") or {}
+        if ENABLE_LOCAL_INTEGRATIONS and any(
+            v in pack_defaults for v in LOCAL_INTEGRATION_TEMPLATE_VARS
+        ):
+            li_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-integrations"
+            li_cfg: dict[str, Any] = {
+                "enabled": True,
+                "local_integrations_base_url": li_base,
+            }
+            for var in LOCAL_INTEGRATION_TEMPLATE_VARS:
+                if var in pack_defaults:
+                    li_cfg[var] = default_vars[var]
+            workflow_configurations["local_integrations"] = li_cfg
+        if ENABLE_LOCAL_EHR and any(v in pack_defaults for v in LOCAL_EHR_TEMPLATE_VARS):
+            ehr_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-ehr"
+            workflow_configurations["local_ehr"] = {
+                "enabled": True,
+                "local_ehr_base_url": ehr_base,
+                "ehr_api_base_url": default_vars.get("ehr_api_base_url", ehr_base),
+            }
+        if ENABLE_LOCAL_MESSAGING and any(
+            v in pack_defaults for v in LOCAL_MESSAGING_TEMPLATE_VARS
+        ):
+            msg_base = f"{BACKEND_API_ENDPOINT.rstrip('/')}/api/v1/local-messaging"
+            workflow_configurations["local_messaging"] = {
+                "enabled": True,
+                "local_messaging_base_url": msg_base,
+                "messaging_api_base_url": default_vars.get("messaging_api_base_url", msg_base),
             }
         workflow = await db_client.create_workflow(
             request.workflow_name,

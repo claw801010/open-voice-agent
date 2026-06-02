@@ -35,6 +35,7 @@ Base: **`{BACKEND}/api/v1/local-scheduling`**
 | GET | `/lookup_availability?date=YYYY-MM-DD` | Open slots minus already-booked times |
 | POST | `/book_slot` | Voice HTTP tool path (catalog `response_mapping`) |
 | POST | `/api/v1/appointments` | Runbook alias when `scheduling_api_base_url` points here |
+| POST | `/api/v1/appointments/reschedule` | `reschedule_appointment` / `confirm_or_reschedule_interview` |
 | POST | `/appointments` | Authenticated UI booking |
 | GET | `/appointments/{id}/invite.ics` | Calendar invite download |
 | GET/DELETE | `/appointments` | List / cancel (authenticated) |

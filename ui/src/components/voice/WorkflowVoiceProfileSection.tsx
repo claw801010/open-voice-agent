@@ -87,7 +87,7 @@ export function WorkflowVoiceProfileSection({ workflowConfigurations, onSave, wo
                     Voice delivery profile
                 </CardTitle>
                 <CardDescription>
-                    Override org default for this agent. Controls authenticity, professional fillers, and TTS
+                    Override org default for this agent. Controls authenticity, fillers, natural delivery, and TTS
                     tuning during live calls.
                 </CardDescription>
             </CardHeader>
@@ -123,6 +123,8 @@ export function WorkflowVoiceProfileSection({ workflowConfigurations, onSave, wo
                                         `; fillers: ${selectedProfile.speechSettings.fillerIntensity}`}
                                     {selectedProfile.speechSettings.enableExtendedFillers &&
                                         '; extended fillers on'}
+                                    {selectedProfile.speechSettings.authenticityLayer?.enabled &&
+                                        '; natural delivery on'}
                                 </span>
                             </p>
                         )}

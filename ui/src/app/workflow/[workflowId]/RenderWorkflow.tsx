@@ -571,6 +571,8 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
     useUnsavedChanges('workflow-canvas', canvasHasUnsavedChanges);
 
     const catalogSlug = (initialWorkflowConfigurations as WorkflowConfigurations | undefined)?.mk01?.catalog_slug;
+    const catalogVariantId =
+        (initialWorkflowConfigurations as WorkflowConfigurations | undefined)?.mk01?.catalog_variant_id ?? null;
 
     useEffect(() => {
         if (isViewingHistoricalVersion) {
@@ -1260,6 +1262,7 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                                     hasPublishedVersion={hasPublishedVersion}
                                     toolNamesByUuid={toolNamesByUuid}
                                     catalogSlug={catalogSlug ?? null}
+                                    catalogVariantId={catalogVariantId}
                                     catalogDisplayName={catalogPackMeta?.display_name ?? null}
                                     simulationDebugSnapshot={simulationDebugSnapshot}
                                     templateContextVariables={templateContextVariables ?? {}}

@@ -23,16 +23,16 @@ from api.services.voice.vertical_presets import (
 # Industry sample lines for catalog / profile preview (spoken ▸ style).
 CATALOG_VOICE_PREVIEW_SCRIPTS: dict[str, str] = {
     "healthcare-clinic-screening": (
-        "I understand you'd like to schedule a visit. "
-        "One moment while I check availability for you."
+        "Hi Maria — I have your chart pulled up, including your approved prior auth for the knee MRI. "
+        "I can book Tuesday at three p.m. and text you prep instructions."
     ),
     "retail-wismo-faq": (
-        "Sure thing — let me check on that order for you. "
-        "One moment while I pull up the details."
+        "Okay, sure thing — I see an outstanding balance on order 8842. "
+        "I can set up a flexible twenty-five dollar per month payment plan today."
     ),
     "b2b-saas-trial-nurture": (
-        "Thanks for calling. I can help with your trial account "
-        "or schedule a demo with our team."
+        "Thanks for calling — your trial is going well. "
+        "I can move you to paid and book a QBR with your customer success manager."
     ),
     "insurance-fnol-faq": (
         "Thank you for calling. I can walk you through first-notice guidance "
@@ -51,8 +51,8 @@ CATALOG_VOICE_PREVIEW_SCRIPTS: dict[str, str] = {
         "One moment while I check store hours."
     ),
     "telecom-utilities-outage-faq": (
-        "I can help with outage information for your area. "
-        "One moment while I check the latest service status."
+        "Right — I'm checking outage status for zip 90210. "
+        "There is an active issue in your area; crews estimate restore by six p.m."
     ),
     "public-sector-civic-services-faq": (
         "I can help with permit and licensing questions. "
@@ -65,7 +65,7 @@ CATALOG_VOICE_PREVIEW_SCRIPTS: dict[str, str] = {
 }
 
 _DEFAULT_PREVIEW_SCRIPT = (
-    "Thanks for calling. One moment while I look that up for you."
+    "Sure — thanks for calling. One moment while I look that up for you."
 )
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]

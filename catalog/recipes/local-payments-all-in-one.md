@@ -1,6 +1,6 @@
 # All-in-one local payments (MK-01)
 
-**Goal:** Run **collections** and **payment redirect** flows without Stripe or a buyer processor. Dograh stores promises and redirect confirms locally with booking-compatible JSON for analytics `mapped_data`.
+**Goal:** Run **collections**, **payment redirect**, and **concierge enroll** flows without Stripe or a buyer processor. Dograh stores promises, redirect confirms, and concierge enrollments locally with booking-compatible JSON for analytics `mapped_data`.
 
 External payment processors are optional upgrades.
 
@@ -18,15 +18,31 @@ Records persist under **`run/local_payments/org_{id}.json`**.
 
 ## Install from catalog (auto-wired)
 
-1. Install retail **`collections_complex`** from Template catalog.
-2. **`install-from-catalog`** sets **`collections_api_base_url`** to  
-   `{BACKEND_API_ENDPOINT}/api/v1/local-payments` when `ENABLE_LOCAL_PAYMENTS` is on.
-3. Wire HTTP tool **`capture_payment_promise`**:  
-   `POST {{collections_api_base_url}}/api/v1/payment-promises`
-4. **response_mapping** — `promise_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `promised_date` → `appointment.slot.start`
+When `ENABLE_LOCAL_PAYMENTS` is on, **`install-from-catalog`** sets:
 
-For telecom **`payment_redirect_complex`**, point **`billing_api_base_url`** at the same base (or full URL below) and use **`confirm_payment_redirect`**:  
-`POST {BASE}/api/v1/payments/redirect/confirm`
+| Template variable | Local base |
+|-------------------|------------|
+| **`collections_api_base_url`** | `{BACKEND}/api/v1/local-payments` (retail **`collections_complex`**) |
+| **`billing_api_base_url`** | same base (telecom **`payment_redirect_complex`**, healthcare **`concierge_complex`**) |
+
+### Retail collections
+
+1. Install retail **`collections_complex`** from Template catalog.
+2. Wire HTTP tool **`capture_payment_promise`**:  
+   `POST {{collections_api_base_url}}/api/v1/payment-promises`
+3. **response_mapping** — `promise_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `promised_date` → `appointment.slot.start`
+
+Or use **Wire local payments** on the workflow editor catalog guide card (creates tools + sets URLs).
+
+### Telecom payment redirect
+
+Install **`payment_redirect_complex`**; **`billing_api_base_url`** is auto-wired. Wire **`confirm_payment_redirect`**:  
+`POST {{billing_api_base_url}}/api/v1/payments/redirect/confirm`
+
+### Healthcare concierge enroll
+
+Install **`concierge_complex`**; **`billing_api_base_url`** is auto-wired. Wire **`enroll_concierge_visit`**:  
+`POST {{billing_api_base_url}}/api/v1/visits/enroll`
 
 ## HTTP surface
 
@@ -38,9 +54,12 @@ Base: **`{BACKEND}/api/v1/local-payments`**
 | GET | `/records` | Authenticated list (Settings UI) |
 | POST | `/api/v1/payment-promises` | `capture_payment_promise` |
 | POST | `/api/v1/payments/redirect/confirm` | `confirm_payment_redirect` |
+| POST | `/api/v1/visits/enroll` | `enroll_concierge_visit` |
 
 ## UI smoke test
 
-**Settings → Local demo payments** — view recorded promises after a voice HTTP tool call or manual POST.
+**Settings → Local demo payments** — view recorded promises, redirects, and enrollments after a voice HTTP tool call or manual POST.
+
+**Workflow editor** — catalog guide card **Wire local payments** (when the vertical uses payment HTTP tools).
 
 **Related:** [local-scheduling-all-in-one.md](local-scheduling-all-in-one.md), [booking-http-analytics-smoke.md](booking-http-analytics-smoke.md).

@@ -1,8 +1,10 @@
 /**
  * MK-01 vertical hints: tie packaged catalog slugs to example HTTP tool names and
  * stable response_mapping keys (→ analytics call detail mapped_data). Keep in sync
- * with catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md.
+ * with catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md and catalog/catalog-variant-http-tools.json.
  */
+import catalogVariantHttpTools from '../../../catalog/catalog-variant-http-tools.json';
+
 export type VerticalHttpProofHint = {
     example_tool_names: string[];
     suggested_response_mapping_keys: string[];
@@ -11,7 +13,15 @@ export type VerticalHttpProofHint = {
 export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = {
     "healthcare-clinic-screening": {
         example_tool_names: ["book_slot", "lookup_availability"],
-        suggested_response_mapping_keys: ["appointment_id", "slot_start", "confirmation_code"],
+        suggested_response_mapping_keys: [
+            "appointment_id",
+            "slot_start",
+            "confirmation_code",
+            "prior_auth_id",
+            "chart_sync_id",
+            "message_id",
+            "patient_id",
+        ],
     },
     "retail-wismo-faq": {
         example_tool_names: ["reserve_pickup_slot"],
@@ -51,8 +61,25 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
     },
 };
 
-export function verticalHttpProofHintForSlug(slug: string | null | undefined): VerticalHttpProofHint | null {
+/** Per-variant HTTP tool focus for catalog guide wire buttons (MK-01 complex variants). */
+export const CATALOG_VARIANT_HTTP_TOOLS: Record<string, Record<string, string[]>> =
+    catalogVariantHttpTools;
+
+export function verticalHttpProofHintForSlug(
+    slug: string | null | undefined,
+    variantId?: string | null,
+): VerticalHttpProofHint | null {
     const s = (slug || "").trim();
     if (!s) return null;
-    return VERTICAL_HTTP_PROOF_HINTS[s] ?? null;
+    const base = VERTICAL_HTTP_PROOF_HINTS[s];
+    if (!base) return null;
+    const variant = (variantId || "").trim();
+    const variantTools = variant ? CATALOG_VARIANT_HTTP_TOOLS[s]?.[variant] : undefined;
+    if (variantTools?.length) {
+        return {
+            example_tool_names: variantTools,
+            suggested_response_mapping_keys: base.suggested_response_mapping_keys,
+        };
+    }
+    return base;
 }

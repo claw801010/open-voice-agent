@@ -17,6 +17,7 @@ import {
   Mic,
   Phone,
   Settings,
+  ShieldCheck,
   Store,
   TrendingUp,
   Workflow,
@@ -184,6 +185,11 @@ export function AppSidebar() {
       title: "Analytics",
       url: "/analytics",
       icon: ClipboardList,
+    },
+    {
+      title: "Review inbox",
+      url: "/analytics/review",
+      icon: ShieldCheck,
     },
     // {
     //   title: "LoopTalk",

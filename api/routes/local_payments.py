@@ -34,6 +34,7 @@ class LocalPaymentsConfigResponse(BaseModel):
     enabled: bool
     payment_promises_url: str
     payment_redirect_confirm_url: str
+    visits_enroll_url: str
     local_payments_base_url: str
     message: str
 
@@ -53,6 +54,13 @@ class PaymentRedirectConfirmRequest(BaseModel):
     organization_id: Optional[int] = Field(default=None, ge=1)
 
 
+class ConciergeEnrollRequest(BaseModel):
+    visit_type: Optional[str] = None
+    slot_start: Optional[str] = None
+    patient_name: Optional[str] = None
+    organization_id: Optional[int] = Field(default=None, ge=1)
+
+
 @router.get("/config", response_model=LocalPaymentsConfigResponse)
 async def get_config() -> LocalPaymentsConfigResponse:
     base = local_payments_base_url()
@@ -60,10 +68,11 @@ async def get_config() -> LocalPaymentsConfigResponse:
         enabled=ENABLE_LOCAL_PAYMENTS,
         payment_promises_url=f"{base}/api/v1/payment-promises",
         payment_redirect_confirm_url=f"{base}/api/v1/payments/redirect/confirm",
+        visits_enroll_url=f"{base}/api/v1/visits/enroll",
         local_payments_base_url=base,
         message=(
-            "All-in-one local payments: voluntary payment promises and redirect confirms "
-            "persist under run/local_payments/ — no Stripe or collections processor required."
+            "All-in-one local payments: payment promises, redirect confirms, and concierge enroll "
+            "persist under run/local_payments/ — no Stripe or billing processor required."
         ),
     )
 
@@ -99,4 +108,17 @@ async def confirm_payment_redirect(body: PaymentRedirectConfirmRequest) -> dict[
         account_reference=body.account_reference,
         redirect_url=body.redirect_url,
         reason_code=body.reason_code,
+    )
+
+
+@router.post("/api/v1/visits/enroll")
+async def enroll_concierge_visit(body: ConciergeEnrollRequest) -> dict[str, Any]:
+    """Runbook-compatible alias for enroll_concierge_visit HTTP tools."""
+    _require_enabled()
+    org = body.organization_id if body.organization_id is not None else 1
+    return store.enroll_concierge_visit(
+        org,
+        visit_type=body.visit_type,
+        slot_start=body.slot_start,
+        patient_name=body.patient_name,
     )

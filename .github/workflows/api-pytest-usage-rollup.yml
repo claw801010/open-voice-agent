@@ -7,12 +7,14 @@ on:
       - "api/**"
       - "catalog/vertical-packs.json"
       - "catalog/packaged-workflows/**"
+      - "catalog/catalog-variant-http-tools.json"
       - ".github/workflows/api-pytest-usage-rollup.yml"
   pull_request:
     paths:
       - "api/**"
       - "catalog/vertical-packs.json"
       - "catalog/packaged-workflows/**"
+      - "catalog/catalog-variant-http-tools.json"
       - ".github/workflows/api-pytest-usage-rollup.yml"
 
 concurrency:
@@ -77,12 +79,23 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
           REDIS_URL: redis://127.0.0.1:6379/0
+          ENVIRONMENT: local
+          ENABLE_LOCAL_SCHEDULING: "true"
+          ENABLE_LOCAL_PAYMENTS: "true"
+          ENABLE_LOCAL_INTEGRATIONS: "true"
           LOG_LEVEL: WARNING
         run: |
           python -m pytest \
             tests/test_vertical_packs_catalog.py \
             tests/test_catalog_install.py \
             tests/test_install_from_catalog_routes.py \
+            tests/test_voice_profiles.py \
+            tests/test_voice_profiles_routes.py \
+            tests/test_voice_profile_preview.py \
+            tests/test_gtm_local_all_in_one.py \
+            tests/test_local_scheduling_routes.py \
+            tests/test_local_payments_routes.py \
+            tests/test_local_integrations_routes.py \
             tests/test_workflow_n8n_import_route.py \
             tests/test_make_scenario_adapter_unit.py \
             tests/test_workflow_make_import_route.py \

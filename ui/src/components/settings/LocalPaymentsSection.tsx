@@ -63,7 +63,7 @@ export function LocalPaymentsSection() {
     }
 
     return (
-        <div className="space-y-4 text-sm">
+        <div className="space-y-4 text-sm" data-testid="local-payments-section">
             <p className="text-muted-foreground leading-snug">
                 All-in-one collections demos: payment promises and redirect confirms persist under{' '}
                 <code className="rounded bg-muted px-1 text-xs">run/local_payments/</code> — no Stripe or
@@ -79,6 +79,10 @@ export function LocalPaymentsSection() {
                 <p>
                     <span className="text-muted-foreground">POST </span>
                     {config.payment_redirect_confirm_url}
+                </p>
+                <p>
+                    <span className="text-muted-foreground">POST </span>
+                    {config.visits_enroll_url}
                 </p>
             </div>
             <div>

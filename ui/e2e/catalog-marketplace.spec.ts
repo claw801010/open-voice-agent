@@ -34,6 +34,59 @@ test.describe("Template catalog (authenticated)", () => {
         await expect(page.getByText("Could not load catalog")).not.toBeVisible();
         await expect(page.getByText("Invalid catalog response")).not.toBeVisible();
     });
+
+    test("healthcare pack card shows natural delivery voice hint", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const packCard = page.locator("article").filter({ hasText: "Patient screening & triage" });
+        await expect(packCard.getByText(/natural delivery/i)).toBeVisible({ timeout: 15_000 });
+        await expect(packCard.getByText(/Healthcare voice/i)).toBeVisible();
+    });
+
+    test("healthcare pack card links analytics proof for complex variant", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-healthcare-clinic-screening");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        await expect(proofLink).toHaveAttribute("href", /\/analytics\/calls\?/);
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=healthcare-clinic-screening");
+        expect(href).toContain("catalog_variant_id=ehr_sync_complex");
+        expect(href).toContain("tool_name=lookup_patient_context");
+
+        const reviewLink = page.getByTestId("catalog-review-inbox-healthcare-clinic-screening");
+        await expect(reviewLink).toBeVisible({ timeout: 15_000 });
+        await expect(reviewLink).toHaveAttribute("href", "/analytics/review");
+    });
+
+    test("retail pack card links local payments settings", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const settingsLink = page.getByTestId("catalog-settings-local-retail-wismo-faq");
+        await expect(settingsLink).toBeVisible({ timeout: 15_000 });
+        await expect(settingsLink).toHaveAttribute("href", "/settings#local-payments");
+        await expect(settingsLink).toHaveText("Local demo payments");
+    });
+
+    test("telecom pack card links local integrations settings", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const settingsLink = page.getByTestId("catalog-settings-local-telecom-utilities-outage-faq");
+        await expect(settingsLink).toBeVisible({ timeout: 15_000 });
+        await expect(settingsLink).toHaveAttribute("href", "/settings#local-integrations");
+    });
 });
 
 test.describe("Install from catalog → editor (authenticated + API)", () => {
@@ -141,5 +194,278 @@ test.describe("Install complex variant from catalog → editor", () => {
         await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
         await expect(page.getByText("Installed from catalog")).toBeVisible({ timeout: 30_000 });
         await expect(page.getByText("WISMO & collections")).toBeVisible({ timeout: 30_000 });
+    });
+});
+
+test.describe("Catalog guide — wire local all-in-one (authenticated + API)", () => {
+    test.beforeEach(async ({ page }) => {
+        await loginAnalyticsE2E(page);
+    });
+
+    test("healthcare install shows Wire local calendar and wires successfully", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const packCard = page.locator("article").filter({ hasText: "Patient screening & triage" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await expect(dialog.getByRole("heading", { name: "Name your workflow" })).toBeVisible();
+
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Booking-ready prompts/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire calendar ${suffix}`);
+
+        const installSubmit = dialog.getByRole("button", { name: "Install", exact: true });
+        await expect(installSubmit).toBeEnabled({ timeout: 15_000 });
+        await installSubmit.click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+        await expect(page.getByText("Installed from catalog")).toBeHidden({ timeout: 30_000 });
+
+        const wireCalendar = page.getByRole("button", { name: "Wire local calendar" });
+        await expect(wireCalendar).toBeVisible({ timeout: 30_000 });
+        await wireCalendar.click();
+
+        await expect(page.getByText("Local calendar wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("healthcare ehr_sync_complex wires local EHR and messaging", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const packCard = page.locator("article").filter({ hasText: "Patient screening & triage" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Full context \+ EHR sync/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire ehr sync ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("ehr_sync_complex")).toBeVisible();
+
+        const wireEhr = page.getByTestId("wire-local-ehr-button");
+        await expect(wireEhr).toBeVisible({ timeout: 15_000 });
+        await wireEhr.click();
+        await expect(page.getByText("Local EHR wired")).toBeVisible({ timeout: 30_000 });
+
+        const wireMessaging = page.getByTestId("wire-local-messaging-button");
+        await expect(wireMessaging).toBeVisible();
+        await wireMessaging.click();
+        await expect(page.getByText("Local messaging wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("telecom outage variant shows Wire local integrations", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Outage & billing FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Live outage status lookup/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire integrations ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const wireIntegrations = page.getByRole("button", { name: "Wire local integrations" });
+        await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
+        await wireIntegrations.click();
+
+        await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("retail collections variant wires local payments", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "WISMO & store policy FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Collections \/ payment promise/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire payments ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const wirePayments = page.getByRole("button", { name: "Wire local payments" });
+        await expect(wirePayments).toBeVisible({ timeout: 30_000 });
+        await wirePayments.click();
+
+        await expect(page.getByText("Local payments wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("retail collections variant shows payments wire only", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "WISMO & store policy FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Collections \/ payment promise/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E variant payments only ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        await expect(page.getByRole("button", { name: "Wire local payments" })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByRole("button", { name: "Wire local calendar" })).not.toBeVisible();
+    });
+
+    test("telecom outage variant shows integrations wire only", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Outage & billing FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Live outage status lookup/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E variant integrations only ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        await expect(page.getByRole("button", { name: "Wire local integrations" })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByRole("button", { name: "Wire local calendar" })).not.toBeVisible();
+        await expect(page.getByRole("button", { name: "Wire local payments" })).not.toBeVisible();
+    });
+
+    test("catalog guide Preview analytics link includes variant and tool filters", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: catalog guide analytics link not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "WISMO & store policy FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Collections \/ payment promise/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E analytics link ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const previewAnalytics = page.getByRole("link", { name: "Preview analytics" });
+        await expect(previewAnalytics).toBeVisible({ timeout: 30_000 });
+        await expect(previewAnalytics).toHaveAttribute(
+            "href",
+            /catalog_slug=retail-wismo-faq/,
+        );
+        await expect(previewAnalytics).toHaveAttribute(
+            "href",
+            /catalog_variant_id=collections_complex/,
+        );
+        await expect(previewAnalytics).toHaveAttribute(
+            "href",
+            /tool_name=capture_payment_promise/,
+        );
+    });
+
+    test("collections variant shows catalog_variant_id on guide card", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: catalog guide variant badge not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "WISMO & store policy FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Collections \/ payment promise/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E variant badge ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("collections_complex")).toBeVisible();
     });
 });

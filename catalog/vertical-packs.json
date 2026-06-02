@@ -64,21 +64,39 @@
           "complexity": "complex",
           "packaged_definition_ref": "healthcare-triage-concierge-complex.json",
           "description": "Triage then optional paid priority visit enrollment; wire HTTP enroll_concierge_visit to {{billing_api_base_url}}/api/v1/visits/enroll after install. See runbook concierge happy path + PARTNER_REVIEW."
+        },
+        {
+          "variant_id": "ehr_sync_complex",
+          "label": "Full context + EHR sync (buyer-ready)",
+          "complexity": "complex",
+          "packaged_definition_ref": "healthcare-triage-booking-complex.json",
+          "description": "Saga-style arc: load patient context and prior auth from EHR, book/reschedule, send SMS confirmation, sync chart. Wire local EHR + scheduling + messaging from the catalog guide card."
         }
       ],
       "default_template_variables": {
         "clinic_name": "Your Clinic Name",
         "support_phone": "+1-555-0100",
         "scheduling_api_base_url": "https://scheduling.example.com/api/v1",
+        "ehr_api_base_url": "https://ehr.example.com/api/v1",
+        "messaging_api_base_url": "https://messaging.example.com/api/v1",
+        "patient_token": "maria-rodriguez",
+        "patient_name": "Maria Rodriguez",
+        "patient_phone": "+1-555-0199",
+        "patient_email": "maria.rodriguez@example.com",
+        "procedure_code": "73721",
         "preferred_visit_type": "primary_care",
         "clinic_location_id": "demo-location-1",
         "billing_api_base_url": "https://billing.example.com/api/v1",
-        "concierge_visit_type": "priority_primary_care"
+        "concierge_visit_type": "priority_primary_care",
+        "confirmation_sms_body": "Your appointment is confirmed. Reply HELP for prep instructions.",
+        "chart_sync_summary": "Voice agent completed scheduling workflow"
       },
       "analytics_hooks": [
         "After catalog install, workflows expose MK-01 catalog_slug \u2014 filter /analytics and /analytics/calls by that slug.",
         "Prove triage \u2192 handoff with outcome_key in gathered_context and HTTP tool mapped_data on call detail.",
         "booking_complex: book_slot; confirm_remind: reschedule_appointment; concierge_complex: enroll_concierge_visit + catalog_variant_id filter.",
+        "ehr_sync_complex: lookup_patient_context, verify_prior_auth, send_confirmation_sms, sync_chart_to_ehr — live workflow timeline on call detail.",
+        "Human-in-the-loop: queue SMS/email follow-ups with suggested_message → Analytics → Review inbox.",
         "Export CSV for booking / reminder / concierge funnel QA."
       ],
       "roadmap_motions": []

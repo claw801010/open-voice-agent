@@ -11,6 +11,7 @@ import { wireLocalCalendarForWorkflow } from '@/lib/wireLocalCalendar';
 type Props = {
     templateContextVariables: Record<string, string>;
     saveTemplateContextVariables: (vars: Record<string, string>) => Promise<void>;
+    toolNames?: string[];
     size?: 'sm' | 'default';
     variant?: 'default' | 'secondary' | 'outline';
 };
@@ -18,6 +19,7 @@ type Props = {
 export function WireLocalCalendarButton({
     templateContextVariables,
     saveTemplateContextVariables,
+    toolNames,
     size = 'sm',
     variant = 'secondary',
 }: Props) {
@@ -38,11 +40,14 @@ export function WireLocalCalendarButton({
                         getAccessToken,
                         templateContextVariables,
                         saveTemplateContextVariables,
+                        toolNames,
                     });
+                    const created =
+                        result.createdToolNames.length > 0
+                            ? ` · created ${result.createdToolNames.join(', ')}`
+                            : '';
                     toast.success('Local calendar wired', {
-                        description: result.toolUuid
-                            ? `scheduling_api_base_url set · book_slot tool ready`
-                            : `scheduling_api_base_url set to ${result.baseUrl}`,
+                        description: `scheduling_api_base_url → ${result.baseUrl}${created}`,
                     });
                 } catch (e) {
                     toast.error(e instanceof Error ? e.message : 'Could not wire local calendar');

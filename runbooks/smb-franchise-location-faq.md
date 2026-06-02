@@ -23,7 +23,7 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 
 **Goal:** schedule a **lead callback** in **≤6 agent turns** after **`schedule_lead_callback`** is wired.
 
-**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`). Optional: [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **Multi-location FAQ & lead callback** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
 2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`brand_name`**, **`default_location_code`**, and **`preferred_callback_window_hours`** from pack defaults.
@@ -36,10 +36,10 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 
 **Goal:** resolve **store routing** in **≤6 agent turns** after **`route_call_to_location`** is wired (**location_router_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/locations/route` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`locations_api_base_url`**).
 
 1. Install **Multi-location FAQ & lead callback** with variant **`location_router_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"location_router_complex"`).
-2. **Customize**; set **`locations_api_base_url`** = `http://127.0.0.1:8765`, **`brand_name`**, and **`routing_policy_code`** from pack defaults.
+2. **Customize**; confirm **`locations_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`brand_name`** and **`routing_policy_code`** from pack defaults.
 3. HTTP tool **`route_call_to_location`**: `POST {{locations_api_base_url}}/api/v1/locations/route`; **response_mapping** — `route_id` → `appointment.id`, `target_location_code` → `confirmation_code`, `transfer_extension` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Location FAQ & router** agent; **Publish**.
 5. **Web test** script: ask to speak with a nearby store → give city or ZIP → confirm summary when agent reads back routing result.
@@ -49,10 +49,10 @@ One template × many locations: contain tier-1 **multi-site FAQ** and **lead cal
 
 **Goal:** capture **sales or service lead intent** in **≤6 agent turns** after **`capture_lead_intent`** is wired (**lead_capture_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/leads/intent` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`crm_api_base_url`**).
 
 1. Install **Multi-location FAQ & lead callback** with variant **`lead_capture_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"lead_capture_complex"`).
-2. **Customize**; set **`crm_api_base_url`** = `http://127.0.0.1:8765`, **`crm_lead_source_code`**, and **`brand_name`** from pack defaults.
+2. **Customize**; confirm **`crm_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`crm_lead_source_code`** and **`brand_name`** from pack defaults.
 3. HTTP tool **`capture_lead_intent`**: `POST {{crm_api_base_url}}/api/v1/leads/intent`; **response_mapping** — `intent_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `follow_up_by` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Location FAQ & lead capture** agent; **Publish**.
 5. **Web test** script: ask about a service → express interest in a quote or visit → confirm reference when agent summarizes CRM handoff.

@@ -39,14 +39,25 @@ import {
     type CatalogJson,
     defaultCatalogFilters,
     filterVerticalPacks,
+    packHasReviewInboxStory,
+    preferredCatalogProofVariantId,
     type VerticalPack,
 } from '@/lib/catalog/filterVerticalPacks';
+import {
+    buildMarketplaceSettingsHref,
+    buyerDemoSettingsSectionLabel,
+} from '@/lib/catalog/buyerDemoDefaults';
+import {
+    buildAnalyticsOverviewHref,
+    buildMarketplaceAnalyticsProofHref,
+} from '@/lib/analyticsOverviewDeepLinks';
 import logger from '@/lib/logger';
 import { getBackendPublicBaseUrl } from '@/lib/apiClient';
 import {
     fetchCatalogVoicePreview,
     previewVoiceProfile,
     VERTICAL_VOICE_PROFILE_LABELS,
+    naturalDeliveryCatalogHint,
     type CatalogVoicePreview,
 } from '@/lib/voiceProfiles';
 import { cn, getRandomId } from '@/lib/utils';
@@ -505,6 +516,17 @@ export function MarketplaceCatalog({
                                         <span className="font-medium text-foreground">Voice profile: </span>
                                         {VERTICAL_VOICE_PROFILE_LABELS[pack.recommended_voice_profile_id] ??
                                             pack.recommended_voice_profile_id}
+                                        {(() => {
+                                            const hint = naturalDeliveryCatalogHint(
+                                                pack.recommended_voice_profile_id,
+                                            );
+                                            return hint ? (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {' '}
+                                                    · {hint}
+                                                </span>
+                                            ) : null;
+                                        })()}
                                         {' '}
                                         <span className="text-xs">(applied on install; clone &amp; save under Voice profiles)</span>
                                     </p>
@@ -561,6 +583,60 @@ export function MarketplaceCatalog({
                                         >
                                             Preview voice script
                                         </Button>
+                                        {(() => {
+                                            const proofVariantId = preferredCatalogProofVariantId(pack);
+                                            const proofHref = buildMarketplaceAnalyticsProofHref({
+                                                catalogSlug: pack.slug,
+                                                catalogVariantId: proofVariantId || undefined,
+                                            });
+                                            const overviewHref = buildAnalyticsOverviewHref({
+                                                catalogSlug: pack.slug,
+                                                catalogVariantId: proofVariantId || undefined,
+                                            });
+                                            const showReviewInbox = packHasReviewInboxStory(pack);
+                                            const settingsHref = buildMarketplaceSettingsHref(pack.slug);
+                                            const settingsSection = settingsHref
+                                                ? settingsHref.split('#')[1]
+                                                : null;
+                                            const settingsLabel = settingsSection
+                                                ? buyerDemoSettingsSectionLabel(settingsSection)
+                                                : null;
+                                            return proofHref ? (
+                                                <div className="flex w-full flex-col gap-1 text-center text-xs text-muted-foreground">
+                                                    <Link
+                                                        href={proofHref}
+                                                        className="text-foreground/90 underline-offset-2 hover:underline"
+                                                        data-testid={`catalog-analytics-proof-${pack.slug}`}
+                                                    >
+                                                        Analytics proof (HTTP tools)
+                                                    </Link>
+                                                    <Link
+                                                        href={overviewHref}
+                                                        className="text-muted-foreground underline-offset-2 hover:underline"
+                                                    >
+                                                        Overview for this vertical
+                                                    </Link>
+                                                    {settingsHref && settingsLabel ? (
+                                                        <Link
+                                                            href={settingsHref}
+                                                            className="text-muted-foreground underline-offset-2 hover:underline"
+                                                            data-testid={`catalog-settings-local-${pack.slug}`}
+                                                        >
+                                                            {settingsLabel}
+                                                        </Link>
+                                                    ) : null}
+                                                    {showReviewInbox ? (
+                                                        <Link
+                                                            href="/analytics/review"
+                                                            className="text-muted-foreground underline-offset-2 hover:underline"
+                                                            data-testid={`catalog-review-inbox-${pack.slug}`}
+                                                        >
+                                                            Review inbox (HITL)
+                                                        </Link>
+                                                    ) : null}
+                                                </div>
+                                            ) : null;
+                                        })()}
                                         <Button type="button" className="w-full" onClick={() => openInstall(pack)}>
                                             Install into my org
                                         </Button>
@@ -700,6 +776,12 @@ export function MarketplaceCatalog({
                                             <strong className="text-foreground">Voice profile:</strong>{' '}
                                             {VERTICAL_VOICE_PROFILE_LABELS[tryPack.recommended_voice_profile_id] ??
                                                 tryPack.recommended_voice_profile_id}
+                                            {(() => {
+                                                const hint = naturalDeliveryCatalogHint(
+                                                    tryPack.recommended_voice_profile_id,
+                                                );
+                                                return hint ? <> · {hint}</> : null;
+                                            })()}
                                             {' '}(applied on install)
                                         </p>
                                     )}
@@ -778,6 +860,12 @@ export function MarketplaceCatalog({
                                             <strong className="text-foreground">Voice profile:</strong>{' '}
                                             {VERTICAL_VOICE_PROFILE_LABELS[loopTalkPack.recommended_voice_profile_id] ??
                                                 loopTalkPack.recommended_voice_profile_id}
+                                            {(() => {
+                                                const hint = naturalDeliveryCatalogHint(
+                                                    loopTalkPack.recommended_voice_profile_id,
+                                                );
+                                                return hint ? <> · {hint}</> : null;
+                                            })()}
                                             {' '}(applied on install)
                                         </p>
                                     )}

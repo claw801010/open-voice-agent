@@ -35,7 +35,13 @@ import {
     fetchVoiceProfiles,
     setOrgDefaultVoiceProfile,
     updateVoiceProfile,
+    DEFAULT_ONE_WORD_FILLERS,
+    DEFAULT_THREE_WORD_FILLERS,
+    DEFAULT_TWO_WORD_FILLERS,
+    type AuthenticityLayerSettings,
     type FillerIntensity,
+    type KeyProjectionIntensity,
+    type SoftBreathIntensity,
     type SpeechDeliverySettings,
     type DeliveryBehavior,
     type DeliveryTone,
@@ -43,6 +49,199 @@ import {
 } from "@/lib/voiceProfiles";
 
 const CLONE_NONE = "__none__";
+
+function linesToList(text: string, max: number): string[] {
+    return text
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .slice(0, max);
+}
+
+function listToLines(items: string[]): string {
+    return items.join("\n");
+}
+
+function NaturalDeliveryEditor({
+    layer,
+    onChange,
+    disabled,
+}: {
+    layer: AuthenticityLayerSettings;
+    onChange: (layer: AuthenticityLayerSettings) => void;
+    disabled?: boolean;
+}) {
+    const setLayer = (patch: Partial<AuthenticityLayerSettings>) => onChange({ ...layer, ...patch });
+
+    return (
+        <div
+            className="space-y-4 rounded-md border border-dashed border-teal-500/30 bg-teal-500/5 p-3"
+            data-testid="natural-delivery-editor"
+        >
+            <div className="flex items-center justify-between gap-4">
+                <div>
+                    <Label>Natural delivery</Label>
+                    <p className="text-xs text-muted-foreground">
+                        Short 1–3 word fillers, soft breath cadence, and clear emphasis on key facts in spoken (▸)
+                        replies.
+                    </p>
+                </div>
+                <Switch
+                    disabled={disabled}
+                    checked={layer.enabled}
+                    onCheckedChange={(c) =>
+                        setLayer({
+                            enabled: c,
+                            fillerIntensity:
+                                c && layer.fillerIntensity === "off" ? "low" : layer.fillerIntensity,
+                        })
+                    }
+                />
+            </div>
+            {layer.enabled ? (
+                <>
+                    <div className="space-y-2">
+                        <Label>Short filler intensity</Label>
+                        <Select
+                            disabled={disabled}
+                            value={layer.fillerIntensity}
+                            onValueChange={(v) => setLayer({ fillerIntensity: v as FillerIntensity })}
+                        >
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="off">Off</SelectItem>
+                                <SelectItem value="low">Low</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {layer.fillerIntensity !== "off" && (
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="space-y-2">
+                                <Label>1-word fillers</Label>
+                                <Textarea
+                                    disabled={disabled}
+                                    rows={4}
+                                    placeholder={DEFAULT_ONE_WORD_FILLERS.join("\n")}
+                                    value={listToLines(layer.oneWordFillers)}
+                                    onChange={(e) =>
+                                        setLayer({ oneWordFillers: linesToList(e.target.value, 12) })
+                                    }
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>2-word fillers</Label>
+                                <Textarea
+                                    disabled={disabled}
+                                    rows={4}
+                                    placeholder={DEFAULT_TWO_WORD_FILLERS.join("\n")}
+                                    value={listToLines(layer.twoWordFillers)}
+                                    onChange={(e) =>
+                                        setLayer({ twoWordFillers: linesToList(e.target.value, 12) })
+                                    }
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>3-word fillers</Label>
+                                <Textarea
+                                    disabled={disabled}
+                                    rows={4}
+                                    placeholder={DEFAULT_THREE_WORD_FILLERS.join("\n")}
+                                    value={listToLines(layer.threeWordFillers)}
+                                    onChange={(e) =>
+                                        setLayer({ threeWordFillers: linesToList(e.target.value, 12) })
+                                    }
+                                />
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex items-center justify-between gap-4">
+                        <div>
+                            <Label>Soft breath</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Gentle in-breath micro-pauses between ideas — not audible gasps.
+                            </p>
+                        </div>
+                        <Switch
+                            disabled={disabled}
+                            checked={layer.enableSoftBreath}
+                            onCheckedChange={(c) => setLayer({ enableSoftBreath: c })}
+                        />
+                    </div>
+                    {layer.enableSoftBreath && (
+                        <div className="space-y-2">
+                            <Label>Breath intensity</Label>
+                            <Select
+                                disabled={disabled}
+                                value={layer.softBreathIntensity}
+                                onValueChange={(v) =>
+                                    setLayer({ softBreathIntensity: v as SoftBreathIntensity })
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="subtle">Subtle micro-pauses</SelectItem>
+                                    <SelectItem value="natural">Natural clause breaks</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                    <div className="flex items-center justify-between gap-4">
+                        <div>
+                            <Label>Key projection</Label>
+                            <p className="text-xs text-muted-foreground">
+                                Clear vocal weight on dates, amounts, codes, and policy terms.
+                            </p>
+                        </div>
+                        <Switch
+                            disabled={disabled}
+                            checked={layer.enableKeyProjection}
+                            onCheckedChange={(c) => setLayer({ enableKeyProjection: c })}
+                        />
+                    </div>
+                    {layer.enableKeyProjection && (
+                        <>
+                            <div className="space-y-2">
+                                <Label>Projection intensity</Label>
+                                <Select
+                                    disabled={disabled}
+                                    value={layer.keyProjectionIntensity}
+                                    onValueChange={(v) =>
+                                        setLayer({ keyProjectionIntensity: v as KeyProjectionIntensity })
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="light">Light emphasis</SelectItem>
+                                        <SelectItem value="moderate">Moderate + brief pause after key facts</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Key terms to emphasize (optional)</Label>
+                                <Textarea
+                                    disabled={disabled}
+                                    rows={2}
+                                    placeholder="confirmation code&#10;appointment"
+                                    value={listToLines(layer.keyProjectionTerms)}
+                                    onChange={(e) =>
+                                        setLayer({ keyProjectionTerms: linesToList(e.target.value, 16) })
+                                    }
+                                />
+                            </div>
+                        </>
+                    )}
+                </>
+            ) : null}
+        </div>
+    );
+}
 
 function SpeechSettingsEditor({
     value,
@@ -213,6 +412,11 @@ function SpeechSettingsEditor({
                     onCheckedChange={(c) => onChange({ ...value, enableBreathPauses: c })}
                 />
             </div>
+            <NaturalDeliveryEditor
+                disabled={disabled}
+                layer={value.authenticityLayer}
+                onChange={(authenticityLayer) => onChange({ ...value, authenticityLayer })}
+            />
             <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-2">
                     <Label>Stability</Label>
@@ -274,7 +478,7 @@ function SpeechSettingsEditor({
 }
 
 export function VoiceProfilesManager() {
-    const { getAccessToken } = useAuth();
+    const { getAccessToken, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(true);
     const [profiles, setProfiles] = useState<VoiceProfile[]>([]);
     const [defaultId, setDefaultId] = useState<string | null>(null);
@@ -299,14 +503,13 @@ export function VoiceProfilesManager() {
         }
         setProfiles(list.profiles);
         setDefaultId(list.defaultProfileId);
-        if (!selectedId && list.profiles.length) {
-            setSelectedId(list.defaultProfileId ?? list.profiles[0].id);
-        }
+        setSelectedId((cur) => cur ?? list.defaultProfileId ?? list.profiles[0]?.id ?? null);
     }, [getAccessToken]);
 
     useEffect(() => {
+        if (authLoading) return;
         void reload();
-    }, [reload]);
+    }, [reload, authLoading]);
 
     const selected = profiles.find((p) => p.id === selectedId) ?? null;
 
@@ -412,8 +615,8 @@ export function VoiceProfilesManager() {
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-muted-foreground max-w-xl">
-                    Built-in presets tune authenticity, professional fillers, breath pauses, and ElevenLabs
-                    stability/similarity. Clone any preset to customize, or set an org default for new agents.
+                    Built-in presets tune authenticity, professional fillers, breath pauses, natural delivery
+                    (short fillers, soft breath, key projection), and ElevenLabs stability/similarity. Clone any preset to customize, or set an org default for new agents.
                 </p>
                 <Button type="button" onClick={() => setCreateOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -426,6 +629,7 @@ export function VoiceProfilesManager() {
                     {profiles.map((p) => (
                         <Card
                             key={p.id}
+                            data-testid={`voice-profile-card-${p.id}`}
                             className={`cursor-pointer transition-colors ${selectedId === p.id ? "border-primary" : ""}`}
                             onClick={() => setSelectedId(p.id)}
                         >
@@ -581,12 +785,21 @@ export function VoiceProfilesManager() {
                     </DialogHeader>
                     <div className="space-y-3">
                         <div className="space-y-2">
-                            <Label>Name</Label>
-                            <Input value={newName} onChange={(e) => setNewName(e.target.value)} />
+                            <Label htmlFor="new-voice-profile-name">Name</Label>
+                            <Input
+                                id="new-voice-profile-name"
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                            />
                         </div>
                         <div className="space-y-2">
-                            <Label>Description</Label>
-                            <Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} rows={2} />
+                            <Label htmlFor="new-voice-profile-description">Description</Label>
+                            <Textarea
+                                id="new-voice-profile-description"
+                                value={newDesc}
+                                onChange={(e) => setNewDesc(e.target.value)}
+                                rows={2}
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label>Clone from (optional)</Label>

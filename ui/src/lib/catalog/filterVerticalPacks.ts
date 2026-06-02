@@ -2,6 +2,8 @@
  * Client-side filters for MK-01 marketplace catalog (vertical-packs.json shape).
  */
 
+import { buyerDemoDefaultVariant } from '@/lib/catalog/buyerDemoDefaults';
+
 /** Optional simple vs complex graphs for the same vertical (see catalog/PREBUILD_VERTICAL_ROADMAP.md). */
 export type WorkflowVariantMeta = {
     variant_id: string;
@@ -82,6 +84,29 @@ export function filterVerticalPacks(packs: VerticalPack[], f: CatalogFilters): V
         }
         return true;
     });
+}
+
+/** Prefer buyer-ready variant from catalog/buyer-demo-defaults.json, else first complex graph. */
+export function preferredCatalogProofVariantId(pack: VerticalPack): string {
+    const variants = pack.workflow_variants ?? [];
+    const preferred = buyerDemoDefaultVariant(pack.slug);
+    if (preferred && variants.some((v) => v.variant_id === preferred)) {
+        return preferred;
+    }
+    const complex = variants.find((v) => v.complexity === 'complex');
+    if (complex) {
+        return complex.variant_id;
+    }
+    const simple = variants.find((v) => v.complexity === 'simple');
+    if (simple) {
+        return simple.variant_id;
+    }
+    return variants[0]?.variant_id ?? '';
+}
+
+/** Slugs with human-in-the-loop review inbox in the buyer story (MK-01 healthcare). */
+export function packHasReviewInboxStory(pack: VerticalPack): boolean {
+    return (pack.workflow_variants ?? []).some((v) => v.variant_id === 'ehr_sync_complex');
 }
 
 export function catalogFacets(packs: VerticalPack[]) {

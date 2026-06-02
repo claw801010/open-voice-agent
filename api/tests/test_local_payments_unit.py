@@ -42,6 +42,20 @@ def test_confirm_payment_redirect_includes_redirect_fields():
     assert payload["appointment"]["id"].startswith("local-redirect-")
 
 
+def test_enroll_concierge_visit_booking_shape():
+    payload = store.enroll_concierge_visit(
+        13,
+        visit_type="priority",
+        slot_start="2026-11-15T10:00:00Z",
+        patient_name="Jordan",
+    )
+    assert payload["appointment"]["id"].startswith("local-enroll-")
+    assert payload["confirmation_code"]
+    assert payload["appointment"]["slot"]["start"] == "2026-11-15T10:00:00Z"
+    rows = store.list_records(13)
+    assert rows[0]["type"] == "concierge_enroll"
+
+
 def test_list_records():
     store.capture_payment_promise(12, promised_date="2026-09-01T00:00:00Z")
     rows = store.list_records(12)

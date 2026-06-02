@@ -43,6 +43,14 @@ function profileSummary(p: VoiceProfile): string {
         parts.push("no fillers");
     }
     if (s.enableBreathPauses) parts.push("pauses");
+    const layer = s.authenticityLayer;
+    if (layer?.enabled) {
+        const bits: string[] = [];
+        if (layer.fillerIntensity !== "off") bits.push(`short ${layer.fillerIntensity}`);
+        if (layer.enableSoftBreath) bits.push("soft breath");
+        if (layer.enableKeyProjection) bits.push("key emphasis");
+        if (bits.length) parts.push(`natural · ${bits.join(" · ")}`);
+    }
     return parts.join(" · ");
 }
 

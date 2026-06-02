@@ -6,13 +6,19 @@ on:
     paths:
       - "ui/**"
       - "api/**"
+      - "catalog/**"
       - "scripts/ci_promote_oss_user_superuser.py"
+      - "scripts/gtm_capture_deck.sh"
+      - "scripts/seed_gtm_catalog_workflow.py"
       - ".github/workflows/ui-playwright.yml"
   pull_request:
     paths:
       - "ui/**"
       - "api/**"
+      - "catalog/**"
       - "scripts/ci_promote_oss_user_superuser.py"
+      - "scripts/gtm_capture_deck.sh"
+      - "scripts/seed_gtm_catalog_workflow.py"
       - ".github/workflows/ui-playwright.yml"
 
 concurrency:
@@ -106,6 +112,10 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
           REDIS_URL: redis://127.0.0.1:6379/0
           AUTH_PROVIDER: local
+          ENVIRONMENT: local
+          ENABLE_LOCAL_SCHEDULING: "true"
+          ENABLE_LOCAL_PAYMENTS: "true"
+          ENABLE_LOCAL_INTEGRATIONS: "true"
           MK01_ANALYTICS_LOCAL_E2E_STRICT_REDACTION_RBAC: "1"
           MK01_ANALYTICS_REDACTION_DISABLE_REQUIRES_SUPERUSER: "1"
           MINIO_PUBLIC_ENDPOINT: http://127.0.0.1:9000
@@ -136,6 +146,14 @@ jobs:
           CALL_ID=$(python "${GITHUB_WORKSPACE}/scripts/seed_gtm_analytics_demo_call.py")
           echo "Seeded call_id=${CALL_ID}"
           echo "E2E_GTM_SAMPLE_CALL_ID=${CALL_ID}" >> "${GITHUB_ENV}"
+
+      - name: Seed catalog workflow for wire-local / voice E2E
+        run: |
+          WF_ID=$(python "${GITHUB_WORKSPACE}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" || true)
+          if [ -n "${WF_ID}" ]; then
+            echo "E2E_GTM_WORKFLOW_ID=${WF_ID}" >> "${GITHUB_ENV}"
+            python "${GITHUB_WORKSPACE}/scripts/gtm_unlock_workflow_editor.py" "${E2E_EMAIL}" "${WF_ID}" || true
+          fi
 
       - uses: actions/setup-node@v4
         with:

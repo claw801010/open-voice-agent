@@ -158,6 +158,76 @@ def cancel_appointment(org_id: int, appointment_id: str) -> bool:
     return True
 
 
+def _booked_slot_starts_excluding(
+    org_id: int,
+    date_yyyy_mm_dd: str,
+    *,
+    exclude_appointment_id: str | None = None,
+) -> set[str]:
+    prefix = f"{date_yyyy_mm_dd}T"
+    booked: set[str] = set()
+    for row in _rows_for_org(org_id):
+        if row.get("status") == "cancelled":
+            continue
+        if exclude_appointment_id and row.get("id") == exclude_appointment_id:
+            continue
+        slot = str(row.get("slot_start") or "")
+        if slot.startswith(prefix):
+            booked.add(slot)
+    return booked
+
+
+def reschedule_appointment(
+    org_id: int,
+    *,
+    slot_start: str,
+    appointment_id: str | None = None,
+    patient_name: str | None = None,
+) -> dict[str, Any]:
+    with _LOCK:
+        rows = _rows_for_org(org_id)
+        target_idx: int | None = None
+        if appointment_id:
+            for i, row in enumerate(rows):
+                if row.get("id") == appointment_id and row.get("status") != "cancelled":
+                    target_idx = i
+                    break
+            if target_idx is None:
+                raise ValueError(f"Appointment not found: {appointment_id}")
+        else:
+            active = [i for i, r in enumerate(rows) if r.get("status") != "cancelled"]
+            if not active:
+                raise ValueError("No active appointment to reschedule")
+            target_idx = active[-1]
+
+        exclude_id = rows[target_idx].get("id")
+        prefix = f"{slot_start[:10]}T"
+        booked: set[str] = set()
+        for row in rows:
+            if row.get("status") == "cancelled":
+                continue
+            if exclude_id and row.get("id") == exclude_id:
+                continue
+            slot = str(row.get("slot_start") or "")
+            if slot.startswith(prefix):
+                booked.add(slot)
+        if slot_start in booked:
+            raise ValueError(f"Slot already booked: {slot_start}")
+
+        updated = dict(rows[target_idx])
+        updated["slot_start"] = slot_start
+        if patient_name:
+            updated["patient_name"] = patient_name
+        updated["rescheduled_at"] = datetime.now(timezone.utc).isoformat()
+        next_rows = list(rows)
+        next_rows[target_idx] = updated
+        _STORE[org_id] = next_rows
+        _save_org(org_id, next_rows)
+
+    appt = LocalAppointment(**{k: updated[k] for k in LocalAppointment.__dataclass_fields__ if k in updated})
+    return appt.to_booking_response()
+
+
 def default_open_slots(date_yyyy_mm_dd: str, org_id: int = 1) -> list[dict[str, str]]:
     """Return open slots for a calendar day (UTC ISO start), using org schedule when set."""
     return schedule_config.open_slots_for_day(org_id, date_yyyy_mm_dd)

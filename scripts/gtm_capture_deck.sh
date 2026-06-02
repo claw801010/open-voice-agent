@@ -16,6 +16,17 @@ fi
 export E2E_BACKEND_URL="${E2E_BACKEND_URL:-http://127.0.0.1:8000}"
 export E2E_BASE_URL="${E2E_BASE_URL:-http://127.0.0.1:3000}"
 
+echo "Smoke local all-in-one APIs at ${E2E_BACKEND_URL} …"
+if "${ROOT}/scripts/gtm-local-all-in-one-demo.sh" "${E2E_BACKEND_URL}"; then
+  echo "Local all-in-one API smoke OK."
+else
+  echo "WARN: local all-in-one smoke failed — ensure API is up with ENABLE_LOCAL_SCHEDULING/PAYMENTS/INTEGRATIONS." >&2
+fi
+
+if [[ "${GTM_SKIP_PREREQ_CHECK:-}" != "1" ]]; then
+  "${ROOT}/scripts/check_gtm_capture_prereqs.sh" || echo "WARN: GTM preflight failed — capture may skip frames." >&2
+fi
+
 if [[ ! -f ui/.env && -f ui/.env.example ]]; then
   cp ui/.env.example ui/.env
   echo "Created ui/.env from .env.example (BACKEND_URL for session route)."
@@ -40,14 +51,43 @@ if [[ -z "${E2E_GTM_SAMPLE_CALL_ID:-}" ]]; then
     -H "Authorization: Bearer ${TOKEN}" \
     | python3 -c "import json,sys; d=json.load(sys.stdin); items=d.get('items') or []; print(items[0]['call_id'] if items else '')" 2>/dev/null || true)"
   if [[ -z "${CALL_ID}" ]]; then
-    echo "Seeding demo analytics call for GTM call-detail frames…"
-    CALL_ID="$(PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/seed_gtm_analytics_demo_call.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+    echo "Seeding healthcare EHR demo call (tool spans + review inbox + chart sync)…"
+    CALL_ID="$(PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/seed_gtm_healthcare_ehr_demo.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+    if [[ -z "${CALL_ID}" ]]; then
+      echo "Fallback: basic analytics demo call…"
+      CALL_ID="$(PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/seed_gtm_analytics_demo_call.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+    fi
   fi
   if [[ -n "${CALL_ID}" ]]; then
     export E2E_GTM_SAMPLE_CALL_ID="${CALL_ID}"
     echo "Using E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID}"
   else
     echo "No calls in org — skipping call-detail / call-review PNGs."
+  fi
+fi
+
+_seed_catalog_demo_call() {
+  local slug="$1"
+  local variant="$2"
+  PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_demo_call.py" "${E2E_EMAIL}" "${slug}" "${variant}" 2>/dev/null || true
+}
+
+if [[ -z "${E2E_GTM_RETAIL_CALL_ID:-}" ]]; then
+  echo "Seeding retail collections demo call…"
+  RETAIL_ID="$(_seed_catalog_demo_call retail-wismo-faq collections_complex)"
+  if [[ -n "${RETAIL_ID}" ]]; then
+    export E2E_GTM_RETAIL_CALL_ID="${RETAIL_ID}"
+    echo "Using E2E_GTM_RETAIL_CALL_ID=${E2E_GTM_RETAIL_CALL_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_TELECOM_CALL_ID:-}" ]]; then
+  echo "Seeding telecom outage demo call…"
+  TELECOM_ID="$(_seed_catalog_demo_call telecom-utilities-outage-faq outage_status_complex)"
+  if [[ -n "${TELECOM_ID}" ]]; then
+    export E2E_GTM_TELECOM_CALL_ID="${TELECOM_ID}"
+    echo "Using E2E_GTM_TELECOM_CALL_ID=${E2E_GTM_TELECOM_CALL_ID}"
   fi
 fi
 
@@ -61,19 +101,67 @@ if [[ -z "${E2E_GTM_HTTP_TOOL_UUID:-}" ]]; then
   fi
 fi
 
+if [[ -z "${E2E_GTM_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding healthcare EHR catalog workflow…"
+  WF_ID="$(GTM_CATALOG_SLUG=healthcare-clinic-screening GTM_CATALOG_VARIANT=ehr_sync_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${WF_ID}" ]]; then
+    export E2E_GTM_WORKFLOW_ID="${WF_ID}"
+    echo "Using E2E_GTM_WORKFLOW_ID=${E2E_GTM_WORKFLOW_ID}"
+  else
+    echo "Could not seed healthcare catalog workflow — skipping EHR wire / voice quick-pick PNGs."
+  fi
+fi
+
+if [[ -z "${E2E_GTM_RETAIL_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding retail collections catalog workflow…"
+  RETAIL_WF="$(GTM_CATALOG_SLUG=retail-wismo-faq GTM_CATALOG_VARIANT=collections_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${RETAIL_WF}" ]]; then
+    export E2E_GTM_RETAIL_WORKFLOW_ID="${RETAIL_WF}"
+    echo "Using E2E_GTM_RETAIL_WORKFLOW_ID=${E2E_GTM_RETAIL_WORKFLOW_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_TELECOM_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding telecom outage catalog workflow…"
+  TELECOM_WF="$(GTM_CATALOG_SLUG=telecom-utilities-outage-faq GTM_CATALOG_VARIANT=outage_status_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${TELECOM_WF}" ]]; then
+    export E2E_GTM_TELECOM_WORKFLOW_ID="${TELECOM_WF}"
+    echo "Using E2E_GTM_TELECOM_WORKFLOW_ID=${E2E_GTM_TELECOM_WORKFLOW_ID}"
+  fi
+fi
+
 export E2E_GTM_DECK_SCREENSHOTS=1
 export PLAYWRIGHT_SKIP_WEBSERVER=1
 
 if [[ -n "${E2E_GTM_WORKFLOW_ID:-}" ]]; then
-  echo "Unlocking catalog editor lock on workflow ${E2E_GTM_WORKFLOW_ID} (voice quick-pick / editor rail)…"
+  echo "Unlocking catalog editor lock on workflow ${E2E_GTM_WORKFLOW_ID} (healthcare EHR / voice quick-pick)…"
   PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
     "${E2E_EMAIL}" "${E2E_GTM_WORKFLOW_ID}" || true
 fi
+if [[ -n "${E2E_GTM_RETAIL_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking retail collections workflow ${E2E_GTM_RETAIL_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_RETAIL_WORKFLOW_ID}" || true
+fi
+if [[ -n "${E2E_GTM_TELECOM_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking telecom outage workflow ${E2E_GTM_TELECOM_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_TELECOM_WORKFLOW_ID}" || true
+fi
 
-echo "Optional: E2E_GTM_WORKFLOW_ID (voice quick-pick + editor rail)"
-echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset}, E2E_GTM_HTTP_TOOL_UUID=${E2E_GTM_HTTP_TOOL_UUID:-unset})"
+echo "Optional env: E2E_GTM_WORKFLOW_ID E2E_GTM_RETAIL_WORKFLOW_ID E2E_GTM_TELECOM_WORKFLOW_ID"
+echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset}, E2E_GTM_RETAIL_CALL_ID=${E2E_GTM_RETAIL_CALL_ID:-unset}, E2E_GTM_TELECOM_CALL_ID=${E2E_GTM_TELECOM_CALL_ID:-unset})"
 
 cd ui
 npm run test:e2e -- gtm-deck
+
+echo "Filling any missing GTM PNGs with stdlib placeholders (replace via live capture when API+UI up)…"
+"${PYTHON}" "${ROOT}/scripts/gen_gtm_deck_placeholder_pngs.py" || true
 
 echo "PNG files written under docs/images/ (gtm-*.png)"

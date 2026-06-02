@@ -239,3 +239,27 @@ async def book_slot_catalog_alias(body: BookSlotRequest) -> BookSlotResponse:
     _require_enabled()
     org = body.organization_id if body.organization_id is not None else 1
     return _book_payload(org, body)
+
+
+class RescheduleAppointmentRequest(BaseModel):
+    slot_start: str
+    appointment_id: Optional[str] = None
+    patient_name: Optional[str] = None
+    organization_id: Optional[int] = Field(default=None, ge=1)
+
+
+@router.post("/api/v1/appointments/reschedule", response_model=BookSlotResponse)
+async def reschedule_appointment_alias(body: RescheduleAppointmentRequest) -> BookSlotResponse:
+    """Runbook-compatible alias for reschedule_appointment / confirm_or_reschedule_interview tools."""
+    _require_enabled()
+    org = body.organization_id if body.organization_id is not None else 1
+    try:
+        payload = store.reschedule_appointment(
+            org,
+            slot_start=body.slot_start,
+            appointment_id=body.appointment_id,
+            patient_name=body.patient_name,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=409 if "booked" in str(e) else 404, detail=str(e)) from e
+    return BookSlotResponse(**payload)

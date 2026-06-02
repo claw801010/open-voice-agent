@@ -728,7 +728,7 @@ export function AnalyticsDashboardClient() {
                 );
             }
             case "revenue_motions": {
-                const httpHint = verticalHttpProofHintForSlug(catalogSlug);
+                const httpHint = verticalHttpProofHintForSlug(catalogSlug, catalogVariantId);
                 return (
                     <WidgetChrome title={meta.title} description={meta.description} onRemove={onRemove}>
                         <p className="text-xs text-muted-foreground">
@@ -760,10 +760,22 @@ export function AnalyticsDashboardClient() {
                                 </p>
                                 <p className="mt-1.5 text-muted-foreground">
                                     <span className="text-foreground/90">Example tools:</span>{" "}
-                                    {httpHint.example_tool_names.map((n) => (
-                                        <code key={n} className="mr-1 text-[11px]">
-                                            {n}
-                                        </code>
+                                    {httpHint.example_tool_names.map((n, i) => (
+                                        <span key={n}>
+                                            {i > 0 ? " " : null}
+                                            <Link
+                                                href={buildAnalyticsCallsExploreHref({
+                                                    toolName: n,
+                                                    catalogSlug: catalogSlug.trim() || undefined,
+                                                    catalogVariantId: catalogVariantId.trim() || undefined,
+                                                    insightsSinceIso: data?.since,
+                                                    insightsUntilIso: data?.until,
+                                                })}
+                                                className="font-mono text-[11px] text-foreground/90 underline-offset-2 hover:underline"
+                                            >
+                                                {n}
+                                            </Link>
+                                        </span>
                                     ))}
                                 </p>
                                 <p className="mt-1 text-muted-foreground">

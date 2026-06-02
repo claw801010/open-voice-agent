@@ -1,12 +1,26 @@
 """Integration tests: POST /api/v1/workflow/install-from-catalog (MK-01-INSTALL)."""
 
 import json
+from pathlib import Path
 
 import pytest
 
 from api.db.models import OrganizationModel, UserModel
 
 _HEALTHCARE_SLUG = "healthcare-clinic-screening"
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_CATALOG_PATH = _REPO_ROOT / "catalog" / "vertical-packs.json"
+
+
+def _catalog_pack_slugs_and_voice_profiles() -> list[tuple[str, str]]:
+    data = json.loads(_CATALOG_PATH.read_text(encoding="utf-8"))
+    out: list[tuple[str, str]] = []
+    for pack in data.get("packs") or []:
+        slug = pack.get("slug")
+        profile_id = pack.get("recommended_voice_profile_id")
+        if isinstance(slug, str) and isinstance(profile_id, str):
+            out.append((slug, profile_id))
+    return out
 
 
 @pytest.fixture
@@ -92,6 +106,23 @@ async def test_install_from_catalog_default_happy_path(
     assert stored is not None
     assert stored.organization_id == org.id
     assert stored.user_id == user.id
+
+
+@pytest.mark.parametrize("slug,expected_profile_id", _catalog_pack_slugs_and_voice_profiles())
+@pytest.mark.asyncio
+async def test_install_from_catalog_each_pack_sets_recommended_voice_profile(
+    test_client_factory, org_user_catalog_install, slug, expected_profile_id
+):
+    """Every MK-01 pack install binds recommended_voice_profile_id on the workflow."""
+    _, user = org_user_catalog_install
+    async with test_client_factory(user) as client:
+        res = await client.post(
+            "/api/v1/workflow/install-from-catalog",
+            json={"slug": slug, "workflow_name": f"Voice profile bind {slug}"},
+        )
+    assert res.status_code == 200, res.text
+    wf_cfg = (res.json().get("workflow_configurations") or {})
+    assert wf_cfg.get("voice_profile_id") == expected_profile_id
 
 
 @pytest.mark.asyncio
@@ -245,6 +276,10 @@ async def test_install_from_catalog_conversion_complex_variant(
     assert "update_crm_deal_stage" in blob
     assert "crm_api_base_url" in blob
     assert "target_deal_stage" in blob
+    dtv = data.get("template_context_variables") or {}
+    assert "/api/v1/local-integrations" in str(dtv.get("crm_api_base_url") or "")
+    li = (data.get("workflow_configurations") or {}).get("local_integrations") or {}
+    assert li.get("enabled") is True
 
 
 @pytest.mark.asyncio
@@ -270,6 +305,11 @@ async def test_install_from_catalog_concierge_complex_variant(
     assert "enroll_concierge_visit" in blob
     assert "billing_api_base_url" in blob
     assert "concierge_visit_type" in blob
+    dtv = data.get("template_context_variables") or {}
+    assert "/api/v1/local-payments" in str(dtv.get("billing_api_base_url") or "")
+    lp = (data.get("workflow_configurations") or {}).get("local_payments") or {}
+    assert lp.get("enabled") is True
+    assert "/api/v1/visits/enroll" in str(lp.get("visits_enroll_url") or "")
 
 
 @pytest.mark.asyncio
@@ -655,6 +695,10 @@ async def test_install_from_catalog_telecom_outage_status_complex(
     blob = json.dumps(data.get("workflow_definition") or {})
     assert "lookup_outage_status" in blob
     assert "oss_api_base_url" in blob
+    dtv = data.get("template_context_variables") or {}
+    assert "/api/v1/local-integrations" in str(dtv.get("oss_api_base_url") or "")
+    li = (data.get("workflow_configurations") or {}).get("local_integrations") or {}
+    assert li.get("enabled") is True
 
 
 @pytest.mark.asyncio
@@ -679,6 +723,13 @@ async def test_install_from_catalog_telecom_payment_redirect_complex(
     blob = json.dumps(data.get("workflow_definition") or {})
     assert "confirm_payment_redirect" in blob
     assert "billing_api_base_url" in blob
+    dtv = data.get("template_context_variables") or {}
+    assert "/api/v1/local-payments" in str(dtv.get("billing_api_base_url") or "")
+    lp = (data.get("workflow_configurations") or {}).get("local_payments") or {}
+    assert lp.get("enabled") is True
+    assert "/api/v1/payments/redirect/confirm" in str(
+        lp.get("payment_redirect_confirm_url") or ""
+    )
 
 
 @pytest.mark.asyncio

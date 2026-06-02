@@ -22,7 +22,7 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 
 **Goal:** book a **demo** in **≤6 agent turns** after **`book_demo`** is wired.
 
-**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`). Optional: [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **Trial nurture & PQL voice qual** with variant **`booking_complex`**.
 2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`demo_duration_minutes`**, and **`crm_owner_email`** as needed.
@@ -35,10 +35,10 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 
 **Goal:** schedule a **QBR** in **≤6 agent turns** after **`book_qbr`** is wired (**renewal_complex** variant).
 
-**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`). Optional: [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **Trial nurture & PQL voice qual** with variant **`renewal_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"renewal_complex"`).
-2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`crm_api_base_url`** = `http://127.0.0.1:8765` (optional second tool), **`account_health_tier`**, and **`crm_owner_email`** as needed.
+2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**). Optional **`sync_crm_health`**: confirm **`crm_api_base_url`** → `{BACKEND}/api/v1/local-integrations` (auto on install; or **Wire local integrations**). Set **`account_health_tier`** and **`crm_owner_email`** as needed.
 3. HTTP tool **`book_qbr`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `meeting_id` → `appointment.id`, `meeting_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
 4. *(Optional)* HTTP tool **`sync_crm_health`**: `POST {{crm_api_base_url}}/api/v1/accounts/health` with non-sensitive fields only.
 5. Attach **`book_qbr`** to the **Renewal & QBR** agent; **Publish**.
@@ -49,10 +49,10 @@ Use voice for **short qualification**, trial check-ins, and onboarding nudges wi
 
 **Goal:** qualify trial intent and **update CRM deal stage** in **≤6 agent turns** after **`update_crm_deal_stage`** is wired (**conversion_complex** variant).
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/deals/stage` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`crm_api_base_url`**).
 
 1. Install **Trial nurture & PQL voice qual** with variant **`conversion_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"conversion_complex"`).
-2. **Customize**; set **`crm_api_base_url`** = `http://127.0.0.1:8765` and **`target_deal_stage`** = `closed_won` (or buyer CRM stage id).
+2. **Customize**; confirm **`crm_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`target_deal_stage`** = `closed_won` (or buyer CRM stage id).
 3. HTTP tool **`update_crm_deal_stage`**: `POST {{crm_api_base_url}}/api/v1/deals/stage`; **response_mapping** — `deal_id` → `appointment.id`, `stage_updated_at` → `appointment.slot.start`, `confirmation_code` → `confirmation_code` (reuse stub sample shape for local QA).
 4. Attach to the **PQL & conversion** agent; **Publish**.
 5. **Web test** script: trial goals → express readiness to upgrade → confirm when agent summarizes CRM handoff.

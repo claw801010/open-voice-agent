@@ -2,7 +2,11 @@
 
 import pytest
 
-from api.schemas.voice_profile import SpeechDeliverySettings
+from api.schemas.voice_profile import AuthenticityLayerSettings, SpeechDeliverySettings
+from api.services.voice.authenticity_layer import (
+    build_authenticity_layer_prompt_block,
+    layer_warm,
+)
 from api.services.voice.presets import (
     DEFAULT_BUILTIN_PROFILE_ID,
     list_builtin_profiles,
@@ -33,6 +37,50 @@ def test_builtin_profiles_include_authentic_natural_default():
     authentic = next(p for p in profiles if p["id"] == DEFAULT_BUILTIN_PROFILE_ID)
     assert authentic["speech_settings"]["enable_professional_fillers"] is True
     assert authentic["speech_settings"]["filler_intensity"] == "medium"
+    assert authentic["speech_settings"]["authenticity_layer"]["enabled"] is True
+
+
+def test_authentic_natural_has_warm_authenticity_layer():
+    profiles = list_builtin_profiles()
+    authentic = next(p for p in profiles if p["id"] == DEFAULT_BUILTIN_PROFILE_ID)
+    layer = authentic["speech_settings"]["authenticity_layer"]
+    assert layer["enabled"] is True
+    assert layer["filler_intensity"] == "medium"
+    assert layer["enable_soft_breath"] is True
+    assert layer["enable_key_projection"] is True
+
+
+def test_build_authenticity_layer_prompt_short_fillers_and_projection():
+    block = build_authenticity_layer_prompt_block(layer_warm())
+    assert "NATURAL DELIVERY" in block
+    assert "1-word" in block
+    assert "2-word" in block
+    assert "3-word" in block
+    assert "Soft breath" in block
+    assert "Key projection" in block
+
+
+def test_build_speech_style_prompt_includes_authenticity_layer():
+    block = build_speech_style_prompt_block(
+        SpeechDeliverySettings(authenticity_layer=layer_warm())
+    )
+    assert "VOICE DELIVERY" in block
+    assert "NATURAL DELIVERY" in block
+
+
+def test_soft_breath_lowers_tts_stability():
+    from api.services.voice.speech_delivery import apply_speech_settings_to_tts_overrides
+
+    settings = SpeechDeliverySettings(
+        stability=0.62,
+        authenticity_layer=layer_warm(),
+    )
+    merged = apply_speech_settings_to_tts_overrides(settings, {})
+    assert merged["stability"] == pytest.approx(0.58)
+
+
+def test_authenticity_layer_disabled_emits_no_block():
+    assert build_authenticity_layer_prompt_block(AuthenticityLayerSettings()) == ""
 
 
 def test_create_clone_and_update_custom_profile():
@@ -99,7 +147,7 @@ def test_apply_voice_profile_merges_elevenlabs_tts():
     )
     profile = list_builtin_profiles()[2]  # authentic_natural
     effective = apply_voice_profile_to_user_config(user_config, profile)
-    assert effective.tts.stability == pytest.approx(0.62)
+    assert effective.tts.stability == pytest.approx(0.58)
     assert effective.tts.similarity_boost == pytest.approx(0.9)
 
 
@@ -116,6 +164,7 @@ def test_vertical_builtin_profiles_present():
     assert ss["tone"] == "empathetic"
     assert ss["enable_extended_fillers"] is True
     assert "es-US" in ss.get("multilingual_fillers", {})
+    assert ss["authenticity_layer"]["enabled"] is True
 
 
 def test_build_speech_style_prompt_extended_and_multilingual():

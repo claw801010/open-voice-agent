@@ -15,7 +15,7 @@ FollowUpActionType = Literal[
     "other",
 ]
 
-FollowUpStatus = Literal["pending", "completed", "cancelled"]
+FollowUpStatus = Literal["pending", "approved", "edited", "dismissed", "completed", "cancelled"]
 
 
 class CallReviewRecommendation(BaseModel):
@@ -56,6 +56,20 @@ class CreateFollowUpBody(BaseModel):
         default=None,
         description="Phone, email, or name hint for the operator",
     )
+    suggested_message: str | None = Field(
+        default=None,
+        description="Draft SMS/email/call script for human-in-the-loop review",
+    )
+    requires_review: bool = Field(
+        default=False,
+        description="When true, item appears in Review Inbox until approved or dismissed",
+    )
+
+
+class UpdateFollowUpBody(BaseModel):
+    status: FollowUpStatus | None = None
+    notes: str | None = None
+    suggested_message: str | None = None
 
 
 class FollowUpItemResponse(BaseModel):
@@ -65,12 +79,29 @@ class FollowUpItemResponse(BaseModel):
     notes: str
     scheduled_at: str | None = None
     contact_hint: str | None = None
+    suggested_message: str | None = None
+    requires_review: bool = False
     created_at: str
     created_by_user_id: int | None = None
+    updated_at: str | None = None
 
 
 class FollowUpListResponse(BaseModel):
     items: list[FollowUpItemResponse]
+
+
+class ReviewInboxItemResponse(BaseModel):
+    call_id: str
+    workflow_id: int | None = None
+    workflow_name: str | None = None
+    catalog_slug: str | None = None
+    follow_up: FollowUpItemResponse
+    ai_summary: str | None = None
+
+
+class ReviewInboxListResponse(BaseModel):
+    items: list[ReviewInboxItemResponse]
+    pending_count: int = 0
 
 
 class ApplyWorkflowImprovementBody(BaseModel):

@@ -12,28 +12,32 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 _GTM_TOOL_NAME = "GTM book_slot demo"
 
-_DEFINITION = {
-    "schema_version": 1,
-    "type": "http_api",
-    "config": {
-        "method": "POST",
-        "url": "http://127.0.0.1:8765/appointments/book",
-        "parameters": [
-            {
-                "name": "patient_name",
-                "type": "string",
-                "description": "Caller name for the appointment",
-                "required": True,
+
+def _tool_definition() -> dict:
+    backend = os.environ.get("BACKEND_API_ENDPOINT", "http://127.0.0.1:8000").rstrip("/")
+    url = f"{backend}/api/v1/local-scheduling/api/v1/appointments"
+    return {
+        "schema_version": 1,
+        "type": "http_api",
+        "config": {
+            "method": "POST",
+            "url": url,
+            "parameters": [
+                {
+                    "name": "patient_name",
+                    "type": "string",
+                    "description": "Caller name for the appointment",
+                    "required": True,
+                },
+            ],
+            "response_mapping": {
+                "appointment_id": "appointment.id",
+                "confirmation_code": "confirmation_code",
+                "slot_start": "appointment.slot.start",
             },
-        ],
-        "response_mapping": {
-            "confirmation_code": "confirmation_code",
-            "appointment_status": "appointment.status",
-            "slot_start": "appointment.slot.start",
+            "body_template": '{"slot_start": "2026-12-15T10:00:00Z", "patient_name": "{{conversation.caller_name}}", "organization_id": 1}',
         },
-        "body_template": '{"patient_name": "{{conversation.caller_name}}"}',
-    },
-}
+    }
 
 
 async def main() -> int:
@@ -77,9 +81,9 @@ async def main() -> int:
         organization_id=org_id,
         user_id=user.id,
         name=_GTM_TOOL_NAME,
-        definition=_DEFINITION,
+        definition=_tool_definition(),
         category=ToolCategory.HTTP_API.value,
-        description="GTM demo — booking stub with response_mapping for analytics proof.",
+        description="GTM demo — local scheduling book with response_mapping for analytics proof.",
         icon="globe",
         icon_color="#3B82F6",
     )

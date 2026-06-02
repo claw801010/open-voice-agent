@@ -1,0 +1,27 @@
+{
+  "description": "MK-01 default catalog_variant_id per slug for buyer demos, marketplace analytics proof, and ./scripts/catalog-buyer-demo.sh when variant is omitted.",
+  "defaults": {
+    "healthcare-clinic-screening": "ehr_sync_complex",
+    "retail-wismo-faq": "collections_complex",
+    "b2b-saas-trial-nurture": "conversion_complex",
+    "insurance-fnol-faq": "claims_lookup_complex",
+    "hospitality-travel-concierge": "waiver_complex",
+    "financial-services-banking-faq": "balance_lookup_complex",
+    "smb-franchise-location-faq": "lead_capture_complex",
+    "telecom-utilities-outage-faq": "outage_status_complex",
+    "public-sector-civic-services-faq": "permit_status_complex",
+    "hr-staffing-recruiting-faq": "application_status_complex"
+  },
+  "settings_sections": {
+    "healthcare-clinic-screening": "local-ehr",
+    "retail-wismo-faq": "local-payments",
+    "b2b-saas-trial-nurture": "local-integrations",
+    "insurance-fnol-faq": "local-integrations",
+    "hospitality-travel-concierge": "local-integrations",
+    "financial-services-banking-faq": "local-integrations",
+    "smb-franchise-location-faq": "local-integrations",
+    "telecom-utilities-outage-faq": "local-integrations",
+    "public-sector-civic-services-faq": "local-integrations",
+    "hr-staffing-recruiting-faq": "local-integrations"
+  }
+}

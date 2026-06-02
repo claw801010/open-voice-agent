@@ -23,7 +23,7 @@ Deflect **office hours**, **permit and licensing FAQ**, and **department routing
 
 **Goal:** schedule a **case worker callback** in **≤6 agent turns** after **`schedule_civic_callback`** is wired.
 
-**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`). Optional: [booking stub](../catalog/recipes/booking-scheduling-stub-local.md) on `:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **Civic services & permits FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
 2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`agency_name`**, and **`default_department_code`** from pack defaults.
@@ -36,10 +36,10 @@ Deflect **office hours**, **permit and licensing FAQ**, and **department routing
 
 **Goal:** return **tokenized permit status** in **≤6 agent turns** after **`lookup_permit_status`** is wired (**permit_status_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/permits/status` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`records_api_base_url`**).
 
 1. Install **Civic services & permits FAQ** with variant **`permit_status_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"permit_status_complex"`).
-2. **Customize**; set **`records_api_base_url`** = `http://127.0.0.1:8765`, **`agency_name`**, and **`default_department_code`** from pack defaults.
+2. **Customize**; confirm **`records_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`agency_name`** and **`default_department_code`** from pack defaults.
 3. HTTP tool **`lookup_permit_status`**: `POST {{records_api_base_url}}/api/v1/permits/status`; **response_mapping** — `permit_id` → `appointment.id`, `status_code` → `confirmation_code`, `last_updated` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Civic FAQ & permit lookup** agent; **Publish**.
 5. **Web test** script: ask about permit status → provide tokenized application reference → confirm summary when agent reads back tool result.
@@ -49,10 +49,10 @@ Deflect **office hours**, **permit and licensing FAQ**, and **department routing
 
 **Goal:** submit a **language routing request** in **≤6 agent turns** after **`route_by_language`** is wired (**language_router_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` for static fixture JSON (accepts `POST /api/v1/calls/route-by-language` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`routing_api_base_url`**).
 
 1. Install **Civic services & permits FAQ** with variant **`language_router_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"language_router_complex"`).
-2. **Customize**; set **`routing_api_base_url`** = `http://127.0.0.1:8765`, **`agency_name`**, and **`language_routing_policy_code`** from pack defaults.
+2. **Customize**; confirm **`routing_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`agency_name`** and **`language_routing_policy_code`** from pack defaults.
 3. HTTP tool **`route_by_language`**: `POST {{routing_api_base_url}}/api/v1/calls/route-by-language`; **response_mapping** — `route_id` → `appointment.id`, `target_queue` → `confirmation_code`, `language_code` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Civic FAQ & language router** agent; **Publish**.
 5. **Web test** script: ask for Spanish support → confirm language preference → confirm summary when agent reads back tool result.

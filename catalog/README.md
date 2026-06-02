@@ -5,13 +5,19 @@
 | File | Role |
 |------|------|
 | [vertical-packs.json](vertical-packs.json) | Canonical JSON for **≥5** verticals (healthcare, retail, B2B SaaS, insurance, hospitality); each entry references a **runbook** under [runbooks/](../runbooks/). |
+| [catalog-variant-http-tools.json](catalog-variant-http-tools.json) | **Variant → HTTP tool names** for complex packaged graphs; consumed by workflow catalog guide + [analyticsVerticalHttpHints.ts](../ui/src/lib/analyticsVerticalHttpHints.ts). |
 | [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md) | **Booking + revenue motions** gap analysis vs shipped graphs; next slices for prebuilt marketplace demos (**MK-01-RUBRIC**). |
 | [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) | **Calls, dashboards, APIs, DB** — analytics companion for vertical prebuilds (**MK-01-ANALYTICS-VERTICAL**). |
 | [ANALYTICS_REDACTION_MATRIX.md](ANALYTICS_REDACTION_MATRIX.md) | **QM / privacy reviewers** — surfaces × v1 redaction × RBAC; deferred RLS / span table called out. |
 | [VERTICAL_ANALYTICS_HTTP_MATRIX.md](VERTICAL_ANALYTICS_HTTP_MATRIX.md) | **Reviewer matrix:** each **`catalog_slug`** ↔ booking story ↔ HTTP tools ↔ **`response_mapping`** ↔ analytics filters. |
 | [recipes/booking-http-analytics-smoke.md](recipes/booking-http-analytics-smoke.md) | **MK-01 smoke:** `response_mapping` → **`mapped_data`** → analytics tool span (pytest + sample JSON). |
 | [recipes/http-api-analytics-redaction-gtm-demo.md](recipes/http-api-analytics-redaction-gtm-demo.md) | **GTM runbook:** HTTP tool → Analytics → org **PII redaction** / RBAC; companion script [gtm-http-api-analytics-redaction-demo.sh](../scripts/gtm-http-api-analytics-redaction-demo.sh). |
-| [recipes/prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) | **PREBUILD complete:** slug × variant × HTTP tool × analytics filter matrix for GTM / QA across all three verticals. |
+| [recipes/local-scheduling-all-in-one.md](recipes/local-scheduling-all-in-one.md) | **All-in-one local calendar** — book, reschedule, `.ics` invites; no external scheduler. |
+| [recipes/local-payments-all-in-one.md](recipes/local-payments-all-in-one.md) | **All-in-one local payments** — collections, payment redirect, concierge enroll. |
+| [recipes/local-integrations-all-in-one.md](recipes/local-integrations-all-in-one.md) | **All-in-one local integrations** — CRM, OSS, ATS, banking, civic, hospitality HTTP tools. |
+| [recipes/healthcare-ehr-all-in-one.md](recipes/healthcare-ehr-all-in-one.md) | **Healthcare EHR + messaging** — patient context, prior auth, chart sync, SMS/email, review inbox. |
+| [recipes/local-all-in-one-gtm-demo.md](recipes/local-all-in-one-gtm-demo.md) | **GTM walkthrough** — zero-`:8765` demo script + UI checklist for local stack. |
+| [recipes/prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) | **PREBUILD complete:** slug × variant × HTTP tool × local endpoint matrix for GTM / QA (all 10 verticals). |
 | [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) | **OpenAPI draft** — contract for `GET /api/v1/analytics/insights`, `GET /api/v1/analytics/calls` + detail ([api/routes/analytics.py](../api/routes/analytics.py)); **HttpToolSpanSummary**; insights + `catalog_slug` filters. |
 | [packaged-workflows/looptalk-simulated-caller.json](packaged-workflows/looptalk-simulated-caller.json) | **System** adversary graph for LoopTalk quick-persona tests (not a marketplace vertical); installed per org as `[System] LoopTalk simulated caller` via `POST /api/v1/looptalk/test-sessions/quick-persona`. |
 | [PARTNER_REVIEW.md](PARTNER_REVIEW.md) | Partner / community **review checklist** (safety, PII, telephony compliance) before a pack is **published** — **MK-01-PARTNER**. |

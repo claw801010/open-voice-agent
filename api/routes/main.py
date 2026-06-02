@@ -10,6 +10,9 @@ from api.routes.credentials import router as credentials_router
 from api.routes.feedback import router as feedback_router
 from api.routes.integration import router as integration_router
 from api.routes.knowledge_base import router as knowledge_base_router
+from api.routes.local_ehr import router as local_ehr_router
+from api.routes.local_integrations import router as local_integrations_router
+from api.routes.local_messaging import router as local_messaging_router
 from api.routes.local_payments import router as local_payments_router
 from api.routes.local_scheduling import router as local_scheduling_router
 from api.routes.looptalk import router as looptalk_router
@@ -63,6 +66,9 @@ router.include_router(workflow_embed_router)
 router.include_router(knowledge_base_router)
 router.include_router(local_scheduling_router)
 router.include_router(local_payments_router)
+router.include_router(local_integrations_router)
+router.include_router(local_ehr_router)
+router.include_router(local_messaging_router)
 router.include_router(voice_profiles_router)
 router.include_router(workflow_recording_router)
 router.include_router(auth_router)

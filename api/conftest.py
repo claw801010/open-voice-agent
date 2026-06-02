@@ -11,10 +11,35 @@ References:
 - https://docs.sqlalchemy.org/en/20/orm/session_transaction.html
 """
 
+import sys
+from pathlib import Path
+
+# When pytest cwd is api/, ``import mcp`` shadows the PyPI fastmcp dependency with api/mcp/.
+_API_DIR = Path(__file__).resolve().parent
+_WORKSPACE_ROOT = _API_DIR.parent
+
+
+def _ensure_pypi_mcp_importable() -> None:
+    for _shadow in ("", str(_API_DIR)):
+        while _shadow in sys.path:
+            sys.path.remove(_shadow)
+    if str(_WORKSPACE_ROOT) not in sys.path:
+        sys.path.insert(0, str(_WORKSPACE_ROOT))
+    mod = sys.modules.get("mcp")
+    mod_file = getattr(mod, "__file__", "") or ""
+    if mod is not None and mod_file.startswith(str(_API_DIR)):
+        del sys.modules["mcp"]
+
+
+_ensure_pypi_mcp_importable()
+
+
+def pytest_configure(config) -> None:
+    _ensure_pypi_mcp_importable()
+
 import os
 
 # Load environment variables before importing anything else
-from pathlib import Path
 from typing import AsyncGenerator
 from urllib.parse import urlparse, urlunparse
 
@@ -239,6 +264,7 @@ async def run_migrations(database_url: str):
         if original_env_url:
             os.environ["DATABASE_URL"] = original_env_url
         api.constants.DATABASE_URL = original_constants_url
+        _ensure_pypi_mcp_importable()
 
 
 @pytest.fixture(scope="session")
@@ -384,6 +410,7 @@ async def test_client_factory(db_session):
 
     from httpx import ASGITransport, AsyncClient
 
+    _ensure_pypi_mcp_importable()
     from api.app import app
     from api.services.auth.depends import get_user
 

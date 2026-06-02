@@ -30,6 +30,7 @@ Opening **`/analytics?catalog_slug=<known-vertical-slug>`** (e.g. `healthcare-cl
 | D | **Call detail** | Tool spans; **`mapped_data`** vs raw upstream (when redaction allows fewer masks). |
 | E | **Analytics → Overview** | Org **PII redaction** switch + confirm dialog when turning **Off**. With **Vertical slug** set to a shipped pack, **Revenue & booking** shows example **`tool_name`** values and suggested **`response_mapping`** keys ([analyticsVerticalHttpHints.ts](../../ui/src/lib/analyticsVerticalHttpHints.ts)). **Top outcomes** / **Top tools** rows link to **Calls** with the same filters + date window ([analyticsOverviewDeepLinks.ts](../../ui/src/lib/analyticsOverviewDeepLinks.ts)). |
 | F | **Analytics → Calls** — **Scheduled QM export** ([AnalyticsCallsListContent.tsx](../../ui/src/app/analytics/calls/AnalyticsCallsListContent.tsx)) | Org schedule for server CSV → object storage (ARQ + `ENABLE_ANALYTICS_QM_EXPORT_CRON`); **`cron_enabled`** in API explains whether hourly uploads run in this environment. |
+| H | **Settings → Local demo** (calendar / payments / integrations) | All-in-one vertical stack — no buyer CRM/calendar/payment APIs ([local-all-in-one-gtm-demo.md](local-all-in-one-gtm-demo.md)); API smoke: [gtm-local-all-in-one-demo.sh](../../scripts/gtm-local-all-in-one-demo.sh). |
 | G | **Settings → Platform** (optional **WE-01** tie-in) | **HTTP integration cache policy** draft: org default + **per-integration** rows ([HttpIntegrationCachePolicySection.tsx](../../ui/src/components/HttpIntegrationCachePolicySection.tsx)); runtime cache still **not_implemented** — set expectations for buyers (governance before speed). |
 
 ### Screenshot pack (deck / leave-behind)
@@ -47,10 +48,24 @@ Suggested filenames under **`docs/images/`** (add files when ready; safe to comm
 | `gtm-mk01-analytics-scorecard-rubric.png` | Call list — **QM scorecard rubric** editor + **Copy for QA node**. |
 | `gtm-mk01-analytics-quality-widget.png` | Overview — **CX & containment** quality rollup widget. |
 | `gtm-mk01-analytics-call-review.png` | Call detail — **AI call review** panel (`E2E_GTM_SAMPLE_CALL_ID`). |
+| `gtm-mk01-analytics-live-workflow.png` | Call detail — **Live workflow** timeline (healthcare `ehr_sync_complex` tool spans). |
+| `gtm-mk01-analytics-review-inbox.png` | **Review inbox** — pending SMS/email drafts for human approval. |
+| `gtm-mk01-settings-local-ehr-records.png` | Settings — **Local demo EHR** record keeping mode + chart sync log ([healthcare-ehr-all-in-one.md](healthcare-ehr-all-in-one.md)). |
+| `gtm-mk01-analytics-call-detail-retail-collections.png` | Call detail — **`capture_payment_promise`** mapped_data (`E2E_GTM_RETAIL_CALL_ID`). |
+| `gtm-mk01-analytics-call-detail-telecom-outage.png` | Call detail — **`lookup_outage_status`** mapped_data (`E2E_GTM_TELECOM_CALL_ID`). |
+| `gtm-mk01-settings-local-payments-collections.png` | Settings — **Local demo payments** (collections buyer story). |
+| `gtm-mk01-settings-local-integrations-outage.png` | Settings — **Local demo integrations** (outage buyer story). |
 | `gtm-we01-settings-http-cache-policy.png` | Step **G** — Settings card + optional per-integration table (draft policy). |
+| `gtm-mk01-settings-local-all-in-one.png` | Step **H** — Settings local demo calendar + payments + integrations cards. |
 | `gtm-we01-http-tool-happy-path.png` | Step **A** — HTTP tool editor with **Happy path** checklist visible (auto-seeded **`GTM book_slot demo`** via [gtm_capture_deck.sh](../../scripts/gtm_capture_deck.sh) or set **`E2E_GTM_HTTP_TOOL_UUID`**). |
 | `gtm-we01-workflow-get-started.png` | **Voice Agents** hub — **Get started** cards (catalog / builder / import / blank). |
 | `gtm-mk01-workflow-import-dialog.png` | **Import external flow** dialog on `/workflow`. |
+| `gtm-mk01-workflow-catalog-guide-wire-local.png` | Workflow editor — catalog guide **Wire local** buttons (`E2E_GTM_WORKFLOW_ID`). |
+| `gtm-mk01-workflow-wire-ehr-messaging.png` | Workflow editor — **Wire local EHR** + messaging (`E2E_GTM_WORKFLOW_ID`). |
+| `gtm-mk01-workflow-wire-retail-payments.png` | Workflow editor — **Wire local payments** (`E2E_GTM_RETAIL_WORKFLOW_ID`). |
+| `gtm-mk01-workflow-wire-telecom-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_TELECOM_WORKFLOW_ID`). |
+| `gtm-we01-voice-profiles-page.png` | **Voice profiles** list with recommended presets visible. |
+| `gtm-we01-voice-profiles-natural-delivery.png` | **Voice profiles** — **Authentic — natural** preset with **Natural delivery** editor expanded. |
 | `gtm-we01-workflow-editor-outcome-checklist.png` | Workflow editor right rail — **Outcome checklist** + catalog HTTP guide (`E2E_GTM_WORKFLOW_ID`). |
 
 Wire these into slides or a Notion page; Mintlify can reference them later from `docs/` if you promote the story to the public docs site.
