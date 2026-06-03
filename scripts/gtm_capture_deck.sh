@@ -91,6 +91,24 @@ if [[ -z "${E2E_GTM_TELECOM_CALL_ID:-}" ]]; then
   fi
 fi
 
+if [[ -z "${E2E_GTM_B2B_CALL_ID:-}" ]]; then
+  echo "Seeding B2B conversion demo call…"
+  B2B_ID="$(_seed_catalog_demo_call b2b-saas-trial-nurture conversion_complex)"
+  if [[ -n "${B2B_ID}" ]]; then
+    export E2E_GTM_B2B_CALL_ID="${B2B_ID}"
+    echo "Using E2E_GTM_B2B_CALL_ID=${E2E_GTM_B2B_CALL_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_INSURANCE_CALL_ID:-}" ]]; then
+  echo "Seeding insurance claims lookup demo call…"
+  INSURANCE_ID="$(_seed_catalog_demo_call insurance-fnol-faq claims_lookup_complex)"
+  if [[ -n "${INSURANCE_ID}" ]]; then
+    export E2E_GTM_INSURANCE_CALL_ID="${INSURANCE_ID}"
+    echo "Using E2E_GTM_INSURANCE_CALL_ID=${E2E_GTM_INSURANCE_CALL_ID}"
+  fi
+fi
+
 if [[ -z "${E2E_GTM_HTTP_TOOL_UUID:-}" ]]; then
   TOOL_UUID="$(PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/seed_gtm_http_tool.py" "${E2E_EMAIL}" 2>/dev/null || true)"
   if [[ -n "${TOOL_UUID}" ]]; then
@@ -136,6 +154,28 @@ if [[ -z "${E2E_GTM_TELECOM_WORKFLOW_ID:-}" ]]; then
   fi
 fi
 
+if [[ -z "${E2E_GTM_B2B_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding B2B conversion catalog workflow…"
+  B2B_WF="$(GTM_CATALOG_SLUG=b2b-saas-trial-nurture GTM_CATALOG_VARIANT=conversion_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${B2B_WF}" ]]; then
+    export E2E_GTM_B2B_WORKFLOW_ID="${B2B_WF}"
+    echo "Using E2E_GTM_B2B_WORKFLOW_ID=${E2E_GTM_B2B_WORKFLOW_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_INSURANCE_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding insurance claims lookup catalog workflow…"
+  INSURANCE_WF="$(GTM_CATALOG_SLUG=insurance-fnol-faq GTM_CATALOG_VARIANT=claims_lookup_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${INSURANCE_WF}" ]]; then
+    export E2E_GTM_INSURANCE_WORKFLOW_ID="${INSURANCE_WF}"
+    echo "Using E2E_GTM_INSURANCE_WORKFLOW_ID=${E2E_GTM_INSURANCE_WORKFLOW_ID}"
+  fi
+fi
+
 export E2E_GTM_DECK_SCREENSHOTS=1
 export PLAYWRIGHT_SKIP_WEBSERVER=1
 
@@ -154,9 +194,19 @@ if [[ -n "${E2E_GTM_TELECOM_WORKFLOW_ID:-}" ]]; then
   PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
     "${E2E_EMAIL}" "${E2E_GTM_TELECOM_WORKFLOW_ID}" || true
 fi
+if [[ -n "${E2E_GTM_B2B_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking B2B conversion workflow ${E2E_GTM_B2B_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_B2B_WORKFLOW_ID}" || true
+fi
+if [[ -n "${E2E_GTM_INSURANCE_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking insurance claims lookup workflow ${E2E_GTM_INSURANCE_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_INSURANCE_WORKFLOW_ID}" || true
+fi
 
-echo "Optional env: E2E_GTM_WORKFLOW_ID E2E_GTM_RETAIL_WORKFLOW_ID E2E_GTM_TELECOM_WORKFLOW_ID"
-echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset}, E2E_GTM_RETAIL_CALL_ID=${E2E_GTM_RETAIL_CALL_ID:-unset}, E2E_GTM_TELECOM_CALL_ID=${E2E_GTM_TELECOM_CALL_ID:-unset})"
+echo "Optional env: E2E_GTM_WORKFLOW_ID E2E_GTM_RETAIL_WORKFLOW_ID E2E_GTM_TELECOM_WORKFLOW_ID E2E_GTM_B2B_WORKFLOW_ID E2E_GTM_INSURANCE_WORKFLOW_ID"
+echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset}, E2E_GTM_RETAIL_CALL_ID=${E2E_GTM_RETAIL_CALL_ID:-unset}, E2E_GTM_TELECOM_CALL_ID=${E2E_GTM_TELECOM_CALL_ID:-unset}, E2E_GTM_B2B_CALL_ID=${E2E_GTM_B2B_CALL_ID:-unset}, E2E_GTM_INSURANCE_CALL_ID=${E2E_GTM_INSURANCE_CALL_ID:-unset})"
 
 cd ui
 npm run test:e2e -- gtm-deck

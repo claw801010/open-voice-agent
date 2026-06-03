@@ -61,6 +61,44 @@ _TRANSCRIPT_BY_SLUG: dict[str, list[dict[str, Any]]] = {
             "timestamp": "2026-04-20T12:00:01+00:00",
         },
     ],
+    "b2b-saas-trial-nurture": [
+        {
+            "type": "rtf-user-transcription",
+            "payload": {
+                "final": True,
+                "text": "We are ready to upgrade from trial to paid.",
+                "timestamp": "2026-04-20T12:00:00+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:00+00:00",
+        },
+        {
+            "type": "rtf-bot-text",
+            "payload": {
+                "text": "Great — I will update your deal stage in CRM to closed won.",
+                "timestamp": "2026-04-20T12:00:01+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:01+00:00",
+        },
+    ],
+    "insurance-fnol-faq": [
+        {
+            "type": "rtf-user-transcription",
+            "payload": {
+                "final": True,
+                "text": "What is the status of claim CLM-4421?",
+                "timestamp": "2026-04-20T12:00:00+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:00+00:00",
+        },
+        {
+            "type": "rtf-bot-text",
+            "payload": {
+                "text": "Your claim is in review. An adjuster will follow up within two business days.",
+                "timestamp": "2026-04-20T12:00:01+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:01+00:00",
+        },
+    ],
 }
 
 _DEFAULT_TRANSCRIPT = [

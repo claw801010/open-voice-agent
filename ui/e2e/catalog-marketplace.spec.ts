@@ -119,6 +119,46 @@ test.describe("Template catalog (authenticated)", () => {
         expect(href).toContain("catalog_variant_id=outage_status_complex");
         expect(href).toContain("tool_name=lookup_outage_status");
     });
+
+    test("B2B pack card links local integrations settings", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const settingsLink = page.getByTestId("catalog-settings-local-b2b-saas-trial-nurture");
+        await expect(settingsLink).toBeVisible({ timeout: 15_000 });
+        await expect(settingsLink).toHaveAttribute("href", "/settings#local-integrations");
+    });
+
+    test("B2B pack card links analytics proof for conversion variant", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-b2b-saas-trial-nurture");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        await expect(proofLink).toHaveAttribute("href", /\/analytics\/calls\?/);
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=b2b-saas-trial-nurture");
+        expect(href).toContain("catalog_variant_id=conversion_complex");
+        expect(href).toContain("tool_name=update_crm_deal_stage");
+    });
+
+    test("insurance pack card links local integrations settings", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const settingsLink = page.getByTestId("catalog-settings-local-insurance-fnol-faq");
+        await expect(settingsLink).toBeVisible({ timeout: 15_000 });
+        await expect(settingsLink).toHaveAttribute("href", "/settings#local-integrations");
+    });
+
+    test("insurance pack card links analytics proof for claims lookup variant", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-insurance-fnol-faq");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        await expect(proofLink).toHaveAttribute("href", /\/analytics\/calls\?/);
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=insurance-fnol-faq");
+        expect(href).toContain("catalog_variant_id=claims_lookup_complex");
+        expect(href).toContain("tool_name=lookup_claim_status");
+    });
 });
 
 test.describe("Install from catalog → editor (authenticated + API)", () => {
@@ -538,5 +578,73 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         const guide = page.getByTestId("catalog-guide-card");
         await expect(guide).toBeVisible({ timeout: 30_000 });
         await expect(guide.getByText("collections_complex")).toBeVisible();
+    });
+
+    test("B2B conversion variant wires local integrations", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Trial nurture & PQL voice qual" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Trial → paid conversion/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire b2b conversion ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("conversion_complex")).toBeVisible();
+
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
+        await wireIntegrations.click();
+
+        await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("insurance claims lookup variant wires local integrations", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "FNOL guidance & policy FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Claims status lookup/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire insurance claims ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("claims_lookup_complex")).toBeVisible();
+
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
+        await wireIntegrations.click();
+
+        await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
     });
 });

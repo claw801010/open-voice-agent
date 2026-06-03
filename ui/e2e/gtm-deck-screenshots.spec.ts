@@ -205,6 +205,50 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-mk01-analytics-call-detail-b2b-conversion.png when B2B call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_B2B_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_B2B_CALL_ID (conversion_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("update_crm_deal_stage")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-b2b-conversion.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-insurance-claims.png when insurance call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_INSURANCE_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_INSURANCE_CALL_ID (claims_lookup_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_claim_status")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-insurance-claims.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-mk01-settings-local-payments-collections.png", async ({ page }) => {
         await page.goto("/settings#local-payments");
 
@@ -359,6 +403,49 @@ test.describe("GTM deck screenshots (opt-in)", () => {
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-telecom-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-b2b-integrations.png when B2B workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_B2B_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_B2B_WORKFLOW_ID (conversion_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("conversion_complex")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-b2b-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-insurance-integrations.png when insurance workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_INSURANCE_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_INSURANCE_WORKFLOW_ID (claims_lookup_complex catalog workflow).",
+        );
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("claims_lookup_complex")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-insurance-integrations.png"),
             fullPage: false,
         });
     });

@@ -48,8 +48,12 @@ gtm-mk01-analytics-live-workflow.png
 gtm-mk01-analytics-review-inbox.png
 gtm-mk01-analytics-call-detail-retail-collections.png
 gtm-mk01-analytics-call-detail-telecom-outage.png
+gtm-mk01-analytics-call-detail-b2b-conversion.png
+gtm-mk01-analytics-call-detail-insurance-claims.png
 gtm-mk01-settings-local-payments-collections.png
 gtm-mk01-workflow-wire-retail-payments.png
+gtm-mk01-workflow-wire-b2b-integrations.png
+gtm-mk01-workflow-wire-insurance-integrations.png
 gtm-mk01-workflow-wire-telecom-integrations.png
 gtm-mk01-settings-local-integrations-outage.png
 gtm-we01-voice-profiles-natural-delivery.png

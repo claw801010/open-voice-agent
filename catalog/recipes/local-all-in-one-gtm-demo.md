@@ -71,6 +71,8 @@ Capture deck PNGs with `./scripts/gtm_capture_deck.sh` (`E2E_GTM_DECK_SCREENSHOT
 | `gtm-mk01-workflow-wire-ehr-messaging.png` | Workflow editor — **Wire local EHR** + **Wire local messaging** (`ehr_sync_complex`) |
 | `gtm-mk01-workflow-wire-retail-payments.png` | Workflow editor — **Wire local payments** (`collections_complex`) |
 | `gtm-mk01-workflow-wire-telecom-integrations.png` | Workflow editor — **Wire local integrations** (`outage_status_complex`) |
+| `gtm-mk01-workflow-wire-b2b-integrations.png` | Workflow editor — **Wire local integrations** (`conversion_complex`) |
+| `gtm-mk01-workflow-wire-insurance-integrations.png` | Workflow editor — **Wire local integrations** (`claims_lookup_complex`) |
 | `gtm-we01-voice-profiles-natural-delivery.png` | **Voice profiles** — **Natural delivery** editor on **Authentic — natural** |
 
 If API/UI are not up, [gen_gtm_deck_placeholder_pngs.py](../../scripts/gen_gtm_deck_placeholder_pngs.py) writes **1280×720 placeholders** for missing filenames (same names — swap for real captures before buyer GTM). Preflight: `./scripts/check_gtm_capture_prereqs.sh`.

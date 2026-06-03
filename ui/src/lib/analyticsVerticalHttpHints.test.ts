@@ -24,6 +24,16 @@ describe('verticalHttpProofHintForSlug', () => {
         expect(hint?.example_tool_names).toEqual(['lookup_outage_status']);
     });
 
+    it('B2B conversion variant focuses on update_crm_deal_stage', () => {
+        const hint = verticalHttpProofHintForSlug('b2b-saas-trial-nurture', 'conversion_complex');
+        expect(hint?.example_tool_names).toEqual(['update_crm_deal_stage']);
+    });
+
+    it('insurance claims lookup variant focuses on lookup_claim_status', () => {
+        const hint = verticalHttpProofHintForSlug('insurance-fnol-faq', 'claims_lookup_complex');
+        expect(hint?.example_tool_names).toEqual(['lookup_claim_status']);
+    });
+
     it('falls back to pack hint for unknown variant ids', () => {
         const hint = verticalHttpProofHintForSlug('healthcare-clinic-screening', 'not-a-variant');
         expect(hint?.example_tool_names).toEqual(
