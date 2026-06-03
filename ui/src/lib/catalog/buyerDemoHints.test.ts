@@ -26,6 +26,9 @@ describe('buyerDemoHints', () => {
     it('exposes card tips for marketplace', () => {
         expect(buyerDemoCardTip('financial-services-banking-faq')).toMatch(/tokenized balance/i);
         expect(buyerDemoCardTip('hospitality-travel-concierge')).toMatch(/waiver/i);
+        expect(buyerDemoCardTip('smb-franchise-location-faq')).toMatch(/lead capture/i);
+        expect(buyerDemoCardTip('public-sector-civic-services-faq')).toMatch(/Permit status/i);
+        expect(buyerDemoCardTip('hr-staffing-recruiting-faq')).toMatch(/ATS/i);
     });
 
     it('maps wire module hints for integrations variants', () => {

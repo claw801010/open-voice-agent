@@ -50,6 +50,30 @@ describe('verticalHttpProofHintForSlug', () => {
         expect(hint?.example_tool_names).toEqual(['apply_cancellation_waiver']);
     });
 
+    it('SMB lead capture variant focuses on capture_lead_intent', () => {
+        const hint = verticalHttpProofHintForSlug(
+            'smb-franchise-location-faq',
+            'lead_capture_complex',
+        );
+        expect(hint?.example_tool_names).toEqual(['capture_lead_intent']);
+    });
+
+    it('civic permit variant focuses on lookup_permit_status', () => {
+        const hint = verticalHttpProofHintForSlug(
+            'public-sector-civic-services-faq',
+            'permit_status_complex',
+        );
+        expect(hint?.example_tool_names).toEqual(['lookup_permit_status']);
+    });
+
+    it('HR application status variant focuses on lookup_application_status', () => {
+        const hint = verticalHttpProofHintForSlug(
+            'hr-staffing-recruiting-faq',
+            'application_status_complex',
+        );
+        expect(hint?.example_tool_names).toEqual(['lookup_application_status']);
+    });
+
     it('falls back to pack hint for unknown variant ids', () => {
         const hint = verticalHttpProofHintForSlug('healthcare-clinic-screening', 'not-a-variant');
         expect(hint?.example_tool_names).toEqual(

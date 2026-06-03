@@ -293,6 +293,72 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-mk01-analytics-call-detail-smb-leads.png when SMB call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_SMB_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_SMB_CALL_ID (lead_capture_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("capture_lead_intent")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-smb-leads.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-civic-permits.png when civic call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_CIVIC_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_CIVIC_CALL_ID (permit_status_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_permit_status")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-civic-permits.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-hr-recruiting.png when HR call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_HR_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_HR_CALL_ID (application_status_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_application_status")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-hr-recruiting.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-mk01-settings-local-payments-collections.png", async ({ page }) => {
         await page.goto("/settings#local-payments");
 
@@ -535,6 +601,72 @@ test.describe("GTM deck screenshots (opt-in)", () => {
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-hospitality-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-smb-integrations.png when SMB workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_SMB_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_SMB_WORKFLOW_ID (lead_capture_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("lead_capture_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-smb-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-civic-integrations.png when civic workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_CIVIC_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_CIVIC_WORKFLOW_ID (permit_status_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("permit_status_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-civic-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-hr-integrations.png when HR workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_HR_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_HR_WORKFLOW_ID (application_status_complex catalog workflow).",
+        );
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("application_status_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-hr-integrations.png"),
             fullPage: false,
         });
     });

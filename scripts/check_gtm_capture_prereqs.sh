@@ -54,6 +54,12 @@ gtm-mk01-analytics-call-detail-banking-balance.png
 gtm-mk01-analytics-call-detail-hospitality-waiver.png
 gtm-mk01-workflow-wire-banking-integrations.png
 gtm-mk01-workflow-wire-hospitality-integrations.png
+gtm-mk01-analytics-call-detail-smb-leads.png
+gtm-mk01-analytics-call-detail-civic-permits.png
+gtm-mk01-analytics-call-detail-hr-recruiting.png
+gtm-mk01-workflow-wire-smb-integrations.png
+gtm-mk01-workflow-wire-civic-integrations.png
+gtm-mk01-workflow-wire-hr-integrations.png
 gtm-mk01-settings-local-payments-collections.png
 gtm-mk01-workflow-wire-retail-payments.png
 gtm-mk01-workflow-wire-b2b-integrations.png

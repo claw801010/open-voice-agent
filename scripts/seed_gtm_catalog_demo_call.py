@@ -137,6 +137,63 @@ _TRANSCRIPT_BY_SLUG: dict[str, list[dict[str, Any]]] = {
             "timestamp": "2026-04-20T12:00:01+00:00",
         },
     ],
+    "smb-franchise-location-faq": [
+        {
+            "type": "rtf-user-transcription",
+            "payload": {
+                "final": True,
+                "text": "I want to open a franchise location in Austin and need a callback.",
+                "timestamp": "2026-04-20T12:00:00+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:00+00:00",
+        },
+        {
+            "type": "rtf-bot-text",
+            "payload": {
+                "text": "I captured your lead intent. A local manager will call you within twenty-four hours.",
+                "timestamp": "2026-04-20T12:00:01+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:01+00:00",
+        },
+    ],
+    "public-sector-civic-services-faq": [
+        {
+            "type": "rtf-user-transcription",
+            "payload": {
+                "final": True,
+                "text": "What is the status of permit PER-2024-1182?",
+                "timestamp": "2026-04-20T12:00:00+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:00+00:00",
+        },
+        {
+            "type": "rtf-bot-text",
+            "payload": {
+                "text": "Your permit is approved as of last week. You can pick up documents at the clerk window.",
+                "timestamp": "2026-04-20T12:00:01+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:01+00:00",
+        },
+    ],
+    "hr-staffing-recruiting-faq": [
+        {
+            "type": "rtf-user-transcription",
+            "payload": {
+                "final": True,
+                "text": "Can you check my application status? Reference APP-8821.",
+                "timestamp": "2026-04-20T12:00:00+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:00+00:00",
+        },
+        {
+            "type": "rtf-bot-text",
+            "payload": {
+                "text": "Your application is scheduled for interview. Check your email for the calendar invite.",
+                "timestamp": "2026-04-20T12:00:01+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:01+00:00",
+        },
+    ],
 }
 
 _DEFAULT_TRANSCRIPT = [

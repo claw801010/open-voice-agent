@@ -192,6 +192,51 @@ test.describe("Template catalog (authenticated)", () => {
         expect(href).toContain("catalog_variant_id=waiver_complex");
         expect(href).toContain("tool_name=apply_cancellation_waiver");
     });
+
+    test("SMB pack card shows buyer demo hint and analytics proof", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const hint = page.getByTestId("catalog-buyer-demo-hint-smb-franchise-location-faq");
+        await expect(hint).toBeVisible({ timeout: 15_000 });
+        await expect(hint).toContainText("lead capture");
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-smb-franchise-location-faq");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=smb-franchise-location-faq");
+        expect(href).toContain("catalog_variant_id=lead_capture_complex");
+        expect(href).toContain("tool_name=capture_lead_intent");
+    });
+
+    test("civic pack card shows buyer demo hint and analytics proof", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const hint = page.getByTestId("catalog-buyer-demo-hint-public-sector-civic-services-faq");
+        await expect(hint).toBeVisible({ timeout: 15_000 });
+        await expect(hint).toContainText("Permit status");
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-public-sector-civic-services-faq");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=public-sector-civic-services-faq");
+        expect(href).toContain("catalog_variant_id=permit_status_complex");
+        expect(href).toContain("tool_name=lookup_permit_status");
+    });
+
+    test("HR pack card shows buyer demo hint and analytics proof", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const hint = page.getByTestId("catalog-buyer-demo-hint-hr-staffing-recruiting-faq");
+        await expect(hint).toBeVisible({ timeout: 15_000 });
+        await expect(hint).toContainText("ATS");
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-hr-staffing-recruiting-faq");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=hr-staffing-recruiting-faq");
+        expect(href).toContain("catalog_variant_id=application_status_complex");
+        expect(href).toContain("tool_name=lookup_application_status");
+    });
 });
 
 test.describe("Install from catalog → editor (authenticated + API)", () => {
@@ -742,6 +787,111 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         const guide = page.getByTestId("catalog-guide-card");
         await expect(guide).toBeVisible({ timeout: 30_000 });
         await expect(guide.getByText("waiver_complex")).toBeVisible();
+        await expect(guide.getByText("Buyer story:")).toBeVisible();
+
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
+        await wireIntegrations.click();
+
+        await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("SMB lead capture variant wires local integrations with buyer story", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Multi-location FAQ & lead callback" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /CRM lead capture/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire smb leads ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("lead_capture_complex")).toBeVisible();
+        await expect(guide.getByText("Buyer story:")).toBeVisible();
+
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
+        await wireIntegrations.click();
+
+        await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("civic permit status variant wires local integrations with buyer story", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Civic services & permits FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Permit status lookup/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire civic permits ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("permit_status_complex")).toBeVisible();
+        await expect(guide.getByText("Buyer story:")).toBeVisible();
+
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
+        await wireIntegrations.click();
+
+        await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("HR application status variant wires local integrations with buyer story", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Candidate FAQ & interview scheduling" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Application status lookup/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire hr recruiting ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("application_status_complex")).toBeVisible();
         await expect(guide.getByText("Buyer story:")).toBeVisible();
 
         const wireIntegrations = page.getByTestId("wire-local-integrations-button");

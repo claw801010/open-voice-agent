@@ -41,4 +41,4 @@
 
 **GTM demo:** [local-all-in-one-gtm-demo.md](local-all-in-one-gtm-demo.md) + `./scripts/gtm-local-all-in-one-demo.sh`
 
-**Buyer install + URLs:** [catalog-buyer-demo.md](catalog-buyer-demo.md) + `./scripts/catalog-buyer-demo.sh <slug>` (defaults in [buyer-demo-defaults.json](../buyer-demo-defaults.json))
+**Buyer install + URLs:** [catalog-buyer-demo.md](catalog-buyer-demo.md) + `./scripts/catalog-buyer-demo.sh <slug>` (defaults in [buyer-demo-defaults.json](../buyer-demo-defaults.json); hints in [buyer-demo-hints.json](../buyer-demo-hints.json))

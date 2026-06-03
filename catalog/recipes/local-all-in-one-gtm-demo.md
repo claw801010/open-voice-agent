@@ -54,6 +54,9 @@ See [prebuild-vertical-demo-matrix.md](prebuild-vertical-demo-matrix.md) for slu
 | CRM conversion | `b2b-saas-trial-nurture` | `conversion_complex` | Wire local integrations |
 | Banking balance | `financial-services-banking-faq` | `balance_lookup_complex` | Wire local integrations |
 | Guest waiver | `hospitality-travel-concierge` | `waiver_complex` | Wire local integrations |
+| Franchise leads | `smb-franchise-location-faq` | `lead_capture_complex` | Wire local integrations |
+| Civic permits | `public-sector-civic-services-faq` | `permit_status_complex` | Wire local integrations |
+| HR recruiting | `hr-staffing-recruiting-faq` | `application_status_complex` | Wire local integrations |
 
 ## Related recipes
 

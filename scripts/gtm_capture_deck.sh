@@ -127,6 +127,33 @@ if [[ -z "${E2E_GTM_HOSPITALITY_CALL_ID:-}" ]]; then
   fi
 fi
 
+if [[ -z "${E2E_GTM_SMB_CALL_ID:-}" ]]; then
+  echo "Seeding SMB franchise lead capture demo call…"
+  SMB_ID="$(_seed_catalog_demo_call smb-franchise-location-faq lead_capture_complex)"
+  if [[ -n "${SMB_ID}" ]]; then
+    export E2E_GTM_SMB_CALL_ID="${SMB_ID}"
+    echo "Using E2E_GTM_SMB_CALL_ID=${E2E_GTM_SMB_CALL_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_CIVIC_CALL_ID:-}" ]]; then
+  echo "Seeding civic permit status demo call…"
+  CIVIC_ID="$(_seed_catalog_demo_call public-sector-civic-services-faq permit_status_complex)"
+  if [[ -n "${CIVIC_ID}" ]]; then
+    export E2E_GTM_CIVIC_CALL_ID="${CIVIC_ID}"
+    echo "Using E2E_GTM_CIVIC_CALL_ID=${E2E_GTM_CIVIC_CALL_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_HR_CALL_ID:-}" ]]; then
+  echo "Seeding HR application status demo call…"
+  HR_ID="$(_seed_catalog_demo_call hr-staffing-recruiting-faq application_status_complex)"
+  if [[ -n "${HR_ID}" ]]; then
+    export E2E_GTM_HR_CALL_ID="${HR_ID}"
+    echo "Using E2E_GTM_HR_CALL_ID=${E2E_GTM_HR_CALL_ID}"
+  fi
+fi
+
 if [[ -z "${E2E_GTM_HTTP_TOOL_UUID:-}" ]]; then
   TOOL_UUID="$(PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/seed_gtm_http_tool.py" "${E2E_EMAIL}" 2>/dev/null || true)"
   if [[ -n "${TOOL_UUID}" ]]; then
@@ -216,6 +243,39 @@ if [[ -z "${E2E_GTM_HOSPITALITY_WORKFLOW_ID:-}" ]]; then
   fi
 fi
 
+if [[ -z "${E2E_GTM_SMB_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding SMB lead capture catalog workflow…"
+  SMB_WF="$(GTM_CATALOG_SLUG=smb-franchise-location-faq GTM_CATALOG_VARIANT=lead_capture_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${SMB_WF}" ]]; then
+    export E2E_GTM_SMB_WORKFLOW_ID="${SMB_WF}"
+    echo "Using E2E_GTM_SMB_WORKFLOW_ID=${E2E_GTM_SMB_WORKFLOW_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_CIVIC_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding civic permit lookup catalog workflow…"
+  CIVIC_WF="$(GTM_CATALOG_SLUG=public-sector-civic-services-faq GTM_CATALOG_VARIANT=permit_status_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${CIVIC_WF}" ]]; then
+    export E2E_GTM_CIVIC_WORKFLOW_ID="${CIVIC_WF}"
+    echo "Using E2E_GTM_CIVIC_WORKFLOW_ID=${E2E_GTM_CIVIC_WORKFLOW_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_HR_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding HR application status catalog workflow…"
+  HR_WF="$(GTM_CATALOG_SLUG=hr-staffing-recruiting-faq GTM_CATALOG_VARIANT=application_status_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${HR_WF}" ]]; then
+    export E2E_GTM_HR_WORKFLOW_ID="${HR_WF}"
+    echo "Using E2E_GTM_HR_WORKFLOW_ID=${E2E_GTM_HR_WORKFLOW_ID}"
+  fi
+fi
+
 export E2E_GTM_DECK_SCREENSHOTS=1
 export PLAYWRIGHT_SKIP_WEBSERVER=1
 
@@ -254,9 +314,24 @@ if [[ -n "${E2E_GTM_HOSPITALITY_WORKFLOW_ID:-}" ]]; then
   PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
     "${E2E_EMAIL}" "${E2E_GTM_HOSPITALITY_WORKFLOW_ID}" || true
 fi
+if [[ -n "${E2E_GTM_SMB_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking SMB lead capture workflow ${E2E_GTM_SMB_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_SMB_WORKFLOW_ID}" || true
+fi
+if [[ -n "${E2E_GTM_CIVIC_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking civic permit lookup workflow ${E2E_GTM_CIVIC_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_CIVIC_WORKFLOW_ID}" || true
+fi
+if [[ -n "${E2E_GTM_HR_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking HR application status workflow ${E2E_GTM_HR_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_HR_WORKFLOW_ID}" || true
+fi
 
-echo "Optional env: E2E_GTM_*_WORKFLOW_ID / E2E_GTM_*_CALL_ID (healthcare, retail, telecom, b2b, insurance, banking, hospitality)"
-echo "  sample=${E2E_GTM_SAMPLE_CALL_ID:-unset} retail=${E2E_GTM_RETAIL_CALL_ID:-unset} telecom=${E2E_GTM_TELECOM_CALL_ID:-unset} b2b=${E2E_GTM_B2B_CALL_ID:-unset} insurance=${E2E_GTM_INSURANCE_CALL_ID:-unset} banking=${E2E_GTM_BANKING_CALL_ID:-unset} hospitality=${E2E_GTM_HOSPITALITY_CALL_ID:-unset}"
+echo "Optional env: E2E_GTM_*_WORKFLOW_ID / E2E_GTM_*_CALL_ID (all 10 vertical buyer demos)"
+echo "  sample=${E2E_GTM_SAMPLE_CALL_ID:-unset} smb=${E2E_GTM_SMB_CALL_ID:-unset} civic=${E2E_GTM_CIVIC_CALL_ID:-unset} hr=${E2E_GTM_HR_CALL_ID:-unset}"
 
 cd ui
 npm run test:e2e -- gtm-deck

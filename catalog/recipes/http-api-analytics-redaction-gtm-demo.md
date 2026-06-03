@@ -57,6 +57,9 @@ Suggested filenames under **`docs/images/`** (add files when ready; safe to comm
 | `gtm-mk01-analytics-call-detail-insurance-claims.png` | Call detail — **`lookup_claim_status`** mapped_data (`E2E_GTM_INSURANCE_CALL_ID`). |
 | `gtm-mk01-analytics-call-detail-banking-balance.png` | Call detail — **`lookup_account_balance`** mapped_data (`E2E_GTM_BANKING_CALL_ID`). |
 | `gtm-mk01-analytics-call-detail-hospitality-waiver.png` | Call detail — **`apply_cancellation_waiver`** mapped_data (`E2E_GTM_HOSPITALITY_CALL_ID`). |
+| `gtm-mk01-analytics-call-detail-smb-leads.png` | Call detail — **`capture_lead_intent`** mapped_data (`E2E_GTM_SMB_CALL_ID`). |
+| `gtm-mk01-analytics-call-detail-civic-permits.png` | Call detail — **`lookup_permit_status`** mapped_data (`E2E_GTM_CIVIC_CALL_ID`). |
+| `gtm-mk01-analytics-call-detail-hr-recruiting.png` | Call detail — **`lookup_application_status`** mapped_data (`E2E_GTM_HR_CALL_ID`). |
 | `gtm-mk01-settings-local-payments-collections.png` | Settings — **Local demo payments** (collections buyer story). |
 | `gtm-mk01-settings-local-integrations-outage.png` | Settings — **Local demo integrations** (outage buyer story). |
 | `gtm-we01-settings-http-cache-policy.png` | Step **G** — Settings card + optional per-integration table (draft policy). |
@@ -72,6 +75,9 @@ Suggested filenames under **`docs/images/`** (add files when ready; safe to comm
 | `gtm-mk01-workflow-wire-insurance-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_INSURANCE_WORKFLOW_ID`, `claims_lookup_complex`). |
 | `gtm-mk01-workflow-wire-banking-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_BANKING_WORKFLOW_ID`, `balance_lookup_complex`). |
 | `gtm-mk01-workflow-wire-hospitality-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_HOSPITALITY_WORKFLOW_ID`, `waiver_complex`). |
+| `gtm-mk01-workflow-wire-smb-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_SMB_WORKFLOW_ID`, `lead_capture_complex`). |
+| `gtm-mk01-workflow-wire-civic-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_CIVIC_WORKFLOW_ID`, `permit_status_complex`). |
+| `gtm-mk01-workflow-wire-hr-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_HR_WORKFLOW_ID`, `application_status_complex`). |
 | `gtm-we01-voice-profiles-page.png` | **Voice profiles** list with recommended presets visible. |
 | `gtm-we01-voice-profiles-natural-delivery.png` | **Voice profiles** — **Authentic — natural** preset with **Natural delivery** editor expanded. |
 | `gtm-we01-workflow-editor-outcome-checklist.png` | Workflow editor right rail — **Outcome checklist** + catalog HTTP guide (`E2E_GTM_WORKFLOW_ID`). |

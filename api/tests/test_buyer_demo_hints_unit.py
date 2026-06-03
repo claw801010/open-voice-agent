@@ -30,3 +30,19 @@ def test_banking_and_hospitality_hints_have_scripts() -> None:
     assert banking["script"] == "buyer-demo-banking-balance.sh"
     assert hospitality["script"] == "buyer-demo-hospitality-waiver.sh"
     assert "PCI" in banking.get("compliance_note", "")
+
+
+def test_smb_civic_hr_hints_have_scripts() -> None:
+    hints = json.loads(HINTS_PATH.read_text(encoding="utf-8"))["by_slug"]
+    assert (
+        hints["smb-franchise-location-faq"]["variants"]["lead_capture_complex"]["script"]
+        == "buyer-demo-franchise-leads.sh"
+    )
+    assert (
+        hints["public-sector-civic-services-faq"]["variants"]["permit_status_complex"]["script"]
+        == "buyer-demo-civic-permits.sh"
+    )
+    assert (
+        hints["hr-staffing-recruiting-faq"]["variants"]["application_status_complex"]["script"]
+        == "buyer-demo-hr-recruiting.sh"
+    )
