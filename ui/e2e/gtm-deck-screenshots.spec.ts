@@ -249,6 +249,50 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-mk01-analytics-call-detail-banking-balance.png when banking call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_BANKING_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_BANKING_CALL_ID (balance_lookup_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_account_balance")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-banking-balance.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-hospitality-waiver.png when hospitality call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_HOSPITALITY_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_HOSPITALITY_CALL_ID (waiver_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("apply_cancellation_waiver")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-hospitality-waiver.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-mk01-settings-local-payments-collections.png", async ({ page }) => {
         await page.goto("/settings#local-payments");
 
@@ -446,6 +490,51 @@ test.describe("GTM deck screenshots (opt-in)", () => {
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-insurance-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-banking-integrations.png when banking workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_BANKING_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_BANKING_WORKFLOW_ID (balance_lookup_complex catalog workflow).",
+        );
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("balance_lookup_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-banking-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-hospitality-integrations.png when hospitality workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_HOSPITALITY_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_HOSPITALITY_WORKFLOW_ID (waiver_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("waiver_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-hospitality-integrations.png"),
             fullPage: false,
         });
     });

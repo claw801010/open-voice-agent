@@ -50,6 +50,10 @@ gtm-mk01-analytics-call-detail-retail-collections.png
 gtm-mk01-analytics-call-detail-telecom-outage.png
 gtm-mk01-analytics-call-detail-b2b-conversion.png
 gtm-mk01-analytics-call-detail-insurance-claims.png
+gtm-mk01-analytics-call-detail-banking-balance.png
+gtm-mk01-analytics-call-detail-hospitality-waiver.png
+gtm-mk01-workflow-wire-banking-integrations.png
+gtm-mk01-workflow-wire-hospitality-integrations.png
 gtm-mk01-settings-local-payments-collections.png
 gtm-mk01-workflow-wire-retail-payments.png
 gtm-mk01-workflow-wire-b2b-integrations.png

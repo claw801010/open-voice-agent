@@ -52,6 +52,8 @@ See [prebuild-vertical-demo-matrix.md](prebuild-vertical-demo-matrix.md) for slu
 | Collections | `retail-wismo-faq` | `collections_complex` | Wire local payments |
 | Outage status | `telecom-utilities-outage-faq` | `outage_status_complex` | Wire local integrations |
 | CRM conversion | `b2b-saas-trial-nurture` | `conversion_complex` | Wire local integrations |
+| Banking balance | `financial-services-banking-faq` | `balance_lookup_complex` | Wire local integrations |
+| Guest waiver | `hospitality-travel-concierge` | `waiver_complex` | Wire local integrations |
 
 ## Related recipes
 

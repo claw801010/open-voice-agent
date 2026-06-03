@@ -109,6 +109,24 @@ if [[ -z "${E2E_GTM_INSURANCE_CALL_ID:-}" ]]; then
   fi
 fi
 
+if [[ -z "${E2E_GTM_BANKING_CALL_ID:-}" ]]; then
+  echo "Seeding banking balance lookup demo call…"
+  BANKING_ID="$(_seed_catalog_demo_call financial-services-banking-faq balance_lookup_complex)"
+  if [[ -n "${BANKING_ID}" ]]; then
+    export E2E_GTM_BANKING_CALL_ID="${BANKING_ID}"
+    echo "Using E2E_GTM_BANKING_CALL_ID=${E2E_GTM_BANKING_CALL_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_HOSPITALITY_CALL_ID:-}" ]]; then
+  echo "Seeding hospitality waiver demo call…"
+  HOSPITALITY_ID="$(_seed_catalog_demo_call hospitality-travel-concierge waiver_complex)"
+  if [[ -n "${HOSPITALITY_ID}" ]]; then
+    export E2E_GTM_HOSPITALITY_CALL_ID="${HOSPITALITY_ID}"
+    echo "Using E2E_GTM_HOSPITALITY_CALL_ID=${E2E_GTM_HOSPITALITY_CALL_ID}"
+  fi
+fi
+
 if [[ -z "${E2E_GTM_HTTP_TOOL_UUID:-}" ]]; then
   TOOL_UUID="$(PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/seed_gtm_http_tool.py" "${E2E_EMAIL}" 2>/dev/null || true)"
   if [[ -n "${TOOL_UUID}" ]]; then
@@ -176,6 +194,28 @@ if [[ -z "${E2E_GTM_INSURANCE_WORKFLOW_ID:-}" ]]; then
   fi
 fi
 
+if [[ -z "${E2E_GTM_BANKING_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding banking balance lookup catalog workflow…"
+  BANKING_WF="$(GTM_CATALOG_SLUG=financial-services-banking-faq GTM_CATALOG_VARIANT=balance_lookup_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${BANKING_WF}" ]]; then
+    export E2E_GTM_BANKING_WORKFLOW_ID="${BANKING_WF}"
+    echo "Using E2E_GTM_BANKING_WORKFLOW_ID=${E2E_GTM_BANKING_WORKFLOW_ID}"
+  fi
+fi
+
+if [[ -z "${E2E_GTM_HOSPITALITY_WORKFLOW_ID:-}" ]]; then
+  echo "Seeding hospitality waiver catalog workflow…"
+  HOSPITALITY_WF="$(GTM_CATALOG_SLUG=hospitality-travel-concierge GTM_CATALOG_VARIANT=waiver_complex \
+    PYTHONPATH="${ROOT}" E2E_PASSWORD="${E2E_PASSWORD}" \
+    "${PYTHON}" "${ROOT}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" 2>/dev/null || true)"
+  if [[ -n "${HOSPITALITY_WF}" ]]; then
+    export E2E_GTM_HOSPITALITY_WORKFLOW_ID="${HOSPITALITY_WF}"
+    echo "Using E2E_GTM_HOSPITALITY_WORKFLOW_ID=${E2E_GTM_HOSPITALITY_WORKFLOW_ID}"
+  fi
+fi
+
 export E2E_GTM_DECK_SCREENSHOTS=1
 export PLAYWRIGHT_SKIP_WEBSERVER=1
 
@@ -204,9 +244,19 @@ if [[ -n "${E2E_GTM_INSURANCE_WORKFLOW_ID:-}" ]]; then
   PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
     "${E2E_EMAIL}" "${E2E_GTM_INSURANCE_WORKFLOW_ID}" || true
 fi
+if [[ -n "${E2E_GTM_BANKING_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking banking balance lookup workflow ${E2E_GTM_BANKING_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_BANKING_WORKFLOW_ID}" || true
+fi
+if [[ -n "${E2E_GTM_HOSPITALITY_WORKFLOW_ID:-}" ]]; then
+  echo "Unlocking hospitality waiver workflow ${E2E_GTM_HOSPITALITY_WORKFLOW_ID}…"
+  PYTHONPATH="${ROOT}" "${PYTHON}" "${ROOT}/scripts/gtm_unlock_workflow_editor.py" \
+    "${E2E_EMAIL}" "${E2E_GTM_HOSPITALITY_WORKFLOW_ID}" || true
+fi
 
-echo "Optional env: E2E_GTM_WORKFLOW_ID E2E_GTM_RETAIL_WORKFLOW_ID E2E_GTM_TELECOM_WORKFLOW_ID E2E_GTM_B2B_WORKFLOW_ID E2E_GTM_INSURANCE_WORKFLOW_ID"
-echo "  (override E2E_GTM_SAMPLE_CALL_ID=${E2E_GTM_SAMPLE_CALL_ID:-unset}, E2E_GTM_RETAIL_CALL_ID=${E2E_GTM_RETAIL_CALL_ID:-unset}, E2E_GTM_TELECOM_CALL_ID=${E2E_GTM_TELECOM_CALL_ID:-unset}, E2E_GTM_B2B_CALL_ID=${E2E_GTM_B2B_CALL_ID:-unset}, E2E_GTM_INSURANCE_CALL_ID=${E2E_GTM_INSURANCE_CALL_ID:-unset})"
+echo "Optional env: E2E_GTM_*_WORKFLOW_ID / E2E_GTM_*_CALL_ID (healthcare, retail, telecom, b2b, insurance, banking, hospitality)"
+echo "  sample=${E2E_GTM_SAMPLE_CALL_ID:-unset} retail=${E2E_GTM_RETAIL_CALL_ID:-unset} telecom=${E2E_GTM_TELECOM_CALL_ID:-unset} b2b=${E2E_GTM_B2B_CALL_ID:-unset} insurance=${E2E_GTM_INSURANCE_CALL_ID:-unset} banking=${E2E_GTM_BANKING_CALL_ID:-unset} hospitality=${E2E_GTM_HOSPITALITY_CALL_ID:-unset}"
 
 cd ui
 npm run test:e2e -- gtm-deck

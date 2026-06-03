@@ -99,6 +99,44 @@ _TRANSCRIPT_BY_SLUG: dict[str, list[dict[str, Any]]] = {
             "timestamp": "2026-04-20T12:00:01+00:00",
         },
     ],
+    "financial-services-banking-faq": [
+        {
+            "type": "rtf-user-transcription",
+            "payload": {
+                "final": True,
+                "text": "Can you tell me my checking balance? Account token ending 4421.",
+                "timestamp": "2026-04-20T12:00:00+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:00+00:00",
+        },
+        {
+            "type": "rtf-bot-text",
+            "payload": {
+                "text": "Your available balance is one thousand two hundred forty dollars and fifty cents as of today.",
+                "timestamp": "2026-04-20T12:00:01+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:01+00:00",
+        },
+    ],
+    "hospitality-travel-concierge": [
+        {
+            "type": "rtf-user-transcription",
+            "payload": {
+                "final": True,
+                "text": "I need to cancel my stay but the fee seems wrong. Can you waive it?",
+                "timestamp": "2026-04-20T12:00:00+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:00+00:00",
+        },
+        {
+            "type": "rtf-bot-text",
+            "payload": {
+                "text": "I can apply a seventy-five dollar cancellation credit to your reservation.",
+                "timestamp": "2026-04-20T12:00:01+00:00",
+            },
+            "timestamp": "2026-04-20T12:00:01+00:00",
+        },
+    ],
 }
 
 _DEFAULT_TRANSCRIPT = [

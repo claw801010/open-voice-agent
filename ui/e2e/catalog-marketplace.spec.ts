@@ -159,6 +159,39 @@ test.describe("Template catalog (authenticated)", () => {
         expect(href).toContain("catalog_variant_id=claims_lookup_complex");
         expect(href).toContain("tool_name=lookup_claim_status");
     });
+
+    test("banking pack card shows buyer demo hint and analytics proof", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const hint = page.getByTestId("catalog-buyer-demo-hint-financial-services-banking-faq");
+        await expect(hint).toBeVisible({ timeout: 15_000 });
+        await expect(hint).toContainText("tokenized balance");
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-financial-services-banking-faq");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=financial-services-banking-faq");
+        expect(href).toContain("catalog_variant_id=balance_lookup_complex");
+        expect(href).toContain("tool_name=lookup_account_balance");
+
+        const settingsLink = page.getByTestId("catalog-settings-local-financial-services-banking-faq");
+        await expect(settingsLink).toHaveAttribute("href", "/settings#local-integrations");
+    });
+
+    test("hospitality pack card shows buyer demo hint and analytics proof", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        const hint = page.getByTestId("catalog-buyer-demo-hint-hospitality-travel-concierge");
+        await expect(hint).toBeVisible({ timeout: 15_000 });
+        await expect(hint).toContainText("cancellation fee waiver");
+
+        const proofLink = page.getByTestId("catalog-analytics-proof-hospitality-travel-concierge");
+        await expect(proofLink).toBeVisible({ timeout: 15_000 });
+        const href = await proofLink.getAttribute("href");
+        expect(href).toContain("catalog_slug=hospitality-travel-concierge");
+        expect(href).toContain("catalog_variant_id=waiver_complex");
+        expect(href).toContain("tool_name=apply_cancellation_waiver");
+    });
 });
 
 test.describe("Install from catalog → editor (authenticated + API)", () => {
@@ -640,6 +673,76 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         const guide = page.getByTestId("catalog-guide-card");
         await expect(guide).toBeVisible({ timeout: 30_000 });
         await expect(guide.getByText("claims_lookup_complex")).toBeVisible();
+
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
+        await wireIntegrations.click();
+
+        await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("banking balance variant wires local integrations with buyer story", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Card & branch banking FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Tokenized balance lookup/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire banking balance ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("balance_lookup_complex")).toBeVisible();
+        await expect(guide.getByText("Buyer story:")).toBeVisible();
+
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });
+        await wireIntegrations.click();
+
+        await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("hospitality waiver variant wires local integrations with buyer story", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: wire-local flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+
+        const packCard = page.locator("article").filter({ hasText: "Travel concierge & booking FAQ" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await page.locator("#catalog-variant").click();
+        await page.getByRole("option", { name: /Cancellation fee waiver/i }).click();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await page.getByLabel("Workflow name").fill(`E2E wire hospitality waiver ${suffix}`);
+
+        await dialog.getByRole("button", { name: "Install", exact: true }).click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await page.getByRole("button", { name: "Customize" }).click();
+
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("waiver_complex")).toBeVisible();
+        await expect(guide.getByText("Buyer story:")).toBeVisible();
 
         const wireIntegrations = page.getByTestId("wire-local-integrations-button");
         await expect(wireIntegrations).toBeVisible({ timeout: 30_000 });

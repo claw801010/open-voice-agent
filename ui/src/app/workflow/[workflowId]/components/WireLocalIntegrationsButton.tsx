@@ -8,12 +8,16 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { wireLocalIntegrationsForWorkflow } from '@/lib/wireLocalIntegrations';
 
+import { WireLocalActionHint } from './WireLocalActionHint';
+
 type Props = {
     templateContextVariables: Record<string, string>;
     saveTemplateContextVariables: (vars: Record<string, string>) => Promise<void>;
     toolNames?: string[];
     size?: 'sm' | 'default';
     variant?: 'default' | 'secondary' | 'outline';
+    /** Buyer-demo hover tip (MK-01 catalog guide). */
+    hint?: string;
 };
 
 export function WireLocalIntegrationsButton({
@@ -22,18 +26,21 @@ export function WireLocalIntegrationsButton({
     toolNames,
     size = 'sm',
     variant = 'outline',
+    hint,
 }: Props) {
     const { getAccessToken } = useAuth();
     const [busy, setBusy] = useState(false);
 
     return (
-        <Button
-            type="button"
-            size={size}
-            variant={variant}
-            className="gap-1.5"
-            disabled={busy}
-            data-testid="wire-local-integrations-button"
+        <WireLocalActionHint hint={hint}>
+            <Button
+                type="button"
+                size={size}
+                variant={variant}
+                className="gap-1.5"
+                disabled={busy}
+                title={hint}
+                data-testid="wire-local-integrations-button"
             onClick={async () => {
                 setBusy(true);
                 try {
@@ -64,5 +71,6 @@ export function WireLocalIntegrationsButton({
             )}
             Wire local integrations
         </Button>
+        </WireLocalActionHint>
     );
 }

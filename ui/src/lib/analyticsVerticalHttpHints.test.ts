@@ -34,6 +34,22 @@ describe('verticalHttpProofHintForSlug', () => {
         expect(hint?.example_tool_names).toEqual(['lookup_claim_status']);
     });
 
+    it('banking balance variant focuses on lookup_account_balance', () => {
+        const hint = verticalHttpProofHintForSlug(
+            'financial-services-banking-faq',
+            'balance_lookup_complex',
+        );
+        expect(hint?.example_tool_names).toEqual(['lookup_account_balance']);
+    });
+
+    it('hospitality waiver variant focuses on apply_cancellation_waiver', () => {
+        const hint = verticalHttpProofHintForSlug(
+            'hospitality-travel-concierge',
+            'waiver_complex',
+        );
+        expect(hint?.example_tool_names).toEqual(['apply_cancellation_waiver']);
+    });
+
     it('falls back to pack hint for unknown variant ids', () => {
         const hint = verticalHttpProofHintForSlug('healthcare-clinic-screening', 'not-a-variant');
         expect(hint?.example_tool_names).toEqual(

@@ -55,6 +55,8 @@ Suggested filenames under **`docs/images/`** (add files when ready; safe to comm
 | `gtm-mk01-analytics-call-detail-telecom-outage.png` | Call detail — **`lookup_outage_status`** mapped_data (`E2E_GTM_TELECOM_CALL_ID`). |
 | `gtm-mk01-analytics-call-detail-b2b-conversion.png` | Call detail — **`update_crm_deal_stage`** mapped_data (`E2E_GTM_B2B_CALL_ID`). |
 | `gtm-mk01-analytics-call-detail-insurance-claims.png` | Call detail — **`lookup_claim_status`** mapped_data (`E2E_GTM_INSURANCE_CALL_ID`). |
+| `gtm-mk01-analytics-call-detail-banking-balance.png` | Call detail — **`lookup_account_balance`** mapped_data (`E2E_GTM_BANKING_CALL_ID`). |
+| `gtm-mk01-analytics-call-detail-hospitality-waiver.png` | Call detail — **`apply_cancellation_waiver`** mapped_data (`E2E_GTM_HOSPITALITY_CALL_ID`). |
 | `gtm-mk01-settings-local-payments-collections.png` | Settings — **Local demo payments** (collections buyer story). |
 | `gtm-mk01-settings-local-integrations-outage.png` | Settings — **Local demo integrations** (outage buyer story). |
 | `gtm-we01-settings-http-cache-policy.png` | Step **G** — Settings card + optional per-integration table (draft policy). |
@@ -68,6 +70,8 @@ Suggested filenames under **`docs/images/`** (add files when ready; safe to comm
 | `gtm-mk01-workflow-wire-telecom-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_TELECOM_WORKFLOW_ID`). |
 | `gtm-mk01-workflow-wire-b2b-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_B2B_WORKFLOW_ID`, `conversion_complex`). |
 | `gtm-mk01-workflow-wire-insurance-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_INSURANCE_WORKFLOW_ID`, `claims_lookup_complex`). |
+| `gtm-mk01-workflow-wire-banking-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_BANKING_WORKFLOW_ID`, `balance_lookup_complex`). |
+| `gtm-mk01-workflow-wire-hospitality-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_HOSPITALITY_WORKFLOW_ID`, `waiver_complex`). |
 | `gtm-we01-voice-profiles-page.png` | **Voice profiles** list with recommended presets visible. |
 | `gtm-we01-voice-profiles-natural-delivery.png` | **Voice profiles** — **Authentic — natural** preset with **Natural delivery** editor expanded. |
 | `gtm-we01-workflow-editor-outcome-checklist.png` | Workflow editor right rail — **Outcome checklist** + catalog HTTP guide (`E2E_GTM_WORKFLOW_ID`). |

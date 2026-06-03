@@ -18,6 +18,9 @@
 | [recipes/healthcare-ehr-all-in-one.md](recipes/healthcare-ehr-all-in-one.md) | **Healthcare EHR + messaging** — patient context, prior auth, chart sync, SMS/email, review inbox. |
 | [recipes/local-all-in-one-gtm-demo.md](recipes/local-all-in-one-gtm-demo.md) | **GTM walkthrough** — zero-`:8765` demo script + UI checklist for local stack. |
 | [recipes/prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) | **PREBUILD complete:** slug × variant × HTTP tool × local endpoint matrix for GTM / QA (all 10 verticals). |
+| [buyer-demo-defaults.json](buyer-demo-defaults.json) | Default **`catalog_variant_id`** + settings hash per slug for marketplace proof links and `./scripts/buyer-demo-*.sh`. |
+| [buyer-demo-hints.json](buyer-demo-hints.json) | **In-product tips** — buyer story, wire-local hover copy, compliance notes (marketplace + workflow guide). |
+| [recipes/catalog-buyer-demo.md](recipes/catalog-buyer-demo.md) | One-command buyer install + shortcut scripts. |
 | [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) | **OpenAPI draft** — contract for `GET /api/v1/analytics/insights`, `GET /api/v1/analytics/calls` + detail ([api/routes/analytics.py](../api/routes/analytics.py)); **HttpToolSpanSummary**; insights + `catalog_slug` filters. |
 | [packaged-workflows/looptalk-simulated-caller.json](packaged-workflows/looptalk-simulated-caller.json) | **System** adversary graph for LoopTalk quick-persona tests (not a marketplace vertical); installed per org as `[System] LoopTalk simulated caller` via `POST /api/v1/looptalk/test-sessions/quick-persona`. |
 | [PARTNER_REVIEW.md](PARTNER_REVIEW.md) | Partner / community **review checklist** (safety, PII, telephony compliance) before a pack is **published** — **MK-01-PARTNER**. |

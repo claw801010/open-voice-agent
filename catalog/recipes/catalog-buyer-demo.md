@@ -39,6 +39,16 @@ python3 scripts/gen_buyer_demo_shortcuts.py
 | `buyer-demo-civic-permits.sh` | `public-sector-civic-services-faq` | `permit_status_complex` |
 | `buyer-demo-hr-recruiting.sh` | `hr-staffing-recruiting-faq` | `application_status_complex` |
 
+## In-product hints (marketplace + editor)
+
+Story copy, wire-local hover tips, and compliance notes live in [buyer-demo-hints.json](../buyer-demo-hints.json). The UI surfaces them on:
+
+- **Template catalog** pack cards (`Buyer demo` strip + script hover)
+- **Install dialog** when you pick a complex variant
+- **Workflow editor** catalog guide card (`Buyer story` + wire button tooltips)
+
+Keep hints aligned when you change default variants in `buyer-demo-defaults.json`. CI: `test_buyer_demo_hints_unit.py`, `buyerDemoHints.test.ts`.
+
 ```bash
 # explicit variant:
 ./scripts/catalog-buyer-demo.sh healthcare-clinic-screening ehr_sync_complex

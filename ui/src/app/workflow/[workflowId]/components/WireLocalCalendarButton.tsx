@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { wireLocalCalendarForWorkflow } from '@/lib/wireLocalCalendar';
 
+import { WireLocalActionHint } from './WireLocalActionHint';
+
 type Props = {
     templateContextVariables: Record<string, string>;
     saveTemplateContextVariables: (vars: Record<string, string>) => Promise<void>;
     toolNames?: string[];
     size?: 'sm' | 'default';
     variant?: 'default' | 'secondary' | 'outline';
+    hint?: string;
 };
 
 export function WireLocalCalendarButton({
@@ -22,17 +25,20 @@ export function WireLocalCalendarButton({
     toolNames,
     size = 'sm',
     variant = 'secondary',
+    hint,
 }: Props) {
     const { getAccessToken } = useAuth();
     const [busy, setBusy] = useState(false);
 
     return (
-        <Button
-            type="button"
-            size={size}
-            variant={variant}
-            className="gap-1.5"
-            disabled={busy}
+        <WireLocalActionHint hint={hint}>
+            <Button
+                type="button"
+                size={size}
+                variant={variant}
+                className="gap-1.5"
+                disabled={busy}
+                title={hint}
             onClick={async () => {
                 setBusy(true);
                 try {
@@ -63,5 +69,6 @@ export function WireLocalCalendarButton({
             )}
             Wire local calendar
         </Button>
+        </WireLocalActionHint>
     );
 }

@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { wireLocalMessagingForWorkflow } from '@/lib/wireLocalMessaging';
 
+import { WireLocalActionHint } from './WireLocalActionHint';
+
 type Props = {
     templateContextVariables: Record<string, string>;
     saveTemplateContextVariables: (vars: Record<string, string>) => Promise<void>;
     toolNames?: string[];
     size?: 'sm' | 'default';
     variant?: 'default' | 'secondary' | 'outline';
+    hint?: string;
 };
 
 export function WireLocalMessagingButton({
@@ -22,18 +25,21 @@ export function WireLocalMessagingButton({
     toolNames,
     size = 'sm',
     variant = 'outline',
+    hint,
 }: Props) {
     const { getAccessToken } = useAuth();
     const [busy, setBusy] = useState(false);
 
     return (
-        <Button
-            type="button"
-            size={size}
-            variant={variant}
-            className="gap-1.5"
-            disabled={busy}
-            data-testid="wire-local-messaging-button"
+        <WireLocalActionHint hint={hint}>
+            <Button
+                type="button"
+                size={size}
+                variant={variant}
+                className="gap-1.5"
+                disabled={busy}
+                title={hint}
+                data-testid="wire-local-messaging-button"
             onClick={async () => {
                 setBusy(true);
                 try {
@@ -64,5 +70,6 @@ export function WireLocalMessagingButton({
             )}
             Wire local messaging
         </Button>
+        </WireLocalActionHint>
     );
 }

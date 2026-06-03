@@ -19,6 +19,8 @@ import {
     type LocalIntegrationsConfig,
 } from '@/lib/localIntegrationsApi';
 
+import { CatalogBuyerHintTip } from '@/components/catalog/CatalogBuyerHintTip';
+
 export function LocalIntegrationsSection() {
     const { getAccessToken } = useAuth();
     const [config, setConfig] = useState<LocalIntegrationsConfig | null>(null);
@@ -69,7 +71,17 @@ export function LocalIntegrationsSection() {
                 <code className="rounded bg-muted px-1 text-xs">run/local_integrations/</code> — no buyer API keys
                 required. Install-from-catalog auto-wires{' '}
                 <code className="rounded bg-muted px-1 text-xs">*_api_base_url</code> template vars, or use{' '}
-                <strong className="text-foreground">Wire local integrations</strong> on the workflow editor guide card.
+                <strong className="text-foreground">Wire local integrations</strong> on the workflow editor guide card
+                (hover buttons for per-vertical tips).
+            </p>
+            <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                <span>
+                    Banking balance · telecom outage · B2B CRM · insurance claims · hospitality waiver — see{' '}
+                    <code className="rounded bg-muted px-1">./scripts/buyer-demo-*.sh</code>
+                </span>
+                <CatalogBuyerHintTip
+                    tip="Tokenized balance and waiver demos use local integrations only — no PCI or CRS keys. Map response fields (available_balance, waiver_status) for analytics mapped_data proof."
+                />
             </p>
             <div className="rounded-md border border-border bg-muted/30 p-3 space-y-1 text-xs font-mono break-all max-h-40 overflow-y-auto">
                 {Object.entries(config.endpoints).map(([key, url]) => (

@@ -2,8 +2,13 @@
 
 import Link from 'next/link';
 
+import { CatalogBuyerHintTip } from '@/components/catalog/CatalogBuyerHintTip';
 import { buildCatalogGuideAnalyticsHref } from '@/lib/analyticsOverviewDeepLinks';
 import { verticalHttpProofHintForSlug } from '@/lib/analyticsVerticalHttpHints';
+import {
+    buyerDemoVariantHint,
+    buyerDemoWireModuleHint,
+} from '@/lib/catalog/buyerDemoHints';
 import { LOCAL_EHR_TOOL_SPECS } from '@/lib/localEhrToolDefinitions';
 import { LOCAL_INTEGRATION_TOOL_SPECS } from '@/lib/localIntegrationToolDefinitions';
 import { LOCAL_MESSAGING_TOOL_SPECS } from '@/lib/localMessagingToolDefinitions';
@@ -66,6 +71,7 @@ export function WorkflowVerticalGuideCard({
     const showIntegrationsWire = integrationTools.length > 0;
     const showEhrWire = ehrTools.length > 0;
     const showMessagingWire = messagingTools.length > 0;
+    const buyerHint = buyerDemoVariantHint(catalogSlug, catalogVariantId);
 
     return (
         <div className="mb-3 rounded-md border border-teal-500/25 bg-teal-500/5 p-3 text-[11px]" data-testid="catalog-guide-card">
@@ -77,6 +83,19 @@ export function WorkflowVerticalGuideCard({
                     </span>
                 ) : null}
             </p>
+            {buyerHint ? (
+                <p className="mt-1.5 flex flex-wrap items-start gap-x-2 gap-y-1 text-muted-foreground leading-snug">
+                    <span>
+                        <strong className="font-medium text-foreground">Buyer story:</strong>{' '}
+                        {buyerHint.story}
+                    </span>
+                    <CatalogBuyerHintTip
+                        tip={[buyerHint.analytics_tip, buyerHint.settings_tip, buyerHint.compliance_note]
+                            .filter(Boolean)
+                            .join(' ')}
+                    />
+                </p>
+            ) : null}
             <p className="mt-1 text-muted-foreground leading-snug">
                 Wire HTTP tools named{' '}
                 <strong className="font-medium text-foreground">{hint.example_tool_names.join(', ')}</strong> and map
@@ -92,6 +111,7 @@ export function WorkflowVerticalGuideCard({
                         templateContextVariables={templateContextVariables}
                         saveTemplateContextVariables={saveTemplateContextVariables}
                         toolNames={schedulingTools}
+                        hint={buyerDemoWireModuleHint(catalogSlug, catalogVariantId, 'calendar')}
                     />
                 ) : null}
                 {saveTemplateContextVariables && showPaymentsWire ? (
@@ -99,6 +119,7 @@ export function WorkflowVerticalGuideCard({
                         templateContextVariables={templateContextVariables}
                         saveTemplateContextVariables={saveTemplateContextVariables}
                         toolNames={paymentTools}
+                        hint={buyerDemoWireModuleHint(catalogSlug, catalogVariantId, 'payments')}
                     />
                 ) : null}
                 {saveTemplateContextVariables && showIntegrationsWire ? (
@@ -106,6 +127,7 @@ export function WorkflowVerticalGuideCard({
                         templateContextVariables={templateContextVariables}
                         saveTemplateContextVariables={saveTemplateContextVariables}
                         toolNames={integrationTools}
+                        hint={buyerDemoWireModuleHint(catalogSlug, catalogVariantId, 'integrations')}
                     />
                 ) : null}
                 {saveTemplateContextVariables && showEhrWire ? (
@@ -113,6 +135,7 @@ export function WorkflowVerticalGuideCard({
                         templateContextVariables={templateContextVariables}
                         saveTemplateContextVariables={saveTemplateContextVariables}
                         toolNames={ehrTools}
+                        hint={buyerDemoWireModuleHint(catalogSlug, catalogVariantId, 'ehr')}
                     />
                 ) : null}
                 {saveTemplateContextVariables && showMessagingWire ? (
@@ -120,6 +143,7 @@ export function WorkflowVerticalGuideCard({
                         templateContextVariables={templateContextVariables}
                         saveTemplateContextVariables={saveTemplateContextVariables}
                         toolNames={messagingTools}
+                        hint={buyerDemoWireModuleHint(catalogSlug, catalogVariantId, 'messaging')}
                     />
                 ) : null}
             </div>

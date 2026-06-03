@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { wireLocalPaymentsForWorkflow } from '@/lib/wireLocalPayments';
 
+import { WireLocalActionHint } from './WireLocalActionHint';
+
 type Props = {
     templateContextVariables: Record<string, string>;
     saveTemplateContextVariables: (vars: Record<string, string>) => Promise<void>;
     toolNames?: string[];
     size?: 'sm' | 'default';
     variant?: 'default' | 'secondary' | 'outline';
+    hint?: string;
 };
 
 export function WireLocalPaymentsButton({
@@ -22,18 +25,21 @@ export function WireLocalPaymentsButton({
     toolNames,
     size = 'sm',
     variant = 'outline',
+    hint,
 }: Props) {
     const { getAccessToken } = useAuth();
     const [busy, setBusy] = useState(false);
 
     return (
-        <Button
-            type="button"
-            size={size}
-            variant={variant}
-            className="gap-1.5"
-            disabled={busy}
-            data-testid="wire-local-payments-button"
+        <WireLocalActionHint hint={hint}>
+            <Button
+                type="button"
+                size={size}
+                variant={variant}
+                className="gap-1.5"
+                disabled={busy}
+                title={hint}
+                data-testid="wire-local-payments-button"
             onClick={async () => {
                 setBusy(true);
                 try {
@@ -64,5 +70,6 @@ export function WireLocalPaymentsButton({
             )}
             Wire local payments
         </Button>
+        </WireLocalActionHint>
     );
 }

@@ -31,6 +31,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Sparkline, sparklineValuesFromSeed } from '@/components/ui/sparkline';
+import { CatalogBuyerHintTip } from '@/components/catalog/CatalogBuyerHintTip';
 import { WORKFLOW_RUN_MODES } from '@/constants/workflowRunModes';
 import { useAuth } from '@/lib/auth';
 import {
@@ -47,6 +48,11 @@ import {
     buildMarketplaceSettingsHref,
     buyerDemoSettingsSectionLabel,
 } from '@/lib/catalog/buyerDemoDefaults';
+import {
+    buyerDemoCardTip,
+    buyerDemoScriptName,
+    buyerDemoVariantHint,
+} from '@/lib/catalog/buyerDemoHints';
 import {
     buildAnalyticsOverviewHref,
     buildMarketplaceAnalyticsProofHref,
@@ -493,6 +499,34 @@ export function MarketplaceCatalog({
                             </CardHeader>
                             <CardContent className="flex-1 space-y-2 text-sm text-muted-foreground">
                                 <p>{pack.summary}</p>
+                                {(() => {
+                                    const proofVariant = preferredCatalogProofVariantId(pack);
+                                    const cardTip = buyerDemoCardTip(pack.slug);
+                                    const variantHint = buyerDemoVariantHint(pack.slug, proofVariant);
+                                    const script = buyerDemoScriptName(pack.slug, proofVariant);
+                                    if (!cardTip && !variantHint) return null;
+                                    return (
+                                        <p
+                                            className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-teal-500/20 bg-teal-500/5 px-2 py-1.5 text-xs leading-snug"
+                                            data-testid={`catalog-buyer-demo-hint-${pack.slug}`}
+                                        >
+                                            <span className="font-medium text-foreground">Buyer demo</span>
+                                            {cardTip ? <span>{cardTip}</span> : null}
+                                            {variantHint && script ? (
+                                                <CatalogBuyerHintTip
+                                                    label={`./scripts/${script}`}
+                                                    tip={[
+                                                        variantHint.story,
+                                                        variantHint.wire_tip,
+                                                        variantHint.compliance_note,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' ')}
+                                                />
+                                            ) : null}
+                                        </p>
+                                    );
+                                })()}
                                 {pack.use_cases && pack.use_cases.length > 0 && (
                                     <p>
                                         <span className="font-medium text-foreground">Use cases: </span>
@@ -708,6 +742,44 @@ export function MarketplaceCatalog({
                                             </code>
                                             .
                                         </p>
+                                        {installVariantId && installTarget ? (
+                                            (() => {
+                                                const vHint = buyerDemoVariantHint(
+                                                    installTarget.slug,
+                                                    installVariantId,
+                                                );
+                                                const script = buyerDemoScriptName(
+                                                    installTarget.slug,
+                                                    installVariantId,
+                                                );
+                                                if (!vHint) return null;
+                                                return (
+                                                    <p
+                                                        className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-teal-500/20 bg-teal-500/5 px-2 py-1.5 text-xs leading-snug text-muted-foreground"
+                                                        data-testid="catalog-install-variant-hint"
+                                                    >
+                                                        <span>
+                                                            <strong className="font-medium text-foreground">
+                                                                Tip:
+                                                            </strong>{' '}
+                                                            {vHint.story}
+                                                        </span>
+                                                        {script ? (
+                                                            <CatalogBuyerHintTip
+                                                                label={`Run ./scripts/${script}`}
+                                                                tip={[
+                                                                    vHint.wire_tip,
+                                                                    vHint.analytics_tip,
+                                                                    vHint.compliance_note,
+                                                                ]
+                                                                    .filter(Boolean)
+                                                                    .join(' ')}
+                                                            />
+                                                        ) : null}
+                                                    </p>
+                                                );
+                                            })()
+                                        ) : null}
                                     </div>
                                 )}
                             <div className="space-y-2">
