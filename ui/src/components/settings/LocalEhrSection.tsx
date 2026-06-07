@@ -66,7 +66,7 @@ function syncStatusLabel(r: LocalEhrSyncRecord): string {
 }
 
 export function LocalEhrSection() {
-    const { getAccessToken } = useAuth();
+    const { getAccessToken, loading: authLoading } = useAuth();
     const [config, setConfig] = useState<LocalEhrConfig | null>(null);
     const [patients, setPatients] = useState<LocalEhrPatient[]>([]);
     const [records, setRecords] = useState<LocalEhrSyncRecord[]>([]);
@@ -75,9 +75,15 @@ export function LocalEhrSection() {
     const [pushing, setPushing] = useState(false);
 
     const refresh = useCallback(async () => {
+        if (authLoading) {
+            return;
+        }
+        const token = await getAccessToken();
+        if (!token) {
+            return;
+        }
         setLoading(true);
         try {
-            const token = await getAccessToken();
             const cfg = await fetchLocalEhrConfig(token);
             setConfig(cfg);
             if (cfg.enabled) {
@@ -99,7 +105,7 @@ export function LocalEhrSection() {
         } finally {
             setLoading(false);
         }
-    }, [getAccessToken]);
+    }, [getAccessToken, authLoading]);
 
     useEffect(() => {
         void refresh();
@@ -116,7 +122,7 @@ export function LocalEhrSection() {
         }
     };
 
-    if (loading) {
+    if (authLoading || loading) {
         return <p className="text-sm text-muted-foreground">Loading local EHR…</p>;
     }
 

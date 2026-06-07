@@ -159,4 +159,27 @@ else
 fi
 
 echo ""
+echo "== GET catalog voice-preview (retail + healthcare, no auth) =="
+for slug in retail-wismo-faq healthcare-clinic-screening; do
+  code_vp="$(curl -sS -o "/tmp/gtm-vp-${slug}.json" -w "%{http_code}" \
+    "${BASE}/api/v1/catalog/vertical-packs/${slug}/voice-preview" \
+    -H 'Accept: application/json')" || true
+  echo "  ${slug}/voice-preview → HTTP ${code_vp}"
+  if [[ "$code_vp" == "200" ]]; then
+    python3 -c "
+import json,sys
+d=json.load(open('/tmp/gtm-vp-${slug}.json'))
+assert d.get('preview_audio_url','').find('voice-preview/audio')>=0, d
+print('    profile:', d.get('profileId') or d.get('profile_id'))
+" || die "voice-preview JSON invalid for ${slug}"
+    code_audio="$(curl -sS -o /dev/null -w "%{http_code}" \
+      "${BASE}/api/v1/catalog/vertical-packs/${slug}/voice-preview/audio")" || true
+    echo "    audio → HTTP ${code_audio}"
+    [[ "$code_audio" == "200" ]] || die "voice-preview/audio failed for ${slug}"
+  else
+    die "voice-preview GET failed for ${slug}"
+  fi
+done
+
+echo ""
 echo "Done. UI demo steps: catalog/recipes/http-api-analytics-redaction-gtm-demo.md"

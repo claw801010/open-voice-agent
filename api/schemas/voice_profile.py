@@ -207,3 +207,4 @@ class CatalogVoicePreviewResponse(BaseModel):
     speech_settings: SpeechDeliverySettings
     recommended_voice_profile_id: str | None = None
     preview_audio_url: str | None = None
+    hosted_preview_is_silent_placeholder: bool | None = None

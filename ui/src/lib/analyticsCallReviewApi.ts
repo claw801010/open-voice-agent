@@ -24,7 +24,12 @@ export type CallReviewRecommendation = NonNullable<
 
 export type CallAiReview = CallAiReviewResponse;
 
-export type FollowUpItem = FollowUpItemResponse;
+/** API returns review fields before full OpenAPI regen. */
+export type FollowUpItem = FollowUpItemResponse & {
+    suggested_message?: string | null;
+    requires_review?: boolean;
+    status?: FollowUpItemResponse['status'] | 'approved' | 'edited' | 'dismissed';
+};
 
 function reviewClient(getAccessToken: () => Promise<string>) {
     const client = createClient(createClientConfig());

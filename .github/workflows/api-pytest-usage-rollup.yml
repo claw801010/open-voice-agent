@@ -8,6 +8,18 @@ on:
       - "catalog/vertical-packs.json"
       - "catalog/packaged-workflows/**"
       - "catalog/catalog-variant-http-tools.json"
+      - "catalog/buyer-demo-defaults.json"
+      - "catalog/buyer-demo-hints.json"
+      - "catalog/voice-previews/**"
+      - "scripts/check_buyer_demo_matrix.sh"
+      - "scripts/verify_mk01_buyer_shipped.sh"
+      - "scripts/gtm-local-all-in-one-demo.sh"
+      - "scripts/ensure_mk01_api_env.sh"
+      - "scripts/stage_mk01_split.sh"
+      - "scripts/split_mk01_pr_hints.sh"
+      - "scripts/run_all_buyer_demos.sh"
+      - "scripts/check_voice_previews_spoken.sh"
+      - "scripts/generate_catalog_voice_preview_audio.py"
       - ".github/workflows/api-pytest-usage-rollup.yml"
   pull_request:
     paths:
@@ -15,6 +27,18 @@ on:
       - "catalog/vertical-packs.json"
       - "catalog/packaged-workflows/**"
       - "catalog/catalog-variant-http-tools.json"
+      - "catalog/buyer-demo-defaults.json"
+      - "catalog/buyer-demo-hints.json"
+      - "catalog/voice-previews/**"
+      - "scripts/check_buyer_demo_matrix.sh"
+      - "scripts/verify_mk01_buyer_shipped.sh"
+      - "scripts/gtm-local-all-in-one-demo.sh"
+      - "scripts/ensure_mk01_api_env.sh"
+      - "scripts/stage_mk01_split.sh"
+      - "scripts/split_mk01_pr_hints.sh"
+      - "scripts/run_all_buyer_demos.sh"
+      - "scripts/check_voice_previews_spoken.sh"
+      - "scripts/generate_catalog_voice_preview_audio.py"
       - ".github/workflows/api-pytest-usage-rollup.yml"
 
 concurrency:
@@ -75,6 +99,10 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
         run: alembic upgrade head
 
+      - name: Catalog voice preview WAV inventory
+        run: |
+          python "${GITHUB_WORKSPACE}/scripts/generate_catalog_voice_preview_audio.py" --check
+
       - name: Run usage rollup, HTTP cache, MK-01 analytics units
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
@@ -83,10 +111,18 @@ jobs:
           ENABLE_LOCAL_SCHEDULING: "true"
           ENABLE_LOCAL_PAYMENTS: "true"
           ENABLE_LOCAL_INTEGRATIONS: "true"
+          ENABLE_LOCAL_EHR: "true"
+          ENABLE_LOCAL_MESSAGING: "true"
           LOG_LEVEL: WARNING
         run: |
           python -m pytest \
             tests/test_vertical_packs_catalog.py \
+            tests/test_buyer_demo_defaults_unit.py \
+            tests/test_buyer_demo_hints_unit.py \
+            tests/test_buyer_demo_matrix_unit.py \
+            tests/test_gtm_deck_inventory_sync_unit.py \
+            tests/test_gen_buyer_demo_shortcuts_unit.py \
+            tests/test_gtm_local_all_in_one_script_unit.py \
             tests/test_catalog_install.py \
             tests/test_install_from_catalog_routes.py \
             tests/test_voice_profiles.py \

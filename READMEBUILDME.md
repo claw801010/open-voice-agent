@@ -181,6 +181,7 @@ bash scripts/bootstrap_fresh_dev.sh
 - **Prerequisites:** [Python 3](https://www.python.org/) (`python3`), [Node + npm](https://nodejs.org/), and **Docker** with Compose (for Postgres on **5433**, Redis, Minio) unless you set **`SKIP_DOCKER=1`** and already run matching services.
 - **Creates** `venv/` (override with `VENV_DIR`), **copies** [api/.env.example](api/.env.example) → `api/.env` if missing, **runs** [scripts/migrate.sh](scripts/migrate.sh), **`npm ci`** + **`npm test`** in [ui/](ui/).
 - **Does not** start long-running API/UI processes (avoids port conflicts and matches how developers run hot-reload). **Optional voice/Pipecat:** after bootstrap, run [scripts/setup_pipecat.sh](scripts/setup_pipecat.sh) for full real-time audio stacks (not required to smoke-test the dashboard or HTTP tool editor).
+- **MK-01 local demos:** bootstrap appends `ENVIRONMENT=local` and `ENABLE_LOCAL_*` to `api/.env` when missing (calendar, payments, integrations, EHR, messaging).
 - **Skips** (environment variables): `SKIP_SUBMODULE=1`, `SKIP_DOCKER=1`, `SKIP_UI_TEST=1`, `SKIP_PIP=1` — see the script header.
 
 ### Windows and WSL (local dev)
@@ -349,6 +350,20 @@ Search-and-replace alone is insufficient; verify runtime behavior.
 - **Distribution:** embed widget ([api/routes/workflow_embed.py](api/routes/workflow_embed.py)) + optional public directory (growth bet #1 in READMEPLANNING).
 
 **Traceability:** track template and marketplace engineering under **MK-01** in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md); ship lines in [READMENEWRELEASES.md](READMENEWRELEASES.md).
+
+**Buyer demo quickstart (local, all-in-one):**
+
+```bash
+./scripts/check_buyer_demo_matrix.sh          # defaults, hints, 41 GTM PNGs, voice WAVs
+./scripts/gtm_buyer_demo_pack.sh --smoke-api  # curl local scheduling/payments/integrations/EHR
+E2E_EMAIL=… E2E_PASSWORD=… ./scripts/gtm_buyer_demo_pack.sh --seed-workflows --seed-calls
+./scripts/gtm_live_capture_ready.sh --run-capture   # API + UI up → real docs/images/gtm-*.png
+./scripts/start_mk01_gtm_stack.sh                   # Docker up → migrate/API/UI hints
+./scripts/start_ui_for_gtm.sh                       # UI on :3000 (standalone or dev) for Playwright
+./scripts/prepare_mk01_pr.sh                          # offline verify + git summary before PR
+```
+
+Recipe: [catalog/recipes/catalog-buyer-demo.md](catalog/recipes/catalog-buyer-demo.md).
 
 ---
 

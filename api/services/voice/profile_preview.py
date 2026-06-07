@@ -80,9 +80,21 @@ def catalog_voice_preview_audio_path(slug: str) -> Path:
     return VOICE_PREVIEWS_DIR / f"{slug}.wav"
 
 
+# Silent stdlib placeholders from generate_catalog_voice_preview_audio.py (~17.6 KB).
+SILENT_PLACEHOLDER_WAV_MAX_BYTES = 20_000
+
+
 def preview_audio_file_available(slug: str) -> bool:
     path = catalog_voice_preview_audio_path(slug)
     return path.is_file() and path.stat().st_size > 0
+
+
+def hosted_preview_is_silent_placeholder(slug: str) -> bool:
+    """True when on-disk WAV is the short silent placeholder (not ElevenLabs speech)."""
+    path = catalog_voice_preview_audio_path(slug)
+    if not path.is_file():
+        return False
+    return path.stat().st_size <= SILENT_PLACEHOLDER_WAV_MAX_BYTES
 
 
 def preview_script_for_catalog_slug(slug: str) -> str:
@@ -129,6 +141,9 @@ def build_catalog_voice_preview(slug: str, profile: dict[str, Any]) -> dict[str,
         "speech_settings": settings.model_dump(),
         "recommended_voice_profile_id": recommended_voice_profile_id_for_catalog_slug(slug),
         "preview_audio_url": hosted_preview_audio_api_path(slug)
+        if preview_audio_file_available(slug)
+        else None,
+        "hosted_preview_is_silent_placeholder": hosted_preview_is_silent_placeholder(slug)
         if preview_audio_file_available(slug)
         else None,
     }

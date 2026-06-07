@@ -42,6 +42,23 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         await loginAnalyticsE2E(page);
     });
 
+    test("writes gtm-mk01-workflow-catalog-marketplace.png", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByTestId("catalog-buyer-demo-hint-healthcare-clinic-screening")).toBeVisible({
+            timeout: 15_000,
+        });
+        await expect(page.getByTestId("catalog-buyer-demo-hint-retail-wismo-faq")).toBeVisible();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-catalog-marketplace.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-mk01-analytics-overview.png", async ({ page }) => {
         await page.goto(`/analytics?catalog_slug=${slug}&days=7`);
 
@@ -101,9 +118,14 @@ test.describe("GTM deck screenshots (opt-in)", () => {
 
         await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
 
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByText("healthcare-clinic-screening")).toBeVisible({ timeout: 30_000 });
+
         const timeline = page.getByTestId("live-workflow-timeline");
-        await timeline.scrollIntoViewIfNeeded();
         await expect(timeline).toBeVisible({ timeout: 30_000 });
+        await timeline.scrollIntoViewIfNeeded();
         await expect(timeline.getByText("Prior auth verified")).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
@@ -124,15 +146,38 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
-    test("writes gtm-mk01-settings-local-ehr-records.png", async ({ page }) => {
+    test("writes gtm-mk01-settings-local-ehr-records.png", async ({ page, request }) => {
+        const backendURL = process.env.E2E_BACKEND_URL || "http://127.0.0.1:8000";
+        const loginRes = await request.post(`${backendURL}/api/v1/auth/login`, {
+            data: {
+                email: process.env.E2E_EMAIL!.trim(),
+                password: process.env.E2E_PASSWORD!,
+            },
+        });
+        expect(loginRes.ok()).toBeTruthy();
+        const { token } = (await loginRes.json()) as { token: string };
+        await request.put(`${backendURL}/api/v1/local-ehr/connector`, {
+            headers: { Authorization: `Bearer ${token}` },
+            data: {
+                record_keeping_mode: "local_with_connector",
+                vendor: "athenahealth",
+                connector_sync_enabled: true,
+            },
+        });
+
         await page.goto("/settings");
 
         const ehrHeading = page.getByRole("heading", { name: "Local demo EHR" });
         await expect(ehrHeading).toBeVisible({ timeout: 30_000 });
         await ehrHeading.scrollIntoViewIfNeeded();
 
+        await page.waitForResponse(
+            (res) => res.url().includes("/local-ehr/config") && res.status() === 200,
+            { timeout: 30_000 },
+        );
+
         const section = page.getByTestId("local-ehr-section");
-        await expect(section).toBeVisible({ timeout: 15_000 });
+        await expect(section).toBeVisible({ timeout: 30_000 });
         await expect(section.getByTestId("local-ehr-mode-select")).toBeVisible();
 
         await page.screenshot({
@@ -175,7 +220,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("capture_payment_promise")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("capture_payment_promise").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-retail-collections.png"),
@@ -197,7 +242,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("lookup_outage_status")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_outage_status").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-telecom-outage.png"),
@@ -219,7 +264,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("update_crm_deal_stage")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("update_crm_deal_stage").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-b2b-conversion.png"),
@@ -241,7 +286,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("lookup_claim_status")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_claim_status").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-insurance-claims.png"),
@@ -263,7 +308,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("lookup_account_balance")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_account_balance").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-banking-balance.png"),
@@ -285,7 +330,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("apply_cancellation_waiver")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("apply_cancellation_waiver").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-hospitality-waiver.png"),
@@ -307,7 +352,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("capture_lead_intent")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("capture_lead_intent").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-smb-leads.png"),
@@ -329,7 +374,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("lookup_permit_status")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_permit_status").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-civic-permits.png"),
@@ -351,7 +396,7 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
         await traceHeading.scrollIntoViewIfNeeded();
         await expect(traceHeading).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText("lookup_application_status")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_application_status").first()).toBeVisible({ timeout: 15_000 });
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-hr-recruiting.png"),

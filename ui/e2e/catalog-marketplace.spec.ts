@@ -900,4 +900,101 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
 
         await expect(page.getByText("Local integrations wired")).toBeVisible({ timeout: 30_000 });
     });
+
+    test("all vertical pack cards expose buyer demo hint strip", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const slugs = [
+            "healthcare-clinic-screening",
+            "retail-wismo-faq",
+            "b2b-saas-trial-nurture",
+            "insurance-fnol-faq",
+            "hospitality-travel-concierge",
+            "financial-services-banking-faq",
+            "smb-franchise-location-faq",
+            "telecom-utilities-outage-faq",
+            "public-sector-civic-services-faq",
+            "hr-staffing-recruiting-faq",
+        ];
+
+        for (const slug of slugs) {
+            await expect(page.getByTestId(`catalog-buyer-demo-hint-${slug}`)).toBeVisible({
+                timeout: 15_000,
+            });
+        }
+    });
+
+    test("healthcare install dialog defaults to ehr_sync with buyer hint", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const packCard = page.locator("article").filter({ hasText: "Patient screening" });
+        await packCard.getByRole("button", { name: "Install into my org" }).click();
+
+        const dialog = page.getByRole("dialog");
+        await expect(dialog).toBeVisible({ timeout: 15_000 });
+        await expect(dialog.locator("#catalog-variant")).toContainText(/EHR/i);
+        await expect(dialog.getByTestId("catalog-install-variant-hint")).toBeVisible();
+        await expect(dialog.getByText(/chart to local EHR/i)).toBeVisible();
+    });
+
+    test("B2B LoopTalk dialog pre-selects conversion variant with buyer hint", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const packCard = page.locator("article").filter({ hasText: "Trial nurture" });
+        await packCard.getByRole("button", { name: "Try (LoopTalk persona)" }).click();
+
+        const dialog = page.getByRole("dialog", { name: "Try with LoopTalk (simulated caller)" });
+        await expect(dialog).toBeVisible({ timeout: 15_000 });
+        await expect(dialog.getByTestId("catalog-looptalk-variant-hint")).toBeVisible();
+        await expect(dialog.getByText(/CRM/i)).toBeVisible();
+        await expect(dialog.locator("#looptalk-variant")).toContainText(/Conversion/i);
+    });
+
+    test("retail voice preview dialog loads hosted audio", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const packCard = page.locator("article").filter({ hasText: "WISMO" });
+        await packCard.getByRole("button", { name: "Preview voice script" }).click();
+
+        const dialog = page.getByRole("dialog", { name: "Voice preview" });
+        await expect(dialog).toBeVisible({ timeout: 15_000 });
+        await expect(dialog.locator("audio")).toHaveAttribute("src", /voice-preview\/audio/, {
+            timeout: 15_000,
+        });
+        await expect(dialog.getByText(/Buyer story:/i)).toBeVisible();
+        await expect(dialog.getByText(/silent placeholder/i)).toBeVisible();
+    });
+
+    test("retail Try dialog pre-selects collections variant with buyer hint", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
+        const packCard = page.locator("article").filter({ hasText: "WISMO" });
+        await packCard.getByRole("button", { name: "Try (Web only)" }).click();
+
+        const dialog = page.getByRole("dialog", { name: "Try in browser (Web only)" });
+        await expect(dialog).toBeVisible({ timeout: 15_000 });
+        await expect(dialog.getByTestId("catalog-try-variant-hint")).toBeVisible();
+        await expect(dialog.getByText(/payment promise/i)).toBeVisible();
+        await expect(dialog.locator("#try-variant")).toContainText(/Collections/i);
+    });
 });

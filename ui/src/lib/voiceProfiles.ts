@@ -440,6 +440,7 @@ export type CatalogVoicePreview = {
     script: string;
     recommendedVoiceProfileId: string | null;
     previewAudioUrl: string | null;
+    hostedPreviewIsSilentPlaceholder: boolean;
 };
 
 export type VoiceProfilePreviewResult = {
@@ -459,6 +460,7 @@ type CatalogVoicePreviewApi = {
     script?: string;
     recommended_voice_profile_id?: string | null;
     preview_audio_url?: string | null;
+    hosted_preview_is_silent_placeholder?: boolean | null;
 };
 
 type VoiceProfilePreviewApi = {
@@ -471,6 +473,21 @@ type VoiceProfilePreviewApi = {
     audio_skip_reason?: string | null;
 };
 
+export function mapCatalogVoicePreviewApiResponse(
+    slug: string,
+    data: CatalogVoicePreviewApi,
+): CatalogVoicePreview {
+    return {
+        catalogSlug: String(data.catalog_slug ?? slug),
+        profileId: String(data.profile_id ?? ''),
+        profileName: String(data.profile_name ?? ''),
+        script: String(data.script ?? ''),
+        recommendedVoiceProfileId: data.recommended_voice_profile_id ?? null,
+        previewAudioUrl: data.preview_audio_url ?? null,
+        hostedPreviewIsSilentPlaceholder: Boolean(data.hosted_preview_is_silent_placeholder),
+    };
+}
+
 export async function fetchCatalogVoicePreview(slug: string): Promise<CatalogVoicePreview | null> {
     const base = getBackendPublicBaseUrl();
     try {
@@ -480,14 +497,7 @@ export async function fetchCatalogVoicePreview(slug: string): Promise<CatalogVoi
         );
         if (!res.ok) return null;
         const data = (await res.json()) as CatalogVoicePreviewApi;
-        return {
-            catalogSlug: String(data.catalog_slug ?? slug),
-            profileId: String(data.profile_id ?? ''),
-            profileName: String(data.profile_name ?? ''),
-            script: String(data.script ?? ''),
-            recommendedVoiceProfileId: data.recommended_voice_profile_id ?? null,
-            previewAudioUrl: data.preview_audio_url ?? null,
-        };
+        return mapCatalogVoicePreviewApiResponse(slug, data);
     } catch {
         return null;
     }

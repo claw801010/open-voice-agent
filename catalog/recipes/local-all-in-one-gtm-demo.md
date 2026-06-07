@@ -5,7 +5,7 @@
 
 ## Story arc
 
-1. **Zero external deps** — Dograh runs booking, payments, and buyer integrations in-process (`ENABLE_LOCAL_*` flags; default on in `ENVIRONMENT=local`).
+1. **Zero external deps** — Dograh runs booking, payments, integrations, EHR, and messaging in-process (`ENABLE_LOCAL_*` flags; default on in `ENVIRONMENT=local`).
 2. **Install** — Template catalog → complex variant (e.g. telecom `outage_status_complex`); **`install-from-catalog`** auto-wires `*_api_base_url` template vars.
 3. **Wire** — Workflow editor catalog guide card → **Wire local calendar / payments / integrations** (one click each).
 4. **Prove** — Web test call → **Analytics → call detail** shows HTTP spans + **`mapped_data`**.
@@ -14,7 +14,7 @@
 ## Prerequisites
 
 - API + UI running locally or on staging.
-- `api/.env`: `ENVIRONMENT=local`, `ENABLE_LOCAL_SCHEDULING=true`, `ENABLE_LOCAL_PAYMENTS=true`, `ENABLE_LOCAL_INTEGRATIONS=true`.
+- `api/.env`: run **`./scripts/ensure_mk01_api_env.sh`** (or bootstrap) for `ENVIRONMENT=local` and all `ENABLE_LOCAL_*` flags (scheduling, payments, integrations, EHR, messaging).
 - Signed-in operator account for UI steps.
 
 ## API smoke (no auth)
@@ -26,7 +26,7 @@ export GTM_DEMO_BEARER_TOKEN='…'
 ./scripts/gtm-local-all-in-one-demo.sh
 ```
 
-Exercises: config endpoints, book + reschedule, payment promise, outage status lookup — all booking-shaped JSON for **`response_mapping`**.
+Exercises: config endpoints, book + reschedule, payment promise, outage status, **EHR patient context + prior auth**, **SMS log**, and all **10-vertical** integration POSTs — booking-shaped JSON for **`response_mapping`**.
 
 ## UI checklist
 
@@ -67,11 +67,14 @@ See [prebuild-vertical-demo-matrix.md](prebuild-vertical-demo-matrix.md) for slu
 
 ## Screenshot (deck)
 
-Capture deck PNGs with `./scripts/gtm_capture_deck.sh` (`E2E_GTM_DECK_SCREENSHOTS=1`):
+Preflight + live capture: `./scripts/gtm_live_capture_ready.sh` (add `--run-capture` when API/UI are up).
+
+Capture deck PNGs with `./scripts/gtm_capture_deck.sh` (`E2E_GTM_DECK_SCREENSHOTS=1`) — **41 frames** (see [http-api-analytics-redaction-gtm-demo.md](http-api-analytics-redaction-gtm-demo.md)):
 
 | File | What to show |
 |------|----------------|
 | `gtm-mk01-settings-local-all-in-one.png` | **Settings** — local demo calendar + payments + integrations cards |
+| `gtm-mk01-workflow-catalog-marketplace.png` | **Template catalog** — pack cards with buyer-demo hint strips |
 | `gtm-mk01-workflow-catalog-guide-wire-local.png` | Workflow editor — catalog guide **Wire local** buttons (needs seeded catalog workflow) |
 | `gtm-mk01-workflow-wire-ehr-messaging.png` | Workflow editor — **Wire local EHR** + **Wire local messaging** (`ehr_sync_complex`) |
 | `gtm-mk01-workflow-wire-retail-payments.png` | Workflow editor — **Wire local payments** (`collections_complex`) |

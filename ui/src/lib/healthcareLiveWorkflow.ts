@@ -58,7 +58,13 @@ export function buildHealthcareLiveWorkflowSteps(detail: AnalyticsCallDetail): L
         {
             id: 'call-in',
             label: 'Patient calls in',
-            detail: detail.outcomes?.customer_outcome ?? detail.outcomes?.outcome_key ?? undefined,
+            detail:
+                (typeof detail.outcomes?.customer_outcome === 'string'
+                    ? detail.outcomes.customer_outcome
+                    : undefined) ??
+                (typeof detail.outcomes?.outcome_key === 'string'
+                    ? detail.outcomes.outcome_key
+                    : undefined),
             status: 'done',
         },
     ];

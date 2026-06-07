@@ -10,6 +10,12 @@ on:
       - "scripts/ci_promote_oss_user_superuser.py"
       - "scripts/gtm_capture_deck.sh"
       - "scripts/seed_gtm_catalog_workflow.py"
+      - "scripts/seed_gtm_all_buyer_demo_calls.py"
+      - "scripts/seed_gtm_all_buyer_workflows.py"
+      - "ui/e2e/analytics-buyer-demo-calls.spec.ts"
+      - "scripts/check_buyer_demo_matrix.sh"
+      - "scripts/gtm_buyer_demo_pack.sh"
+      - "scripts/gtm-local-all-in-one-demo.sh"
       - ".github/workflows/ui-playwright.yml"
   pull_request:
     paths:
@@ -19,6 +25,12 @@ on:
       - "scripts/ci_promote_oss_user_superuser.py"
       - "scripts/gtm_capture_deck.sh"
       - "scripts/seed_gtm_catalog_workflow.py"
+      - "scripts/seed_gtm_all_buyer_demo_calls.py"
+      - "scripts/seed_gtm_all_buyer_workflows.py"
+      - "ui/e2e/analytics-buyer-demo-calls.spec.ts"
+      - "scripts/check_buyer_demo_matrix.sh"
+      - "scripts/gtm_buyer_demo_pack.sh"
+      - "scripts/gtm-local-all-in-one-demo.sh"
       - ".github/workflows/ui-playwright.yml"
 
 concurrency:
@@ -116,6 +128,8 @@ jobs:
           ENABLE_LOCAL_SCHEDULING: "true"
           ENABLE_LOCAL_PAYMENTS: "true"
           ENABLE_LOCAL_INTEGRATIONS: "true"
+          ENABLE_LOCAL_EHR: "true"
+          ENABLE_LOCAL_MESSAGING: "true"
           MK01_ANALYTICS_LOCAL_E2E_STRICT_REDACTION_RBAC: "1"
           MK01_ANALYTICS_REDACTION_DISABLE_REQUIRES_SUPERUSER: "1"
           MINIO_PUBLIC_ENDPOINT: http://127.0.0.1:9000
@@ -139,21 +153,21 @@ jobs:
           echo "E2E_PASSWORD=PlaywrightE2E-test-99" >> "${GITHUB_ENV}"
           echo "E2E_STRICT_REDACTION_RBAC=1" >> "${GITHUB_ENV}"
 
-      - name: Seed analytics demo call for call-detail E2E
+      - name: Seed buyer-demo analytics calls (all verticals)
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
         run: |
-          CALL_ID=$(python "${GITHUB_WORKSPACE}/scripts/seed_gtm_analytics_demo_call.py")
-          echo "Seeded call_id=${CALL_ID}"
-          echo "E2E_GTM_SAMPLE_CALL_ID=${CALL_ID}" >> "${GITHUB_ENV}"
+          python "${GITHUB_WORKSPACE}/scripts/seed_gtm_all_buyer_demo_calls.py" "${E2E_EMAIL}" --github-env >> "${GITHUB_ENV}" || true
 
-      - name: Seed catalog workflow for wire-local / voice E2E
+      - name: Seed buyer-demo catalog workflows (all verticals)
         run: |
-          WF_ID=$(python "${GITHUB_WORKSPACE}/scripts/seed_gtm_catalog_workflow.py" "${E2E_EMAIL}" || true)
-          if [ -n "${WF_ID}" ]; then
-            echo "E2E_GTM_WORKFLOW_ID=${WF_ID}" >> "${GITHUB_ENV}"
-            python "${GITHUB_WORKSPACE}/scripts/gtm_unlock_workflow_editor.py" "${E2E_EMAIL}" "${WF_ID}" || true
-          fi
+          python "${GITHUB_WORKSPACE}/scripts/seed_gtm_all_buyer_workflows.py" "${E2E_EMAIL}" --github-env >> "${GITHUB_ENV}" || true
+          for wf in E2E_GTM_WORKFLOW_ID E2E_GTM_RETAIL_WORKFLOW_ID E2E_GTM_TELECOM_WORKFLOW_ID E2E_GTM_B2B_WORKFLOW_ID E2E_GTM_INSURANCE_WORKFLOW_ID E2E_GTM_BANKING_WORKFLOW_ID E2E_GTM_HOSPITALITY_WORKFLOW_ID E2E_GTM_SMB_WORKFLOW_ID E2E_GTM_CIVIC_WORKFLOW_ID E2E_GTM_HR_WORKFLOW_ID; do
+            id="${!wf:-}"
+            if [ -n "$id" ]; then
+              python "${GITHUB_WORKSPACE}/scripts/gtm_unlock_workflow_editor.py" "${E2E_EMAIL}" "$id" || true
+            fi
+          done
 
       - uses: actions/setup-node@v4
         with:

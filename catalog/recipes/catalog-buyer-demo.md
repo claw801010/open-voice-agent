@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- API running (`ENABLE_LOCAL_SCHEDULING`, `ENABLE_LOCAL_PAYMENTS`, `ENABLE_LOCAL_INTEGRATIONS` on for wire-local demos)
+- API running (`./scripts/ensure_mk01_api_env.sh` — scheduling, payments, integrations, EHR, messaging)
 - UI running
 - Demo org credentials (`E2E_EMAIL` / `E2E_PASSWORD`)
 
@@ -24,6 +24,7 @@ Regenerate shortcuts after editing [buyer-demo-defaults.json](../buyer-demo-defa
 
 ```bash
 python3 scripts/gen_buyer_demo_shortcuts.py
+python3 scripts/gen_buyer_demo_shortcuts.py --check   # CI / verify_mk01_buyer_shipped
 ```
 
 | Shortcut script | Slug | Default variant |
@@ -44,10 +45,51 @@ python3 scripts/gen_buyer_demo_shortcuts.py
 Story copy, wire-local hover tips, and compliance notes live in [buyer-demo-hints.json](../buyer-demo-hints.json). The UI surfaces them on:
 
 - **Template catalog** pack cards (`Buyer demo` strip + script hover)
-- **Install dialog** when you pick a complex variant
+- **Install / Try (Web) / LoopTalk** dialogs when you pick a complex variant (defaults to [buyer-demo-defaults.json](../buyer-demo-defaults.json))
 - **Workflow editor** catalog guide card (`Buyer story` + wire button tooltips)
 
-Keep hints aligned when you change default variants in `buyer-demo-defaults.json`. CI: `test_buyer_demo_hints_unit.py`, `buyerDemoHints.test.ts`.
+Keep hints aligned when you change default variants in `buyer-demo-defaults.json`. CI: `test_buyer_demo_hints_unit.py`, `buyerDemoHints.test.ts`, `./scripts/check_buyer_demo_matrix.sh`.
+
+**Matrix check (no API):**
+
+```bash
+./scripts/check_buyer_demo_matrix.sh
+./scripts/verify_mk01_buyer_shipped.sh   # matrix + pytest + vitest buyer hints
+```
+
+**All verticals (dry run or batch install):**
+
+```bash
+./scripts/run_all_buyer_demos.sh
+BUYER_DEMO_INSTALL=1 E2E_EMAIL=… E2E_PASSWORD=… ./scripts/run_all_buyer_demos.sh
+```
+
+**PR prep (Incomplete until merged):**
+
+```bash
+./scripts/prepare_mk01_pr.sh              # offline verify + git summary
+./scripts/prepare_mk01_pr.sh --split-hints
+./scripts/prepare_mk01_pr.sh --stage 1    # git add split PR 1 … 4 or all
+```
+
+**Full GTM / buyer prep (checks + optional API seed + capture):**
+
+```bash
+./scripts/gtm_buyer_demo_pack.sh
+./scripts/gtm_buyer_demo_pack.sh --smoke-api
+E2E_EMAIL=… ./scripts/gtm_buyer_demo_pack.sh --seed-calls
+./scripts/gtm_buyer_demo_pack.sh --capture   # runs gtm_capture_deck.sh
+```
+
+Seed all analytics demo calls for Playwright: `python scripts/seed_gtm_all_buyer_demo_calls.py "$E2E_EMAIL" --github-env`
+
+Seed all catalog workflows (install-from-catalog per vertical): `E2E_PASSWORD=… python scripts/seed_gtm_all_buyer_workflows.py "$E2E_EMAIL" --export-lines`
+
+**Voice previews (hosted WAV per slug):**
+
+```bash
+./scripts/regen_catalog_voice_previews.sh
+```
 
 ```bash
 # explicit variant:
@@ -105,6 +147,7 @@ On **Template catalog**, each pack card links:
 
 ## Related
 
+- [buyer-demo-gtm-day.md](buyer-demo-gtm-day.md) — **45-minute SE runbook** (verify → stack → seed → walkthrough)
 - [local-all-in-one-gtm-demo.md](local-all-in-one-gtm-demo.md)
 - [prebuild-vertical-demo-matrix.md](prebuild-vertical-demo-matrix.md)
 - [http-api-analytics-redaction-gtm-demo.md](http-api-analytics-redaction-gtm-demo.md)

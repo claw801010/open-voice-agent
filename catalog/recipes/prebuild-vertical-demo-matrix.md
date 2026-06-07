@@ -39,6 +39,8 @@
 
 **Workflow editor:** use **Wire local calendar / payments / integrations** on the catalog guide card after install.
 
-**GTM demo:** [local-all-in-one-gtm-demo.md](local-all-in-one-gtm-demo.md) + `./scripts/gtm-local-all-in-one-demo.sh`
+**GTM demo:** [local-all-in-one-gtm-demo.md](local-all-in-one-gtm-demo.md) + `./scripts/gtm-local-all-in-one-demo.sh` (smokes scheduling, payments, EHR, messaging, and all buyer-primary integration POSTs)
 
 **Buyer install + URLs:** [catalog-buyer-demo.md](catalog-buyer-demo.md) + `./scripts/catalog-buyer-demo.sh <slug>` (defaults in [buyer-demo-defaults.json](../buyer-demo-defaults.json); hints in [buyer-demo-hints.json](../buyer-demo-hints.json))
+
+**Matrix CI (no API):** `./scripts/check_buyer_demo_matrix.sh`

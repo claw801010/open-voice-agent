@@ -34,21 +34,47 @@ exec "$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)/catalog-buyer-demo.sh" "{s
 """
 
 
+def _expected_script(slug: str, variant: str, title: str, script_name: str) -> str:
+    return _TEMPLATE.format(title=title, variant=variant, script_name=script_name, slug=slug)
+
+
 def main() -> int:
+    import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="Generate or verify buyer-demo shortcut scripts")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Exit 1 if any scripts/buyer-demo-*.sh drifts from buyer-demo-defaults.json",
+    )
+    args = parser.parse_args()
+
     defaults = json.loads(DEFAULTS_PATH.read_text(encoding="utf-8")).get("defaults") or {}
     packs = {
         p["slug"]: p.get("display_name") or p["slug"]
         for p in json.loads(PACKS_PATH.read_text(encoding="utf-8")).get("packs", [])
     }
+
+    if args.check:
+        drift: list[str] = []
+        for slug, variant in defaults.items():
+            script_name = SHORT_NAMES.get(slug, f"buyer-demo-{slug}.sh")
+            path = ROOT / "scripts" / script_name
+            title = packs.get(slug, slug)
+            expected = _expected_script(slug, variant, title, script_name)
+            if not path.is_file() or path.read_text(encoding="utf-8") != expected:
+                drift.append(script_name)
+        if drift:
+            print("Buyer-demo shortcut drift (run without --check to regen):", ", ".join(drift), file=sys.stderr)
+            return 1
+        print(f"OK — all {len(defaults)} buyer-demo shortcut scripts match defaults")
+        return 0
+
     for slug, variant in defaults.items():
         script_name = SHORT_NAMES.get(slug, f"buyer-demo-{slug}.sh")
         title = packs.get(slug, slug)
-        content = _TEMPLATE.format(
-            title=title,
-            variant=variant,
-            script_name=script_name,
-            slug=slug,
-        )
+        content = _expected_script(slug, variant, title, script_name)
         path = ROOT / "scripts" / script_name
         path.write_text(content, encoding="utf-8")
         path.chmod(0o755)

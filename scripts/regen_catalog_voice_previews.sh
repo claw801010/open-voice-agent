@@ -38,5 +38,8 @@ fi
 "${PYTHON}" "${ROOT}/scripts/generate_catalog_voice_preview_audio.py" "${ARGS[@]}"
 
 echo ""
+"${PYTHON}" "${ROOT}/scripts/generate_catalog_voice_preview_audio.py" --report
+
+echo ""
 echo "Done. Hosted at GET /api/v1/catalog/vertical-packs/{slug}/voice-preview/audio"
-echo "Verify: ${PYTHON} scripts/generate_catalog_voice_preview_audio.py --check"
+"${PYTHON}" "${ROOT}/scripts/generate_catalog_voice_preview_audio.py" --check

@@ -73,6 +73,9 @@ else
   info "api/.env already present"
 fi
 
+info "Ensuring MK-01 local demo flags in api/.env…"
+bash "$REPO_ROOT/scripts/ensure_mk01_api_env.sh"
+
 # --- 4) Local infra (Postgres, Redis, Minio) via compose -------------------
 DOCKER_COMPOSE=(docker compose)
 if ! "${DOCKER_COMPOSE[@]}" version >/dev/null 2>&1; then
@@ -140,6 +143,9 @@ Next (two terminals, from repository root, with venv active):
 Smoke:
   curl -sS http://127.0.0.1:8000/api/v1/health
   Open http://localhost:3000 and sign in; open an HTTP API tool: Test API Call + call context pickers.
+
+MK-01 buyer demo (offline, optional):
+  ./scripts/verify_mk01_buyer_shipped.sh
 
 If the OpenAPI spec changed, regenerate the client (API must be up):
   cd ui && npm run generate-client

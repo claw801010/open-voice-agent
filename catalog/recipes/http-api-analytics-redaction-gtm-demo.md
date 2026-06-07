@@ -67,6 +67,7 @@ Suggested filenames under **`docs/images/`** (add files when ready; safe to comm
 | `gtm-we01-http-tool-happy-path.png` | Step **A** — HTTP tool editor with **Happy path** checklist visible (auto-seeded **`GTM book_slot demo`** via [gtm_capture_deck.sh](../../scripts/gtm_capture_deck.sh) or set **`E2E_GTM_HTTP_TOOL_UUID`**). |
 | `gtm-we01-workflow-get-started.png` | **Voice Agents** hub — **Get started** cards (catalog / builder / import / blank). |
 | `gtm-mk01-workflow-import-dialog.png` | **Import external flow** dialog on `/workflow`. |
+| `gtm-mk01-workflow-catalog-marketplace.png` | **Template catalog** — pack cards with buyer-demo hint strips (no extra env). |
 | `gtm-mk01-workflow-catalog-guide-wire-local.png` | Workflow editor — catalog guide **Wire local** buttons (`E2E_GTM_WORKFLOW_ID`). |
 | `gtm-mk01-workflow-wire-ehr-messaging.png` | Workflow editor — **Wire local EHR** + messaging (`E2E_GTM_WORKFLOW_ID`). |
 | `gtm-mk01-workflow-wire-retail-payments.png` | Workflow editor — **Wire local payments** (`E2E_GTM_RETAIL_WORKFLOW_ID`). |

@@ -154,6 +154,11 @@ def main() -> int:
         action="store_true",
         help="Exit 1 if any catalog slug is missing catalog/voice-previews/{slug}.wav",
     )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="Print per-slug WAV size and silent vs spoken classification",
+    )
     args = parser.parse_args()
     slugs = args.slug or _catalog_slugs()
     if not slugs:
@@ -166,6 +171,33 @@ def main() -> int:
             print("Missing voice preview WAVs:", ", ".join(missing), file=sys.stderr)
             return 1
         print(f"OK — all {len(slugs)} catalog voice preview WAVs present")
+        return 0
+
+    if args.report:
+        sys.path.insert(0, str(_REPO))
+        from api.services.voice.profile_preview import (
+            SILENT_PLACEHOLDER_WAV_MAX_BYTES,
+            hosted_preview_is_silent_placeholder,
+        )
+
+        silent_count = 0
+        for slug in slugs:
+            wav = _OUT_DIR / f"{slug}.wav"
+            if not wav.is_file():
+                print(f"{slug}: missing")
+                continue
+            size = wav.stat().st_size
+            kind = (
+                "silent-placeholder"
+                if hosted_preview_is_silent_placeholder(slug)
+                else "spoken-or-custom"
+            )
+            if kind == "silent-placeholder":
+                silent_count += 1
+            print(f"{slug}: {size} bytes ({kind})")
+        print(
+            f"Summary: {len(slugs)} slugs, {silent_count} silent (≤{SILENT_PLACEHOLDER_WAV_MAX_BYTES} bytes)"
+        )
         return 0
 
     _OUT_DIR.mkdir(parents=True, exist_ok=True)

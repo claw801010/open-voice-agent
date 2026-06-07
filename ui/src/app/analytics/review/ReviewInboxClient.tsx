@@ -31,7 +31,7 @@ function channelIcon(actionType: string) {
 }
 
 export function ReviewInboxClient() {
-    const { user, authLoading, getAccessToken } = useAuth();
+    const { user, loading: authLoading, getAccessToken } = useAuth();
     const [tab, setTab] = useState<'pending' | 'approved' | 'edited' | 'dismissed'>('pending');
     const [items, setItems] = useState<ReviewInboxItem[]>([]);
     const [pendingCount, setPendingCount] = useState(0);

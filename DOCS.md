@@ -12,6 +12,7 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | **API, MCP, IDE, agents** | [READMEADK.md](READMEADK.md) | [READMELEARNME.md](READMELEARNME.md) §3–10 |
 | **Minimal-code integrations** | [recipes/README.md](recipes/README.md) | Per-recipe files in [recipes/](recipes/) |
 | **Marketplace vertical packs (catalog + runbooks)** | [catalog/README.md](catalog/README.md) | [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md), [runbooks/README.md](runbooks/README.md), [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md), [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) |
+| **Buyer demo + GTM deck (10 verticals, local all-in-one)** | [catalog/recipes/catalog-buyer-demo.md](catalog/recipes/catalog-buyer-demo.md) | `./scripts/verify_mk01_buyer_shipped.sh`, [buyer-demo-gtm-day.md](catalog/recipes/buyer-demo-gtm-day.md), `./scripts/prepare_mk01_pr.sh` (`--split-hints`, `--stage N`), [prebuild-vertical-demo-matrix.md](catalog/recipes/prebuild-vertical-demo-matrix.md), [docs/images/](docs/images/) (`gtm-mk01-*`, 41 frames) |
 | **Strategy & roadmap** | [READMEPLANNING.md](READMEPLANNING.md) | [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) |
 | **Shipping & changelog** | [READMENEWRELEASES.md](READMENEWRELEASES.md) | Execution IDs in READMEPLANTOEXECUTE |
 

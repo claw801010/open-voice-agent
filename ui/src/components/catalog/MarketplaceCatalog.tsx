@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/select';
 import { Sparkline, sparklineValuesFromSeed } from '@/components/ui/sparkline';
 import { CatalogBuyerHintTip } from '@/components/catalog/CatalogBuyerHintTip';
+import { CatalogBuyerVariantHintStrip } from '@/components/catalog/CatalogBuyerVariantHintStrip';
 import { WORKFLOW_RUN_MODES } from '@/constants/workflowRunModes';
 import { useAuth } from '@/lib/auth';
 import {
@@ -88,13 +89,6 @@ function toggleString(arr: string[], value: string, checked: boolean): string[] 
     return [...set];
 }
 
-function defaultCatalogVariantId(pack: VerticalPack): string {
-    const v = pack.workflow_variants;
-    if (!v || v.length === 0) return '';
-    const simple = v.find((x) => x.complexity === 'simple');
-    return (simple ?? v[0])!.variant_id;
-}
-
 export function MarketplaceCatalog({
     catalog,
     loadError,
@@ -133,17 +127,17 @@ export function MarketplaceCatalog({
     const openInstall = useCallback((pack: VerticalPack) => {
         setInstallTarget(pack);
         setInstallName(pack.display_name);
-        setInstallVariantId(defaultCatalogVariantId(pack));
+        setInstallVariantId(preferredCatalogProofVariantId(pack));
     }, []);
 
     const openTry = useCallback((pack: VerticalPack) => {
         setTryPack(pack);
-        setTryVariantId(defaultCatalogVariantId(pack));
+        setTryVariantId(preferredCatalogProofVariantId(pack));
     }, []);
 
     const openLoopTalk = useCallback((pack: VerticalPack) => {
         setLoopTalkPack(pack);
-        setLoopTalkVariantId(defaultCatalogVariantId(pack));
+        setLoopTalkVariantId(preferredCatalogProofVariantId(pack));
     }, []);
 
     const openVoicePreview = useCallback((pack: VerticalPack) => {
@@ -743,42 +737,11 @@ export function MarketplaceCatalog({
                                             .
                                         </p>
                                         {installVariantId && installTarget ? (
-                                            (() => {
-                                                const vHint = buyerDemoVariantHint(
-                                                    installTarget.slug,
-                                                    installVariantId,
-                                                );
-                                                const script = buyerDemoScriptName(
-                                                    installTarget.slug,
-                                                    installVariantId,
-                                                );
-                                                if (!vHint) return null;
-                                                return (
-                                                    <p
-                                                        className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-teal-500/20 bg-teal-500/5 px-2 py-1.5 text-xs leading-snug text-muted-foreground"
-                                                        data-testid="catalog-install-variant-hint"
-                                                    >
-                                                        <span>
-                                                            <strong className="font-medium text-foreground">
-                                                                Tip:
-                                                            </strong>{' '}
-                                                            {vHint.story}
-                                                        </span>
-                                                        {script ? (
-                                                            <CatalogBuyerHintTip
-                                                                label={`Run ./scripts/${script}`}
-                                                                tip={[
-                                                                    vHint.wire_tip,
-                                                                    vHint.analytics_tip,
-                                                                    vHint.compliance_note,
-                                                                ]
-                                                                    .filter(Boolean)
-                                                                    .join(' ')}
-                                                            />
-                                                        ) : null}
-                                                    </p>
-                                                );
-                                            })()
+                                            <CatalogBuyerVariantHintStrip
+                                                catalogSlug={installTarget.slug}
+                                                variantId={installVariantId}
+                                                testId="catalog-install-variant-hint"
+                                            />
                                         ) : null}
                                     </div>
                                 )}
@@ -875,6 +838,13 @@ export function MarketplaceCatalog({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {tryVariantId && tryPack ? (
+                                    <CatalogBuyerVariantHintStrip
+                                        catalogSlug={tryPack.slug}
+                                        variantId={tryVariantId}
+                                        testId="catalog-try-variant-hint"
+                                    />
+                                ) : null}
                             </div>
                         )}
                         <DialogFooter className="gap-2 sm:gap-0">
@@ -959,6 +929,13 @@ export function MarketplaceCatalog({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {loopTalkVariantId && loopTalkPack ? (
+                                    <CatalogBuyerVariantHintStrip
+                                        catalogSlug={loopTalkPack.slug}
+                                        variantId={loopTalkVariantId}
+                                        testId="catalog-looptalk-variant-hint"
+                                    />
+                                ) : null}
                             </div>
                         )}
                         <DialogFooter className="gap-2 sm:gap-0">
@@ -1015,6 +992,22 @@ export function MarketplaceCatalog({
                                 {voicePreviewAudioUrl ? (
                                     // eslint-disable-next-line jsx-a11y/media-has-caption -- TTS preview clip
                                     <audio controls src={voicePreviewAudioUrl} className="w-full" />
+                                ) : null}
+                                {voicePreview?.hostedPreviewIsSilentPlaceholder ? (
+                                    <p className="text-xs text-muted-foreground">
+                                        Hosted sample is a silent placeholder. Run{' '}
+                                        <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                                            ./scripts/regen_catalog_voice_previews.sh
+                                        </code>{' '}
+                                        with <strong className="text-foreground">ELEVENLABS_API_KEY</strong>{' '}
+                                        for spoken industry audio.
+                                    </p>
+                                ) : null}
+                                {voicePreviewPack && buyerDemoCardTip(voicePreviewPack.slug) ? (
+                                    <p className="text-xs text-muted-foreground">
+                                        <strong className="text-foreground">Buyer story: </strong>
+                                        {buyerDemoCardTip(voicePreviewPack.slug)}
+                                    </p>
                                 ) : null}
                             </>
                         ) : (

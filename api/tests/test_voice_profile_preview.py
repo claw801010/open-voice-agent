@@ -7,6 +7,7 @@ import pytest
 from api.routes.catalog import get_vertical_pack_voice_preview
 from api.services.voice.profile_preview import (
     build_catalog_voice_preview,
+    hosted_preview_is_silent_placeholder,
     preview_script_for_catalog_slug,
 )
 from api.services.voice.presets import get_builtin_profile
@@ -49,6 +50,33 @@ async def test_catalog_voice_preview_handler_includes_hosted_audio_url():
     result = await get_vertical_pack_voice_preview("healthcare-clinic-screening")
     assert result.preview_audio_url
     assert "voice-preview/audio" in result.preview_audio_url
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "slug",
+    [
+        "healthcare-clinic-screening",
+        "retail-wismo-faq",
+        "b2b-saas-trial-nurture",
+        "telecom-utilities-outage-faq",
+        "hr-staffing-recruiting-faq",
+    ],
+)
+async def test_catalog_voice_preview_silent_flag_matches_on_disk_wav(slug: str):
+    result = await get_vertical_pack_voice_preview(slug)
+    if not hosted_preview_is_silent_placeholder(slug):
+        pytest.skip(f"{slug}: WAV is not a silent placeholder")
+    assert result.hosted_preview_is_silent_placeholder is True
+    assert result.preview_audio_url
+
+
+@pytest.mark.asyncio
+async def test_catalog_voice_preview_flags_silent_placeholder_wav():
+    result = await get_vertical_pack_voice_preview("healthcare-clinic-screening")
+    if not hosted_preview_is_silent_placeholder("healthcare-clinic-screening"):
+        pytest.skip("WAV on disk is spoken/custom — not a silent placeholder")
+    assert result.hosted_preview_is_silent_placeholder is True
 
 
 @pytest.mark.asyncio

@@ -18,9 +18,12 @@
 | [recipes/healthcare-ehr-all-in-one.md](recipes/healthcare-ehr-all-in-one.md) | **Healthcare EHR + messaging** — patient context, prior auth, chart sync, SMS/email, review inbox. |
 | [recipes/local-all-in-one-gtm-demo.md](recipes/local-all-in-one-gtm-demo.md) | **GTM walkthrough** — zero-`:8765` demo script + UI checklist for local stack. |
 | [recipes/prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) | **PREBUILD complete:** slug × variant × HTTP tool × local endpoint matrix for GTM / QA (all 10 verticals). |
+| [recipes/catalog-buyer-demo.md](recipes/catalog-buyer-demo.md) | One-command buyer install + shortcut scripts; **`run_all_buyer_demos.sh`**, **`gtm_buyer_demo_pack.sh`**. |
 | [buyer-demo-defaults.json](buyer-demo-defaults.json) | Default **`catalog_variant_id`** + settings hash per slug for marketplace proof links and `./scripts/buyer-demo-*.sh`. |
 | [buyer-demo-hints.json](buyer-demo-hints.json) | **In-product tips** — buyer story, wire-local hover copy, compliance notes (marketplace + workflow guide). |
-| [recipes/catalog-buyer-demo.md](recipes/catalog-buyer-demo.md) | One-command buyer install + shortcut scripts. |
+| [recipes/buyer-demo-gtm-day.md](recipes/buyer-demo-gtm-day.md) | **SE runbook** — 45-minute buyer + GTM day (verify → stack → seed → demo flow). |
+| [voice-previews/](voice-previews/) | Hosted **`{slug}.wav`** for marketplace voice preview (`regen_catalog_voice_previews.sh`). |
+| [voice-previews/README.md](voice-previews/README.md) | Regenerate / `--report` silent vs spoken placeholders. |
 | [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) | **OpenAPI draft** — contract for `GET /api/v1/analytics/insights`, `GET /api/v1/analytics/calls` + detail ([api/routes/analytics.py](../api/routes/analytics.py)); **HttpToolSpanSummary**; insights + `catalog_slug` filters. |
 | [packaged-workflows/looptalk-simulated-caller.json](packaged-workflows/looptalk-simulated-caller.json) | **System** adversary graph for LoopTalk quick-persona tests (not a marketplace vertical); installed per org as `[System] LoopTalk simulated caller` via `POST /api/v1/looptalk/test-sessions/quick-persona`. |
 | [PARTNER_REVIEW.md](PARTNER_REVIEW.md) | Partner / community **review checklist** (safety, PII, telephony compliance) before a pack is **published** — **MK-01-PARTNER**. |
@@ -28,6 +31,8 @@
 **Relationship to the API:** production templates may live in `workflow_templates` ([api/db/models.py](../api/db/models.py) `WorkflowTemplates`). This repo catalog is the **source of truth for marketing and packaging** until each pack is bound to a `template_id` (see `workflow_template` on each pack).
 
 **Execution ID:** **MK-01-CATALOG**.
+
+**Offline ship check (buyer matrix + 41 GTM PNGs + voice WAVs):** `./scripts/verify_mk01_buyer_shipped.sh` from repo root.
 
 **Template quality rubric:** see **MK-01-RUBRIC** in [READMEPLANTOEXECUTE.md](../READMEPLANTOEXECUTE.md). **Reviewer worksheet:** [TEMPLATE_QUALITY_RUBRIC.md](TEMPLATE_QUALITY_RUBRIC.md) (copy into PRs); complements [PARTNER_REVIEW.md](PARTNER_REVIEW.md). **CI:** [test_vertical_packs_catalog.py](../api/tests/test_vertical_packs_catalog.py) guards `vertical-packs.json` shape, on-disk refs, and **parses every** `catalog/packaged-workflows/*.json` as a minimal **nodes/edges** graph. PRs touching the catalog: see [.github/pull_request_template.md](../.github/pull_request_template.md).
 
