@@ -914,8 +914,8 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 |----|--------|------------------------|
 | MK-01 | Marketplace: ready-to-bake vertical packs | §6 Marketplace and GTM |
 | MK-01-RUBRIC | Template quality rubric (**`Done`** — CI + runbook happy-path + Playwright catalog install flow) | §2 Pillar 1 near-term (template quality) |
-| MK-01-BUYER-GTM-MATRIX | Ten-vertical buyer demo + live GTM deck (**`Done`** in tree; **MK-01-SHIP-PR** `Incomplete`) | [catalog-buyer-demo.md](catalog/recipes/catalog-buyer-demo.md) |
-| MK-01-SHIP-PR | Commit + open PR for buyer/GTM slice (**`Incomplete`**) | [prepare_mk01_pr.sh](scripts/prepare_mk01_pr.sh) |
+| MK-01-BUYER-GTM-MATRIX | Ten-vertical buyer demo + live GTM deck (**`Done`**) | [catalog-buyer-demo.md](catalog/recipes/catalog-buyer-demo.md) |
+| MK-01-SHIP-PR | Commit + open PR for buyer/GTM slice (**`Done`** — [PR #1](https://github.com/claw801010/open-voice-agent/pull/1)) | [prepare_mk01_pr.sh](scripts/prepare_mk01_pr.sh) |
 | MK-01-VOICE-SPOKEN | ElevenLabs spoken voice previews (**`Incomplete`**) | [catalog/voice-previews/README.md](catalog/voice-previews/README.md) |
 | MK-01-PREBUILD-COMPLETE | All revenue motions shipped (**`Done`** — empty `roadmap_motions`, demo matrix, variant Playwright) | §6 Marketplace and GTM |
 | MK-01-CATALOG-INSURANCE | Fourth vertical — Insurance FNOL seed (**`Done`**) | §6 Insurance row |
