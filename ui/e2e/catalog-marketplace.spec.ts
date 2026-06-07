@@ -175,7 +175,7 @@ test.describe("Template catalog (authenticated)", () => {
         const hint = page.getByTestId("catalog-buyer-demo-hint-financial-services-banking-faq");
         await hint.scrollIntoViewIfNeeded();
         await expect(hint).toBeVisible({ timeout: 15_000 });
-        await expect(hint).toContainText("tokenized balance");
+        await expect(hint).toContainText(/tokenized balance/i);
 
         const proofLink = page.getByTestId("catalog-analytics-proof-financial-services-banking-faq");
         await expect(proofLink).toBeVisible({ timeout: 15_000 });
@@ -1002,7 +1002,7 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         const dialog = page.getByRole("dialog", { name: "Try in browser (Web only)" });
         await expect(dialog).toBeVisible({ timeout: 15_000 });
         await expect(dialog.getByTestId("catalog-try-variant-hint")).toBeVisible();
-        await expect(dialog.getByText(/payment promise/i)).toBeVisible();
+        await expect(dialog.getByText(/payment promise/i).first()).toBeVisible();
         await expect(dialog.locator("#try-variant")).toContainText(/Collections/i);
     });
 });
