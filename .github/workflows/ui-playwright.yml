@@ -187,12 +187,10 @@ jobs:
           npm ci
           npx playwright install chromium --with-deps
 
-      - name: Workflow-import OpenAPI + client are committed
+      - name: Verify workflow-import OpenAPI snapshot is committed
         run: |
           python scripts/gen_workflow_import_openapi.py
           git diff --exit-code catalog/openapi/workflow-import.openapi.json
-          cd ui && npm run generate-client:workflow-import
-          git diff --exit-code src/client/workflowImport/
 
       - name: Verify OpenAPI exposes workflow import routes
         run: |
@@ -205,7 +203,7 @@ jobs:
           echo "workflow import paths in OpenAPI: ${IMPORT_COUNT}"
           test "${IMPORT_COUNT}" -ge 8
 
-      - name: OpenAPI client drift (workflow import — advisory until MK-01-IMPORT-CLIENT Done)
+      - name: OpenAPI client drift (main client — advisory until MK-01-IMPORT-CLIENT Done)
         working-directory: ui
         env:
           OPENAPI_INPUT: http://127.0.0.1:8000/api/v1/openapi.json
@@ -216,6 +214,12 @@ jobs:
             echo "::warning::ui/src/client drift — run: bash scripts/generate_ui_openapi_client.sh and commit"
             git diff --stat -- src/client/ || true
           fi
+
+      - name: Regenerate workflow-import client (after main client; openapi-ts clears src/client)
+        working-directory: ui
+        run: |
+          npm run generate-client:workflow-import
+          git diff --exit-code src/client/workflowImport/
 
       - name: Build Next.js
         working-directory: ui

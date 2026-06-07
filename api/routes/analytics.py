@@ -893,10 +893,17 @@ async def apply_workflow_improvement_route(
         else workflow.released_definition.workflow_json
     )
     new_def, node_id = append_improvement_to_workflow_definition(base_def, improvement)
+    template_vars = (
+        draft.template_context_variables
+        if draft
+        else workflow.released_definition.template_context_variables
+    )
     await db_client.update_workflow(
         workflow_id=run.workflow_id,
         name=workflow.name,
         workflow_definition=new_def,
+        template_context_variables=template_vars,
+        workflow_configurations=workflow.workflow_configurations,
         organization_id=org_id,
     )
     return ApplyWorkflowImprovementResponse(

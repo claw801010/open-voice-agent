@@ -750,7 +750,7 @@ class AnalyticsCallsClient(BaseDBClient):
             .order_by(desc(WorkflowRunModel.created_at))
             .limit(300)
         )
-        async with self.get_session() as session:
+        async with self.async_session() as session:
             runs = (await session.execute(q)).scalars().unique().all()
 
         items: list[dict[str, Any]] = []
