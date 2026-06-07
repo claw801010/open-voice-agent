@@ -25,6 +25,7 @@ from api.services.analytics.call_live_trace import (
 )
 from api.services.analytics.call_quality_report import build_call_quality_report
 from api.services.analytics.call_engineering_links import build_engineering_links
+from api.services.analytics.call_intel import parse_analytics_call_id
 from api.services.analytics.http_cache_insights import fetch_http_cache_rollups
 from api.services.analytics.insights_quality_rollup import (
     QUALITY_ROLLUP_MAX_RUNS,

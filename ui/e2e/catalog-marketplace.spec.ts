@@ -163,7 +163,12 @@ test.describe("Template catalog (authenticated)", () => {
     test("banking pack card shows buyer demo hint and analytics proof", async ({ page }) => {
         await page.goto("/workflow/catalog");
 
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+
         const hint = page.getByTestId("catalog-buyer-demo-hint-financial-services-banking-faq");
+        await hint.scrollIntoViewIfNeeded();
         await expect(hint).toBeVisible({ timeout: 15_000 });
         await expect(hint).toContainText("tokenized balance");
 
@@ -989,6 +994,7 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         });
 
         const packCard = page.locator("article").filter({ hasText: "WISMO" });
+        await packCard.scrollIntoViewIfNeeded();
         await packCard.getByRole("button", { name: "Try (Web only)" }).click();
 
         const dialog = page.getByRole("dialog", { name: "Try in browser (Web only)" });
