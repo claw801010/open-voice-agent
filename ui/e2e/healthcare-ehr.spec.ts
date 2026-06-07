@@ -61,12 +61,17 @@ test.describe("Healthcare EHR settings (authenticated)", () => {
         expect(localSync.ok()).toBeTruthy();
 
         await page.goto("/settings");
-        await expect(page.getByTestId("local-ehr-section")).toBeVisible({ timeout: 30_000 });
-        await expect(page.getByText("Local only")).toBeVisible({ timeout: 15_000 });
+        const ehrSection = page.getByTestId("local-ehr-section");
+        await expect(ehrSection).toBeVisible({ timeout: 30_000 });
+        await expect(ehrSection.getByRole("cell", { name: "Local only" }).first()).toBeVisible({
+            timeout: 15_000,
+        });
 
         await page.getByTestId("local-ehr-mode-select").click();
         await page.getByRole("option", { name: /Local \+ sync to connector/i }).click();
         await expect(page.getByText(/Always write locally first/i)).toBeVisible({ timeout: 15_000 });
+        await page.getByTestId("local-ehr-vendor-select").click();
+        await page.getByRole("option", { name: /athenaHealth/i }).click();
 
         const connectorSync = await request.post(`${backendURL}/api/v1/local-ehr/api/v1/chart/sync`, {
             data: {
@@ -78,8 +83,11 @@ test.describe("Healthcare EHR settings (authenticated)", () => {
         expect(connectorSync.ok()).toBeTruthy();
 
         await page.reload();
-        await expect(page.getByTestId("local-ehr-section")).toBeVisible({ timeout: 30_000 });
-        await expect(page.getByText(/Synced · athenahealth/i)).toBeVisible({ timeout: 15_000 });
+        const ehrAfter = page.getByTestId("local-ehr-section");
+        await expect(ehrAfter).toBeVisible({ timeout: 30_000 });
+        await expect(ehrAfter.getByRole("cell", { name: /Synced · athenahealth/i }).first()).toBeVisible({
+            timeout: 15_000,
+        });
     });
 });
 
