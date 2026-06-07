@@ -2,6 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { loginAnalyticsE2E } from "./loginForE2E";
 
+/** Wait for vertical-packs API + marketplace cards (avoids racing catalog fetch in CI). */
+async function waitForCatalogPacks(page: Page): Promise<void> {
+    await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+        timeout: 30_000,
+    });
+    await expect(page.locator("article").first()).toBeVisible({ timeout: 30_000 });
+}
+
 /** Mark the graph dirty via the canvas **Tidy up layout** control (stable vs mouse-drag). */
 async function markGraphDirtyViaTidyUp(page: Page): Promise<void> {
     const tidyUp = page.getByRole("button", { name: "Tidy up layout" });
@@ -162,10 +170,7 @@ test.describe("Template catalog (authenticated)", () => {
 
     test("banking pack card shows buyer demo hint and analytics proof", async ({ page }) => {
         await page.goto("/workflow/catalog");
-
-        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
-            timeout: 30_000,
-        });
+        await waitForCatalogPacks(page);
 
         const hint = page.getByTestId("catalog-buyer-demo-hint-financial-services-banking-faq");
         await hint.scrollIntoViewIfNeeded();
@@ -988,10 +993,7 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
 
     test("retail Try dialog pre-selects collections variant with buyer hint", async ({ page }) => {
         await page.goto("/workflow/catalog");
-
-        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
-            timeout: 30_000,
-        });
+        await waitForCatalogPacks(page);
 
         const packCard = page.locator("article").filter({ hasText: "WISMO" });
         await packCard.scrollIntoViewIfNeeded();

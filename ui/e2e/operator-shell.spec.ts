@@ -51,13 +51,10 @@ test.describe("Operator shell authenticated (OSS / Stack)", () => {
         await expect(page.getByRole("heading", { name: /Welcome to Dograh|Welcome,/ })).toBeVisible({
             timeout: 30_000,
         });
-        await expect(page.getByRole("link", { name: "Go to agents" })).toBeVisible();
-        const usageLink = page.getByRole("link", { name: "Usage" });
-        await usageLink.scrollIntoViewIfNeeded();
-        await expect(usageLink).toBeVisible();
-        const analyticsLink = page.getByRole("link", { name: "Analytics" });
-        await analyticsLink.scrollIntoViewIfNeeded();
-        await expect(analyticsLink).toBeVisible();
+        const main = page.locator("main");
+        await expect(main.getByRole("link", { name: "Go to agents" })).toBeVisible();
+        await expect(main.getByRole("link", { name: "Usage" })).toBeVisible();
+        await expect(main.getByRole("link", { name: "Analytics" })).toBeVisible();
     });
 
     test("reports page renders daily shell and filters", async ({ page }) => {
