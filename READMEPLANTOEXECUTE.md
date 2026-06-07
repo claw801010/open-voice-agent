@@ -136,7 +136,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ### MK-01-BUYER-GTM-MATRIX — Ten-vertical buyer demo + live deck
 
-**Status:** `Done` (working tree — PR merge tracked under **MK-01-SHIP-PR** `Incomplete`)
+**Status:** `Done` (shipped in [PR #1](https://github.com/claw801010/open-voice-agent/pull/1))
 
 **Goal:** One matrix for all **10** vertical buyer demos: defaults, hints, install shortcuts, seed scripts, analytics E2E, and **41** live GTM deck PNGs.
 
