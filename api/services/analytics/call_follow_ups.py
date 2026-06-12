@@ -26,7 +26,10 @@ def append_follow_up(
     scheduled_at: str | None,
     contact_hint: str | None,
     user_id: int | None,
+    suggested_message: str | None = None,
+    requires_review: bool = False,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    now = datetime.now(timezone.utc).isoformat()
     item = {
         "id": f"fu-{uuid.uuid4().hex[:12]}",
         "action_type": action_type,
@@ -34,7 +37,10 @@ def append_follow_up(
         "notes": notes.strip(),
         "scheduled_at": scheduled_at,
         "contact_hint": (contact_hint or "").strip() or None,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "suggested_message": (suggested_message or "").strip() or None,
+        "requires_review": bool(requires_review or suggested_message),
+        "created_at": now,
+        "updated_at": None,
         "created_by_user_id": user_id,
     }
     ann = dict(annotations or {})
@@ -42,6 +48,40 @@ def append_follow_up(
     items.append(item)
     ann[ANNOT_KEY_FOLLOW_UPS] = items
     return ann, item
+
+
+def update_follow_up(
+    annotations: dict[str, Any] | None,
+    follow_up_id: str,
+    *,
+    status: FollowUpStatus | None = None,
+    notes: str | None = None,
+    suggested_message: str | None = None,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    ann = dict(annotations or {})
+    items = list_follow_ups(ann)
+    idx = next((i for i, row in enumerate(items) if row.get("id") == follow_up_id), None)
+    if idx is None:
+        return ann, None
+    row = dict(items[idx])
+    if status is not None:
+        row["status"] = status
+    if notes is not None:
+        row["notes"] = notes.strip()
+    if suggested_message is not None:
+        row["suggested_message"] = suggested_message.strip() or None
+        row["requires_review"] = True
+    row["updated_at"] = datetime.now(timezone.utc).isoformat()
+    items[idx] = row
+    ann[ANNOT_KEY_FOLLOW_UPS] = items
+    return ann, row
+
+
+def is_inbox_pending(item: dict[str, Any]) -> bool:
+    status = str(item.get("status") or "pending")
+    if status != "pending":
+        return False
+    return bool(item.get("requires_review")) or bool(item.get("suggested_message"))
 
 
 def get_cached_ai_review(annotations: dict[str, Any] | None) -> dict[str, Any] | None:

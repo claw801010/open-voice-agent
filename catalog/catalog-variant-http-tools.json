@@ -1,0 +1,59 @@
+{
+  "healthcare-clinic-screening": {
+    "booking_complex": ["book_slot", "lookup_availability"],
+    "confirm_remind": ["reschedule_appointment"],
+    "concierge_complex": ["enroll_concierge_visit"],
+    "ehr_sync_complex": [
+      "lookup_patient_context",
+      "verify_prior_auth",
+      "book_slot",
+      "send_confirmation_sms",
+      "sync_chart_to_ehr"
+    ]
+  },
+  "retail-wismo-faq": {
+    "booking_complex": ["reserve_pickup_slot"],
+    "upsell_complex": ["offer_warranty_addon"],
+    "collections_complex": ["capture_payment_promise"]
+  },
+  "b2b-saas-trial-nurture": {
+    "booking_complex": ["book_demo"],
+    "renewal_complex": ["book_qbr"],
+    "conversion_complex": ["update_crm_deal_stage"]
+  },
+  "insurance-fnol-faq": {
+    "booking_complex": ["schedule_adjuster_callback"],
+    "quote_complex": ["capture_quote_intent"],
+    "claims_lookup_complex": ["lookup_claim_status"]
+  },
+  "hospitality-travel-concierge": {
+    "booking_complex": ["modify_reservation"],
+    "waiver_complex": ["apply_cancellation_waiver"],
+    "upsell_complex": ["offer_room_upgrade"]
+  },
+  "financial-services-banking-faq": {
+    "booking_complex": ["schedule_branch_appointment"],
+    "balance_lookup_complex": ["lookup_account_balance"],
+    "card_block_complex": ["report_card_lost_stolen"]
+  },
+  "smb-franchise-location-faq": {
+    "booking_complex": ["schedule_lead_callback"],
+    "location_router_complex": ["route_call_to_location"],
+    "lead_capture_complex": ["capture_lead_intent"]
+  },
+  "telecom-utilities-outage-faq": {
+    "booking_complex": ["schedule_service_callback"],
+    "outage_status_complex": ["lookup_outage_status"],
+    "payment_redirect_complex": ["confirm_payment_redirect"]
+  },
+  "public-sector-civic-services-faq": {
+    "booking_complex": ["schedule_civic_callback"],
+    "permit_status_complex": ["lookup_permit_status"],
+    "language_router_complex": ["route_by_language"]
+  },
+  "hr-staffing-recruiting-faq": {
+    "booking_complex": ["schedule_interview"],
+    "application_status_complex": ["lookup_application_status"],
+    "interview_confirm_complex": ["confirm_or_reschedule_interview"]
+  }
+}

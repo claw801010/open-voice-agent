@@ -137,7 +137,10 @@ async def test_analytics_calls_list_and_detail(
     assert row["disposition"] == "completed"
     assert row["outcome_key"] == "booked"
     assert "reserve_time" in row["tool_names"]
-    assert "cx_score" not in row
+    assert row.get("cx_score") is None
+    assert row.get("containment") is None
+    assert row.get("qa_score") is None
+    assert row.get("scorecard_pass_rate") is None
 
     async with test_client_factory(user) as client:
         with_qm = await client.get(

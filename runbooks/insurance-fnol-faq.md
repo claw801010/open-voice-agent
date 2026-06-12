@@ -23,10 +23,10 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 
 **Goal:** schedule an **adjuster callback** in **≤6 agent turns** after **`schedule_adjuster_callback`** is wired.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **FNOL guidance & policy FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
-2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`, **`carrier_name`**, **`line_of_business`**, and **`preferred_callback_window_hours`** from pack defaults.
+2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`carrier_name`**, **`line_of_business`**, and **`preferred_callback_window_hours`** from pack defaults.
 3. HTTP tool **`schedule_adjuster_callback`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `callback_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
 4. Attach tool to the **FNOL & adjuster callback** agent; **Publish**.
 5. **Web test** script: brief FNOL context → request adjuster callback → give timezone + preferred window → confirm summary.
@@ -36,10 +36,10 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 
 **Goal:** capture **quote-ready intent** in **≤6 agent turns** after **`capture_quote_intent`** is wired (**quote_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/quotes/intent` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`quoting_api_base_url`**).
 
 1. Install **FNOL guidance & policy FAQ** with variant **`quote_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"quote_complex"`).
-2. **Customize**; set **`quoting_api_base_url`** = `http://127.0.0.1:8765`, **`quote_product_code`**, and **`line_of_business`** from pack defaults.
+2. **Customize**; confirm **`quoting_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`quote_product_code`** and **`line_of_business`** from pack defaults.
 3. HTTP tool **`capture_quote_intent`**: `POST {{quoting_api_base_url}}/api/v1/quotes/intent`; **response_mapping** — `intent_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `follow_up_by` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **FNOL & quote intent** agent; **Publish**.
 5. **Web test** script: ask about new auto coverage → express quote-ready intent → confirm reference when agent summarizes handoff to licensed agent.
@@ -49,10 +49,10 @@ Contain tier-1 **FNOL (first notice of loss)** and **policy FAQ** calls with scr
 
 **Goal:** return **tokenized claim status** in **≤6 agent turns** after **`lookup_claim_status`** is wired (**claims_lookup_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/claims/status` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`claims_api_base_url`**).
 
 1. Install **FNOL guidance & policy FAQ** with variant **`claims_lookup_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"claims_lookup_complex"`).
-2. **Customize**; set **`claims_api_base_url`** = `http://127.0.0.1:8765`, **`carrier_name`**, and **`line_of_business`** from pack defaults.
+2. **Customize**; confirm **`claims_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`carrier_name`** and **`line_of_business`** from pack defaults.
 3. HTTP tool **`lookup_claim_status`**: `POST {{claims_api_base_url}}/api/v1/claims/status`; **response_mapping** — `claim_id` → `appointment.id`, `status_code` → `confirmation_code`, `last_updated` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **FNOL & claims status** agent; **Publish**.
 5. **Web test** script: ask for claim status → provide tokenized claim reference → confirm summary when agent reads back tool result.

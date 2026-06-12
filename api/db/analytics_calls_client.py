@@ -25,6 +25,7 @@ from api.services.analytics.call_live_trace import (
 )
 from api.services.analytics.call_quality_report import build_call_quality_report
 from api.services.analytics.call_engineering_links import build_engineering_links
+from api.services.analytics.call_intel import parse_analytics_call_id
 from api.services.analytics.http_cache_insights import fetch_http_cache_rollups
 from api.services.analytics.insights_quality_rollup import (
     QUALITY_ROLLUP_MAX_RUNS,
@@ -37,7 +38,11 @@ from api.services.analytics.qm_scorecard import (
     normalize_qm_scorecard_document,
 )
 from api.services.analytics.call_transcript import transcript_from_logs
-from api.services.analytics.call_follow_ups import get_cached_ai_review, list_follow_ups
+from api.services.analytics.call_follow_ups import (
+    get_cached_ai_review,
+    is_inbox_pending,
+    list_follow_ups,
+)
 from api.services.analytics.call_intel import (
     build_call_metrics,
     disposition_from_gathered,
@@ -726,3 +731,52 @@ class AnalyticsCallsClient(BaseDBClient):
         if await self.analytics_detail_redaction_enabled(organization_id):
             return redact_analytics_call_detail(raw)
         return raw
+
+    async def list_review_inbox(
+        self,
+        organization_id: int,
+        *,
+        limit: int = 50,
+        status: str = "pending",
+    ) -> list[dict[str, Any]]:
+        """Human-in-the-loop items from run annotations (pending suggested responses)."""
+        from sqlalchemy import desc
+
+        limit = max(1, min(limit, 200))
+        q = (
+            select(WorkflowRunModel)
+            .join(WorkflowModel, WorkflowRunModel.workflow_id == WorkflowModel.id)
+            .where(WorkflowModel.organization_id == organization_id)
+            .options(joinedload(WorkflowRunModel.workflow))
+            .order_by(desc(WorkflowRunModel.created_at))
+            .limit(300)
+        )
+        async with self.async_session() as session:
+            runs = (await session.execute(q)).scalars().unique().all()
+
+        items: list[dict[str, Any]] = []
+        for run in runs:
+            wf = run.workflow
+            mk01 = (wf.workflow_configurations or {}).get("mk01") if wf else {}
+            catalog_slug = mk01.get("catalog_slug") if isinstance(mk01, dict) else None
+            cached = get_cached_ai_review(run.annotations or {})
+            ai_summary = cached.get("summary") if cached else None
+            for fu in list_follow_ups(run.annotations or {}):
+                fu_status = str(fu.get("status") or "pending")
+                if status == "pending" and not is_inbox_pending(fu):
+                    continue
+                if status != "pending" and fu_status != status:
+                    continue
+                items.append(
+                    {
+                        "call_id": workflow_run_to_analytics_call_id(run.id),
+                        "workflow_id": run.workflow_id,
+                        "workflow_name": wf.name if wf else None,
+                        "catalog_slug": catalog_slug,
+                        "follow_up": fu,
+                        "ai_summary": ai_summary,
+                    }
+                )
+                if len(items) >= limit:
+                    return items
+        return items

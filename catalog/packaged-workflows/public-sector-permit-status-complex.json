@@ -1,0 +1,53 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": { "x": 0, "y": 0 },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting for {{agency_name}}; offer civic FAQ or permit status lookup when appropriate.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": { "x": 0, "y": 140 },
+      "data": {
+        "name": "Civic FAQ & permit lookup",
+        "prompt": "Assistant for **{{agency_name}}**. Provide **scripted office hours and permit FAQ** — never collect SSN or full account numbers on the call.\n\nWhen the caller asks for **permit or application status**, collect only tokenized or high-level references they voluntarily provide (e.g. application reference — default department hint {{default_department_code}}). If a permit records HTTP tool is attached, call **lookup_permit_status** at {{records_api_base_url}}/api/v1/permits/status — do not invent status until the tool returns. If lookup is unavailable, direct to {{services_directory_url}} or {{support_phone}}.\n\nUse plain language suitable for accessibility.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": { "x": 0, "y": 280 },
+      "data": {
+        "name": "End",
+        "prompt": "Close professionally; confirm permit summary or handoff reference if the lookup tool succeeded.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": { "label": "Continue", "condition": "After greeting" }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": { "label": "End", "condition": "When resolved or escalated" }
+    }
+  ]
+}

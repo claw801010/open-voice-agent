@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -22,16 +23,16 @@ from api.services.voice.vertical_presets import (
 # Industry sample lines for catalog / profile preview (spoken ▸ style).
 CATALOG_VOICE_PREVIEW_SCRIPTS: dict[str, str] = {
     "healthcare-clinic-screening": (
-        "I understand you'd like to schedule a visit. "
-        "One moment while I check availability for you."
+        "Hi Maria — I have your chart pulled up, including your approved prior auth for the knee MRI. "
+        "I can book Tuesday at three p.m. and text you prep instructions."
     ),
     "retail-wismo-faq": (
-        "Sure thing — let me check on that order for you. "
-        "One moment while I pull up the details."
+        "Okay, sure thing — I see an outstanding balance on order 8842. "
+        "I can set up a flexible twenty-five dollar per month payment plan today."
     ),
     "b2b-saas-trial-nurture": (
-        "Thanks for calling. I can help with your trial account "
-        "or schedule a demo with our team."
+        "Thanks for calling — your trial is going well. "
+        "I can move you to paid and book a QBR with your customer success manager."
     ),
     "insurance-fnol-faq": (
         "Thank you for calling. I can walk you through first-notice guidance "
@@ -50,14 +51,50 @@ CATALOG_VOICE_PREVIEW_SCRIPTS: dict[str, str] = {
         "One moment while I check store hours."
     ),
     "telecom-utilities-outage-faq": (
-        "I can help with outage information for your area. "
-        "One moment while I check the latest service status."
+        "Right — I'm checking outage status for zip 90210. "
+        "There is an active issue in your area; crews estimate restore by six p.m."
+    ),
+    "public-sector-civic-services-faq": (
+        "I can help with permit and licensing questions. "
+        "One moment while I look up the information for you."
+    ),
+    "hr-staffing-recruiting-faq": (
+        "Thanks for your interest in joining our team. "
+        "I can help with your application or schedule an interview."
     ),
 }
 
 _DEFAULT_PREVIEW_SCRIPT = (
-    "Thanks for calling. One moment while I look that up for you."
+    "Sure — thanks for calling. One moment while I look that up for you."
 )
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+VOICE_PREVIEWS_DIR = _REPO_ROOT / "catalog" / "voice-previews"
+
+
+def hosted_preview_audio_api_path(slug: str) -> str:
+    return f"/api/v1/catalog/vertical-packs/{slug}/voice-preview/audio"
+
+
+def catalog_voice_preview_audio_path(slug: str) -> Path:
+    return VOICE_PREVIEWS_DIR / f"{slug}.wav"
+
+
+# Silent stdlib placeholders from generate_catalog_voice_preview_audio.py (~17.6 KB).
+SILENT_PLACEHOLDER_WAV_MAX_BYTES = 20_000
+
+
+def preview_audio_file_available(slug: str) -> bool:
+    path = catalog_voice_preview_audio_path(slug)
+    return path.is_file() and path.stat().st_size > 0
+
+
+def hosted_preview_is_silent_placeholder(slug: str) -> bool:
+    """True when on-disk WAV is the short silent placeholder (not ElevenLabs speech)."""
+    path = catalog_voice_preview_audio_path(slug)
+    if not path.is_file():
+        return False
+    return path.stat().st_size <= SILENT_PLACEHOLDER_WAV_MAX_BYTES
 
 
 def preview_script_for_catalog_slug(slug: str) -> str:
@@ -77,6 +114,11 @@ def preview_script_for_profile(profile: dict[str, Any], *, override_text: str | 
         ("financial", "financial-services-banking-faq"),
         ("smb", "smb-franchise-location-faq"),
         ("telecom", "telecom-utilities-outage-faq"),
+        ("gov", "public-sector-civic-services-faq"),
+        ("public", "public-sector-civic-services-faq"),
+        ("hr", "hr-staffing-recruiting-faq"),
+        ("staffing", "hr-staffing-recruiting-faq"),
+        ("recruiting", "hr-staffing-recruiting-faq"),
         ("vertical", None),
     ):
         if tag in tags and slug:
@@ -98,6 +140,12 @@ def build_catalog_voice_preview(slug: str, profile: dict[str, Any]) -> dict[str,
         "script": preview_script_for_catalog_slug(slug),
         "speech_settings": settings.model_dump(),
         "recommended_voice_profile_id": recommended_voice_profile_id_for_catalog_slug(slug),
+        "preview_audio_url": hosted_preview_audio_api_path(slug)
+        if preview_audio_file_available(slug)
+        else None,
+        "hosted_preview_is_silent_placeholder": hosted_preview_is_silent_placeholder(slug)
+        if preview_audio_file_available(slug)
+        else None,
     }
 
 

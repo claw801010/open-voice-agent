@@ -211,6 +211,51 @@ async def test_follow_ups_list_and_create(test_client_factory, review_run, db_se
 
 
 @pytest.mark.asyncio
+async def test_follow_up_with_suggested_message_appears_in_review_inbox(
+    test_client_factory, review_run
+):
+    _org, user, _wf, run = review_run
+    call_id = f"wr-{run.id}"
+
+    async with test_client_factory(user) as client:
+        created = await client.post(
+            f"/api/v1/analytics/calls/{call_id}/follow-ups",
+            json={
+                "action_type": "sms",
+                "notes": "Prior auth denial — appeal needed",
+                "contact_hint": "Maria Rodriguez",
+                "suggested_message": "Your MRI prior auth was denied. We are filing an appeal.",
+                "requires_review": True,
+            },
+        )
+    assert created.status_code == 200
+    fu_id = created.json()["id"]
+
+    async with test_client_factory(user) as client:
+        inbox = await client.get("/api/v1/analytics/review-inbox?status=pending")
+    assert inbox.status_code == 200
+    body = inbox.json()
+    assert body["pending_count"] >= 1
+    match = next((i for i in body["items"] if i["follow_up"]["id"] == fu_id), None)
+    assert match is not None
+    assert match["call_id"] == call_id
+    assert "appeal" in (match["follow_up"].get("suggested_message") or "")
+
+    async with test_client_factory(user) as client:
+        patched = await client.patch(
+            f"/api/v1/analytics/calls/{call_id}/follow-ups/{fu_id}",
+            json={"status": "approved"},
+        )
+    assert patched.status_code == 200
+    assert patched.json()["status"] == "approved"
+
+    async with test_client_factory(user) as client:
+        inbox_after = await client.get("/api/v1/analytics/review-inbox?status=pending")
+    assert inbox_after.status_code == 200
+    assert all(i["follow_up"]["id"] != fu_id for i in inbox_after.json()["items"])
+
+
+@pytest.mark.asyncio
 async def test_apply_workflow_improvement_appends_prompt(
     test_client_factory, review_run, db_session
 ):

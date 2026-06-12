@@ -7,12 +7,38 @@ on:
       - "api/**"
       - "catalog/vertical-packs.json"
       - "catalog/packaged-workflows/**"
+      - "catalog/catalog-variant-http-tools.json"
+      - "catalog/buyer-demo-defaults.json"
+      - "catalog/buyer-demo-hints.json"
+      - "catalog/voice-previews/**"
+      - "scripts/check_buyer_demo_matrix.sh"
+      - "scripts/verify_mk01_buyer_shipped.sh"
+      - "scripts/gtm-local-all-in-one-demo.sh"
+      - "scripts/ensure_mk01_api_env.sh"
+      - "scripts/stage_mk01_split.sh"
+      - "scripts/split_mk01_pr_hints.sh"
+      - "scripts/run_all_buyer_demos.sh"
+      - "scripts/check_voice_previews_spoken.sh"
+      - "scripts/generate_catalog_voice_preview_audio.py"
       - ".github/workflows/api-pytest-usage-rollup.yml"
   pull_request:
     paths:
       - "api/**"
       - "catalog/vertical-packs.json"
       - "catalog/packaged-workflows/**"
+      - "catalog/catalog-variant-http-tools.json"
+      - "catalog/buyer-demo-defaults.json"
+      - "catalog/buyer-demo-hints.json"
+      - "catalog/voice-previews/**"
+      - "scripts/check_buyer_demo_matrix.sh"
+      - "scripts/verify_mk01_buyer_shipped.sh"
+      - "scripts/gtm-local-all-in-one-demo.sh"
+      - "scripts/ensure_mk01_api_env.sh"
+      - "scripts/stage_mk01_split.sh"
+      - "scripts/split_mk01_pr_hints.sh"
+      - "scripts/run_all_buyer_demos.sh"
+      - "scripts/check_voice_previews_spoken.sh"
+      - "scripts/generate_catalog_voice_preview_audio.py"
       - ".github/workflows/api-pytest-usage-rollup.yml"
 
 concurrency:
@@ -24,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -55,6 +81,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -64,25 +92,54 @@ jobs:
           cache-dependency-path: api/requirements*.txt
 
       - name: Install dependencies
+        env:
+          # Match api/Dockerfile pipecat extras so service_factory imports succeed in pytest.
+          PIPECAT_EXTRAS: assemblyai,aws,azure,camb,cartesia,deepgram,elevenlabs,google,groq,openai,openrouter,rime,sarvam,silero,soundfile,speechmatics,tracing,webrtc
         run: |
           python -m pip install --upgrade pip
+          pip install -e "${GITHUB_WORKSPACE}/pipecat[${PIPECAT_EXTRAS}]"
           pip install -r requirements.txt -r requirements.dev.txt
 
       - name: Alembic upgrade head
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+          REDIS_URL: redis://127.0.0.1:6379/0
         run: alembic upgrade head
+
+      - name: Catalog voice preview WAV inventory
+        run: |
+          python "${GITHUB_WORKSPACE}/scripts/generate_catalog_voice_preview_audio.py" --check
 
       - name: Run usage rollup, HTTP cache, MK-01 analytics units
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
           REDIS_URL: redis://127.0.0.1:6379/0
+          ENVIRONMENT: local
+          ENABLE_LOCAL_SCHEDULING: "true"
+          ENABLE_LOCAL_PAYMENTS: "true"
+          ENABLE_LOCAL_INTEGRATIONS: "true"
+          ENABLE_LOCAL_EHR: "true"
+          ENABLE_LOCAL_MESSAGING: "true"
+          MINIO_PUBLIC_ENDPOINT: http://127.0.0.1:9000
           LOG_LEVEL: WARNING
         run: |
           python -m pytest \
             tests/test_vertical_packs_catalog.py \
+            tests/test_buyer_demo_defaults_unit.py \
+            tests/test_buyer_demo_hints_unit.py \
+            tests/test_buyer_demo_matrix_unit.py \
+            tests/test_gtm_deck_inventory_sync_unit.py \
+            tests/test_gen_buyer_demo_shortcuts_unit.py \
+            tests/test_gtm_local_all_in_one_script_unit.py \
             tests/test_catalog_install.py \
             tests/test_install_from_catalog_routes.py \
+            tests/test_voice_profiles.py \
+            tests/test_voice_profiles_routes.py \
+            tests/test_voice_profile_preview.py \
+            tests/test_gtm_local_all_in_one.py \
+            tests/test_local_scheduling_routes.py \
+            tests/test_local_payments_routes.py \
+            tests/test_local_integrations_routes.py \
             tests/test_workflow_n8n_import_route.py \
             tests/test_make_scenario_adapter_unit.py \
             tests/test_workflow_make_import_route.py \

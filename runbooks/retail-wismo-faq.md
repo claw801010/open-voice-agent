@@ -22,10 +22,10 @@ Reduce **“where is my order”** and basic policy load using voice with option
 
 **Goal:** reserve a pickup / service window in **≤6 agent turns** after **`reserve_pickup_slot`** is wired.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **WISMO & store policy FAQ** with variant **`booking_complex`** from the catalog.
-2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765` and **`pickup_location_code`** / **`store_name`** from pack defaults.
+2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set  and **`pickup_location_code`** / **`store_name`** from pack defaults.
 3. HTTP tool **`reserve_pickup_slot`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; map at minimum **`confirmation_code`**, **`slot_start`** (from `appointment.slot.start`), **`appointment_id`** (from `appointment.id`) for analytics ([VERTICAL_ANALYTICS_HTTP_MATRIX.md](../catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md)).
 4. Attach tool to the agent; **Publish**.
 5. **Web test** script: ask for in-store pickup window → give date/time preference → confirm when agent summarizes.
@@ -35,10 +35,10 @@ Reduce **“where is my order”** and basic policy load using voice with option
 
 **Goal:** resolve a WISMO-style question, then attach a warranty/subscription add-on in **≤6 agent turns** after **`offer_warranty_addon`** is wired (**upsell_complex** variant).
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/offers/attach` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`product_api_base_url`**).
 
 1. Install **WISMO & store policy FAQ** with variant **`upsell_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"upsell_complex"`).
-2. **Customize**; set **`product_api_base_url`** = `http://127.0.0.1:8765` and **`upsell_product_sku`** from pack defaults.
+2. **Customize**; confirm **`product_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`upsell_product_sku`** from pack defaults.
 3. HTTP tool **`offer_warranty_addon`**: `POST {{product_api_base_url}}/api/v1/offers/attach`; **response_mapping** — `offer_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `slot_start` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **WISMO & upsell** agent; **Publish**.
 5. **Web test** script: ask a generic order-status question → accept warranty offer when prompted → confirm enrollment summary.
@@ -48,10 +48,10 @@ Reduce **“where is my order”** and basic policy load using voice with option
 
 **Goal:** capture voluntary payment-plan intent in **≤6 agent turns** after **`capture_payment_promise`** is wired (**collections_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/payment-promises` with sample JSON).
+**Prerequisites:** [local payments all-in-one](../catalog/recipes/local-payments-all-in-one.md) (`ENABLE_LOCAL_PAYMENTS=true`; install auto-wires **`collections_api_base_url`**).
 
 1. Install **WISMO & store policy FAQ** with variant **`collections_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"collections_complex"`).
-2. **Customize**; set **`collections_api_base_url`** = `http://127.0.0.1:8765` and **`payment_plan_policy_id`** from pack defaults.
+2. **Customize**; confirm **`collections_api_base_url`** points at `{BACKEND}/api/v1/local-payments` (or click **Wire local payments** on the catalog guide card). Set **`payment_plan_policy_id`** from pack defaults.
 3. HTTP tool **`capture_payment_promise`**: `POST {{collections_api_base_url}}/api/v1/payment-promises`; **response_mapping** — `promise_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `promised_date` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **WISMO & collections** agent; **Publish**.
 5. **Web test** script: mention past-due balance → agree to pay a specific amount on a target date → confirm promise reference when agent summarizes.

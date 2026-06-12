@@ -1,8 +1,10 @@
 /**
  * MK-01 vertical hints: tie packaged catalog slugs to example HTTP tool names and
  * stable response_mapping keys (→ analytics call detail mapped_data). Keep in sync
- * with catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md.
+ * with catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md and catalog/catalog-variant-http-tools.json.
  */
+import catalogVariantHttpTools from '../../../catalog/catalog-variant-http-tools.json';
+
 export type VerticalHttpProofHint = {
     example_tool_names: string[];
     suggested_response_mapping_keys: string[];
@@ -11,7 +13,15 @@ export type VerticalHttpProofHint = {
 export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = {
     "healthcare-clinic-screening": {
         example_tool_names: ["book_slot", "lookup_availability"],
-        suggested_response_mapping_keys: ["appointment_id", "slot_start", "confirmation_code"],
+        suggested_response_mapping_keys: [
+            "appointment_id",
+            "slot_start",
+            "confirmation_code",
+            "prior_auth_id",
+            "chart_sync_id",
+            "message_id",
+            "patient_id",
+        ],
     },
     "retail-wismo-faq": {
         example_tool_names: ["reserve_pickup_slot"],
@@ -41,10 +51,35 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         example_tool_names: ["schedule_service_callback", "lookup_outage_status", "confirm_payment_redirect"],
         suggested_response_mapping_keys: ["callback_id", "slot_start", "outage_id", "restoration_eta", "status_code", "redirect_id", "portal_url", "expires_at", "confirmation_code"],
     },
+    "public-sector-civic-services-faq": {
+        example_tool_names: ["schedule_civic_callback", "lookup_permit_status", "route_by_language"],
+        suggested_response_mapping_keys: ["callback_id", "slot_start", "permit_id", "status_code", "last_updated", "route_id", "target_queue", "language_code", "confirmation_code"],
+    },
+    "hr-staffing-recruiting-faq": {
+        example_tool_names: ["schedule_interview", "lookup_application_status", "confirm_or_reschedule_interview"],
+        suggested_response_mapping_keys: ["interview_id", "slot_start", "application_id", "status_code", "last_updated", "confirmation_code", "invite_download_url"],
+    },
 };
 
-export function verticalHttpProofHintForSlug(slug: string | null | undefined): VerticalHttpProofHint | null {
+/** Per-variant HTTP tool focus for catalog guide wire buttons (MK-01 complex variants). */
+export const CATALOG_VARIANT_HTTP_TOOLS: Record<string, Record<string, string[]>> =
+    catalogVariantHttpTools;
+
+export function verticalHttpProofHintForSlug(
+    slug: string | null | undefined,
+    variantId?: string | null,
+): VerticalHttpProofHint | null {
     const s = (slug || "").trim();
     if (!s) return null;
-    return VERTICAL_HTTP_PROOF_HINTS[s] ?? null;
+    const base = VERTICAL_HTTP_PROOF_HINTS[s];
+    if (!base) return null;
+    const variant = (variantId || "").trim();
+    const variantTools = variant ? CATALOG_VARIANT_HTTP_TOOLS[s]?.[variant] : undefined;
+    if (variantTools?.length) {
+        return {
+            example_tool_names: variantTools,
+            suggested_response_mapping_keys: base.suggested_response_mapping_keys,
+        };
+    }
+    return base;
 }

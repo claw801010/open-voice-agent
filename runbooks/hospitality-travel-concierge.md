@@ -23,10 +23,10 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 **Goal:** modify a reservation in **≤6 agent turns** after **`modify_reservation`** is wired.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`pms_api_base_url`**).
 
 1. Install **Travel concierge & booking FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
-2. **Customize**; set **`pms_api_base_url`** = `http://127.0.0.1:8765`, **`property_name`**, **`confirmation_prefix`**, and **`default_room_type`** from pack defaults.
+2. **Customize**; confirm **`pms_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`property_name`**, **`confirmation_prefix`**, and **`default_room_type`** from pack defaults.
 3. HTTP tool **`modify_reservation`**: `POST {{pms_api_base_url}}/api/v1/reservations/modify`; **response_mapping** — `reservation_id` → `appointment.id`, `new_check_in` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
 4. Attach tool to the **Concierge & booking modify** agent; **Publish**.
 5. **Web test** script: ask to move check-in date → provide confirmation ref + new dates → confirm summary when agent reads back tool result.
@@ -36,10 +36,10 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 **Goal:** apply a **documented cancellation fee waiver or credit** in **≤6 agent turns** after **`apply_cancellation_waiver`** is wired (**waiver_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/cancellations/waiver` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`policy_api_base_url`**).
 
 1. Install **Travel concierge & booking FAQ** with variant **`waiver_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"waiver_complex"`).
-2. **Customize**; set **`policy_api_base_url`** = `http://127.0.0.1:8765`, **`waiver_policy_code`**, and **`confirmation_prefix`** from pack defaults.
+2. **Customize**; confirm **`policy_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`waiver_policy_code`** and **`confirmation_prefix`** from pack defaults.
 3. HTTP tool **`apply_cancellation_waiver`**: `POST {{policy_api_base_url}}/api/v1/cancellations/waiver`; **response_mapping** — `waiver_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `credit_amount` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Concierge & waiver** agent; **Publish**.
 5. **Web test** script: ask about cancellation fee → provide confirmation ref + reason → confirm waiver reference when agent summarizes.
@@ -49,10 +49,10 @@ Provide **24/7 concierge FAQ** and **reservation modify** handoffs for hotels an
 
 **Goal:** offer and attach a **loyalty room upgrade** in **≤6 agent turns** after **`offer_room_upgrade`** is wired (**upsell_complex** variant).
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/offers/attach` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`crs_api_base_url`**).
 
 1. Install **Travel concierge & booking FAQ** with variant **`upsell_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"upsell_complex"`).
-2. **Customize**; set **`crs_api_base_url`** = `http://127.0.0.1:8765`, **`upgrade_room_type`**, and **`confirmation_prefix`** from pack defaults.
+2. **Customize**; confirm **`crs_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or **Wire local integrations**). Set **`upgrade_room_type`** and **`confirmation_prefix`** from pack defaults.
 3. HTTP tool **`offer_room_upgrade`**: `POST {{crs_api_base_url}}/api/v1/offers/attach`; **response_mapping** — `offer_id` → `appointment.id`, `confirmation_code` → `confirmation_code`, `upgrade_effective` → `appointment.slot.start`.
 4. Attach tool to the **Concierge & upsell** agent; **Publish**.
 5. **Web test** script: ask an amenity question → accept room upgrade when offered → confirm reference when agent summarizes.

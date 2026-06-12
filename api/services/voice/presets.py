@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from api.schemas.voice_profile import SpeechDeliverySettings
+from api.services.voice.authenticity_layer import layer_off, layer_subtle, layer_warm
 
 BUILTIN_PROFILE_SLUGS = (
     "professional_clear",
@@ -19,6 +20,7 @@ _BUILTIN_SPEECH: dict[str, SpeechDeliverySettings] = {
         enable_professional_fillers=False,
         filler_intensity="off",
         enable_breath_pauses=False,
+        authenticity_layer=layer_off(),
         stability=0.85,
         similarity_boost=0.78,
         speed=1.0,
@@ -28,6 +30,7 @@ _BUILTIN_SPEECH: dict[str, SpeechDeliverySettings] = {
         enable_professional_fillers=True,
         filler_intensity="low",
         enable_breath_pauses=True,
+        authenticity_layer=layer_subtle(),
         stability=0.72,
         similarity_boost=0.86,
         speed=0.97,
@@ -37,6 +40,7 @@ _BUILTIN_SPEECH: dict[str, SpeechDeliverySettings] = {
         enable_professional_fillers=True,
         filler_intensity="medium",
         enable_breath_pauses=True,
+        authenticity_layer=layer_warm(),
         stability=0.62,
         similarity_boost=0.9,
         speed=1.0,
@@ -46,6 +50,7 @@ _BUILTIN_SPEECH: dict[str, SpeechDeliverySettings] = {
         enable_professional_fillers=False,
         filler_intensity="off",
         enable_breath_pauses=False,
+        authenticity_layer=layer_off(),
         stability=0.92,
         similarity_boost=0.74,
         speed=1.03,
@@ -67,7 +72,7 @@ _BUILTIN_META: dict[str, dict[str, Any]] = {
     },
     "authentic_natural": {
         "name": "Authentic — natural",
-        "description": "Most human-sounding: moderate fillers, higher similarity, relaxed stability.",
+        "description": "Most human-sounding: moderate fillers, natural delivery, higher similarity, relaxed stability.",
         "tags": ["recommended", "retail"],
         "tts_overrides": {"speed": 1.0},
     },

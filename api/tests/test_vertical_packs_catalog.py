@@ -41,7 +41,24 @@ def catalog() -> dict:
 def test_catalog_version_and_pack_count(catalog: dict) -> None:
     assert isinstance(catalog.get("catalog_version"), int)
     packs = catalog.get("packs")
-    assert isinstance(packs, list) and len(packs) >= 8
+    assert isinstance(packs, list) and len(packs) >= 10
+
+
+def test_each_pack_has_preview_audio_url_when_wav_on_disk(catalog: dict) -> None:
+    """MK-01 depth: preview_audio_url points at hosted audio route when WAV exists."""
+    from api.services.voice.profile_preview import (
+        hosted_preview_audio_api_path,
+        preview_audio_file_available,
+    )
+
+    for pack in catalog["packs"]:
+        slug = pack["slug"]
+        url = pack.get("preview_audio_url")
+        if preview_audio_file_available(slug):
+            assert isinstance(url, str) and url.strip(), f"{slug}: missing preview_audio_url"
+            assert hosted_preview_audio_api_path(slug) in url, (
+                f"{slug}: preview_audio_url must reference voice-preview/audio route"
+            )
 
 
 def test_each_pack_recommends_valid_voice_profile(catalog: dict) -> None:
@@ -57,6 +74,221 @@ def test_each_pack_recommends_valid_voice_profile(catalog: dict) -> None:
         assert get_builtin_profile(profile_id), (
             f"{slug!r}: unknown voice profile {profile_id!r}"
         )
+
+
+def test_recommended_voice_profiles_enable_natural_delivery_for_consumer_verticals(
+    catalog: dict,
+) -> None:
+    """Warm consumer verticals ship with natural delivery (short fillers, breath, key emphasis)."""
+    from api.services.voice.presets import get_builtin_profile
+
+    consumer_slugs = {
+        "healthcare-clinic-screening",
+        "retail-wismo-faq",
+        "hospitality-travel-concierge",
+        "smb-franchise-location-faq",
+        "telecom-utilities-outage-faq",
+        "hr-staffing-recruiting-faq",
+    }
+    for pack in catalog["packs"]:
+        slug = pack["slug"]
+        if slug not in consumer_slugs:
+            continue
+        profile_id = pack.get("recommended_voice_profile_id")
+        profile = get_builtin_profile(profile_id)
+        assert profile, f"{slug!r}: missing profile {profile_id!r}"
+        layer = (profile.get("speech_settings") or {}).get("authenticity_layer") or {}
+        assert layer.get("enabled") is True, (
+            f"{slug!r}: expected natural delivery enabled on {profile_id!r}"
+        )
+
+
+_VARIANT_TOOLS_PATH = REPO_ROOT / "catalog" / "catalog-variant-http-tools.json"
+
+
+def test_each_complex_variant_has_http_tool_map(catalog: dict) -> None:
+    """MK-01: every non-simple workflow variant has catalog-variant-http-tools.json entry."""
+    variant_tools = json.loads(_VARIANT_TOOLS_PATH.read_text(encoding="utf-8"))
+    for pack in catalog["packs"]:
+        slug = pack["slug"]
+        for variant in pack.get("workflow_variants") or []:
+            if not isinstance(variant, dict):
+                continue
+            vid = variant.get("variant_id")
+            if not vid or vid == "simple":
+                continue
+            slug_map = variant_tools.get(slug) or {}
+            assert vid in slug_map, (
+                f"{slug!r} variant {vid!r} missing from catalog/catalog-variant-http-tools.json"
+            )
+            tools = slug_map[vid]
+            assert isinstance(tools, list) and len(tools) >= 1, (
+                f"{slug!r}:{vid!r} must list at least one HTTP tool name"
+            )
+
+
+# Local all-in-one POST paths (must match api/routes/local_* and ui local*ToolDefinitions).
+_LOCAL_TOOL_POST_PATH: dict[str, tuple[str, str]] = {
+    # scheduling — book_* / schedule_* → appointments; *reschedule* → reschedule
+    "book_slot": ("scheduling", "/api/v1/appointments"),
+    "book_demo": ("scheduling", "/api/v1/appointments"),
+    "book_qbr": ("scheduling", "/api/v1/appointments"),
+    "schedule_adjuster_callback": ("scheduling", "/api/v1/appointments"),
+    "schedule_branch_appointment": ("scheduling", "/api/v1/appointments"),
+    "schedule_civic_callback": ("scheduling", "/api/v1/appointments"),
+    "schedule_interview": ("scheduling", "/api/v1/appointments"),
+    "schedule_lead_callback": ("scheduling", "/api/v1/appointments"),
+    "schedule_service_callback": ("scheduling", "/api/v1/appointments"),
+    "reschedule_appointment": ("scheduling", "/api/v1/appointments/reschedule"),
+    "confirm_or_reschedule_interview": ("scheduling", "/api/v1/appointments/reschedule"),
+    # payments
+    "capture_payment_promise": ("payments", "/api/v1/payment-promises"),
+    "confirm_payment_redirect": ("payments", "/api/v1/payments/redirect/confirm"),
+    "enroll_concierge_visit": ("payments", "/api/v1/visits/enroll"),
+    # integrations
+    "offer_warranty_addon": ("integrations", "/api/v1/offers/attach"),
+    "offer_room_upgrade": ("integrations", "/api/v1/offers/attach"),
+    "update_crm_deal_stage": ("integrations", "/api/v1/deals/stage"),
+    "capture_quote_intent": ("integrations", "/api/v1/quotes/intent"),
+    "lookup_claim_status": ("integrations", "/api/v1/claims/status"),
+    "modify_reservation": ("integrations", "/api/v1/reservations/modify"),
+    "apply_cancellation_waiver": ("integrations", "/api/v1/cancellations/waiver"),
+    "lookup_account_balance": ("integrations", "/api/v1/accounts/balance"),
+    "report_card_lost_stolen": ("integrations", "/api/v1/cards/block"),
+    "capture_lead_intent": ("integrations", "/api/v1/leads/intent"),
+    "route_call_to_location": ("integrations", "/api/v1/locations/route"),
+    "lookup_outage_status": ("integrations", "/api/v1/outages/status"),
+    "lookup_permit_status": ("integrations", "/api/v1/permits/status"),
+    "route_by_language": ("integrations", "/api/v1/calls/route-by-language"),
+    "lookup_application_status": ("integrations", "/api/v1/applications/status"),
+    # ehr
+    "lookup_patient_context": ("ehr", "/api/v1/patients/context"),
+    "verify_prior_auth": ("ehr", "/api/v1/prior-auth/status"),
+    "sync_chart_to_ehr": ("ehr", "/api/v1/chart/sync"),
+    # messaging
+    "send_confirmation_sms": ("messaging", "/api/v1/messages/sms"),
+    "send_confirmation_email": ("messaging", "/api/v1/messages/email"),
+}
+
+# Tools documented as optional / stub-only in local all-in-one wiring (no POST contract here).
+_LOCAL_TOOL_POST_PATH_OPTIONAL = frozenset({"lookup_availability", "reserve_pickup_slot"})
+
+
+def test_each_catalog_variant_http_tool_has_local_post_path() -> None:
+    """MK-01 PREBUILD: variant HTTP tools map to shipped local-scheduling/payments/integrations paths."""
+    variant_tools = json.loads(_VARIANT_TOOLS_PATH.read_text(encoding="utf-8"))
+    missing: list[str] = []
+    for slug, variants in variant_tools.items():
+        for vid, tools in variants.items():
+            for tool in tools:
+                if tool in _LOCAL_TOOL_POST_PATH_OPTIONAL:
+                    continue
+                if tool not in _LOCAL_TOOL_POST_PATH:
+                    missing.append(f"{slug}:{vid}:{tool}")
+    assert not missing, (
+        "Add _LOCAL_TOOL_POST_PATH entries for: " + ", ".join(sorted(missing))
+    )
+
+
+_PREBUILD_MATRIX_PATH = REPO_ROOT / "catalog" / "recipes" / "prebuild-vertical-demo-matrix.md"
+
+
+def _parse_prebuild_demo_matrix_rows() -> list[tuple[str, str, str, str]]:
+    """Return (slug, variant_id, tool, endpoint_cell) from the markdown matrix table."""
+    text = _PREBUILD_MATRIX_PATH.read_text(encoding="utf-8")
+    rows: list[tuple[str, str, str, str]] = []
+    for line in text.splitlines():
+        if not line.startswith("| `"):
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) < 5:
+            continue
+        slug = parts[1].strip("`")
+        variant_id = parts[2].strip("`")
+        tool = parts[3].strip("`")
+        endpoint = parts[4].strip().strip("`")
+        if slug == "catalog_slug":
+            continue
+        rows.append((slug, variant_id, tool, endpoint))
+    return rows
+
+
+def test_prebuild_demo_matrix_endpoints_match_local_modules() -> None:
+    """MK-01 PREBUILD: demo matrix POST paths align with local all-in-one modules."""
+    assert _PREBUILD_MATRIX_PATH.is_file(), "prebuild-vertical-demo-matrix.md missing"
+    mismatches: list[str] = []
+    for slug, variant_id, tool, endpoint in _parse_prebuild_demo_matrix_rows():
+        if tool in _LOCAL_TOOL_POST_PATH_OPTIONAL:
+            continue
+        expected = _LOCAL_TOOL_POST_PATH.get(tool)
+        if not expected:
+            mismatches.append(f"{slug}:{variant_id}:{tool}: unknown tool")
+            continue
+        module, path = expected
+        expected_endpoint = f"POST {{{module}}}{path}"
+        if endpoint != expected_endpoint:
+            mismatches.append(f"{tool}: got {endpoint!r}, want {expected_endpoint!r}")
+        variant_tools = json.loads(_VARIANT_TOOLS_PATH.read_text(encoding="utf-8"))
+        listed = variant_tools.get(slug, {}).get(variant_id)
+        if listed is not None and tool not in listed:
+            mismatches.append(f"{slug}:{variant_id}: tool {tool!r} not in catalog-variant-http-tools.json")
+    assert not mismatches, "prebuild matrix drift:\n" + "\n".join(mismatches)
+
+
+_GTM_DECK_REQUIRED_PNGS: tuple[str, ...] = (
+    "gtm-mk01-analytics-overview.png",
+    "gtm-mk01-analytics-calls.png",
+    "gtm-mk01-analytics-scorecard-rubric.png",
+    "gtm-mk01-analytics-qm-schedule.png",
+    "gtm-mk01-analytics-quality-widget.png",
+    "gtm-mk01-analytics-live-workflow.png",
+    "gtm-mk01-analytics-review-inbox.png",
+    "gtm-mk01-analytics-call-detail.png",
+    "gtm-mk01-analytics-call-detail-retail-collections.png",
+    "gtm-mk01-analytics-call-detail-telecom-outage.png",
+    "gtm-mk01-analytics-call-detail-b2b-conversion.png",
+    "gtm-mk01-analytics-call-detail-insurance-claims.png",
+    "gtm-mk01-analytics-call-detail-banking-balance.png",
+    "gtm-mk01-analytics-call-detail-hospitality-waiver.png",
+    "gtm-mk01-analytics-call-detail-smb-leads.png",
+    "gtm-mk01-analytics-call-detail-civic-permits.png",
+    "gtm-mk01-analytics-call-detail-hr-recruiting.png",
+    "gtm-mk01-workflow-import-dialog.png",
+    "gtm-mk01-workflow-catalog-marketplace.png",
+    "gtm-mk01-settings-local-all-in-one.png",
+    "gtm-mk01-settings-local-ehr-records.png",
+    "gtm-mk01-settings-local-payments-collections.png",
+    "gtm-mk01-settings-local-integrations-outage.png",
+    "gtm-mk01-workflow-catalog-guide-wire-local.png",
+    "gtm-mk01-workflow-wire-ehr-messaging.png",
+    "gtm-mk01-workflow-wire-retail-payments.png",
+    "gtm-mk01-workflow-wire-telecom-integrations.png",
+    "gtm-mk01-workflow-wire-b2b-integrations.png",
+    "gtm-mk01-workflow-wire-insurance-integrations.png",
+    "gtm-mk01-workflow-wire-banking-integrations.png",
+    "gtm-mk01-workflow-wire-hospitality-integrations.png",
+    "gtm-mk01-workflow-wire-smb-integrations.png",
+    "gtm-mk01-workflow-wire-civic-integrations.png",
+    "gtm-mk01-workflow-wire-hr-integrations.png",
+    "gtm-we01-workflow-get-started.png",
+    "gtm-we01-settings-http-cache-policy.png",
+    "gtm-we01-voice-profiles-page.png",
+    "gtm-we01-voice-profiles-natural-delivery.png",
+    "gtm-we01-http-tool-happy-path.png",
+    "gtm-we01-workflow-editor-outcome-checklist.png",
+    "gtm-we01-workflow-voice-profile-quick-pick.png",
+)
+
+
+def test_gtm_deck_png_inventory_on_disk() -> None:
+    """GTM deck: committed docs/images/gtm-*.png set matches Playwright screenshot pack."""
+    images = REPO_ROOT / "docs" / "images"
+    missing = [name for name in _GTM_DECK_REQUIRED_PNGS if not (images / name).is_file()]
+    assert not missing, (
+        "Missing docs/images GTM PNGs (run ./scripts/gtm_capture_deck.sh or "
+        "python3 scripts/gen_gtm_deck_placeholder_pngs.py): "
+        + ", ".join(missing)
+    )
 
 
 def test_each_vertical_pack_rubric_fields(catalog: dict) -> None:
@@ -648,6 +880,142 @@ def test_runbooks_document_payment_redirect_happy_path(catalog: dict) -> None:
         )
 
 
+_PERMIT_STATUS_COMPLEX_SECTION = "## Permit status lookup happy-path test"
+
+
+def test_runbooks_document_permit_status_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: permit_status_complex variant documents permit lookup tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "permit_status_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _PERMIT_STATUS_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_PERMIT_STATUS_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_PERMIT_STATUS_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: permit status section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: permit status section needs expected outcome"
+        assert "permit_status_complex" in tail, (
+            f"{slug}: permit status section must name variant_id"
+        )
+        assert "lookup_permit_status" in tail, (
+            f"{slug}: permit status section must reference lookup_permit_status tool"
+        )
+        assert "records_api_base_url" in tail, (
+            f"{slug}: permit status section must reference records_api_base_url"
+        )
+
+
+_LANGUAGE_ROUTER_COMPLEX_SECTION = "## Multilingual routing happy-path test"
+
+
+def test_runbooks_document_language_router_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: language_router_complex variant documents routing tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "language_router_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _LANGUAGE_ROUTER_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_LANGUAGE_ROUTER_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_LANGUAGE_ROUTER_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: language router section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: language router section needs expected outcome"
+        assert "language_router_complex" in tail, (
+            f"{slug}: language router section must name variant_id"
+        )
+        assert "route_by_language" in tail, (
+            f"{slug}: language router section must reference route_by_language tool"
+        )
+        assert "routing_api_base_url" in tail, (
+            f"{slug}: language router section must reference routing_api_base_url"
+        )
+
+
+_APPLICATION_STATUS_COMPLEX_SECTION = "## Application status lookup happy-path test"
+
+
+def test_runbooks_document_application_status_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: application_status_complex variant documents ATS lookup tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "application_status_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _APPLICATION_STATUS_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_APPLICATION_STATUS_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_APPLICATION_STATUS_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: application status section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: application status section needs expected outcome"
+        assert "application_status_complex" in tail, (
+            f"{slug}: application status section must name variant_id"
+        )
+        assert "lookup_application_status" in tail, (
+            f"{slug}: application status section must reference lookup_application_status tool"
+        )
+        assert "ats_api_base_url" in tail, (
+            f"{slug}: application status section must reference ats_api_base_url"
+        )
+
+
+_INTERVIEW_CONFIRM_COMPLEX_SECTION = "## Interview confirm / reschedule happy-path test"
+
+
+def test_runbooks_document_interview_confirm_happy_path(catalog: dict) -> None:
+    """MK-01-PREBUILD: interview_confirm_complex variant documents reschedule tool + analytics proof."""
+    packs = catalog["packs"]
+    for pack in packs:
+        variants = pack.get("workflow_variants") or []
+        if not any(
+            isinstance(v, dict) and v.get("variant_id") == "interview_confirm_complex"
+            for v in variants
+        ):
+            continue
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert _INTERVIEW_CONFIRM_COMPLEX_SECTION in text, (
+            f"{slug}: runbook missing {_INTERVIEW_CONFIRM_COMPLEX_SECTION!r} section"
+        )
+        idx = text.index(_INTERVIEW_CONFIRM_COMPLEX_SECTION)
+        tail = text[idx : idx + 2600]
+        assert re.search(r"\n1\.\s", tail), f"{slug}: interview confirm section needs numbered steps"
+        assert "Expected" in tail, f"{slug}: interview confirm section needs expected outcome"
+        assert "interview_confirm_complex" in tail, (
+            f"{slug}: interview confirm section must name variant_id"
+        )
+        assert "confirm_or_reschedule_interview" in tail, (
+            f"{slug}: interview confirm section must reference confirm_or_reschedule_interview tool"
+        )
+        assert "scheduling_api_base_url" in tail, (
+            f"{slug}: interview confirm section must reference scheduling_api_base_url"
+        )
+
+
 def test_each_pack_has_analytics_hooks(catalog: dict) -> None:
     """MK-01-ANALYTICS-VERTICAL: every vertical documents how analytics pairs with the pack."""
     packs = catalog["packs"]
@@ -686,6 +1054,8 @@ _PREBUILD_COMPLEX_VARIANTS: dict[str, set[str]] = {
     "financial-services-banking-faq": {"booking_complex", "balance_lookup_complex", "card_block_complex"},
     "smb-franchise-location-faq": {"booking_complex", "location_router_complex", "lead_capture_complex"},
     "telecom-utilities-outage-faq": {"booking_complex", "outage_status_complex", "payment_redirect_complex"},
+    "public-sector-civic-services-faq": {"booking_complex", "permit_status_complex", "language_router_complex"},
+    "hr-staffing-recruiting-faq": {"booking_complex", "application_status_complex", "interview_confirm_complex"},
 }
 
 _PREBUILD_COMPLETE_SLUGS = frozenset(
@@ -698,6 +1068,8 @@ _PREBUILD_COMPLETE_SLUGS = frozenset(
         "financial-services-banking-faq",
         "smb-franchise-location-faq",
         "telecom-utilities-outage-faq",
+        "public-sector-civic-services-faq",
+        "hr-staffing-recruiting-faq",
     }
 )
 
@@ -743,6 +1115,18 @@ def test_runbooks_document_roadmap_motions(catalog: dict) -> None:
         )
         assert "roadmap_motions" in text, (
             f"{slug}: roadmap section must reference vertical-packs.json roadmap_motions"
+        )
+
+
+def test_runbooks_do_not_require_booking_stub_port(catalog: dict) -> None:
+    """PREBUILD all-in-one: runbooks must not point at :8765 as the default HTTP backend."""
+    packs = catalog["packs"]
+    for pack in packs:
+        slug = pack["slug"]
+        path = REPO_ROOT / Path(pack["runbook_path"])
+        text = path.read_text(encoding="utf-8")
+        assert "127.0.0.1:8765" not in text and ":8765" not in text, (
+            f"{slug}: runbook still references optional :8765 stub; use local all-in-one recipes"
         )
 
 

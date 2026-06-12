@@ -16,4 +16,6 @@ venv/
 .playwright-mcp
 coturn/
 *.wav
+!catalog/voice-previews/
+!catalog/voice-previews/*.wav
 dograh_pcm_cache/

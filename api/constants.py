@@ -80,6 +80,45 @@ ENABLE_LOCAL_SCHEDULING = (
     os.getenv("ENABLE_LOCAL_SCHEDULING", _default_local_scheduling).lower() == "true"
 )
 
+# Local in-process demo payments (payment promises / redirect confirm for GTM).
+ENABLE_LOCAL_PAYMENTS = (
+    os.getenv("ENABLE_LOCAL_PAYMENTS", _default_local_scheduling).lower() == "true"
+)
+
+# Local in-process demo integrations (CRM, OSS, ATS, etc. — no external buyer APIs).
+ENABLE_LOCAL_INTEGRATIONS = (
+    os.getenv("ENABLE_LOCAL_INTEGRATIONS", _default_local_scheduling).lower() == "true"
+)
+
+# Local in-process demo EHR (patient context, prior auth, chart sync).
+ENABLE_LOCAL_EHR = os.getenv("ENABLE_LOCAL_EHR", _default_local_scheduling).lower() == "true"
+
+# Local in-process demo SMS / email log (no Twilio / SendGrid).
+ENABLE_LOCAL_MESSAGING = (
+    os.getenv("ENABLE_LOCAL_MESSAGING", _default_local_scheduling).lower() == "true"
+)
+
+# Template vars rewritten to local-integrations base on catalog install.
+LOCAL_INTEGRATION_TEMPLATE_VARS = (
+    "oss_api_base_url",
+    "crm_api_base_url",
+    "ats_api_base_url",
+    "product_api_base_url",
+    "quoting_api_base_url",
+    "claims_api_base_url",
+    "pms_api_base_url",
+    "policy_api_base_url",
+    "crs_api_base_url",
+    "banking_api_base_url",
+    "cards_api_base_url",
+    "locations_api_base_url",
+    "records_api_base_url",
+    "routing_api_base_url",
+)
+
+LOCAL_EHR_TEMPLATE_VARS = ("ehr_api_base_url",)
+LOCAL_MESSAGING_TEMPLATE_VARS = ("messaging_api_base_url",)
+
 
 def _get_version() -> str:
     """Read version from pyproject.toml."""

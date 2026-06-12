@@ -1,0 +1,140 @@
+{
+  "description": "MK-01 buyer-demo story tips, wire-local hover copy, and script names. Keys align with buyer-demo-defaults.json and catalog/recipes/prebuild-vertical-demo-matrix.md.",
+  "by_slug": {
+    "healthcare-clinic-screening": {
+      "card_tip": "Full buyer story: EHR chart sync + SMS approval with human-in-the-loop review inbox.",
+      "variants": {
+        "ehr_sync_complex": {
+          "story": "Lookup patient context, sync chart to local EHR, and queue SMS for staff approval before send.",
+          "primary_tool": "sync_chart_to_ehr",
+          "wire_tip": "Wire EHR + messaging first; calendar optional for booking variants. Review inbox catches outbound SMS.",
+          "analytics_tip": "Filter Calls by ehr_sync_complex and sync_chart_to_ehr; live workflow timeline on healthcare demo calls.",
+          "settings_tip": "Settings → Local demo EHR records + messaging templates.",
+          "script": "buyer-demo-healthcare-ehr.sh",
+          "compliance_note": "PHI: use redaction on analytics exports before external decks."
+        }
+      }
+    },
+    "retail-wismo-faq": {
+      "card_tip": "Collections and payment-plan promises without a live billing stack.",
+      "variants": {
+        "collections_complex": {
+          "story": "Capture a compliant payment promise after WISMO — amount, cadence, confirmation code.",
+          "primary_tool": "capture_payment_promise",
+          "wire_tip": "Creates capture_payment_promise → local payments API. Map promised_amount for mapped_data proof.",
+          "analytics_tip": "Analytics proof link pre-fills catalog_slug, collections_complex, and tool_name.",
+          "settings_tip": "Settings → Local demo payments lists recorded promises.",
+          "script": "buyer-demo-retail-collections.sh",
+          "compliance_note": "Collections: confirm recording disclosure and no card PAN on the call."
+        }
+      }
+    },
+    "b2b-saas-trial-nurture": {
+      "card_tip": "Trial → paid motion with CRM stage update — no Salesforce keys in the demo org.",
+      "variants": {
+        "conversion_complex": {
+          "story": "Qualify PQL intent and push deal stage to closed won via local CRM integration.",
+          "primary_tool": "update_crm_deal_stage",
+          "wire_tip": "One click wires update_crm_deal_stage to local integrations; map deal_stage and deal_id.",
+          "analytics_tip": "Filter by conversion_complex + update_crm_deal_stage on call detail.",
+          "settings_tip": "Settings → Local demo integrations shows CRM action log.",
+          "script": "buyer-demo-b2b-conversion.sh"
+        }
+      }
+    },
+    "insurance-fnol-faq": {
+      "card_tip": "FNOL containment with tokenized claims status lookup.",
+      "variants": {
+        "claims_lookup_complex": {
+          "story": "Verify policy token, then speak claim status from local claims API — no full policy # on the call.",
+          "primary_tool": "lookup_claim_status",
+          "wire_tip": "Wires lookup_claim_status → local integrations. Map claim_status and claim_id.",
+          "analytics_tip": "Use Analytics proof on the pack card for pre-filtered Calls list.",
+          "settings_tip": "Seed claim tokens under Local demo integrations before Web test.",
+          "script": "buyer-demo-insurance-claims.sh",
+          "compliance_note": "Partner review recommended before external GTM."
+        }
+      }
+    },
+    "hospitality-travel-concierge": {
+      "card_tip": "Guest recovery: cancellation fee waiver or credit without a live CRS.",
+      "variants": {
+        "waiver_complex": {
+          "story": "Apply a documented waiver or credit after guest verification — recovery without live PMS keys.",
+          "primary_tool": "apply_cancellation_waiver",
+          "wire_tip": "Wires apply_cancellation_waiver → local integrations. Map waiver_status and credit_amount.",
+          "analytics_tip": "Filter waiver_complex + apply_cancellation_waiver; upsell variant uses offer_room_upgrade.",
+          "settings_tip": "Settings → Local demo integrations → cancellations/waiver endpoint.",
+          "script": "buyer-demo-hospitality-waiver.sh",
+          "compliance_note": "Confirm rate/fee disclosure language matches your property policy."
+        }
+      }
+    },
+    "financial-services-banking-faq": {
+      "card_tip": "Tokenized balance lookup after identity verify — PCI-safe tier-1 containment.",
+      "variants": {
+        "balance_lookup_complex": {
+          "story": "Verify caller identity, then read available balance from tokenized account lookup — never full PAN.",
+          "primary_tool": "lookup_account_balance",
+          "wire_tip": "Wires lookup_account_balance → local integrations. Map available_balance and as_of_date.",
+          "analytics_tip": "Analytics proof link filters balance_lookup_complex + lookup_account_balance.",
+          "settings_tip": "Settings → Local demo integrations → accounts/balance endpoint.",
+          "script": "buyer-demo-banking-balance.sh",
+          "compliance_note": "PCI: no-payment-card-in-prompt; tokenized APIs only."
+        }
+      }
+    },
+    "telecom-utilities-outage-faq": {
+      "card_tip": "Live outage ETAs from local OSS/BSS stub — no field-service keys.",
+      "variants": {
+        "outage_status_complex": {
+          "story": "Zip or account lookup → active outage status and restoration ETA.",
+          "primary_tool": "lookup_outage_status",
+          "wire_tip": "Wires lookup_outage_status → local integrations. Map outage_id and restoration_eta.",
+          "analytics_tip": "Telecom call-detail deck frame shows mapped_data on lookup_outage_status span.",
+          "settings_tip": "Settings → Local demo integrations outage status endpoint.",
+          "script": "buyer-demo-telecom-outage.sh"
+        }
+      }
+    },
+    "smb-franchise-location-faq": {
+      "card_tip": "Multi-location lead capture into local CRM stub.",
+      "variants": {
+        "lead_capture_complex": {
+          "story": "Capture lead intent with location code for franchise routing follow-up.",
+          "primary_tool": "capture_lead_intent",
+          "wire_tip": "Wires capture_lead_intent → local integrations. Map intent_id and confirmation_code.",
+          "analytics_tip": "Filter lead_capture_complex + capture_lead_intent on Calls.",
+          "settings_tip": "Local demo integrations → leads/intent endpoint.",
+          "script": "buyer-demo-franchise-leads.sh"
+        }
+      }
+    },
+    "public-sector-civic-services-faq": {
+      "card_tip": "Permit status lookup for civic self-service.",
+      "variants": {
+        "permit_status_complex": {
+          "story": "Tokenized permit lookup with last-updated status for caller reassurance.",
+          "primary_tool": "lookup_permit_status",
+          "wire_tip": "Wires lookup_permit_status → local integrations. Map permit_status and permit_id.",
+          "analytics_tip": "Filter permit_status_complex + lookup_permit_status.",
+          "settings_tip": "Local demo integrations → permits/status endpoint.",
+          "script": "buyer-demo-civic-permits.sh"
+        }
+      }
+    },
+    "hr-staffing-recruiting-faq": {
+      "card_tip": "ATS application status without live Greenhouse/Lever keys.",
+      "variants": {
+        "application_status_complex": {
+          "story": "Lookup application status by token after candidate verifies email or ref code.",
+          "primary_tool": "lookup_application_status",
+          "wire_tip": "Wires lookup_application_status → local integrations. Map application_status.",
+          "analytics_tip": "Filter application_status_complex + lookup_application_status.",
+          "settings_tip": "Local demo integrations → applications/status endpoint.",
+          "script": "buyer-demo-hr-recruiting.sh"
+        }
+      }
+    }
+  }
+}

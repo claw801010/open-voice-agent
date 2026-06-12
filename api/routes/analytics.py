@@ -22,6 +22,9 @@ from api.schemas.analytics_call_review import (
     FollowUpItemResponse,
     FollowUpListResponse,
     GenerateCallAiReviewBody,
+    ReviewInboxItemResponse,
+    ReviewInboxListResponse,
+    UpdateFollowUpBody,
 )
 from api.services.analytics.apply_workflow_improvement import (
     append_improvement_to_workflow_definition,
@@ -29,6 +32,7 @@ from api.services.analytics.apply_workflow_improvement import (
 from api.services.analytics.call_follow_ups import (
     append_follow_up,
     set_cached_ai_review,
+    update_follow_up,
 )
 from api.services.analytics.call_intel import parse_analytics_call_id
 from api.services.analytics.call_review_ai import generate_call_ai_review
@@ -805,9 +809,56 @@ async def create_call_follow_up(
         scheduled_at=body.scheduled_at,
         contact_hint=body.contact_hint,
         user_id=user.id,
+        suggested_message=body.suggested_message,
+        requires_review=body.requires_review,
     )
     await db_client.update_workflow_run(run_id, annotations=ann)
     return FollowUpItemResponse(**item)
+
+
+@router.patch("/calls/{call_id}/follow-ups/{follow_up_id}", response_model=FollowUpItemResponse)
+async def patch_call_follow_up(
+    call_id: str,
+    follow_up_id: str,
+    body: UpdateFollowUpBody,
+    user: UserModel = Depends(get_user),
+):
+    org_id = _require_org(user)
+    run_id, run = await _load_run_for_call(org_id, call_id)
+    ann, item = update_follow_up(
+        run.annotations,
+        follow_up_id,
+        status=body.status,
+        notes=body.notes,
+        suggested_message=body.suggested_message,
+    )
+    if item is None:
+        raise HTTPException(status_code=404, detail="Follow-up not found")
+    await db_client.update_workflow_run(run_id, annotations=ann)
+    return FollowUpItemResponse(**item)
+
+
+@router.get("/review-inbox", response_model=ReviewInboxListResponse)
+async def list_review_inbox(
+    user: UserModel = Depends(get_user),
+    status: str = Query("pending", description="pending | approved | edited | dismissed"),
+    limit: int = Query(50, ge=1, le=200),
+):
+    org_id = _require_org(user)
+    rows = await db_client.list_review_inbox(org_id, limit=limit, status=status)
+    items = [
+        ReviewInboxItemResponse(
+            call_id=row["call_id"],
+            workflow_id=row.get("workflow_id"),
+            workflow_name=row.get("workflow_name"),
+            catalog_slug=row.get("catalog_slug"),
+            follow_up=FollowUpItemResponse(**row["follow_up"]),
+            ai_summary=row.get("ai_summary"),
+        )
+        for row in rows
+    ]
+    pending_rows = await db_client.list_review_inbox(org_id, limit=200, status="pending")
+    return ReviewInboxListResponse(items=items, pending_count=len(pending_rows))
 
 
 @router.post(
@@ -842,10 +893,17 @@ async def apply_workflow_improvement_route(
         else workflow.released_definition.workflow_json
     )
     new_def, node_id = append_improvement_to_workflow_definition(base_def, improvement)
+    template_vars = (
+        draft.template_context_variables
+        if draft
+        else workflow.released_definition.template_context_variables
+    )
     await db_client.update_workflow(
         workflow_id=run.workflow_id,
         name=workflow.name,
         workflow_definition=new_def,
+        template_context_variables=template_vars,
+        workflow_configurations=workflow.workflow_configurations,
         organization_id=org_id,
     )
     return ApplyWorkflowImprovementResponse(

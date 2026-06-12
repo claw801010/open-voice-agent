@@ -23,23 +23,35 @@ Stand up a **voice** flow for symptom triage, scheduling handoff, or after-hours
 
 **Goal:** book a visit in **≤6 agent turns** after the HTTP **`book_slot`** tool is wired (MK-01 rubric).
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (or buyer scheduling API).
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install auto-wires **`scheduling_api_base_url`**).
 
 1. **Template catalog** → **Patient screening & triage** → install with variant **`booking_complex`** (or `POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
-2. **Customize** the installed workflow; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765` under template variables.
+2. Confirm **`scheduling_api_base_url`** points at **`/api/v1/local-scheduling`** (set on install) or click **Wire local calendar** on the workflow guide.
 3. Create HTTP tool **`book_slot`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `appointment_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code` ([booking-http-analytics-smoke.md](../catalog/recipes/booking-http-analytics-smoke.md)).
 4. Attach **`book_slot`** to the main **Agent** node; **Save** and **Publish** when validation passes.
 5. **Simulation → Start Web test**. Caller script (one turn each): state visit type → preferred date/time window → confirm booking when agent offers.
 6. **Expected:** agent invokes **`book_slot`**; call ends with confirmation language; **Analytics → call detail** shows HTTP span with **`mapped_data.appointment_id`** (and **`confirmation_code`**). Filter **`/analytics/calls?catalog_slug=healthcare-clinic-screening&catalog_variant_id=booking_complex&tool_name=book_slot`**.
 
+## EHR sync happy-path test (QA) — buyer-ready
+
+**Goal:** load **patient context + prior auth**, book/reschedule, **SMS confirm**, **sync chart to EHR** in **≤8 turns** (**`ehr_sync_complex`** variant). See [healthcare-ehr-all-in-one.md](../catalog/recipes/healthcare-ehr-all-in-one.md).
+
+**Prerequisites:** `ENABLE_LOCAL_EHR`, `ENABLE_LOCAL_MESSAGING`, `ENABLE_LOCAL_SCHEDULING` (all default on in local).
+
+1. Install variant **`ehr_sync_complex`**; use demo vars **`patient_token=maria-rodriguez`**, **`procedure_code=73721`**.
+2. On the catalog guide card: **Wire local EHR**, **Wire local calendar**, **Wire local messaging**.
+3. **Settings → Local demo EHR** — pick connector (**athenaHealth**, Epic, Cerner, or eCW).
+4. **Web test** script: “I need to reschedule my knee MRI” → confirm new slot when offered.
+5. **Expected:** call detail **Live workflow** timeline shows prior auth → booking → SMS → chart sync; **Review inbox** available for sensitive follow-ups.
+
 ## No-show reduction happy-path test (QA)
 
 **Goal:** confirm or **reschedule** an upcoming visit in **≤6 agent turns** after **`reschedule_appointment`** is wired (MK-01 prebuild — **confirm_remind** variant).
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install auto-wires **`scheduling_api_base_url`**).
 
 1. **Template catalog** → **Patient screening & triage** → install with variant **`confirm_remind`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"confirm_remind"`).
-2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`.
+2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar** with `reschedule_appointment`).
 3. HTTP tool **`reschedule_appointment`**: `POST {{scheduling_api_base_url}}/api/v1/appointments/reschedule`; **response_mapping** — `appointment_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code` ([booking-http-analytics-smoke.md](../catalog/recipes/booking-http-analytics-smoke.md)).
 4. Attach **`reschedule_appointment`** to the **Confirm & remind** agent; **Save** and **Publish**.
 5. **Simulation → Start Web test**. Caller script: reference an upcoming visit → ask to move to a new time window → confirm when agent summarizes.
@@ -49,10 +61,10 @@ Stand up a **voice** flow for symptom triage, scheduling handoff, or after-hours
 
 **Goal:** offer and **enroll** an optional paid priority visit in **≤6 agent turns** after **`enroll_concierge_visit`** is wired (**concierge_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/visits/enroll` with sample JSON).
+**Prerequisites:** [local payments all-in-one](../catalog/recipes/local-payments-all-in-one.md) (`ENABLE_LOCAL_PAYMENTS=true`; install auto-wires **`billing_api_base_url`**).
 
 1. Install **Patient screening & triage** with variant **`concierge_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"concierge_complex"`).
-2. **Customize**; set **`billing_api_base_url`** = `http://127.0.0.1:8765`, **`concierge_visit_type`**, and **`clinic_location_id`** from pack defaults.
+2. **Customize**; confirm **`billing_api_base_url`** points at `{BACKEND}/api/v1/local-payments` (or click **Wire local payments** on the catalog guide card). Set **`concierge_visit_type`** and **`clinic_location_id`** from pack defaults.
 3. HTTP tool **`enroll_concierge_visit`**: `POST {{billing_api_base_url}}/api/v1/visits/enroll`; **response_mapping** — `enrollment_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
 4. Attach to the **Triage & concierge** agent; **Save** and **Publish**.
 5. **Web test** script: brief triage context → accept optional priority visit when offered → confirm enrollment summary.

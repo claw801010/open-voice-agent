@@ -23,10 +23,10 @@ Deflect repeat **outage status**, **plan compare (non-binding)**, and **payment 
 
 **Goal:** schedule a **field service callback** in **≤6 agent turns** after **`schedule_service_callback`** is wired.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765`.
+**Prerequisites:** [All-in-one local scheduling](../catalog/recipes/local-scheduling-all-in-one.md) (`ENABLE_LOCAL_SCHEDULING`; install-from-catalog auto-sets `scheduling_api_base_url`).
 
 1. Install **Outage & billing FAQ** with variant **`booking_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"booking_complex"`).
-2. **Customize**; set **`scheduling_api_base_url`** = `http://127.0.0.1:8765`, **`utility_name`**, and **`default_service_area_code`** from pack defaults.
+2. **Customize**; confirm **`scheduling_api_base_url`** points at local scheduling (auto on install; or **Wire local calendar**); set **`utility_name`**, and **`default_service_area_code`** from pack defaults.
 3. HTTP tool **`schedule_service_callback`**: `POST {{scheduling_api_base_url}}/api/v1/appointments`; **response_mapping** — `callback_id` → `appointment.id`, `slot_start` → `appointment.slot.start`, `confirmation_code` → `confirmation_code`.
 4. Attach tool to the **Outage FAQ & service callback** agent; **Publish**.
 5. **Web test** script: report service issue → request callback → give timezone + preferred window → confirm summary.
@@ -36,10 +36,10 @@ Deflect repeat **outage status**, **plan compare (non-binding)**, and **payment 
 
 **Goal:** return **tokenized outage status** in **≤6 agent turns** after **`lookup_outage_status`** is wired (**outage_status_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/outages/status` with sample JSON).
+**Prerequisites:** [local integrations all-in-one](../catalog/recipes/local-integrations-all-in-one.md) (`ENABLE_LOCAL_INTEGRATIONS=true`; install auto-wires **`oss_api_base_url`**).
 
 1. Install **Outage & billing FAQ** with variant **`outage_status_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"outage_status_complex"`).
-2. **Customize**; set **`oss_api_base_url`** = `http://127.0.0.1:8765`, **`utility_name`**, and **`default_service_area_code`** from pack defaults.
+2. **Customize**; confirm **`oss_api_base_url`** points at `{BACKEND}/api/v1/local-integrations` (or click **Wire local integrations** on the catalog guide card). Set **`utility_name`** and **`default_service_area_code`** from pack defaults.
 3. HTTP tool **`lookup_outage_status`**: `POST {{oss_api_base_url}}/api/v1/outages/status`; **response_mapping** — `outage_id` → `appointment.id`, `restoration_eta` → `confirmation_code`, `status_code` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Outage FAQ & status lookup** agent; **Publish**.
 5. **Web test** script: ask about outage in your area → provide service area hint → confirm summary when agent reads back tool result.
@@ -49,10 +49,10 @@ Deflect repeat **outage status**, **plan compare (non-binding)**, and **payment 
 
 **Goal:** submit a **tokenized payment redirect confirm** in **≤6 agent turns** after **`confirm_payment_redirect`** is wired (**payment_redirect_complex** variant). Review [PARTNER_REVIEW.md](../catalog/PARTNER_REVIEW.md) and [ANALYTICS_REDACTION_MATRIX.md](../catalog/ANALYTICS_REDACTION_MATRIX.md) before buyer-facing GTM.
 
-**Prerequisites:** [booking scheduling stub](../catalog/recipes/booking-scheduling-stub-local.md) on `http://127.0.0.1:8765` (accepts `POST /api/v1/payments/redirect/confirm` with sample JSON).
+**Prerequisites:** [local payments all-in-one](../catalog/recipes/local-payments-all-in-one.md) (`ENABLE_LOCAL_PAYMENTS=true`; install auto-wires **`billing_api_base_url`**).
 
 1. Install **Outage & billing FAQ** with variant **`payment_redirect_complex`** (`POST /api/v1/workflow/install-from-catalog` with `"variant_id":"payment_redirect_complex"`).
-2. **Customize**; set **`billing_api_base_url`** = `http://127.0.0.1:8765`, **`utility_name`**, and **`payment_redirect_reason_code`** from pack defaults.
+2. **Customize**; confirm **`billing_api_base_url`** points at `{BACKEND}/api/v1/local-payments` (or click **Wire local payments** on the catalog guide card). Set **`utility_name`** and **`payment_redirect_reason_code`** from pack defaults.
 3. HTTP tool **`confirm_payment_redirect`**: `POST {{billing_api_base_url}}/api/v1/payments/redirect/confirm`; **response_mapping** — `redirect_id` → `appointment.id`, `portal_url` → `confirmation_code`, `expires_at` → `appointment.slot.start` (reuse scheduling sample shape for local stub QA).
 4. Attach tool to the **Billing FAQ & payment redirect** agent; **Publish**.
 5. **Web test** script: ask to pay bill → provide tokenized account hint → confirm summary when agent reads back tool result.

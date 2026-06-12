@@ -68,6 +68,8 @@ export interface Mk01InstallMetadata {
     /** e.g. `packaged_definition` | `workflow_templates` */
     source?: string;
     source_template_id?: number;
+    /** Graph variant from install (e.g. booking_complex, collections_complex). */
+    catalog_variant_id?: string;
 }
 
 export interface WorkflowConfigurations {

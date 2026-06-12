@@ -10,7 +10,7 @@
  */
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { loginAnalyticsE2E } from "./loginForE2E";
 
@@ -18,6 +18,15 @@ const slug = "healthcare-clinic-screening";
 
 function gtmImagesDir(): string {
     return path.join(process.cwd(), "..", "docs", "images");
+}
+
+async function openCatalogWorkflowEditor(page: Page, workflowId: string) {
+    await page.goto(`/workflow/${encodeURIComponent(workflowId)}`);
+    const catalogBanner = page.getByText("Installed from catalog");
+    if (await catalogBanner.isVisible({ timeout: 15_000 }).catch(() => false)) {
+        await page.getByRole("button", { name: "Customize" }).click();
+        await expect(catalogBanner).toBeHidden({ timeout: 30_000 });
+    }
 }
 
 test.describe.configure({ mode: "serial", timeout: 120_000 });
@@ -31,6 +40,23 @@ test.describe("GTM deck screenshots (opt-in)", () => {
 
         await page.setViewportSize({ width: 1280, height: 720 });
         await loginAnalyticsE2E(page);
+    });
+
+    test("writes gtm-mk01-workflow-catalog-marketplace.png", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByTestId("catalog-buyer-demo-hint-healthcare-clinic-screening")).toBeVisible({
+            timeout: 15_000,
+        });
+        await expect(page.getByTestId("catalog-buyer-demo-hint-retail-wismo-faq")).toBeVisible();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-catalog-marketplace.png"),
+            fullPage: false,
+        });
     });
 
     test("writes gtm-mk01-analytics-overview.png", async ({ page }) => {
@@ -86,6 +112,80 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-mk01-analytics-live-workflow.png when call id provided", async ({ page }) => {
+        const callId = process.env.E2E_GTM_SAMPLE_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_SAMPLE_CALL_ID to capture live workflow timeline.");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByText("healthcare-clinic-screening")).toBeVisible({ timeout: 30_000 });
+
+        const timeline = page.getByTestId("live-workflow-timeline");
+        await expect(timeline).toBeVisible({ timeout: 30_000 });
+        await timeline.scrollIntoViewIfNeeded();
+        await expect(timeline.getByText("Prior auth verified")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-live-workflow.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-review-inbox.png", async ({ page }) => {
+        await page.goto("/analytics/review");
+
+        await expect(page.getByTestId("review-inbox")).toBeVisible({ timeout: 30_000 });
+        await expect(page.getByRole("heading", { name: "Review inbox" })).toBeVisible();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-review-inbox.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-settings-local-ehr-records.png", async ({ page, request }) => {
+        const backendURL = process.env.E2E_BACKEND_URL || "http://127.0.0.1:8000";
+        const loginRes = await request.post(`${backendURL}/api/v1/auth/login`, {
+            data: {
+                email: process.env.E2E_EMAIL!.trim(),
+                password: process.env.E2E_PASSWORD!,
+            },
+        });
+        expect(loginRes.ok()).toBeTruthy();
+        const { token } = (await loginRes.json()) as { token: string };
+        await request.put(`${backendURL}/api/v1/local-ehr/connector`, {
+            headers: { Authorization: `Bearer ${token}` },
+            data: {
+                record_keeping_mode: "local_with_connector",
+                vendor: "athenahealth",
+                connector_sync_enabled: true,
+            },
+        });
+
+        await page.goto("/settings");
+
+        const ehrHeading = page.getByRole("heading", { name: "Local demo EHR" });
+        await expect(ehrHeading).toBeVisible({ timeout: 30_000 });
+        await ehrHeading.scrollIntoViewIfNeeded();
+
+        await page.waitForResponse(
+            (res) => res.url().includes("/local-ehr/config") && res.status() === 200,
+            { timeout: 30_000 },
+        );
+
+        const section = page.getByTestId("local-ehr-section");
+        await expect(section).toBeVisible({ timeout: 30_000 });
+        await expect(section.getByTestId("local-ehr-mode-select")).toBeVisible();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-settings-local-ehr-records.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-mk01-analytics-call-detail.png when call id provided", async ({ page }) => {
         const callId = process.env.E2E_GTM_SAMPLE_CALL_ID?.trim();
         test.skip(!callId, "Set E2E_GTM_SAMPLE_CALL_ID to capture call detail (e.g. wr-… from Calls list).");
@@ -102,6 +202,232 @@ test.describe("GTM deck screenshots (opt-in)", () => {
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-retail-collections.png when retail call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_RETAIL_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_RETAIL_CALL_ID (collections_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("capture_payment_promise").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-retail-collections.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-telecom-outage.png when telecom call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_TELECOM_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_TELECOM_CALL_ID (outage_status_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_outage_status").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-telecom-outage.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-b2b-conversion.png when B2B call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_B2B_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_B2B_CALL_ID (conversion_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("update_crm_deal_stage").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-b2b-conversion.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-insurance-claims.png when insurance call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_INSURANCE_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_INSURANCE_CALL_ID (claims_lookup_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_claim_status").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-insurance-claims.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-banking-balance.png when banking call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_BANKING_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_BANKING_CALL_ID (balance_lookup_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_account_balance").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-banking-balance.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-hospitality-waiver.png when hospitality call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_HOSPITALITY_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_HOSPITALITY_CALL_ID (waiver_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("apply_cancellation_waiver").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-hospitality-waiver.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-smb-leads.png when SMB call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_SMB_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_SMB_CALL_ID (lead_capture_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("capture_lead_intent").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-smb-leads.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-civic-permits.png when civic call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_CIVIC_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_CIVIC_CALL_ID (permit_status_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_permit_status").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-civic-permits.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-hr-recruiting.png when HR call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_HR_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_HR_CALL_ID (application_status_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(traceHeading).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByText("lookup_application_status").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-hr-recruiting.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-settings-local-payments-collections.png", async ({ page }) => {
+        await page.goto("/settings#local-payments");
+
+        const heading = page.getByRole("heading", { name: "Local demo payments" });
+        await expect(heading).toBeVisible({ timeout: 30_000 });
+        await expect(page.getByTestId("local-payments-section")).toBeVisible({ timeout: 15_000 });
+        await heading.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-settings-local-payments-collections.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-settings-local-integrations-outage.png", async ({ page }) => {
+        await page.goto("/settings#local-integrations");
+
+        const heading = page.getByRole("heading", { name: "Local demo integrations" });
+        await expect(heading).toBeVisible({ timeout: 30_000 });
+        await expect(page.getByTestId("local-integrations-section")).toBeVisible({ timeout: 15_000 });
+        await heading.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-settings-local-integrations-outage.png"),
             fullPage: false,
         });
     });
@@ -196,6 +522,267 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-mk01-workflow-wire-retail-payments.png when retail workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_RETAIL_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_RETAIL_WORKFLOW_ID (collections_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("collections_complex")).toBeVisible({ timeout: 15_000 });
+        const wirePayments = page.getByTestId("wire-local-payments-button");
+        await expect(wirePayments).toBeVisible({ timeout: 15_000 });
+        await wirePayments.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-retail-payments.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-telecom-integrations.png when telecom workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_TELECOM_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_TELECOM_WORKFLOW_ID (outage_status_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("outage_status_complex")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-telecom-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-b2b-integrations.png when B2B workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_B2B_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_B2B_WORKFLOW_ID (conversion_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("conversion_complex")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-b2b-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-insurance-integrations.png when insurance workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_INSURANCE_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_INSURANCE_WORKFLOW_ID (claims_lookup_complex catalog workflow).",
+        );
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("claims_lookup_complex")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-insurance-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-banking-integrations.png when banking workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_BANKING_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_BANKING_WORKFLOW_ID (balance_lookup_complex catalog workflow).",
+        );
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("balance_lookup_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-banking-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-hospitality-integrations.png when hospitality workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_HOSPITALITY_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_HOSPITALITY_WORKFLOW_ID (waiver_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("waiver_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-hospitality-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-smb-integrations.png when SMB workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_SMB_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_SMB_WORKFLOW_ID (lead_capture_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("lead_capture_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-smb-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-civic-integrations.png when civic workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_CIVIC_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_CIVIC_WORKFLOW_ID (permit_status_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("permit_status_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-civic-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-hr-integrations.png when HR workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_HR_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_HR_WORKFLOW_ID (application_status_complex catalog workflow).",
+        );
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("application_status_complex")).toBeVisible({ timeout: 15_000 });
+        await expect(guide.getByText("Buyer story:")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-hr-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-ehr-messaging.png when workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_WORKFLOW_ID (ehr_sync_complex catalog workflow) to capture EHR + messaging wire guide.",
+        );
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        const wireEhr = page.getByTestId("wire-local-ehr-button");
+        const wireMessaging = page.getByTestId("wire-local-messaging-button");
+        await expect(wireEhr).toBeVisible({ timeout: 15_000 });
+        await expect(wireMessaging).toBeVisible({ timeout: 15_000 });
+        await wireEhr.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-ehr-messaging.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-catalog-guide-wire-local.png when workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_WORKFLOW_ID?.trim();
+        test.skip(
+            !workflowId,
+            "Set E2E_GTM_WORKFLOW_ID (catalog-installed workflow) to capture wire-local guide.",
+        );
+
+        await openCatalogWorkflowEditor(page, workflowId);
+
+        const wireEhr = page.getByTestId("wire-local-ehr-button");
+        const wireCalendar = page.getByRole("button", { name: "Wire local calendar" });
+        if (await wireEhr.isVisible({ timeout: 15_000 }).catch(() => false)) {
+            await wireEhr.scrollIntoViewIfNeeded();
+        } else {
+            await expect(wireCalendar).toBeVisible({ timeout: 30_000 });
+            await wireCalendar.scrollIntoViewIfNeeded();
+        }
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-catalog-guide-wire-local.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-settings-local-all-in-one.png", async ({ page }) => {
+        await page.goto("/settings");
+
+        await expect(page.getByText("Local demo calendar")).toBeVisible({ timeout: 30_000 });
+        const payments = page.getByText("Local demo payments");
+        await payments.scrollIntoViewIfNeeded();
+        await expect(payments).toBeVisible({ timeout: 15_000 });
+        const integrations = page.getByText("Local demo integrations");
+        await integrations.scrollIntoViewIfNeeded();
+        await expect(integrations).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-settings-local-all-in-one.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-we01-settings-http-cache-policy.png", async ({ page }) => {
         await page.goto("/settings");
 
@@ -215,14 +802,41 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         await expect(page.getByRole("heading", { name: "Voice profiles" })).toBeVisible({
             timeout: 30_000,
         });
-        // Built-in preset names appear when GET /api/v1/voice-profiles is available (restart API after deploy).
-        const preset = page.getByText(/Authentic|Professional|Warm —/).first();
+        const preset = page.getByText(/Authentic — natural|Professional|Warm —/).first();
         if (await preset.isVisible().catch(() => false)) {
             await preset.scrollIntoViewIfNeeded();
         }
 
         await page.screenshot({
             path: path.join(gtmImagesDir(), "gtm-we01-voice-profiles-page.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-we01-voice-profiles-natural-delivery.png", async ({ page }) => {
+        const profilesLoaded = page.waitForResponse(
+            (res) => res.url().includes("/api/v1/voice-profiles") && res.status() === 200,
+            { timeout: 30_000 },
+        );
+        await page.goto("/voice-profiles");
+
+        await expect(page.getByRole("heading", { name: "Voice profiles" })).toBeVisible({
+            timeout: 30_000,
+        });
+        await profilesLoaded;
+
+        const card = page.getByTestId("voice-profile-card-builtin:authentic_natural");
+        await expect(card).toBeVisible({ timeout: 30_000 });
+        await card.scrollIntoViewIfNeeded();
+        await card.click();
+
+        const editor = page.getByTestId("natural-delivery-editor");
+        await expect(editor).toBeVisible({ timeout: 15_000 });
+        await expect(editor.getByText("Natural delivery")).toBeVisible();
+        await editor.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-we01-voice-profiles-natural-delivery.png"),
             fullPage: false,
         });
     });

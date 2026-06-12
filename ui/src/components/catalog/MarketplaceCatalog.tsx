@@ -31,6 +31,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Sparkline, sparklineValuesFromSeed } from '@/components/ui/sparkline';
+import { CatalogBuyerHintTip } from '@/components/catalog/CatalogBuyerHintTip';
+import { CatalogBuyerVariantHintStrip } from '@/components/catalog/CatalogBuyerVariantHintStrip';
 import { WORKFLOW_RUN_MODES } from '@/constants/workflowRunModes';
 import { useAuth } from '@/lib/auth';
 import {
@@ -39,13 +41,30 @@ import {
     type CatalogJson,
     defaultCatalogFilters,
     filterVerticalPacks,
+    packHasReviewInboxStory,
+    preferredCatalogProofVariantId,
     type VerticalPack,
 } from '@/lib/catalog/filterVerticalPacks';
+import {
+    buildMarketplaceSettingsHref,
+    buyerDemoSettingsSectionLabel,
+} from '@/lib/catalog/buyerDemoDefaults';
+import {
+    buyerDemoCardTip,
+    buyerDemoScriptName,
+    buyerDemoVariantHint,
+} from '@/lib/catalog/buyerDemoHints';
+import {
+    buildAnalyticsOverviewHref,
+    buildMarketplaceAnalyticsProofHref,
+} from '@/lib/analyticsOverviewDeepLinks';
 import logger from '@/lib/logger';
+import { getBackendPublicBaseUrl } from '@/lib/apiClient';
 import {
     fetchCatalogVoicePreview,
     previewVoiceProfile,
     VERTICAL_VOICE_PROFILE_LABELS,
+    naturalDeliveryCatalogHint,
     type CatalogVoicePreview,
 } from '@/lib/voiceProfiles';
 import { cn, getRandomId } from '@/lib/utils';
@@ -68,13 +87,6 @@ function toggleString(arr: string[], value: string, checked: boolean): string[] 
         set.delete(value);
     }
     return [...set];
-}
-
-function defaultCatalogVariantId(pack: VerticalPack): string {
-    const v = pack.workflow_variants;
-    if (!v || v.length === 0) return '';
-    const simple = v.find((x) => x.complexity === 'simple');
-    return (simple ?? v[0])!.variant_id;
 }
 
 export function MarketplaceCatalog({
@@ -115,17 +127,17 @@ export function MarketplaceCatalog({
     const openInstall = useCallback((pack: VerticalPack) => {
         setInstallTarget(pack);
         setInstallName(pack.display_name);
-        setInstallVariantId(defaultCatalogVariantId(pack));
+        setInstallVariantId(preferredCatalogProofVariantId(pack));
     }, []);
 
     const openTry = useCallback((pack: VerticalPack) => {
         setTryPack(pack);
-        setTryVariantId(defaultCatalogVariantId(pack));
+        setTryVariantId(preferredCatalogProofVariantId(pack));
     }, []);
 
     const openLoopTalk = useCallback((pack: VerticalPack) => {
         setLoopTalkPack(pack);
-        setLoopTalkVariantId(defaultCatalogVariantId(pack));
+        setLoopTalkVariantId(preferredCatalogProofVariantId(pack));
     }, []);
 
     const openVoicePreview = useCallback((pack: VerticalPack) => {
@@ -141,6 +153,13 @@ export function MarketplaceCatalog({
         void fetchCatalogVoicePreview(voicePreviewPack.slug).then((data) => {
             if (!cancelled) {
                 setVoicePreview(data);
+                if (data?.previewAudioUrl) {
+                    const path = data.previewAudioUrl;
+                    const url = path.startsWith('http')
+                        ? path
+                        : `${getBackendPublicBaseUrl()}${path}`;
+                    setVoicePreviewAudioUrl(url);
+                }
                 setVoicePreviewLoading(false);
             }
         });
@@ -474,6 +493,34 @@ export function MarketplaceCatalog({
                             </CardHeader>
                             <CardContent className="flex-1 space-y-2 text-sm text-muted-foreground">
                                 <p>{pack.summary}</p>
+                                {(() => {
+                                    const proofVariant = preferredCatalogProofVariantId(pack);
+                                    const cardTip = buyerDemoCardTip(pack.slug);
+                                    const variantHint = buyerDemoVariantHint(pack.slug, proofVariant);
+                                    const script = buyerDemoScriptName(pack.slug, proofVariant);
+                                    if (!cardTip && !variantHint) return null;
+                                    return (
+                                        <p
+                                            className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-teal-500/20 bg-teal-500/5 px-2 py-1.5 text-xs leading-snug"
+                                            data-testid={`catalog-buyer-demo-hint-${pack.slug}`}
+                                        >
+                                            <span className="font-medium text-foreground">Buyer demo</span>
+                                            {cardTip ? <span>{cardTip}</span> : null}
+                                            {variantHint && script ? (
+                                                <CatalogBuyerHintTip
+                                                    label={`./scripts/${script}`}
+                                                    tip={[
+                                                        variantHint.story,
+                                                        variantHint.wire_tip,
+                                                        variantHint.compliance_note,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(' ')}
+                                                />
+                                            ) : null}
+                                        </p>
+                                    );
+                                })()}
                                 {pack.use_cases && pack.use_cases.length > 0 && (
                                     <p>
                                         <span className="font-medium text-foreground">Use cases: </span>
@@ -497,6 +544,17 @@ export function MarketplaceCatalog({
                                         <span className="font-medium text-foreground">Voice profile: </span>
                                         {VERTICAL_VOICE_PROFILE_LABELS[pack.recommended_voice_profile_id] ??
                                             pack.recommended_voice_profile_id}
+                                        {(() => {
+                                            const hint = naturalDeliveryCatalogHint(
+                                                pack.recommended_voice_profile_id,
+                                            );
+                                            return hint ? (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {' '}
+                                                    · {hint}
+                                                </span>
+                                            ) : null;
+                                        })()}
                                         {' '}
                                         <span className="text-xs">(applied on install; clone &amp; save under Voice profiles)</span>
                                     </p>
@@ -553,6 +611,60 @@ export function MarketplaceCatalog({
                                         >
                                             Preview voice script
                                         </Button>
+                                        {(() => {
+                                            const proofVariantId = preferredCatalogProofVariantId(pack);
+                                            const proofHref = buildMarketplaceAnalyticsProofHref({
+                                                catalogSlug: pack.slug,
+                                                catalogVariantId: proofVariantId || undefined,
+                                            });
+                                            const overviewHref = buildAnalyticsOverviewHref({
+                                                catalogSlug: pack.slug,
+                                                catalogVariantId: proofVariantId || undefined,
+                                            });
+                                            const showReviewInbox = packHasReviewInboxStory(pack);
+                                            const settingsHref = buildMarketplaceSettingsHref(pack.slug);
+                                            const settingsSection = settingsHref
+                                                ? settingsHref.split('#')[1]
+                                                : null;
+                                            const settingsLabel = settingsSection
+                                                ? buyerDemoSettingsSectionLabel(settingsSection)
+                                                : null;
+                                            return proofHref ? (
+                                                <div className="flex w-full flex-col gap-1 text-center text-xs text-muted-foreground">
+                                                    <Link
+                                                        href={proofHref}
+                                                        className="text-foreground/90 underline-offset-2 hover:underline"
+                                                        data-testid={`catalog-analytics-proof-${pack.slug}`}
+                                                    >
+                                                        Analytics proof (HTTP tools)
+                                                    </Link>
+                                                    <Link
+                                                        href={overviewHref}
+                                                        className="text-muted-foreground underline-offset-2 hover:underline"
+                                                    >
+                                                        Overview for this vertical
+                                                    </Link>
+                                                    {settingsHref && settingsLabel ? (
+                                                        <Link
+                                                            href={settingsHref}
+                                                            className="text-muted-foreground underline-offset-2 hover:underline"
+                                                            data-testid={`catalog-settings-local-${pack.slug}`}
+                                                        >
+                                                            {settingsLabel}
+                                                        </Link>
+                                                    ) : null}
+                                                    {showReviewInbox ? (
+                                                        <Link
+                                                            href="/analytics/review"
+                                                            className="text-muted-foreground underline-offset-2 hover:underline"
+                                                            data-testid={`catalog-review-inbox-${pack.slug}`}
+                                                        >
+                                                            Review inbox (HITL)
+                                                        </Link>
+                                                    ) : null}
+                                                </div>
+                                            ) : null;
+                                        })()}
                                         <Button type="button" className="w-full" onClick={() => openInstall(pack)}>
                                             Install into my org
                                         </Button>
@@ -624,6 +736,13 @@ export function MarketplaceCatalog({
                                             </code>
                                             .
                                         </p>
+                                        {installVariantId && installTarget ? (
+                                            <CatalogBuyerVariantHintStrip
+                                                catalogSlug={installTarget.slug}
+                                                variantId={installVariantId}
+                                                testId="catalog-install-variant-hint"
+                                            />
+                                        ) : null}
                                     </div>
                                 )}
                             <div className="space-y-2">
@@ -692,6 +811,12 @@ export function MarketplaceCatalog({
                                             <strong className="text-foreground">Voice profile:</strong>{' '}
                                             {VERTICAL_VOICE_PROFILE_LABELS[tryPack.recommended_voice_profile_id] ??
                                                 tryPack.recommended_voice_profile_id}
+                                            {(() => {
+                                                const hint = naturalDeliveryCatalogHint(
+                                                    tryPack.recommended_voice_profile_id,
+                                                );
+                                                return hint ? <> · {hint}</> : null;
+                                            })()}
                                             {' '}(applied on install)
                                         </p>
                                     )}
@@ -713,6 +838,13 @@ export function MarketplaceCatalog({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {tryVariantId && tryPack ? (
+                                    <CatalogBuyerVariantHintStrip
+                                        catalogSlug={tryPack.slug}
+                                        variantId={tryVariantId}
+                                        testId="catalog-try-variant-hint"
+                                    />
+                                ) : null}
                             </div>
                         )}
                         <DialogFooter className="gap-2 sm:gap-0">
@@ -770,6 +902,12 @@ export function MarketplaceCatalog({
                                             <strong className="text-foreground">Voice profile:</strong>{' '}
                                             {VERTICAL_VOICE_PROFILE_LABELS[loopTalkPack.recommended_voice_profile_id] ??
                                                 loopTalkPack.recommended_voice_profile_id}
+                                            {(() => {
+                                                const hint = naturalDeliveryCatalogHint(
+                                                    loopTalkPack.recommended_voice_profile_id,
+                                                );
+                                                return hint ? <> · {hint}</> : null;
+                                            })()}
                                             {' '}(applied on install)
                                         </p>
                                     )}
@@ -791,6 +929,13 @@ export function MarketplaceCatalog({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                {loopTalkVariantId && loopTalkPack ? (
+                                    <CatalogBuyerVariantHintStrip
+                                        catalogSlug={loopTalkPack.slug}
+                                        variantId={loopTalkVariantId}
+                                        testId="catalog-looptalk-variant-hint"
+                                    />
+                                ) : null}
                             </div>
                         )}
                         <DialogFooter className="gap-2 sm:gap-0">
@@ -827,8 +972,8 @@ export function MarketplaceCatalog({
                         <DialogTitle>Voice preview</DialogTitle>
                         <DialogDescription>
                             Industry sample line for{' '}
-                            <strong className="text-foreground">{voicePreviewPack?.display_name}</strong>. Audio
-                            requires ElevenLabs TTS on your account.
+                            <strong className="text-foreground">{voicePreviewPack?.display_name}</strong>.
+                            Hosted sample plays below when available; ElevenLabs uses your account TTS.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-3 py-2 text-sm">
@@ -848,6 +993,22 @@ export function MarketplaceCatalog({
                                     // eslint-disable-next-line jsx-a11y/media-has-caption -- TTS preview clip
                                     <audio controls src={voicePreviewAudioUrl} className="w-full" />
                                 ) : null}
+                                {voicePreview?.hostedPreviewIsSilentPlaceholder ? (
+                                    <p className="text-xs text-muted-foreground">
+                                        Hosted sample is a silent placeholder. Run{' '}
+                                        <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                                            ./scripts/regen_catalog_voice_previews.sh
+                                        </code>{' '}
+                                        with <strong className="text-foreground">ELEVENLABS_API_KEY</strong>{' '}
+                                        for spoken industry audio.
+                                    </p>
+                                ) : null}
+                                {voicePreviewPack && buyerDemoCardTip(voicePreviewPack.slug) ? (
+                                    <p className="text-xs text-muted-foreground">
+                                        <strong className="text-foreground">Buyer story: </strong>
+                                        {buyerDemoCardTip(voicePreviewPack.slug)}
+                                    </p>
+                                ) : null}
                             </>
                         ) : (
                             <p className="text-muted-foreground">Preview unavailable — check that the API is running.</p>
@@ -857,7 +1018,7 @@ export function MarketplaceCatalog({
                         <Button type="button" variant="outline" onClick={() => setVoicePreviewPack(null)}>
                             Close
                         </Button>
-                        {installable && voicePreview ? (
+                        {installable && voicePreview && !voicePreviewAudioUrl ? (
                             <Button
                                 type="button"
                                 onClick={() => void playVoicePreviewAudio()}
