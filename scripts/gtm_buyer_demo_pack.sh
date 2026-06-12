@@ -99,4 +99,4 @@ fi
 
 echo ""
 echo "OK — next: ./scripts/gtm_capture_deck.sh (API+UI) or BUYER_DEMO_INSTALL=1 ./scripts/run_all_buyer_demos.sh"
-echo "Incomplete: MK-01-SHIP-PR · MK-01-VOICE-SPOKEN (./scripts/check_voice_previews_spoken.sh)"
+echo "Incomplete: MK-01-VOICE-SPOKEN only (./scripts/check_voice_previews_spoken.sh --strict for spoken WAVs)"

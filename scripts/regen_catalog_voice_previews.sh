@@ -14,6 +14,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Load ElevenLabs (and other) keys from api/.env when not already exported.
+if [[ -f "${ROOT}/api/.env" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "${ROOT}/api/.env"
+  set +a
+fi
+
 if [[ -x "${ROOT}/venv/bin/python" ]]; then
   PYTHON="${ROOT}/venv/bin/python"
 else

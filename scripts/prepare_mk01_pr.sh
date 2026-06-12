@@ -98,7 +98,7 @@ if [[ -n "${TARGET_BRANCH}" ]]; then
 fi
 
 echo ""
-echo "Status: MK-01-SHIP-PR Incomplete (not committed / not merged)."
+echo "Status: MK-01-SHIP-PR Done (merged PR #1). Remaining: MK-01-VOICE-SPOKEN (ElevenLabs)."
 echo "Split options: ./scripts/prepare_mk01_pr.sh --split-hints"
 echo "Stage split:    ./scripts/prepare_mk01_pr.sh --stage {1|2|3|4|all}"
 echo "Dry-run stage:  ./scripts/prepare_mk01_pr.sh --dry-stage {1|2|3|4|all}"
