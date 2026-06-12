@@ -151,7 +151,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ### MK-01-SHIP-PR — Commit and open PR (buyer/GTM slice)
 
-**Status:** `Done` (PR open — merge to close)
+**Status:** `Done` (merged [PR #1](https://github.com/claw801010/open-voice-agent/pull/1) → `main`)
 
 **Goal:** Land the buyer-demo matrix + GTM deck slice on **`feat/mk01-local-all-in-one-gtm`** (or split PRs per **`prepare_mk01_pr.sh --split-hints`**).
 
@@ -160,7 +160,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 - [x] Split staging — **`prepare_mk01_pr.sh --stage {1|2|3|4|all}`** ([stage_mk01_split.sh](scripts/stage_mk01_split.sh)).
 - [x] Committed + pushed **7** commits on **`feat/mk01-local-all-in-one-gtm`** ([PR #1](https://github.com/claw801010/open-voice-agent/pull/1)).
 - [x] `./scripts/verify_mk01_buyer_shipped.sh` green on the branch.
-- [ ] Merge PR; mirror into **READMENEWRELEASES** on merge.
+- [x] Merge PR; mirror into **READMENEWRELEASES** on merge.
 
 **Key files:** [prepare_mk01_pr.sh](scripts/prepare_mk01_pr.sh), [DOCS.md](DOCS.md), [docs/images/gtm-mk01-*.png](docs/images/).
 
@@ -175,7 +175,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 **Remaining:**
 
 - [x] Advisory gate — **`check_voice_previews_spoken.sh`** (warn while silent; **`--strict`** for CI/release).
-- [ ] `ELEVENLABS_API_KEY=… ELEVENLABS_VOICE_ID=… ./scripts/regen_catalog_voice_previews.sh`
+- [ ] Set `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID` in `api/.env`, then `./scripts/regen_catalog_voice_previews.sh`
 - [ ] `./scripts/check_voice_previews_spoken.sh --strict` shows **0 silent** slugs.
 - [ ] Optional GTM frame **`gtm-we01-voice-profiles-natural-delivery.png`** refresh after UI copy change.
 
