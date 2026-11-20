@@ -34,6 +34,14 @@
 | `hr-staffing-recruiting-faq` | `interview_confirm_complex` | `confirm_or_reschedule_interview` | `POST {scheduling}/api/v1/appointments/reschedule` |
 | `public-sector-civic-services-faq` | `permit_status_complex` | `lookup_permit_status` | `POST {integrations}/api/v1/permits/status` |
 | `public-sector-civic-services-faq` | `language_router_complex` | `route_by_language` | `POST {integrations}/api/v1/calls/route-by-language` |
+| `construction-trades-faq` | `booking_complex` | `schedule_site_visit` | `POST {scheduling}/api/v1/appointments` |
+| `construction-trades-faq` | `estimate_complex` | `capture_project_intent` | `POST {integrations}/api/v1/leads/intent` |
+| `handyman-home-services-faq` | `quote_complex` | `capture_quote_intent` | `POST {integrations}/api/v1/quotes/intent` |
+| `handyman-home-services-faq` | `booking_complex` | `schedule_home_service` | `POST {scheduling}/api/v1/appointments` |
+| `barber-beauty-salon-faq` | `booking_complex` | `book_salon_appointment` | `POST {scheduling}/book_slot` |
+| `barber-beauty-salon-faq` | `location_router_complex` | `route_call_to_location` | `POST {integrations}/api/v1/locations/route` |
+| `solopreneur-coach-faq` | `booking_complex` | `book_discovery_call` | `POST {scheduling}/api/v1/appointments` |
+| `solopreneur-coach-faq` | `lead_capture_complex` | `capture_lead_intent` | `POST {integrations}/api/v1/leads/intent` |
 
 `{scheduling}` = `{BACKEND}/api/v1/local-scheduling` · `{payments}` = `{BACKEND}/api/v1/local-payments` · `{integrations}` = `{BACKEND}/api/v1/local-integrations` · `{ehr}` = `{BACKEND}/api/v1/local-ehr` · `{messaging}` = `{BACKEND}/api/v1/local-messaging`
 

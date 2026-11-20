@@ -1,0 +1,1016 @@
+{
+  "catalog_version": 2,
+  "description": "Modular voice-agent capabilities (MK-01-CAPABILITY-MODULES). Each module is a composable business motion buyers demand\u2014appointment booking, FAQ, lead verification, product help, etc. pack_refs link to shipped vertical packs and optional workflow_variants in catalog/vertical-packs.json.",
+  "categories": [
+    {
+      "id": "scheduling",
+      "label": "Scheduling & reminders",
+      "description": "Book, reschedule, confirm, and remind\u2014calendar and callback flows."
+    },
+    {
+      "id": "knowledge_faq",
+      "label": "FAQ & knowledge",
+      "description": "Policy-safe answers from scripts and knowledge bases\u2014no account changes."
+    },
+    {
+      "id": "sales_growth",
+      "label": "Sales & growth",
+      "description": "Qualify, capture, convert, renew, and upsell with HTTP handoff to CRM."
+    },
+    {
+      "id": "verification_trust",
+      "label": "Verification & trust",
+      "description": "Identity, tokenized lookup, and scripted guardrails before sensitive actions."
+    },
+    {
+      "id": "payments_billing",
+      "label": "Payments & billing",
+      "description": "Non-PCI redirects, balance FAQ, collections, and payment promises."
+    },
+    {
+      "id": "operations_status",
+      "label": "Operations & status",
+      "description": "Order status, outages, permits, application status, and routing."
+    },
+    {
+      "id": "field_local_services",
+      "label": "Field & local services",
+      "description": "Construction, handyman, salon, and owner-led businesses\u2014on-site booking, quotes, and routing."
+    }
+  ],
+  "modules": [
+    {
+      "id": "appointment_scheduling",
+      "label": "Appointment scheduling",
+      "category": "scheduling",
+      "demand_rank": 5,
+      "summary": "Book or reschedule visits, demos, branch appointments, and service callbacks via scheduling API.",
+      "typical_http_tools": [
+        "book_slot",
+        "schedule_branch_appointment",
+        "book_demo",
+        "schedule_interview",
+        "schedule_civic_callback",
+        "schedule_service_callback",
+        "schedule_lead_callback",
+        "schedule_adjuster_callback",
+        "reserve_pickup_slot"
+      ],
+      "template_variable_keys": [
+        "scheduling_api_base_url",
+        "clinic_name",
+        "preferred_visit_type"
+      ],
+      "pack_refs": [
+        {
+          "slug": "healthcare-clinic-screening",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "retail-wismo-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "b2b-saas-trial-nurture",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "insurance-fnol-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "financial-services-banking-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "hospitality-travel-concierge",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "smb-franchise-location-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "telecom-utilities-outage-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "public-sector-civic-services-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "hr-staffing-recruiting-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "barber-beauty-salon-faq",
+          "variant_id": "booking_complex"
+        }
+      ]
+    },
+    {
+      "id": "appointment_confirm_remind",
+      "label": "Confirm / remind / reschedule",
+      "category": "scheduling",
+      "demand_rank": 5,
+      "summary": "Reduce no-shows with reminder-style calls and one-tap reschedule handoff.",
+      "typical_http_tools": [
+        "reschedule_appointment",
+        "confirm_or_reschedule_interview"
+      ],
+      "template_variable_keys": [
+        "scheduling_api_base_url",
+        "confirmation_sms_body"
+      ],
+      "pack_refs": [
+        {
+          "slug": "healthcare-clinic-screening",
+          "variant_id": "confirm_remind"
+        },
+        {
+          "slug": "hr-staffing-recruiting-faq",
+          "variant_id": "interview_confirm_complex"
+        }
+      ]
+    },
+    {
+      "id": "faq_policy",
+      "label": "FAQ & policy answers",
+      "category": "knowledge_faq",
+      "demand_rank": 5,
+      "summary": "Scripted tier-1 answers\u2014hours, policies, product basics\u2014without changing account state.",
+      "typical_http_tools": [],
+      "template_variable_keys": [
+        "clinic_name",
+        "store_name",
+        "support_phone"
+      ],
+      "pack_refs": [
+        {
+          "slug": "healthcare-clinic-screening",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "retail-wismo-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "b2b-saas-trial-nurture",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "insurance-fnol-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "financial-services-banking-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "hospitality-travel-concierge",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "smb-franchise-location-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "telecom-utilities-outage-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "public-sector-civic-services-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "hr-staffing-recruiting-faq",
+          "variant_id": "simple"
+        }
+      ]
+    },
+    {
+      "id": "screening_triage",
+      "label": "Screening & triage",
+      "category": "knowledge_faq",
+      "demand_rank": 5,
+      "summary": "Symptom screening and scripted triage with PHI-minimization and escalation paths.",
+      "typical_http_tools": [],
+      "template_variable_keys": [
+        "clinic_name",
+        "support_phone",
+        "preferred_visit_type"
+      ],
+      "pack_refs": [
+        {
+          "slug": "healthcare-clinic-screening",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "healthcare-clinic-screening",
+          "variant_id": "booking_complex"
+        }
+      ]
+    },
+    {
+      "id": "order_status_wismo",
+      "label": "Order status (WISMO)",
+      "category": "operations_status",
+      "demand_rank": 5,
+      "summary": "Where-is-my-order and shipment status with OMS or helpdesk HTTP lookup.",
+      "typical_http_tools": [
+        "lookup_order_status"
+      ],
+      "template_variable_keys": [
+        "order_api_base_url",
+        "order_id"
+      ],
+      "pack_refs": [
+        {
+          "slug": "retail-wismo-faq",
+          "variant_id": "simple"
+        }
+      ]
+    },
+    {
+      "id": "returns_exchanges",
+      "label": "Returns & exchange policy",
+      "category": "knowledge_faq",
+      "demand_rank": 4,
+      "summary": "Return windows, exchange rules, and store-policy FAQ without initiating refunds on-call.",
+      "typical_http_tools": [],
+      "template_variable_keys": [
+        "return_window_days",
+        "store_name"
+      ],
+      "pack_refs": [
+        {
+          "slug": "retail-wismo-faq",
+          "variant_id": "simple"
+        }
+      ]
+    },
+    {
+      "id": "product_assistance",
+      "label": "Product assistance & recommendations",
+      "category": "sales_growth",
+      "demand_rank": 5,
+      "summary": "SKU help, compatibility, and add-on offers after the core intent is resolved.",
+      "typical_http_tools": [
+        "offer_warranty_addon",
+        "offer_room_upgrade"
+      ],
+      "template_variable_keys": [
+        "product_catalog_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "retail-wismo-faq",
+          "variant_id": "upsell_complex"
+        },
+        {
+          "slug": "hospitality-travel-concierge",
+          "variant_id": "upsell_complex"
+        }
+      ]
+    },
+    {
+      "id": "lead_qualification",
+      "label": "Lead qualification (PQL / SQL)",
+      "category": "sales_growth",
+      "demand_rank": 5,
+      "summary": "Qualify intent, firmographics, and timeline before routing to sales or booking.",
+      "typical_http_tools": [
+        "capture_quote_intent",
+        "update_crm_deal_stage"
+      ],
+      "template_variable_keys": [
+        "company_size",
+        "use_case",
+        "crm_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "b2b-saas-trial-nurture",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "b2b-saas-trial-nurture",
+          "variant_id": "conversion_complex"
+        },
+        {
+          "slug": "insurance-fnol-faq",
+          "variant_id": "quote_complex"
+        },
+        {
+          "slug": "smb-franchise-location-faq",
+          "variant_id": "lead_capture_complex"
+        },
+        {
+          "slug": "solopreneur-coach-faq",
+          "variant_id": "simple"
+        }
+      ]
+    },
+    {
+      "id": "lead_capture",
+      "label": "Lead capture & callback intent",
+      "category": "sales_growth",
+      "demand_rank": 5,
+      "summary": "Capture lead details and schedule follow-up without full CRM implementation on day one.",
+      "typical_http_tools": [
+        "capture_lead_intent",
+        "schedule_lead_callback"
+      ],
+      "template_variable_keys": [
+        "crm_api_base_url",
+        "location_id"
+      ],
+      "pack_refs": [
+        {
+          "slug": "smb-franchise-location-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "smb-franchise-location-faq",
+          "variant_id": "lead_capture_complex"
+        },
+        {
+          "slug": "solopreneur-coach-faq",
+          "variant_id": "lead_capture_complex"
+        }
+      ]
+    },
+    {
+      "id": "lead_verification",
+      "label": "Lead / caller verification",
+      "category": "verification_trust",
+      "demand_rank": 4,
+      "summary": "Tokenized or OTP-style verification before sharing account-specific data (never full PAN/SSN on-call).",
+      "typical_http_tools": [
+        "lookup_account_balance",
+        "lookup_claim_status"
+      ],
+      "template_variable_keys": [
+        "account_token",
+        "last_four_ssn",
+        "date_of_birth"
+      ],
+      "pack_refs": [
+        {
+          "slug": "financial-services-banking-faq",
+          "variant_id": "balance_lookup_complex"
+        },
+        {
+          "slug": "insurance-fnol-faq",
+          "variant_id": "claims_lookup_complex"
+        }
+      ]
+    },
+    {
+      "id": "callback_scheduling",
+      "label": "Callback scheduling",
+      "category": "scheduling",
+      "demand_rank": 4,
+      "summary": "Generic schedule-a-callback motion when full calendar integration is optional.",
+      "typical_http_tools": [
+        "schedule_adjuster_callback",
+        "schedule_service_callback",
+        "schedule_lead_callback"
+      ],
+      "template_variable_keys": [
+        "scheduling_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "insurance-fnol-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "telecom-utilities-outage-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "public-sector-civic-services-faq",
+          "variant_id": "booking_complex"
+        }
+      ]
+    },
+    {
+      "id": "claims_status_lookup",
+      "label": "Claims status lookup",
+      "category": "operations_status",
+      "demand_rank": 4,
+      "summary": "Tokenized claims status after FNOL\u2014no full claim filing on the voice channel.",
+      "typical_http_tools": [
+        "lookup_claim_status"
+      ],
+      "template_variable_keys": [
+        "claims_api_base_url",
+        "claim_token"
+      ],
+      "pack_refs": [
+        {
+          "slug": "insurance-fnol-faq",
+          "variant_id": "claims_lookup_complex"
+        }
+      ]
+    },
+    {
+      "id": "fnol_guidance",
+      "label": "FNOL guidance",
+      "category": "knowledge_faq",
+      "demand_rank": 4,
+      "summary": "First notice of loss scripting\u2014what to collect, what not to say, and warm handoff.",
+      "typical_http_tools": [],
+      "template_variable_keys": [
+        "carrier_name",
+        "claims_phone"
+      ],
+      "pack_refs": [
+        {
+          "slug": "insurance-fnol-faq",
+          "variant_id": "simple"
+        }
+      ]
+    },
+    {
+      "id": "quote_intent_capture",
+      "label": "Quote intent capture",
+      "category": "sales_growth",
+      "demand_rank": 4,
+      "summary": "Capture quote-ready intent and route to agent or async quote workflow.",
+      "typical_http_tools": [
+        "capture_quote_intent"
+      ],
+      "template_variable_keys": [
+        "quote_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "insurance-fnol-faq",
+          "variant_id": "quote_complex"
+        }
+      ]
+    },
+    {
+      "id": "payment_redirect",
+      "label": "Payment redirect (non-PCI)",
+      "category": "payments_billing",
+      "demand_rank": 4,
+      "summary": "Send callers to secure payment portals\u2014never capture card data on the voice call.",
+      "typical_http_tools": [
+        "confirm_payment_redirect"
+      ],
+      "template_variable_keys": [
+        "billing_portal_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "telecom-utilities-outage-faq",
+          "variant_id": "payment_redirect_complex"
+        }
+      ]
+    },
+    {
+      "id": "balance_inquiry",
+      "label": "Balance inquiry (tokenized)",
+      "category": "payments_billing",
+      "demand_rank": 4,
+      "summary": "Non-PCI balance or payment FAQ after token verification.",
+      "typical_http_tools": [
+        "lookup_account_balance"
+      ],
+      "template_variable_keys": [
+        "account_token",
+        "banking_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "financial-services-banking-faq",
+          "variant_id": "balance_lookup_complex"
+        }
+      ]
+    },
+    {
+      "id": "card_block_report",
+      "label": "Card lost / stolen report",
+      "category": "verification_trust",
+      "demand_rank": 4,
+      "summary": "Scripted card block flow with fraud guardrails and tokenized handoff.",
+      "typical_http_tools": [
+        "report_card_lost_stolen"
+      ],
+      "template_variable_keys": [
+        "card_token",
+        "banking_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "financial-services-banking-faq",
+          "variant_id": "card_block_complex"
+        }
+      ]
+    },
+    {
+      "id": "outage_status",
+      "label": "Outage & service status",
+      "category": "operations_status",
+      "demand_rank": 5,
+      "summary": "Outage FAQ and area status lookup from BSS/OSS or static feeds.",
+      "typical_http_tools": [
+        "lookup_outage_status"
+      ],
+      "template_variable_keys": [
+        "outage_api_base_url",
+        "service_zip"
+      ],
+      "pack_refs": [
+        {
+          "slug": "telecom-utilities-outage-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "telecom-utilities-outage-faq",
+          "variant_id": "outage_status_complex"
+        }
+      ]
+    },
+    {
+      "id": "reservation_modify",
+      "label": "Reservation modify",
+      "category": "scheduling",
+      "demand_rank": 4,
+      "summary": "Modify hospitality or travel reservations via PMS/CRS HTTP tools.",
+      "typical_http_tools": [
+        "modify_reservation"
+      ],
+      "template_variable_keys": [
+        "reservation_api_base_url",
+        "confirmation_code"
+      ],
+      "pack_refs": [
+        {
+          "slug": "hospitality-travel-concierge",
+          "variant_id": "booking_complex"
+        }
+      ]
+    },
+    {
+      "id": "cancellation_waiver",
+      "label": "Cancellation fee waiver",
+      "category": "payments_billing",
+      "demand_rank": 3,
+      "summary": "Policy-safe waiver or credit offers for cancellations\u2014legal review per region.",
+      "typical_http_tools": [
+        "apply_cancellation_waiver"
+      ],
+      "template_variable_keys": [
+        "billing_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "hospitality-travel-concierge",
+          "variant_id": "waiver_complex"
+        }
+      ]
+    },
+    {
+      "id": "loyalty_upsell",
+      "label": "Loyalty & upsell",
+      "category": "sales_growth",
+      "demand_rank": 4,
+      "summary": "Attach warranty, room upgrade, or loyalty enrollment after core service.",
+      "typical_http_tools": [
+        "offer_warranty_addon",
+        "offer_room_upgrade"
+      ],
+      "template_variable_keys": [
+        "loyalty_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "retail-wismo-faq",
+          "variant_id": "upsell_complex"
+        },
+        {
+          "slug": "hospitality-travel-concierge",
+          "variant_id": "upsell_complex"
+        }
+      ]
+    },
+    {
+      "id": "collections_payment_promise",
+      "label": "Collections / payment promise",
+      "category": "payments_billing",
+      "demand_rank": 3,
+      "summary": "Regulated-friendly payment arrangement capture\u2014legal sign-off required per jurisdiction.",
+      "typical_http_tools": [
+        "capture_payment_promise"
+      ],
+      "template_variable_keys": [
+        "collections_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "retail-wismo-faq",
+          "variant_id": "collections_complex"
+        }
+      ]
+    },
+    {
+      "id": "location_router",
+      "label": "Multi-location router",
+      "category": "operations_status",
+      "demand_rank": 4,
+      "summary": "Route callers to the right franchise or store location by ZIP or intent.",
+      "typical_http_tools": [
+        "route_call_to_location"
+      ],
+      "template_variable_keys": [
+        "location_id",
+        "franchise_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "smb-franchise-location-faq",
+          "variant_id": "location_router_complex"
+        }
+      ]
+    },
+    {
+      "id": "application_status",
+      "label": "Application status",
+      "category": "operations_status",
+      "demand_rank": 4,
+      "summary": "ATS-friendly application status lookup for candidates.",
+      "typical_http_tools": [
+        "lookup_application_status"
+      ],
+      "template_variable_keys": [
+        "ats_api_base_url",
+        "application_token"
+      ],
+      "pack_refs": [
+        {
+          "slug": "hr-staffing-recruiting-faq",
+          "variant_id": "application_status_complex"
+        }
+      ]
+    },
+    {
+      "id": "interview_scheduling",
+      "label": "Interview scheduling",
+      "category": "scheduling",
+      "demand_rank": 4,
+      "summary": "Schedule recruiter or hiring-manager interviews with calendar HTTP handoff.",
+      "typical_http_tools": [
+        "schedule_interview"
+      ],
+      "template_variable_keys": [
+        "scheduling_api_base_url",
+        "job_id"
+      ],
+      "pack_refs": [
+        {
+          "slug": "hr-staffing-recruiting-faq",
+          "variant_id": "booking_complex"
+        }
+      ]
+    },
+    {
+      "id": "renewal_qbr",
+      "label": "Renewal & QBR booking",
+      "category": "sales_growth",
+      "demand_rank": 4,
+      "summary": "Book QBR/renewal meetings and sync CRM health for customer success.",
+      "typical_http_tools": [
+        "book_qbr",
+        "sync_crm_health"
+      ],
+      "template_variable_keys": [
+        "crm_api_base_url",
+        "scheduling_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "b2b-saas-trial-nurture",
+          "variant_id": "renewal_complex"
+        }
+      ]
+    },
+    {
+      "id": "trial_conversion",
+      "label": "Trial \u2192 paid conversion",
+      "category": "sales_growth",
+      "demand_rank": 4,
+      "summary": "PQL nurture and deal-stage updates for trial accounts.",
+      "typical_http_tools": [
+        "update_crm_deal_stage"
+      ],
+      "template_variable_keys": [
+        "crm_api_base_url",
+        "deal_stage"
+      ],
+      "pack_refs": [
+        {
+          "slug": "b2b-saas-trial-nurture",
+          "variant_id": "conversion_complex"
+        }
+      ]
+    },
+    {
+      "id": "account_health_sync",
+      "label": "Account health / CRM sync",
+      "category": "sales_growth",
+      "demand_rank": 3,
+      "summary": "Push conversation outcomes to CRM for CS and sales visibility.",
+      "typical_http_tools": [
+        "sync_crm_health",
+        "update_crm_deal_stage"
+      ],
+      "template_variable_keys": [
+        "crm_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "b2b-saas-trial-nurture",
+          "variant_id": "renewal_complex"
+        }
+      ]
+    },
+    {
+      "id": "permit_status_lookup",
+      "label": "Permit / case status",
+      "category": "operations_status",
+      "demand_rank": 3,
+      "summary": "Civic permit or case status lookup for public-sector callers.",
+      "typical_http_tools": [
+        "lookup_permit_status"
+      ],
+      "template_variable_keys": [
+        "civic_api_base_url",
+        "permit_id"
+      ],
+      "pack_refs": [
+        {
+          "slug": "public-sector-civic-services-faq",
+          "variant_id": "permit_status_complex"
+        }
+      ]
+    },
+    {
+      "id": "language_routing",
+      "label": "Language routing",
+      "category": "operations_status",
+      "demand_rank": 3,
+      "summary": "Detect language preference and route to the right queue or bilingual agent.",
+      "typical_http_tools": [
+        "route_by_language"
+      ],
+      "template_variable_keys": [
+        "preferred_language"
+      ],
+      "pack_refs": [
+        {
+          "slug": "public-sector-civic-services-faq",
+          "variant_id": "language_router_complex"
+        }
+      ]
+    },
+    {
+      "id": "post_visit_followup",
+      "label": "Post-visit follow-up",
+      "category": "knowledge_faq",
+      "demand_rank": 3,
+      "summary": "Post-discharge or post-visit check-in prompts and escalation.",
+      "typical_http_tools": [],
+      "template_variable_keys": [
+        "clinic_name",
+        "follow_up_window_days"
+      ],
+      "pack_refs": [
+        {
+          "slug": "healthcare-clinic-screening",
+          "variant_id": "simple"
+        }
+      ]
+    },
+    {
+      "id": "human_handoff",
+      "label": "Human handoff & review inbox",
+      "category": "verification_trust",
+      "demand_rank": 4,
+      "summary": "Escalate to staff with SMS/email follow-up and analytics review inbox.",
+      "typical_http_tools": [
+        "send_confirmation_sms",
+        "sync_chart_to_ehr",
+        "lookup_patient_context"
+      ],
+      "template_variable_keys": [
+        "messaging_api_base_url",
+        "ehr_api_base_url"
+      ],
+      "pack_refs": [
+        {
+          "slug": "healthcare-clinic-screening",
+          "variant_id": "ehr_sync_complex"
+        }
+      ]
+    },
+    {
+      "id": "concierge_priority_visit",
+      "label": "Concierge / priority visit",
+      "category": "sales_growth",
+      "demand_rank": 3,
+      "summary": "Optional paid priority or concierge enrollment after triage.",
+      "typical_http_tools": [
+        "enroll_concierge_visit"
+      ],
+      "template_variable_keys": [
+        "billing_api_base_url",
+        "concierge_visit_type"
+      ],
+      "pack_refs": [
+        {
+          "slug": "healthcare-clinic-screening",
+          "variant_id": "concierge_complex"
+        }
+      ]
+    },
+    {
+      "id": "site_visit_scheduling",
+      "label": "Site visit scheduling",
+      "category": "scheduling",
+      "demand_rank": 5,
+      "summary": "Book on-site estimates, walkthroughs, and job visits for contractors and trades.",
+      "typical_http_tools": [
+        "schedule_site_visit",
+        "schedule_home_service"
+      ],
+      "template_variable_keys": [
+        "scheduling_api_base_url",
+        "company_name",
+        "default_trade_code"
+      ],
+      "pack_refs": [
+        {
+          "slug": "construction-trades-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "handyman-home-services-faq",
+          "variant_id": "booking_complex"
+        }
+      ]
+    },
+    {
+      "id": "project_estimate_intake",
+      "label": "Project / bid estimate intake",
+      "category": "sales_growth",
+      "demand_rank": 5,
+      "summary": "Capture remodel or construction bid intent without quoting firm prices on the call.",
+      "typical_http_tools": [
+        "capture_project_intent",
+        "capture_quote_intent"
+      ],
+      "template_variable_keys": [
+        "crm_api_base_url",
+        "quoting_api_base_url",
+        "crm_lead_source_code"
+      ],
+      "pack_refs": [
+        {
+          "slug": "construction-trades-faq",
+          "variant_id": "estimate_complex"
+        },
+        {
+          "slug": "handyman-home-services-faq",
+          "variant_id": "quote_complex"
+        }
+      ]
+    },
+    {
+      "id": "service_area_faq",
+      "label": "Service area & menu FAQ",
+      "category": "knowledge_faq",
+      "demand_rank": 5,
+      "summary": "ZIP coverage, services menu, hours, and licensing FAQ for local operators.",
+      "typical_http_tools": [],
+      "template_variable_keys": [
+        "services_page_url",
+        "service_area_zips",
+        "business_name"
+      ],
+      "pack_refs": [
+        {
+          "slug": "construction-trades-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "handyman-home-services-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "barber-beauty-salon-faq",
+          "variant_id": "simple"
+        },
+        {
+          "slug": "solopreneur-coach-faq",
+          "variant_id": "simple"
+        }
+      ]
+    },
+    {
+      "id": "salon_appointment_booking",
+      "label": "Salon appointment booking",
+      "category": "scheduling",
+      "demand_rank": 5,
+      "summary": "Book cuts, color, and beauty services with stylist hints and cancellation policy.",
+      "typical_http_tools": [
+        "book_salon_appointment",
+        "book_slot"
+      ],
+      "template_variable_keys": [
+        "scheduling_api_base_url",
+        "salon_name",
+        "default_stylist_code"
+      ],
+      "pack_refs": [
+        {
+          "slug": "barber-beauty-salon-faq",
+          "variant_id": "booking_complex"
+        }
+      ]
+    },
+    {
+      "id": "stylist_routing",
+      "label": "Stylist / chair routing",
+      "category": "operations_status",
+      "demand_rank": 4,
+      "summary": "Route callers to the right stylist, barber, or chair by name or specialty.",
+      "typical_http_tools": [
+        "route_call_to_location"
+      ],
+      "template_variable_keys": [
+        "locations_api_base_url",
+        "routing_policy_code"
+      ],
+      "pack_refs": [
+        {
+          "slug": "barber-beauty-salon-faq",
+          "variant_id": "location_router_complex"
+        }
+      ]
+    },
+    {
+      "id": "discovery_call_booking",
+      "label": "Discovery call booking",
+      "category": "scheduling",
+      "demand_rank": 5,
+      "summary": "Book strategy, coaching, or intro calls for solopreneurs and founders.",
+      "typical_http_tools": [
+        "book_discovery_call",
+        "book_demo"
+      ],
+      "template_variable_keys": [
+        "scheduling_api_base_url",
+        "brand_name"
+      ],
+      "pack_refs": [
+        {
+          "slug": "solopreneur-coach-faq",
+          "variant_id": "booking_complex"
+        },
+        {
+          "slug": "b2b-saas-trial-nurture",
+          "variant_id": "booking_complex"
+        }
+      ]
+    },
+    {
+      "id": "solopreneur_client_intake",
+      "label": "Client intake & CRM capture",
+      "category": "sales_growth",
+      "demand_rank": 5,
+      "summary": "Capture program enrollment or project intake for one-person businesses.",
+      "typical_http_tools": [
+        "capture_lead_intent",
+        "capture_client_intake"
+      ],
+      "template_variable_keys": [
+        "crm_api_base_url",
+        "crm_lead_source_code"
+      ],
+      "pack_refs": [
+        {
+          "slug": "solopreneur-coach-faq",
+          "variant_id": "lead_capture_complex"
+        },
+        {
+          "slug": "smb-franchise-location-faq",
+          "variant_id": "lead_capture_complex"
+        }
+      ]
+    }
+  ]
+}

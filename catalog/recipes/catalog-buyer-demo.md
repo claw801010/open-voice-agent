@@ -39,6 +39,10 @@ python3 scripts/gen_buyer_demo_shortcuts.py --check   # CI / verify_mk01_buyer_s
 | `buyer-demo-franchise-leads.sh` | `smb-franchise-location-faq` | `lead_capture_complex` |
 | `buyer-demo-civic-permits.sh` | `public-sector-civic-services-faq` | `permit_status_complex` |
 | `buyer-demo-hr-recruiting.sh` | `hr-staffing-recruiting-faq` | `application_status_complex` |
+| `buyer-demo-construction-site.sh` | `construction-trades-faq` | `booking_complex` |
+| `buyer-demo-handyman-quote.sh` | `handyman-home-services-faq` | `quote_complex` |
+| `buyer-demo-salon-booking.sh` | `barber-beauty-salon-faq` | `booking_complex` |
+| `buyer-demo-solopreneur-intake.sh` | `solopreneur-coach-faq` | `lead_capture_complex` |
 
 ## In-product hints (marketplace + editor)
 
@@ -112,6 +116,12 @@ High-value verticals — defaults from [buyer-demo-defaults.json](../buyer-demo-
 | Telecom outage | `telecom-utilities-outage-faq` | `outage_status_complex` | `lookup_outage_status` |
 | Civic permits | `public-sector-civic-services-faq` | `permit_status_complex` | `lookup_permit_status` |
 | HR recruiting | `hr-staffing-recruiting-faq` | `application_status_complex` | `lookup_application_status` |
+| Construction site visit | `construction-trades-faq` | `booking_complex` | `schedule_site_visit` |
+| Handyman quote | `handyman-home-services-faq` | `quote_complex` | `capture_quote_intent` |
+| Salon booking | `barber-beauty-salon-faq` | `booking_complex` | `book_salon_appointment` |
+| Solopreneur intake | `solopreneur-coach-faq` | `lead_capture_complex` | `capture_lead_intent` |
+
+**Deferred:** spoken voice previews — see [OUTSTANDING.md](../OUTSTANDING.md) (silent WAV placeholders OK until ElevenLabs or `--local-tts`).
 
 ```bash
 BUYER_DEMO_SEED_CALL=1 ./scripts/catalog-buyer-demo.sh telecom-utilities-outage-faq

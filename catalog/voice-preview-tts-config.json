@@ -1,0 +1,15 @@
+{
+  "description": "MK-01-VOICE-SPOKEN — TTS defaults for catalog voice preview regeneration.",
+  "speaches": {
+    "base_url_env": "SPEACHES_TTS_BASE_URL",
+    "default_base_url": "http://127.0.0.1:8100/v1",
+    "model": "hexgrad/Kokoro-82M",
+    "voice": "af_heart",
+    "sample_rate": 24000
+  },
+  "elevenlabs": {
+    "model_env": "ELEVENLABS_MODEL_ID",
+    "default_model": "eleven_flash_v2_5"
+  },
+  "slug_overrides": {}
+}

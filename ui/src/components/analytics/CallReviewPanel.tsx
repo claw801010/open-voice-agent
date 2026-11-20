@@ -206,6 +206,15 @@ export function CallReviewPanel({ callId, detail, onFollowUpsChange }: Props) {
                                     ))}
                                 </div>
                             ) : null}
+                            {displayReview && (displayReview.recommendations ?? []).length > 0 ? (
+                                <p className="text-xs text-muted-foreground">
+                                    Recommendations are also routed to the{' '}
+                                    <Link href="/analytics/quality" className="underline underline-offset-2">
+                                        Quality & improvement
+                                    </Link>{' '}
+                                    queue per your org policy (default: human approval for all).
+                                </p>
+                            ) : null}
                             <Button variant="link" size="sm" className="h-auto p-0" asChild>
                                 <Link href={`/workflow/${detail.workflow_id}`}>Open workflow editor</Link>
                             </Button>

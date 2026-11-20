@@ -21,7 +21,7 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   echo "One-command local dev bootstrap (see READMEBUILDME.md §4)."
   echo "Run from repository root: bash scripts/bootstrap_fresh_dev.sh"
   echo "Windows: use WSL2 (Ubuntu) on the Linux filesystem, or see READMEBUILDME.md §4 · Windows and WSL."
-  echo "Env: SKIP_SUBMODULE=1 SKIP_DOCKER=1 SKIP_UI_TEST=1 SKIP_PIP=1 VENV_DIR=..."
+  echo "Env: SKIP_SUBMODULE=1 SKIP_DOCKER=1 SKIP_UI_TEST=1 SKIP_PIP=1 SKIP_LOCAL_MODELS=1 VENV_DIR=..."
   exit 0
 fi
 
@@ -60,6 +60,19 @@ fi
 
 # For Pipecat voice pipelines, still run: bash scripts/setup_pipecat.sh
 info "Note: for full voice/Pipecat, also run: bash scripts/setup_pipecat.sh (optional for HTTP tool UI + DB smoke)"
+
+# --- 2b) Optional local inference models (Ollama) ----------------------------
+if [[ -z "${SKIP_LOCAL_MODELS:-}" ]]; then
+  if [[ -x "$REPO_ROOT/scripts/setup_local_inference.sh" ]]; then
+    info "Optional: pulling lean local inference models (Ollama)…"
+    bash "$REPO_ROOT/scripts/setup_local_inference.sh" || info "Local model setup skipped (install ollama or set SKIP_LOCAL_MODELS=1)"
+    if [[ -x "$REPO_ROOT/scripts/start_local_inference.sh" ]]; then
+      bash "$REPO_ROOT/scripts/start_local_inference.sh" || info "Speaches not started (install Docker or start manually)"
+    fi
+  fi
+else
+  info "SKIP_LOCAL_MODELS=1 — not running setup_local_inference.sh"
+fi
 
 # --- 3) api/.env ------------------------------------------------------------
 if [[ ! -f "$REPO_ROOT/api/.env" ]]; then

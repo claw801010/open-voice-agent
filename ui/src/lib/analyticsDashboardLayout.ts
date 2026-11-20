@@ -157,6 +157,38 @@ const CATALOG_SLUG_WIDGET_PRESETS: Record<string, readonly AnalyticsWidgetType[]
         "dive_deeper",
         "vertical_shortcuts",
     ],
+    "construction-trades-faq": [
+        "kpi_row",
+        "quality_rollup",
+        "outcome_top",
+        "revenue_motions",
+        "vertical_shortcuts",
+        "dive_deeper",
+    ],
+    "handyman-home-services-faq": [
+        "kpi_row",
+        "quality_rollup",
+        "outcome_top",
+        "revenue_motions",
+        "vertical_shortcuts",
+        "dive_deeper",
+    ],
+    "barber-beauty-salon-faq": [
+        "kpi_row",
+        "quality_rollup",
+        "outcome_top",
+        "revenue_motions",
+        "vertical_shortcuts",
+        "dive_deeper",
+    ],
+    "solopreneur-coach-faq": [
+        "kpi_row",
+        "quality_rollup",
+        "outcome_top",
+        "revenue_motions",
+        "dive_deeper",
+        "vertical_shortcuts",
+    ],
 };
 
 export function buildWidgetLayoutFromTypes(types: readonly AnalyticsWidgetType[]): AnalyticsDashboardWidget[] {

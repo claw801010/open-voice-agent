@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
+import { resolvePostLoginPath } from "@/lib/onboarding/postLoginRedirect";
 import { getAuthUserApiV1UserAuthUserGet } from "@/client/sdk.gen";
 import { getWorkflowCountApiV1WorkflowCountGet } from "@/client/sdk.gen";
 import { impersonateApiV1SuperuserImpersonatePost } from "@/client/sdk.gen";
@@ -88,14 +89,13 @@ export async function getRedirectUrl(token: string, permissions: { id: string }[
       console.log('[getRedirectUrl] User has workflows, redirecting to /workflow');
       return "/workflow";
     } else {
-      console.log('[getRedirectUrl] No workflows found, redirecting to /workflow/create');
-      return "/workflow/create";
+      console.log('[getRedirectUrl] No workflows found, redirecting to /overview');
+      return resolvePostLoginPath(0);
     }
   } catch (error) {
     console.error('[getRedirectUrl] Error checking workflows:', error);
-    // If we can't check workflows, default to /workflow/create
-    console.log('[getRedirectUrl] Defaulting to /workflow/create due to error');
-    return "/workflow/create";
+    console.log('[getRedirectUrl] Defaulting to /overview due to error');
+    return resolvePostLoginPath(0);
   }
   } catch (error) {
     console.error("[getRedirectUrl] Failed to fetch auth user:", error);

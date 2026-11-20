@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const LINKS: { href: string; label: string }[] = [
     { href: "/analytics", label: "Overview" },
     { href: "/analytics/calls", label: "Call list" },
+    { href: "/analytics/quality", label: "Quality & improvement" },
 ];
 
 export function AnalyticsSubnav() {

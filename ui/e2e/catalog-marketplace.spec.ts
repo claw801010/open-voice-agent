@@ -41,6 +41,16 @@ test.describe("Template catalog (authenticated)", () => {
         });
         await expect(page.getByText("Could not load catalog")).not.toBeVisible();
         await expect(page.getByText("Invalid catalog response")).not.toBeVisible();
+        await expect(page.getByTestId("catalog-tab-templates")).toBeVisible();
+        await expect(page.getByTestId("catalog-distribution-barber-beauty-salon-faq")).toBeVisible();
+    });
+
+    test("community library tab lists registry assets", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+        await expect(page.getByTestId("catalog-tab-community")).toBeVisible({ timeout: 30_000 });
+        await page.getByTestId("catalog-tab-community").click();
+        await expect(page.getByTestId("community-registry-panel")).toBeVisible();
+        await expect(page.getByTestId("registry-listing-recipe:local-scheduling-all-in-one")).toBeVisible();
     });
 
     test("healthcare pack card shows natural delivery voice hint", async ({ page }) => {
@@ -1004,5 +1014,114 @@ test.describe("Catalog guide — wire local all-in-one (authenticated + API)", (
         await expect(dialog.getByTestId("catalog-try-variant-hint")).toBeVisible();
         await expect(dialog.getByText(/payment promise/i).first()).toBeVisible();
         await expect(dialog.locator("#try-variant")).toContainText(/Collections/i);
+    });
+});
+
+test.describe("Capability modules install (authenticated + API)", () => {
+    test.beforeEach(async ({ page }) => {
+        await loginAnalyticsE2E(page);
+    });
+
+    test("capability chips filter packs and show install banner", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: capability install flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+        await waitForCatalogPacks(page);
+
+        const appointmentChip = page.getByTestId("catalog-capability-appointment_scheduling");
+        await expect(appointmentChip).toBeVisible({ timeout: 15_000 });
+        await appointmentChip.click();
+
+        await expect(page.getByTestId("catalog-capability-install-banner")).toBeVisible({
+            timeout: 15_000,
+        });
+        await expect(page.getByTestId("catalog-capability-install-open")).toBeEnabled({
+            timeout: 15_000,
+        });
+
+        const faqChip = page.getByTestId("catalog-capability-faq_policy");
+        await expect(faqChip).toBeVisible();
+        await faqChip.click();
+
+        await expect(page.getByTestId("catalog-capability-install-open")).toHaveText(
+            /Install best match/i,
+            { timeout: 15_000 },
+        );
+    });
+
+    test("install best match from selected capability modules", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: capability install flow not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+        await waitForCatalogPacks(page);
+
+        await page.getByTestId("catalog-capability-appointment_scheduling").click();
+        await page.getByTestId("catalog-capability-faq_policy").click();
+
+        await page.getByTestId("catalog-capability-install-open").click();
+
+        const dialog = page.getByRole("dialog", { name: "Install by capability" });
+        await expect(dialog).toBeVisible({ timeout: 15_000 });
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await dialog.getByLabel(/Workflow name/i).fill(`E2E capability install ${suffix}`);
+
+        await dialog.getByTestId("catalog-capability-install-confirm").click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await expect(page.getByText("Installed from catalog")).toBeVisible({ timeout: 30_000 });
+    });
+
+    test("multi-vertical selection shows install plan banner", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: capability compose banner not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+        await waitForCatalogPacks(page);
+
+        await page.getByTestId("catalog-capability-site_visit_scheduling").click();
+        await page.getByTestId("catalog-capability-order_status_wismo").click();
+
+        await expect(page.getByTestId("catalog-capability-install-banner")).toContainText(
+            /Multi-vertical plan: 2 templates/i,
+            { timeout: 15_000 },
+        );
+        await expect(page.getByTestId("catalog-capability-install-open")).toHaveText(
+            /Install plan \(2\)/i,
+            { timeout: 15_000 },
+        );
+    });
+
+    test("install multi-pack capability plan creates first workflow", async ({ page }) => {
+        test.skip(
+            process.env.E2E_EXPECT_STACK_AUTH === "1",
+            "Stack auth E2E: multi-pack capability install not validated in this mode.",
+        );
+
+        await page.goto("/workflow/catalog");
+        await waitForCatalogPacks(page);
+
+        await page.getByTestId("catalog-capability-site_visit_scheduling").click();
+        await page.getByTestId("catalog-capability-order_status_wismo").click();
+        await page.getByTestId("catalog-capability-install-open").click();
+
+        const dialog = page.getByRole("dialog", { name: "Install by capability" });
+        await expect(dialog).toBeVisible({ timeout: 15_000 });
+        await expect(dialog.locator("li").first()).toBeVisible();
+
+        const suffix = process.env.GITHUB_RUN_ID?.trim() || String(Date.now());
+        await dialog.getByLabel("Workflow name prefix").fill(`E2E capability plan ${suffix}`);
+        await dialog.getByTestId("catalog-capability-install-confirm").click();
+
+        await expect(page).toHaveURL(/\/workflow\/\d+(\?|$)/, { timeout: 60_000 });
+        await expect(page.getByText("Installed from catalog")).toBeVisible({ timeout: 30_000 });
     });
 });

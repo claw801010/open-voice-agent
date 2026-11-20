@@ -59,6 +59,29 @@ services:
     networks:
       - app-network
 
+  # Lean local STT/TTS (Speaches). Host 8100 avoids collision with Dograh API on :8000.
+  # Start: docker compose -f docker-compose-local.yaml --profile local-inference up -d speaches
+  # Or: ./scripts/start_local_inference.sh
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cpu
+    profiles: ["local-inference"]
+    ports:
+      - "127.0.0.1:8100:8000"
+    volumes:
+      - speaches_hf_cache:/home/ubuntu/.cache/huggingface/hub
+    environment:
+      STT_MODEL_TTL: "-1"
+      WHISPER__INFERENCE_DEVICE: cpu
+      WHISPER__COMPUTE_TYPE: int8
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - app-network
+
   booking-stub:
     image: python:3.13-slim
     profiles: ["booking-stub"]
@@ -95,6 +118,7 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+  speaches_hf_cache:
 
 networks:
   app-network:

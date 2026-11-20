@@ -605,6 +605,22 @@ async def _run_pipeline(
     # Resolve model overrides from the version onto global user config
     from api.services.configuration.resolve import resolve_effective_config
 
+    inference_profile_id = run_configs.get("inference_profile_id")
+    if inference_profile_id:
+        from api.services.configuration.inference_profiles import (
+            InferenceProfileError,
+            apply_inference_profile,
+        )
+
+        try:
+            user_config, _ = apply_inference_profile(user_config, inference_profile_id)
+        except InferenceProfileError:
+            logger.warning(
+                "Workflow run %s: unknown inference_profile_id=%r — using org model config",
+                workflow_run_id,
+                inference_profile_id,
+            )
+
     model_overrides = run_configs.get("model_overrides")
     user_config = resolve_effective_config(user_config, model_overrides)
 

@@ -14,6 +14,13 @@ _VARIANT_TOOLS = _REPO / "catalog" / "catalog-variant-http-tools.json"
 _CATALOG_DEMO_SCRIPT = _REPO / "scripts" / "seed_gtm_catalog_demo_call.py"
 
 
+def test_buyer_demo_defaults_fourteen_packs() -> None:
+    catalog = json.loads((_REPO / "catalog" / "vertical-packs.json").read_text(encoding="utf-8"))
+    defaults = json.loads(_BUYER_DEFAULTS.read_text(encoding="utf-8"))["defaults"]
+    assert len(catalog["packs"]) == 14
+    assert len(defaults) == 14
+
+
 def test_buyer_demo_defaults_cover_all_packs():
     catalog = json.loads((_REPO / "catalog" / "vertical-packs.json").read_text(encoding="utf-8"))
     defaults = json.loads(_BUYER_DEFAULTS.read_text(encoding="utf-8"))["defaults"]

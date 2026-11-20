@@ -29,14 +29,20 @@ echo "== Buyer-demo shortcut drift (gen_buyer_demo_shortcuts.py --check) =="
 "${PYTHON}" "${ROOT}/scripts/gen_buyer_demo_shortcuts.py" --check
 
 echo ""
-echo "== Shortcut scripts (10 verticals) =="
+echo "== Shortcut scripts (14 verticals) =="
+SCRIPT_COUNT=0
 for s in "${ROOT}"/scripts/buyer-demo-*.sh; do
   [[ -f "$s" ]] || continue
+  SCRIPT_COUNT=$((SCRIPT_COUNT + 1))
   echo "  scripts/$(basename "$s")"
 done
+[[ "$SCRIPT_COUNT" -eq 14 ]] || {
+  echo "WARN: expected 14 buyer-demo-*.sh scripts, found ${SCRIPT_COUNT}" >&2
+  exit 1
+}
 
 echo ""
-echo "== GTM deck PNG inventory (41 frames) =="
+echo "== GTM deck PNG inventory (54 frames) =="
 "${PYTHON}" "${ROOT}/scripts/gen_gtm_deck_placeholder_pngs.py" --check
 
 echo ""

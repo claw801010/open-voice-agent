@@ -8,6 +8,8 @@ from typing import Any
 from sqlalchemy import and_, or_, select, text
 from sqlalchemy.orm import joinedload
 
+from api.services.analytics.mk01_workflow_filters import capability_module_id_sql_bindparam
+
 from api.db.models import WorkflowModel, WorkflowRunModel
 
 # Max runs considered for tier scoring before taking top N (keeps export fast).
@@ -24,6 +26,7 @@ def _base_filter_conds(
     workflow_id: int | None,
     catalog_slug: str | None,
     catalog_variant_id: str | None,
+    capability_module_id: str | None,
     since: datetime,
     until: datetime,
 ) -> list:
@@ -46,6 +49,8 @@ def _base_filter_conds(
                 "workflows.workflow_configurations->'mk01'->>'catalog_variant_id' = :cvid"
             ).bindparams(cvid=catalog_variant_id)
         )
+    if capability_module_id is not None:
+        conds.append(capability_module_id_sql_bindparam(capability_module_id))
     return conds
 
 
@@ -107,6 +112,7 @@ async def select_run_ids_smart_export(
     workflow_id: int | None,
     catalog_slug: str | None,
     catalog_variant_id: str | None,
+    capability_module_id: str | None,
     since: datetime,
     until: datetime,
     max_rows: int,
@@ -124,6 +130,7 @@ async def select_run_ids_smart_export(
         workflow_id=workflow_id,
         catalog_slug=catalog_slug,
         catalog_variant_id=catalog_variant_id,
+        capability_module_id=capability_module_id,
         since=since,
         until=until,
     )

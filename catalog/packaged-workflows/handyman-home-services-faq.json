@@ -1,0 +1,68 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting; offer help with handyman faq.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": {
+        "x": 0,
+        "y": 140
+      },
+      "data": {
+        "name": "Handyman FAQ",
+        "prompt": "You are the voice assistant for **{{business_name}}**, a handyman or home-services operator. Answer **services menu**, **service area ZIPs**, **rates policy** (ranges only\u2014no binding quotes), and **hours** from published copy. Cite {{services_page_url}} for the full list.\n\nNever collect card numbers. Offer human callback to {{support_phone}} when the job needs in-person assessment.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": {
+        "x": 0,
+        "y": 280
+      },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm any next step documented.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": {
+        "label": "Continue",
+        "condition": "After greeting"
+      }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": {
+        "label": "End",
+        "condition": "When resolved or escalated"
+      }
+    }
+  ]
+}

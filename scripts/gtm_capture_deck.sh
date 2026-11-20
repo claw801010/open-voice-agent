@@ -48,7 +48,7 @@ if [[ -z "${E2E_EMAIL:-}" || -z "${E2E_PASSWORD:-}" ]]; then
     -d "{\"email\":\"${E2E_EMAIL}\",\"password\":\"${E2E_PASSWORD}\",\"name\":\"Playwright E2E\"}" >/dev/null
 fi
 
-echo "Seeding buyer-demo analytics calls (all 10 verticals)…"
+echo "Seeding buyer-demo analytics calls (all 14 verticals)…"
 export DATABASE_URL="${DATABASE_URL:-postgresql+asyncpg://postgres:postgres@localhost:5433/postgres}"
 while IFS= read -r line; do
   [[ -n "$line" ]] && eval "$line"
@@ -81,7 +81,7 @@ if [[ -z "${E2E_GTM_HTTP_TOOL_UUID:-}" ]]; then
   fi
 fi
 
-echo "Seeding buyer-demo catalog workflows (all 10 verticals)…"
+echo "Seeding buyer-demo catalog workflows (all 14 verticals)…"
 while IFS= read -r line; do
   [[ -n "$line" ]] && eval "$line"
 done < <("${PYTHON}" "${ROOT}/scripts/seed_gtm_all_buyer_workflows.py" "${E2E_EMAIL}" --export-lines 2>/dev/null || true)
@@ -118,7 +118,7 @@ if ! curl -sf "${E2E_BASE_URL}/templates" >/dev/null 2>&1; then
   }
 fi
 
-echo "Optional env: E2E_GTM_*_WORKFLOW_ID / E2E_GTM_*_CALL_ID (all 10 vertical buyer demos)"
+echo "Optional env: E2E_GTM_*_WORKFLOW_ID / E2E_GTM_*_CALL_ID (all 14 vertical buyer demos)"
 echo "  sample=${E2E_GTM_SAMPLE_CALL_ID:-unset} smb=${E2E_GTM_SMB_CALL_ID:-unset} civic=${E2E_GTM_CIVIC_CALL_ID:-unset} hr=${E2E_GTM_HR_CALL_ID:-unset}"
 
 cd ui

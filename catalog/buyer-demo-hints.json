@@ -135,6 +135,58 @@
           "script": "buyer-demo-hr-recruiting.sh"
         }
       }
+    },
+    "construction-trades-faq": {
+      "card_tip": "Contractor site visits and estimate intake — no firm price quotes on the call.",
+      "variants": {
+        "booking_complex": {
+          "story": "Schedule on-site walkthrough for remodel or trade work via local calendar.",
+          "primary_tool": "schedule_site_visit",
+          "wire_tip": "Wires schedule_site_visit → local scheduling. Map confirmation_code.",
+          "analytics_tip": "Filter booking_complex + schedule_site_visit.",
+          "settings_tip": "Settings → Local demo calendar.",
+          "script": "buyer-demo-construction-site.sh"
+        }
+      }
+    },
+    "handyman-home-services-faq": {
+      "card_tip": "Home-services quote capture for owner-operators.",
+      "variants": {
+        "quote_complex": {
+          "story": "Capture handyman job quote intent after services FAQ.",
+          "primary_tool": "capture_quote_intent",
+          "wire_tip": "Wires capture_quote_intent → local integrations quotes/intent.",
+          "analytics_tip": "Filter quote_complex + capture_quote_intent.",
+          "settings_tip": "Settings → Local demo integrations.",
+          "script": "buyer-demo-handyman-quote.sh"
+        }
+      }
+    },
+    "barber-beauty-salon-faq": {
+      "card_tip": "Salon appointment booking with stylist-friendly voice delivery.",
+      "variants": {
+        "booking_complex": {
+          "story": "Book cut, color, or beauty service via book_salon_appointment (book_slot).",
+          "primary_tool": "book_salon_appointment",
+          "wire_tip": "Wires book_salon_appointment → local scheduling /book_slot.",
+          "analytics_tip": "Filter booking_complex + book_salon_appointment.",
+          "settings_tip": "Settings → Local demo calendar.",
+          "script": "buyer-demo-salon-booking.sh"
+        }
+      }
+    },
+    "solopreneur-coach-faq": {
+      "card_tip": "Founder-led client intake into local CRM — coaches and consultants.",
+      "variants": {
+        "lead_capture_complex": {
+          "story": "Capture program or project intake after offerings FAQ.",
+          "primary_tool": "capture_lead_intent",
+          "wire_tip": "Wires capture_lead_intent → local integrations leads/intent.",
+          "analytics_tip": "Filter lead_capture_complex + capture_lead_intent.",
+          "settings_tip": "Settings → Local demo integrations.",
+          "script": "buyer-demo-solopreneur-intake.sh"
+        }
+      }
     }
   }
 }

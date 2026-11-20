@@ -62,6 +62,22 @@ CATALOG_VOICE_PREVIEW_SCRIPTS: dict[str, str] = {
         "Thanks for your interest in joining our team. "
         "I can help with your application or schedule an interview."
     ),
+    "construction-trades-faq": (
+        "Happy to help — we are licensed and insured for residential remodels in your area. "
+        "I can schedule a site walkthrough for an on-site estimate."
+    ),
+    "handyman-home-services-faq": (
+        "Sure thing — we cover your ZIP for repairs, mounting, and small projects. "
+        "I can capture a quote request or book a service visit."
+    ),
+    "barber-beauty-salon-faq": (
+        "Absolutely — I can walk you through our cuts, color, and styling menu, "
+        "or book your next appointment with your preferred stylist."
+    ),
+    "solopreneur-coach-faq": (
+        "Great question — I help founders and solo operators get clarity on next steps. "
+        "I can book a discovery call or capture your intake details."
+    ),
 }
 
 _DEFAULT_PREVIEW_SCRIPT = (

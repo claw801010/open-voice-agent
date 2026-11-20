@@ -156,6 +156,7 @@ export async function fetchAnalyticsInsights(
         workflow_id?: number;
         catalog_slug?: string;
         catalog_variant_id?: string;
+        capability_module_id?: string;
     } = {},
 ): Promise<AnalyticsInsights> {
     const client = analyticsClient(getAccessToken);
@@ -168,7 +169,8 @@ export async function fetchAnalyticsInsights(
             workflow_id: params.workflow_id ?? null,
             catalog_slug: params.catalog_slug ?? null,
             catalog_variant_id: params.catalog_variant_id ?? null,
-        },
+            capability_module_id: params.capability_module_id ?? null,
+        } as NonNullable<Parameters<typeof getAnalyticsInsightsApiV1AnalyticsInsightsGet>[0]>['query'],
     });
     if (error || !data) {
         throwApiError(error, response?.status);
@@ -182,6 +184,7 @@ export async function fetchAnalyticsCallsPage(
         workflow_id?: number;
         catalog_slug?: string;
         catalog_variant_id?: string;
+        capability_module_id?: string;
         since?: string;
         until?: string;
         disposition?: string;
@@ -199,6 +202,7 @@ export async function fetchAnalyticsCallsPage(
             workflow_id: params.workflow_id ?? null,
             catalog_slug: params.catalog_slug ?? null,
             catalog_variant_id: params.catalog_variant_id ?? null,
+            capability_module_id: params.capability_module_id ?? null,
             since: params.since ?? null,
             until: params.until ?? null,
             disposition: params.disposition ?? null,
@@ -207,7 +211,7 @@ export async function fetchAnalyticsCallsPage(
             limit: params.limit ?? 50,
             cursor: params.cursor ?? null,
             include_qm_summary: params.include_qm_summary ?? false,
-        },
+        } as NonNullable<Parameters<typeof listAnalyticsCallsApiV1AnalyticsCallsGet>[0]>['query'],
     });
     if (error || !data) {
         throwApiError(error, response?.status);
@@ -225,6 +229,7 @@ export async function downloadAnalyticsCallsServerExport(
         workflow_id?: number;
         catalog_slug?: string;
         catalog_variant_id?: string;
+        capability_module_id?: string;
         since?: string;
         until?: string;
         disposition?: string;
@@ -241,6 +246,7 @@ export async function downloadAnalyticsCallsServerExport(
             workflow_id: params.workflow_id ?? null,
             catalog_slug: params.catalog_slug ?? null,
             catalog_variant_id: params.catalog_variant_id ?? null,
+            capability_module_id: params.capability_module_id ?? null,
             since: params.since ?? null,
             until: params.until ?? null,
             disposition: params.disposition ?? null,
@@ -248,7 +254,7 @@ export async function downloadAnalyticsCallsServerExport(
             tool_name: params.tool_name ?? null,
             max_rows: params.max_rows ?? 5000,
             sampling_mode: params.sampling_mode ?? 'smart',
-        },
+        } as NonNullable<Parameters<typeof exportAnalyticsCallsCsvApiV1AnalyticsCallsExportGet>[0]>['query'],
         parseAs: 'blob',
         headers: { Accept: 'text/csv' },
     });

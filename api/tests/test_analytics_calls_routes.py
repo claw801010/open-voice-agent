@@ -188,6 +188,35 @@ async def test_analytics_calls_list_and_detail(
     assert other_cat.status_code == 200
     assert not any(x["call_id"] == f"wr-{run.id}" for x in other_cat.json()["items"])
 
+    await async_session.execute(
+        update(WorkflowModel)
+        .where(WorkflowModel.id == wf.id)
+        .values(
+            workflow_configurations={
+                "mk01": {
+                    "catalog_slug": "healthcare-screening",
+                    "capability_module_ids": ["site_visit_scheduling", "appointment_booking"],
+                    "installed_at": "2026-04-01",
+                }
+            }
+        )
+    )
+    await async_session.flush()
+
+    async with test_client_factory(user) as client:
+        by_cap = await client.get(
+            "/api/v1/analytics/calls?capability_module_id=site_visit_scheduling&limit=20"
+        )
+    assert by_cap.status_code == 200
+    assert any(x["call_id"] == f"wr-{run.id}" for x in by_cap.json()["items"])
+
+    async with test_client_factory(user) as client:
+        miss_cap = await client.get(
+            "/api/v1/analytics/calls?capability_module_id=nonexistent_motion&limit=20"
+        )
+    assert miss_cap.status_code == 200
+    assert not any(x["call_id"] == f"wr-{run.id}" for x in miss_cap.json()["items"])
+
     async with test_client_factory(user) as client:
         exported = await client.get("/api/v1/analytics/calls/export?max_rows=100")
     assert exported.status_code == 200
@@ -261,6 +290,28 @@ async def test_analytics_insights_rollup(
         fslug = await client.get("/api/v1/analytics/insights?days=30&catalog_slug=dental-booking")
     assert fslug.status_code == 200
     assert fslug.json()["total_calls"] >= 1
+
+    await async_session.execute(
+        update(WorkflowModel)
+        .where(WorkflowModel.id == wf.id)
+        .values(
+            workflow_configurations={
+                "mk01": {
+                    "catalog_slug": "dental-booking",
+                    "capability_module_ids": ["appointment_booking"],
+                    "installed_at": "2026-04-01",
+                }
+            }
+        )
+    )
+    await async_session.flush()
+
+    async with test_client_factory(user) as client:
+        fcap = await client.get(
+            "/api/v1/analytics/insights?days=30&capability_module_id=appointment_booking"
+        )
+    assert fcap.status_code == 200
+    assert fcap.json()["total_calls"] >= 1
 
     async with test_client_factory(user) as client:
         bad = await client.get(

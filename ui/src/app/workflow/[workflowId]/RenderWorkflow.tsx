@@ -37,7 +37,9 @@ import { WORKFLOW_RUN_MODES } from '@/constants/workflowRunModes';
 import { useUnsavedChanges } from '@/context/UnsavedChangesContext';
 import logger from '@/lib/logger';
 import { formatMainDraftGraphStats, formatSubflowInventory } from '@/lib/workflow/draftGraphStats';
-import { templateSourceFromMk01 } from '@/lib/workflow/headerMetadata';
+import { templateSourceFromMk01, capabilityMotivationFromMk01, marketplaceCatalogHrefFromMk01, analyticsOverviewHrefFromMk01, analyticsCallsHrefForWorkflow } from '@/lib/workflow/headerMetadata';
+import { capabilityModulesById, loadStaticCapabilityModules } from '@/lib/catalog/capabilityModules';
+import { DISMISSIBLE_HINT_KEYS } from '@/lib/onboarding/dismissibleHints';
 import { costDryRunTooltip, fetchWorkflowCostDryRun, formatCostDryRunHint } from '@/lib/workflow/workflowCostDryRun';
 import { computeRunUsageHints } from '@/lib/workflow/recentRunUsage';
 import type { UsageTrendBucket } from '@/lib/workflow/workflowRunTrends';
@@ -67,6 +69,7 @@ import {
 import { WorkflowConfigurations } from '@/types/workflow-configurations';
 
 import { VoiceProfileCanvasQuickPick } from "@/components/voice/VoiceProfileCanvasQuickPick";
+import { DismissibleHintBanner } from '@/components/onboarding/DismissibleHintBanner';
 import { useOrgVoiceProfiles } from "@/hooks/useOrgVoiceProfiles";
 import AddNodePanel from "../../../components/flow/AddNodePanel";
 import CustomEdge from "../../../components/flow/edges/CustomEdge";
@@ -620,6 +623,32 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
         }
         return templateSourceFromMk01(mk);
     }, [initialWorkflowConfigurations, catalogPackMeta]);
+
+    const capabilityMotivationLabel = useMemo(() => {
+        const mk = (initialWorkflowConfigurations as WorkflowConfigurations | undefined)?.mk01;
+        const byId = capabilityModulesById(loadStaticCapabilityModules());
+        return capabilityMotivationFromMk01(mk, byId);
+    }, [initialWorkflowConfigurations]);
+
+    const capabilityMotivationHref = useMemo(() => {
+        const mk = (initialWorkflowConfigurations as WorkflowConfigurations | undefined)?.mk01;
+        return marketplaceCatalogHrefFromMk01(mk);
+    }, [initialWorkflowConfigurations]);
+
+    const capabilityAnalyticsHref = useMemo(() => {
+        const mk = (initialWorkflowConfigurations as WorkflowConfigurations | undefined)?.mk01;
+        return analyticsOverviewHrefFromMk01(mk);
+    }, [initialWorkflowConfigurations]);
+
+    const workflowAnalyticsCallsHref = useMemo(() => {
+        const mk = (initialWorkflowConfigurations as WorkflowConfigurations | undefined)?.mk01;
+        return analyticsCallsHrefForWorkflow(workflowId, mk);
+    }, [initialWorkflowConfigurations, workflowId]);
+
+    const showEditorLineageHint = useMemo(() => {
+        const mk = (initialWorkflowConfigurations as WorkflowConfigurations | undefined)?.mk01;
+        return Boolean(mk?.catalog_slug || mk?.capability_module_ids?.length);
+    }, [initialWorkflowConfigurations]);
 
     const costLatencyHint = useMemo(() => {
         const mk = (initialWorkflowConfigurations as WorkflowConfigurations | undefined)?.mk01;
@@ -1212,6 +1241,10 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                     isInstallationLocked={installationLocked}
                     onCustomizeInstall={handleCustomizeInstall}
                     templateSourceLabel={templateSourceLabel}
+                    capabilityMotivationLabel={capabilityMotivationLabel}
+                    capabilityMotivationHref={capabilityMotivationHref}
+                    capabilityAnalyticsHref={capabilityAnalyticsHref}
+                    workflowAnalyticsCallsHref={workflowAnalyticsCallsHref}
                     costLatencyHint={costLatencyHint}
                     recentRunUsageHint={recentRunUsageHint}
                     recentRunAggregateHint={recentRunAggregateHint}
@@ -1226,6 +1259,24 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                     flowNodes={flowNodesForHeader}
                     voiceProfileLabel={voiceProfileLabel}
                 />
+
+                {showEditorLineageHint ? (
+                    <div className="px-3 pt-2 md:px-4">
+                        <DismissibleHintBanner
+                            hintKey={DISMISSIBLE_HINT_KEYS.editorLineageLinks}
+                            title="Catalog install shortcuts"
+                            data-testid="editor-lineage-hint"
+                        >
+                            <p>
+                                <span className="text-foreground/90">Capabilities</span> reopens the marketplace with
+                                your install motions.{' '}
+                                <span className="text-foreground/90">Analytics</span> shows insights for the primary
+                                motion. <span className="text-foreground/90">Calls</span> lists runs for this workflow
+                                only — use Simulation → Start Web test first if you have no calls yet.
+                            </p>
+                        </DismissibleHintBanner>
+                    </div>
+                ) : null}
 
                 {/* WE-01-SUBFLOWS: Main flow vs component subgraph */}
                 {!canvasReadOnly && (
@@ -1264,6 +1315,7 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
                                     catalogSlug={catalogSlug ?? null}
                                     catalogVariantId={catalogVariantId}
                                     catalogDisplayName={catalogPackMeta?.display_name ?? null}
+                                    workflowAnalyticsCallsHref={workflowAnalyticsCallsHref}
                                     simulationDebugSnapshot={simulationDebugSnapshot}
                                     templateContextVariables={templateContextVariables ?? {}}
                                     saveTemplateContextVariables={saveTemplateContextVariables}

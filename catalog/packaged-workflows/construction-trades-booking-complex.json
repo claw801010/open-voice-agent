@@ -1,0 +1,68 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting; offer help with construction site visit scheduling.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": {
+        "x": 0,
+        "y": 140
+      },
+      "data": {
+        "name": "Construction site visit scheduling",
+        "prompt": "Assistant for **{{company_name}}** (construction / trades). Answer services and area FAQ; when the caller wants an **on-site estimate or walkthrough**, capture project type, address city/ZIP, and preferred window. If they accept scheduling, call HTTP tool **schedule_site_visit** at {{scheduling_api_base_url}}/api/v1/appointments with trade hint {{default_trade_code}} \u2014 do not confirm until the tool returns success.\n\nEscalate to {{support_phone}} when scope exceeds script or safety concerns arise.\n\nWire **schedule_site_visit** after install; map confirmation_code for analytics.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": {
+        "x": 0,
+        "y": 280
+      },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm any next step documented.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": {
+        "label": "Continue",
+        "condition": "After greeting"
+      }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": {
+        "label": "End",
+        "condition": "When resolved or escalated"
+      }
+    }
+  ]
+}

@@ -33,6 +33,10 @@ import {
 import { Sparkline, sparklineValuesFromSeed } from '@/components/ui/sparkline';
 import { CatalogBuyerHintTip } from '@/components/catalog/CatalogBuyerHintTip';
 import { CatalogBuyerVariantHintStrip } from '@/components/catalog/CatalogBuyerVariantHintStrip';
+import { CatalogDistributionBadge } from '@/components/catalog/CatalogDistributionBadge';
+import { CatalogMarketingHero } from '@/components/catalog/CatalogMarketingHero';
+import { CommunityRegistryPanel } from '@/components/catalog/CommunityRegistryPanel';
+import { DismissibleHintBanner } from '@/components/onboarding/DismissibleHintBanner';
 import { WORKFLOW_RUN_MODES } from '@/constants/workflowRunModes';
 import { useAuth } from '@/lib/auth';
 import {
@@ -46,9 +50,34 @@ import {
     type VerticalPack,
 } from '@/lib/catalog/filterVerticalPacks';
 import {
+    fetchCapabilityComposePlan,
+    fetchCapabilityInstallResolution,
+    installCapabilityComposePlan,
+    installWorkflowFromCapabilityModules,
+    type CapabilityComposePlan,
+    type CapabilityInstallResolution,
+} from '@/lib/catalog/resolveCapabilityInstall';
+import {
+    capabilityModuleLabelsForPack,
+    capabilityModulesById,
+    type CapabilityModulesCatalog,
+    topCapabilityModulesForFilters,
+} from '@/lib/catalog/capabilityModules';
+import {
+    buildCapabilityAnalyticsCallsHref,
+    buildCapabilityAnalyticsOverviewHref,
+} from '@/lib/catalog/catalogDeepLinks';
+import {
     buildMarketplaceSettingsHref,
     buyerDemoSettingsSectionLabel,
 } from '@/lib/catalog/buyerDemoDefaults';
+import {
+    fetchCommunityRegistry,
+    indexVerticalPackDistribution,
+    loadStaticCommunityRegistry,
+    type CommunityRegistry,
+    type DistributionTier,
+} from '@/lib/catalog/communityRegistry';
 import {
     buyerDemoCardTip,
     buyerDemoScriptName,
@@ -59,6 +88,7 @@ import {
     buildMarketplaceAnalyticsProofHref,
 } from '@/lib/analyticsOverviewDeepLinks';
 import logger from '@/lib/logger';
+import { DISMISSIBLE_HINT_KEYS } from '@/lib/onboarding/dismissibleHints';
 import { getBackendPublicBaseUrl } from '@/lib/apiClient';
 import {
     fetchCatalogVoicePreview,
@@ -68,12 +98,17 @@ import {
     type CatalogVoicePreview,
 } from '@/lib/voiceProfiles';
 import { cn, getRandomId } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type MarketplaceCatalogProps = {
     catalog: CatalogJson | null;
     loadError: string | null;
     /** When true, show Install and run install-from-catalog; when false (public browse), show sign-in CTA */
     installable: boolean;
+    /** MK-01-CAPABILITY-MODULES — filter chips + card badges */
+    capabilityModules?: CapabilityModulesCatalog | null;
+    /** MK-02 — pre-select capability motion filters from URL deep link */
+    initialCapabilityModuleIds?: readonly string[];
     title?: string;
     subtitle?: string;
     backButton?: ReactNode;
@@ -93,13 +128,20 @@ export function MarketplaceCatalog({
     catalog,
     loadError,
     installable,
+    capabilityModules = null,
+    initialCapabilityModuleIds = [],
     title = 'Template catalog',
     subtitle = 'Filter by industry, use case, language, and compliance. Install adds a workflow to your organization.',
     backButton,
 }: MarketplaceCatalogProps) {
     const router = useRouter();
     const { getAccessToken } = useAuth();
-    const [filters, setFilters] = useState<CatalogFilters>(defaultCatalogFilters);
+    const [filters, setFilters] = useState<CatalogFilters>(() => ({
+        ...defaultCatalogFilters(),
+        capabilityModules: initialCapabilityModuleIds.length
+            ? [...initialCapabilityModuleIds]
+            : [],
+    }));
     const [installTarget, setInstallTarget] = useState<VerticalPack | null>(null);
     const [installVariantId, setInstallVariantId] = useState('');
     const [installName, setInstallName] = useState('');
@@ -115,10 +157,100 @@ export function MarketplaceCatalog({
     const [voicePreviewLoading, setVoicePreviewLoading] = useState(false);
     const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState<string | null>(null);
     const [voicePreviewAudioLoading, setVoicePreviewAudioLoading] = useState(false);
+    const [capabilityInstallOpen, setCapabilityInstallOpen] = useState(false);
+    const [capabilityResolution, setCapabilityResolution] = useState<CapabilityInstallResolution | null>(
+        null,
+    );
+    const [capabilityResolutionLoading, setCapabilityResolutionLoading] = useState(false);
+    const [capabilityInstallName, setCapabilityInstallName] = useState('');
+    const [capabilityInstalling, setCapabilityInstalling] = useState(false);
+    const [capabilityComposePlan, setCapabilityComposePlan] = useState<CapabilityComposePlan | null>(
+        null,
+    );
+    const [browseTab, setBrowseTab] = useState<'templates' | 'community'>('templates');
+    const [distributionTierFilter, setDistributionTierFilter] = useState<DistributionTier | 'all'>(
+        'all',
+    );
+    const [communityRegistry, setCommunityRegistry] = useState<CommunityRegistry>(() =>
+        loadStaticCommunityRegistry(),
+    );
 
     const packs = catalog?.packs ?? [];
+    const packDistributionBySlug = useMemo(
+        () => indexVerticalPackDistribution(communityRegistry),
+        [communityRegistry],
+    );
     const facets = useMemo(() => catalogFacets(packs), [packs]);
-    const filtered = useMemo(() => filterVerticalPacks(packs, filters), [packs, filters]);
+    const filtered = useMemo(() => {
+        const base = filterVerticalPacks(packs, filters);
+        if (distributionTierFilter === 'all') return base;
+        return base.filter((p) => {
+            const dist = packDistributionBySlug.get(p.slug);
+            return dist?.tier === distributionTierFilter;
+        });
+    }, [packs, filters, distributionTierFilter, packDistributionBySlug]);
+    const capabilityById = useMemo(
+        () => (capabilityModules ? capabilityModulesById(capabilityModules) : new Map()),
+        [capabilityModules],
+    );
+    const capabilityFilterOptions = useMemo(
+        () =>
+            capabilityModules
+                ? topCapabilityModulesForFilters(capabilityModules, 4)
+                : [],
+        [capabilityModules],
+    );
+
+    const primaryCapabilityFilterId = filters.capabilityModules[0] ?? null;
+
+    const capabilityMotionAnalyticsOverviewHref = useMemo(
+        () =>
+            primaryCapabilityFilterId
+                ? buildCapabilityAnalyticsOverviewHref({
+                      capabilityModuleIds: filters.capabilityModules,
+                  })
+                : null,
+        [filters.capabilityModules, primaryCapabilityFilterId],
+    );
+
+    const capabilityMotionAnalyticsCallsHref = useMemo(
+        () =>
+            primaryCapabilityFilterId
+                ? buildCapabilityAnalyticsCallsHref({
+                      capabilityModuleIds: filters.capabilityModules,
+                  })
+                : null,
+        [filters.capabilityModules, primaryCapabilityFilterId],
+    );
+
+    useEffect(() => {
+        let cancelled = false;
+        void fetchCommunityRegistry({ limit: 500 })
+            .then((page) => {
+                if (cancelled || !page.listings?.length) return;
+                setCommunityRegistry({
+                    registry_version: page.registry_version,
+                    generated_at: page.generated_at ?? undefined,
+                    listing_count: page.total,
+                    listing_types: page.listing_types,
+                    publishers: page.publishers,
+                    listings: page.listings,
+                });
+            })
+            .catch(() => {
+                /* static registry fallback already loaded */
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
+        setFilters((prev) => ({
+            ...prev,
+            capabilityModules: [...initialCapabilityModuleIds],
+        }));
+    }, [initialCapabilityModuleIds]);
 
     const resetFilters = useCallback(() => {
         setFilters(defaultCatalogFilters());
@@ -167,6 +299,93 @@ export function MarketplaceCatalog({
             cancelled = true;
         };
     }, [voicePreviewPack]);
+
+    useEffect(() => {
+        if (!installable || filters.capabilityModules.length === 0) {
+            setCapabilityResolution(null);
+            setCapabilityComposePlan(null);
+            return;
+        }
+        let cancelled = false;
+        setCapabilityResolutionLoading(true);
+        void Promise.all([
+            fetchCapabilityInstallResolution(filters.capabilityModules),
+            fetchCapabilityComposePlan(filters.capabilityModules),
+        ]).then(([single, plan]) => {
+            if (!cancelled) {
+                setCapabilityResolution(single);
+                setCapabilityComposePlan(plan);
+                setCapabilityResolutionLoading(false);
+            }
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [filters.capabilityModules, installable]);
+
+    const openCapabilityInstall = useCallback(() => {
+        if (filters.capabilityModules.length === 0) return;
+        const label =
+            capabilityResolution?.display_name ??
+            capabilityById.get(filters.capabilityModules[0])?.label ??
+            'Capability workflow';
+        setCapabilityInstallName(label.slice(0, 200));
+        setCapabilityInstallOpen(true);
+    }, [filters.capabilityModules, capabilityResolution, capabilityById]);
+
+    const confirmCapabilityInstall = useCallback(async () => {
+        if (!capabilityInstallName.trim() || filters.capabilityModules.length === 0) {
+            toast.error('Enter a name for the workflow');
+            return;
+        }
+        setCapabilityInstalling(true);
+        try {
+            const usePlan =
+                capabilityComposePlan &&
+                !capabilityComposePlan.single_pack_sufficient &&
+                capabilityComposePlan.installs.length > 1;
+
+            if (usePlan) {
+                const res = await installCapabilityComposePlan(
+                    getAccessToken,
+                    filters.capabilityModules,
+                    capabilityInstallName.trim(),
+                );
+                if (!res.ok) {
+                    toast.error(res.error);
+                    return;
+                }
+                toast.success(`Installed ${res.workflowIds.length} workflows from capability plan`);
+                setCapabilityInstallOpen(false);
+                router.push(`/workflow/${res.workflowIds[0]}`);
+                return;
+            }
+
+            const res = await installWorkflowFromCapabilityModules(
+                getAccessToken,
+                filters.capabilityModules,
+                capabilityInstallName.trim(),
+            );
+            if (!res.ok) {
+                toast.error(res.error);
+                return;
+            }
+            toast.success(`Installed ${res.resolution.display_name}`);
+            setCapabilityInstallOpen(false);
+            router.push(`/workflow/${res.workflowId}`);
+        } catch (e) {
+            logger.error(`Capability install failed: ${e}`);
+            toast.error('Install failed — check that the API is running and you are signed in');
+        } finally {
+            setCapabilityInstalling(false);
+        }
+    }, [
+        capabilityInstallName,
+        capabilityComposePlan,
+        filters.capabilityModules,
+        getAccessToken,
+        router,
+    ]);
 
     const playVoicePreviewAudio = useCallback(async () => {
         if (!voicePreview?.profileId) return;
@@ -320,7 +539,8 @@ export function MarketplaceCatalog({
         filters.industry !== 'all' ||
         filters.useCaseSearch.trim() !== '' ||
         filters.languages.length > 0 ||
-        filters.complianceTags.length > 0;
+        filters.complianceTags.length > 0 ||
+        filters.capabilityModules.length > 0;
 
     return (
         <div className="container mx-auto max-w-6xl px-4 py-8">
@@ -339,6 +559,40 @@ export function MarketplaceCatalog({
 
             {loadError && <p className="text-destructive mb-4">{loadError}</p>}
 
+            {packs.length > 0 ? <CatalogMarketingHero installable={installable} /> : null}
+
+            {installable && packs.length > 0 ? (
+                <DismissibleHintBanner
+                    hintKey={DISMISSIBLE_HINT_KEYS.catalogQuickStart}
+                    title="First time in the template catalog?"
+                    className="mb-6"
+                    data-testid="catalog-quick-start-hint"
+                >
+                    <ol className="list-decimal space-y-1 pl-4 text-sm">
+                        <li>
+                            <span className="text-foreground/90">Filter</span> by industry or{' '}
+                            <span className="text-foreground/90">Capabilities</span> (appointment, FAQ, lead verify…).
+                        </li>
+                        <li>
+                            <span className="text-foreground/90">Install</span> or{' '}
+                            <span className="text-foreground/90">Try Web</span> — browser test, no PSTN charges on this
+                            page.
+                        </li>
+                        <li>
+                            In the editor, open <span className="text-foreground/90">Simulation → Start Web test</span>{' '}
+                            to hear your agent before going live.
+                        </li>
+                        <li>
+                            Track outcomes in{' '}
+                            <Link href="/analytics" className="text-foreground/90 underline underline-offset-2">
+                                Analytics
+                            </Link>{' '}
+                            — filter by the same capability motion you picked here.
+                        </li>
+                    </ol>
+                </DismissibleHintBanner>
+            ) : null}
+
             {packs.length === 0 && !loadError && (
                 <p className="py-10 text-center text-muted-foreground" role="status">
                     No vertical packs are available in the catalog right now. Check back after a catalog update, or
@@ -347,6 +601,28 @@ export function MarketplaceCatalog({
             )}
 
             {packs.length > 0 && (
+                <Tabs
+                    value={browseTab}
+                    onValueChange={(v) => setBrowseTab(v as 'templates' | 'community')}
+                    className="mb-8"
+                >
+                    <TabsList className="mb-4">
+                        <TabsTrigger value="templates" data-testid="catalog-tab-templates">
+                            Templates ({packs.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="community" data-testid="catalog-tab-community">
+                            Community library (
+                            {communityRegistry.listing_count ??
+                                communityRegistry.listings.length}
+                            )
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="community">
+                        <CommunityRegistryPanel registry={communityRegistry} />
+                    </TabsContent>
+
+                    <TabsContent value="templates">
                 <section
                     className="ovo-glass-panel mb-8 p-4 sm:p-5"
                     aria-label="Filter templates"
@@ -449,6 +725,130 @@ export function MarketplaceCatalog({
                         </fieldset>
                     </div>
 
+                    {capabilityFilterOptions.length > 0 && (
+                        <fieldset className="mt-4">
+                            <legend className="text-sm font-medium mb-2">Capabilities</legend>
+                            <p className="text-xs text-muted-foreground mb-2">
+                                Composable motions buyers ask for—appointment, FAQ, lead verify, WISMO, and more.
+                                Select one or more to show packs that include any of them.
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {capabilityFilterOptions.map((mod) => {
+                                    const active = filters.capabilityModules.includes(mod.id);
+                                    return (
+                                        <Button
+                                            key={mod.id}
+                                            type="button"
+                                            size="sm"
+                                            variant={active ? 'default' : 'outline'}
+                                            className="h-auto py-1.5 text-xs"
+                                            aria-pressed={active}
+                                            data-testid={`catalog-capability-${mod.id}`}
+                                            onClick={() =>
+                                                setFilters((f) => ({
+                                                    ...f,
+                                                    capabilityModules: toggleString(
+                                                        f.capabilityModules,
+                                                        mod.id,
+                                                        !active,
+                                                    ),
+                                                }))
+                                            }
+                                        >
+                                            {mod.label}
+                                        </Button>
+                                    );
+                                })}
+                            </div>
+                        </fieldset>
+                    )}
+
+                    {installable && filters.capabilityModules.length > 0 && (
+                        <div
+                            className="mt-4 rounded-md border border-primary/25 bg-primary/5 px-3 py-3 text-sm"
+                            data-testid="catalog-capability-install-banner"
+                        >
+                            <p className="font-medium text-foreground">Install by capability</p>
+                            <p className="mt-1 text-muted-foreground">
+                                {capabilityResolutionLoading
+                                    ? 'Finding the best matching template…'
+                                    : capabilityComposePlan &&
+                                        !capabilityComposePlan.single_pack_sufficient &&
+                                        capabilityComposePlan.installs.length > 1
+                                      ? `Multi-vertical plan: ${capabilityComposePlan.installs.length} templates (${capabilityComposePlan.installs.map((i) => i.display_name).join(' · ')})`
+                                      : capabilityResolution
+                                        ? `Best match: ${capabilityResolution.display_name}${
+                                              capabilityResolution.variant_label
+                                                  ? ` · ${capabilityResolution.variant_label}`
+                                                  : ''
+                                          } (${capabilityResolution.coverage_score} of ${filters.capabilityModules.length} capabilities on this pack)`
+                                        : 'Could not resolve a template for these capabilities.'}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    disabled={capabilityResolutionLoading || !capabilityResolution}
+                                    data-testid="catalog-capability-install-open"
+                                    onClick={openCapabilityInstall}
+                                >
+                                    {capabilityComposePlan &&
+                                    !capabilityComposePlan.single_pack_sufficient &&
+                                    capabilityComposePlan.installs.length > 1
+                                        ? `Install plan (${capabilityComposePlan.installs.length})`
+                                        : 'Install best match'}
+                                </Button>
+                                {capabilityMotionAnalyticsOverviewHref ? (
+                                    <Button type="button" size="sm" variant="outline" asChild>
+                                        <Link
+                                            href={capabilityMotionAnalyticsOverviewHref}
+                                            data-testid="catalog-capability-analytics-overview"
+                                            title="Preview insights for workflows installed with this capability motion"
+                                        >
+                                            Preview analytics
+                                        </Link>
+                                    </Button>
+                                ) : null}
+                                {capabilityMotionAnalyticsCallsHref ? (
+                                    <Button type="button" size="sm" variant="outline" asChild>
+                                        <Link
+                                            href={capabilityMotionAnalyticsCallsHref}
+                                            data-testid="catalog-capability-analytics-calls"
+                                            title="Open call list filtered by this capability motion"
+                                        >
+                                            Preview calls
+                                        </Link>
+                                    </Button>
+                                ) : null}
+                            </div>
+                        </div>
+                    )}
+
+                    <fieldset className="mt-4">
+                        <legend className="text-sm font-medium mb-2">Distribution tier</legend>
+                        <p className="text-xs text-muted-foreground mb-2">
+                            Community registry pricing stubs — free OSS packs through enterprise tiers.
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                            {(['all', 'free', 'community', 'starter', 'pro', 'enterprise'] as const).map(
+                                (t) => (
+                                    <Button
+                                        key={t}
+                                        type="button"
+                                        size="sm"
+                                        variant={distributionTierFilter === t ? 'default' : 'outline'}
+                                        onClick={() => setDistributionTierFilter(t)}
+                                        data-testid={
+                                            t === 'all' ? 'catalog-tier-filter-all' : `catalog-tier-filter-${t}`
+                                        }
+                                    >
+                                        {t === 'all' ? 'All tiers' : t}
+                                    </Button>
+                                ),
+                            )}
+                        </div>
+                    </fieldset>
+
                     <div className="mt-4 flex flex-wrap items-center gap-2">
                         <Button type="button" variant="outline" size="sm" onClick={resetFilters} disabled={!hasActiveFilters}>
                             Clear filters
@@ -458,7 +858,6 @@ export function MarketplaceCatalog({
                         </span>
                     </div>
                 </section>
-            )}
 
             <div className="grid auto-rows-fr gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {filtered.map((pack) => (
@@ -483,16 +882,37 @@ export function MarketplaceCatalog({
                                         className="mt-0.5 opacity-90"
                                     />
                                 </div>
-                                <p className="mt-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                                    <span
-                                        className="size-1.5 shrink-0 rounded-full bg-emerald-500 ovo-status-breathe"
-                                        aria-hidden
-                                    />
-                                    <span>Active in registry</span>
+                                <p className="mt-2 flex flex-wrap items-center gap-2">
+                                    {packDistributionBySlug.get(pack.slug) ? (
+                                        <CatalogDistributionBadge
+                                            distribution={packDistributionBySlug.get(pack.slug)!}
+                                            data-testid={`catalog-distribution-${pack.slug}`}
+                                        />
+                                    ) : (
+                                        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                                            Active in registry
+                                        </span>
+                                    )}
                                 </p>
                             </CardHeader>
                             <CardContent className="flex-1 space-y-2 text-sm text-muted-foreground">
                                 <p>{pack.summary}</p>
+                                {pack.capability_module_ids && pack.capability_module_ids.length > 0 && (
+                                    <p className="flex flex-wrap gap-1.5">
+                                        {capabilityModuleLabelsForPack(
+                                            pack.capability_module_ids,
+                                            capabilityById,
+                                            5,
+                                        ).map((label) => (
+                                            <span
+                                                key={`${pack.slug}-${label}`}
+                                                className="inline-flex rounded-full border border-border/80 bg-muted/50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-foreground/80"
+                                            >
+                                                {label}
+                                            </span>
+                                        ))}
+                                    </p>
+                                )}
                                 {(() => {
                                     const proofVariant = preferredCatalogProofVariantId(pack);
                                     const cardTip = buyerDemoCardTip(pack.slug);
@@ -616,10 +1036,12 @@ export function MarketplaceCatalog({
                                             const proofHref = buildMarketplaceAnalyticsProofHref({
                                                 catalogSlug: pack.slug,
                                                 catalogVariantId: proofVariantId || undefined,
+                                                capabilityModuleId: primaryCapabilityFilterId ?? undefined,
                                             });
                                             const overviewHref = buildAnalyticsOverviewHref({
                                                 catalogSlug: pack.slug,
                                                 catalogVariantId: proofVariantId || undefined,
+                                                capabilityModuleId: primaryCapabilityFilterId ?? undefined,
                                             });
                                             const showReviewInbox = packHasReviewInboxStory(pack);
                                             const settingsHref = buildMarketplaceSettingsHref(pack.slug);
@@ -671,11 +1093,20 @@ export function MarketplaceCatalog({
                                     </>
                                 ) : (
                                     <>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="w-full"
+                                            data-testid={`catalog-listen-preview-${pack.slug}`}
+                                            onClick={() => openVoicePreview(pack)}
+                                        >
+                                            Listen to voice preview
+                                        </Button>
                                         <Button className="w-full" variant="default" asChild>
-                                            <Link href="/workflow/catalog">Sign in to install</Link>
+                                            <Link href="/auth/login?redirect=/workflow/catalog">Sign in to install</Link>
                                         </Button>
                                         <Button className="w-full" variant="outline" asChild>
-                                            <Link href="/">Back to app home</Link>
+                                            <Link href="/auth/signup?redirect=/overview">Sign up — AI + guided setup</Link>
                                         </Button>
                                     </>
                                 )}
@@ -690,6 +1121,9 @@ export function MarketplaceCatalog({
                     No templates match these filters. Use <span className="font-medium text-foreground">Clear filters</span>{' '}
                     above or broaden the use case search.
                 </p>
+            )}
+                    </TabsContent>
+                </Tabs>
             )}
 
             {installable && (
@@ -1000,7 +1434,11 @@ export function MarketplaceCatalog({
                                             ./scripts/regen_catalog_voice_previews.sh
                                         </code>{' '}
                                         with <strong className="text-foreground">ELEVENLABS_API_KEY</strong>{' '}
-                                        for spoken industry audio.
+                                        or{' '}
+                                        <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                                            --local-tts
+                                        </code>{' '}
+                                        (Speaches) for spoken industry audio.
                                     </p>
                                 ) : null}
                                 {voicePreviewPack && buyerDemoCardTip(voicePreviewPack.slug) ? (
@@ -1030,6 +1468,117 @@ export function MarketplaceCatalog({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {installable && (
+                <Dialog
+                    open={capabilityInstallOpen}
+                    onOpenChange={(open) => !open && setCapabilityInstallOpen(false)}
+                >
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Install by capability</DialogTitle>
+                            <DialogDescription asChild>
+                                <div className="space-y-2 text-left text-sm text-muted-foreground">
+                                    <p>
+                                        Installs the vertical pack that best implements your selected
+                                        capabilities—same as catalog install with the resolved graph
+                                        variant.
+                                    </p>
+                                    {capabilityResolution ? (
+                                        <>
+                                            {capabilityComposePlan &&
+                                            !capabilityComposePlan.single_pack_sufficient &&
+                                            capabilityComposePlan.installs.length > 1 ? (
+                                                <ul className="list-disc pl-4 space-y-1">
+                                                    {capabilityComposePlan.installs.map((inst) => (
+                                                        <li key={inst.slug}>
+                                                            <span className="font-medium text-foreground">
+                                                                {inst.display_name}
+                                                            </span>
+                                                            {inst.variant_label
+                                                                ? ` · ${inst.variant_label}`
+                                                                : ''}{' '}
+                                                            — {inst.module_labels.join(', ')}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <>
+                                                    <p>
+                                                        <span className="font-medium text-foreground">
+                                                            Pack:{' '}
+                                                        </span>
+                                                        {capabilityResolution.display_name} (
+                                                        {capabilityResolution.industry})
+                                                    </p>
+                                                    {capabilityResolution.variant_label ? (
+                                                        <p>
+                                                            <span className="font-medium text-foreground">
+                                                                Variant:{' '}
+                                                            </span>
+                                                            {capabilityResolution.variant_label}
+                                                        </p>
+                                                    ) : null}
+                                                    <p>
+                                                        <span className="font-medium text-foreground">
+                                                            Capabilities:{' '}
+                                                        </span>
+                                                        {capabilityResolution.matched_module_labels.join(
+                                                            ', ',
+                                                        )}
+                                                    </p>
+                                                </>
+                                            )}
+                                        </>
+                                    ) : null}
+                                </div>
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-2 py-2">
+                            <Label htmlFor="capability-wf-name">
+                                {capabilityComposePlan &&
+                                !capabilityComposePlan.single_pack_sufficient &&
+                                capabilityComposePlan.installs.length > 1
+                                    ? 'Workflow name prefix'
+                                    : 'Workflow name'}
+                            </Label>
+                            <Input
+                                id="capability-wf-name"
+                                value={capabilityInstallName}
+                                onChange={(e) => setCapabilityInstallName(e.target.value)}
+                                placeholder="e.g. Salon appointments voice agent"
+                            />
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setCapabilityInstallOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => void confirmCapabilityInstall()}
+                                disabled={
+                                    capabilityInstalling ||
+                                    !capabilityInstallName.trim() ||
+                                    !capabilityResolution
+                                }
+                                data-testid="catalog-capability-install-confirm"
+                            >
+                                {capabilityInstalling
+                                    ? 'Installing…'
+                                    : capabilityComposePlan &&
+                                        !capabilityComposePlan.single_pack_sufficient &&
+                                        capabilityComposePlan.installs.length > 1
+                                      ? `Install ${capabilityComposePlan.installs.length} workflows`
+                                      : 'Install'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     );
 }

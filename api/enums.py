@@ -105,6 +105,12 @@ class OrganizationConfigurationKey(Enum):
     VOICE_PROFILES = (
         "VOICE_PROFILES"  # JSON: { v, default_profile_id, custom_profiles[] } — speech delivery presets
     )
+    MK01_AGENT_SELF_IMPROVEMENT = (
+        "MK01_AGENT_SELF_IMPROVEMENT"  # JSON: policy overrides + improvement proposal queue
+    )
+    MK01_INTERACTION_TIMELINE = (
+        "MK01_INTERACTION_TIMELINE"  # JSON: omnichannel interaction events (voice + async)
+    )
 
 
 class WorkflowStatus(Enum):

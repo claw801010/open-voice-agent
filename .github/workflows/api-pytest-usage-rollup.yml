@@ -6,6 +6,9 @@ on:
     paths:
       - "api/**"
       - "catalog/vertical-packs.json"
+      - "catalog/capability-modules.json"
+      - "catalog/community-registry.json"
+      - "catalog/community-registry-distribution.json"
       - "catalog/packaged-workflows/**"
       - "catalog/catalog-variant-http-tools.json"
       - "catalog/buyer-demo-defaults.json"
@@ -19,12 +22,16 @@ on:
       - "scripts/split_mk01_pr_hints.sh"
       - "scripts/run_all_buyer_demos.sh"
       - "scripts/check_voice_previews_spoken.sh"
+      - "scripts/build_community_catalog.py"
       - "scripts/generate_catalog_voice_preview_audio.py"
       - ".github/workflows/api-pytest-usage-rollup.yml"
   pull_request:
     paths:
       - "api/**"
       - "catalog/vertical-packs.json"
+      - "catalog/capability-modules.json"
+      - "catalog/community-registry.json"
+      - "catalog/community-registry-distribution.json"
       - "catalog/packaged-workflows/**"
       - "catalog/catalog-variant-http-tools.json"
       - "catalog/buyer-demo-defaults.json"
@@ -38,6 +45,7 @@ on:
       - "scripts/split_mk01_pr_hints.sh"
       - "scripts/run_all_buyer_demos.sh"
       - "scripts/check_voice_previews_spoken.sh"
+      - "scripts/build_community_catalog.py"
       - "scripts/generate_catalog_voice_preview_audio.py"
       - ".github/workflows/api-pytest-usage-rollup.yml"
 
@@ -106,6 +114,9 @@ jobs:
           REDIS_URL: redis://127.0.0.1:6379/0
         run: alembic upgrade head
 
+      - name: Community registry freshness
+        run: python "${GITHUB_WORKSPACE}/scripts/build_community_catalog.py" --check
+
       - name: Catalog voice preview WAV inventory
         run: |
           python "${GITHUB_WORKSPACE}/scripts/generate_catalog_voice_preview_audio.py" --check
@@ -125,6 +136,7 @@ jobs:
         run: |
           python -m pytest \
             tests/test_vertical_packs_catalog.py \
+            tests/test_community_registry_unit.py \
             tests/test_buyer_demo_defaults_unit.py \
             tests/test_buyer_demo_hints_unit.py \
             tests/test_buyer_demo_matrix_unit.py \
@@ -135,6 +147,16 @@ jobs:
             tests/test_install_from_catalog_routes.py \
             tests/test_voice_profiles.py \
             tests/test_voice_profiles_routes.py \
+            tests/test_inference_profiles_unit.py \
+            tests/test_inference_profiles_routes.py \
+            tests/test_self_improvement_store_unit.py \
+            tests/test_self_improvement_policy_unit.py \
+            tests/test_self_improvement_rollup_unit.py \
+            tests/test_interaction_timeline_unit.py \
+            tests/test_self_improvement_routes.py \
+            tests/test_oob_defaults_unit.py \
+            tests/test_local_inference_unit.py \
+            tests/test_local_inference_bundle_unit.py \
             tests/test_voice_profile_preview.py \
             tests/test_gtm_local_all_in_one.py \
             tests/test_local_scheduling_routes.py \

@@ -3,7 +3,7 @@
 import { Check, Circle } from 'lucide-react';
 import Link from 'next/link';
 
-import { buildAnalyticsCallsExploreHref } from '@/lib/analyticsOverviewDeepLinks';
+import { analyticsCallsHrefForWorkflow } from '@/lib/workflow/headerMetadata';
 import { WORKFLOW_EDITOR_BEST_PRACTICES } from '@/lib/workflowCreationOptions';
 import {
     buildWorkflowHappyPathSteps,
@@ -19,6 +19,8 @@ type Props = {
     toolNamesByUuid: ReadonlyMap<string, string>;
     catalogSlug?: string | null;
     editorMode: 'edit' | 'simulation';
+    /** MK-03 — scoped call list (workflow + mk01 filters when set). */
+    workflowAnalyticsCallsHref?: string | null;
 };
 
 export function WorkflowHappyPathStrip({
@@ -30,6 +32,7 @@ export function WorkflowHappyPathStrip({
     toolNamesByUuid,
     catalogSlug,
     editorMode,
+    workflowAnalyticsCallsHref = null,
 }: Props) {
     const steps = buildWorkflowHappyPathSteps({
         nodes,
@@ -39,13 +42,10 @@ export function WorkflowHappyPathStrip({
         catalogSlug,
     });
     const complete = workflowHappyPathComplete(steps);
-    const workflowNameTrimmed = (workflowName ?? '').trim();
     const analyticsHref =
-        hasPublishedVersion && workflowNameTrimmed
-            ? buildAnalyticsCallsExploreHref({
-                  toolName: workflowNameTrimmed,
-                  catalogSlug: catalogSlug ?? undefined,
-              })
+        hasPublishedVersion
+            ? (workflowAnalyticsCallsHref ??
+              analyticsCallsHrefForWorkflow(workflowId, undefined))
             : null;
 
     return (

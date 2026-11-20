@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "description": "Distribution tier and price overrides for community-registry listings. Builder merges these on top of type defaults. price_usd_cents null = contact sales.",
+  "default_tiers": {
+    "vertical_pack": "free",
+    "workflow_variant": "starter",
+    "capability_module": "free",
+    "tool_stub": "free",
+    "native_tool_template": "free",
+    "prompt_pack": "community",
+    "recipe": "community",
+    "best_practice": "community",
+    "inference_profile": "free",
+    "governance_policy": "free",
+    "skill_import": "community"
+  },
+  "default_prices_usd_cents": {
+    "free": 0,
+    "community": 0,
+    "starter": 2900,
+    "pro": 9900,
+    "enterprise": null
+  },
+  "overrides": {
+    "vertical_pack:healthcare-clinic-screening": {
+      "tier": "pro",
+      "price_usd_cents": 9900,
+      "certification": "reviewed"
+    },
+    "vertical_pack:banking-balance-faq": {
+      "tier": "enterprise",
+      "price_usd_cents": null
+    }
+  },
+  "publishers": [
+    {
+      "id": "dograh-oss",
+      "display_name": "Dograh OSS",
+      "url": "https://github.com/dograh/dograh",
+      "license_spdx": "MIT"
+    }
+  ]
+}

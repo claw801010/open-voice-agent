@@ -11,6 +11,7 @@ from api.constants import BACKEND_API_ENDPOINT, ENABLE_LOCAL_MESSAGING
 from api.db.models import UserModel
 from api.services.auth.depends import get_user
 from api.services.local_messaging import store
+from api.services.analytics.interaction_timeline_service import record_messaging_send
 
 router = APIRouter(prefix="/local-messaging", tags=["local-messaging"])
 
@@ -79,20 +80,32 @@ async def list_messages(user: UserModel = Depends(get_user)) -> dict[str, Any]:
 async def send_sms(body: MessagingRequest) -> dict[str, Any]:
     _require_enabled()
     org = body.organization_id if body.organization_id is not None else 1
-    return store.send_message(
+    result = store.send_message(
         org,
         channel="sms",
         to_address=body.to,
         body=body.body,
         patient_name=body.patient_name,
     )
+    await record_messaging_send(
+        org,
+        {
+            "id": result.get("message_id"),
+            "channel": "sms",
+            "to": body.to,
+            "body": body.body,
+            "sent_at": result.get("sent_at"),
+            "status": result.get("status"),
+        },
+    )
+    return result
 
 
 @router.post("/api/v1/messages/email")
 async def send_email(body: MessagingRequest) -> dict[str, Any]:
     _require_enabled()
     org = body.organization_id if body.organization_id is not None else 1
-    return store.send_message(
+    result = store.send_message(
         org,
         channel="email",
         to_address=body.to,
@@ -100,3 +113,16 @@ async def send_email(body: MessagingRequest) -> dict[str, Any]:
         subject=body.subject,
         patient_name=body.patient_name,
     )
+    await record_messaging_send(
+        org,
+        {
+            "id": result.get("message_id"),
+            "channel": "email",
+            "to": body.to,
+            "body": body.body,
+            "subject": body.subject,
+            "sent_at": result.get("sent_at"),
+            "status": result.get("status"),
+        },
+    )
+    return result

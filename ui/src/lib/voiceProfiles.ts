@@ -412,6 +412,9 @@ export const VERTICAL_VOICE_PROFILE_LABELS: Record<string, string> = {
     'builtin:vertical_telecom': 'Telecom / utilities voice',
     'builtin:vertical_gov': 'Public sector voice',
     'builtin:vertical_hr': 'HR / staffing voice',
+    'builtin:vertical_trades': 'Trades & home services voice',
+    'builtin:vertical_beauty': 'Salon & beauty voice',
+    'builtin:vertical_solopreneur': 'Solopreneur voice',
 };
 
 /** Built-in profile ids that ship with natural delivery enabled (catalog card hint). */
@@ -426,6 +429,9 @@ export const VOICE_PROFILES_WITH_NATURAL_DELIVERY = new Set([
     'builtin:vertical_telecom',
     'builtin:vertical_gov',
     'builtin:vertical_hr',
+    'builtin:vertical_trades',
+    'builtin:vertical_beauty',
+    'builtin:vertical_solopreneur',
 ]);
 
 export function naturalDeliveryCatalogHint(profileId: string | null | undefined): string | null {

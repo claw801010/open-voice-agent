@@ -10,6 +10,7 @@ from api.db import db_client
 from api.db.models import UserModel
 from api.schemas.user_configuration import UserConfiguration
 from api.services.auth.stack_auth import stackauth
+from api.services.configuration.oob_defaults import build_oob_user_configuration
 from api.services.configuration.registry import ServiceProviders
 from api.utils.auth import decode_jwt_token
 
@@ -272,6 +273,9 @@ async def create_user_configuration_with_mps_key(
             logger.warning(
                 f"Failed to get MPS service key: {response.status_code} - {response.text}"
             )
+
+    logger.info("MPS service key unavailable — using local OSS inference defaults")
+    return build_oob_user_configuration()
 
 
 async def get_superuser(

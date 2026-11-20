@@ -78,6 +78,10 @@ from api.schemas.usage_rollup import (
 )
 from api.services.workflow.workflow import WorkflowGraph
 from api.utils.catalog_install import resolve_packaged_definition_ref
+from api.services.catalog.capability_modules import (
+    compose_capability_install_plan,
+    resolve_install_target_for_modules,
+)
 from api.utils.make_scenario_adapter import (
     MakeScenarioExportError,
     MakeUnsupportedModulesError,
@@ -274,6 +278,26 @@ class InstallFromCatalogRequest(BaseModel):
         min_length=1,
         max_length=64,
         description="Optional; must match a variant_id in the pack's workflow_variants (catalog/vertical-packs.json).",
+    )
+
+
+class InstallFromCapabilityModulesRequest(BaseModel):
+    module_ids: list[str] = Field(
+        ...,
+        min_length=1,
+        max_length=24,
+        description="Capability module ids from catalog/capability-modules.json (MK-01-CAPABILITY-MODULES).",
+    )
+    workflow_name: str = Field(..., min_length=1, max_length=200)
+
+
+class InstallCapabilityPlanRequest(BaseModel):
+    module_ids: list[str] = Field(..., min_length=1, max_length=24)
+    workflow_name_prefix: str = Field(
+        ...,
+        min_length=1,
+        max_length=120,
+        description="Base name; each pack installs as '{prefix} · {pack display_name}'.",
     )
 
 
@@ -1908,6 +1932,115 @@ async def install_workflow_from_catalog(
         status_code=400,
         detail="This catalog pack is not installable (missing packaged_definition or template_name)",
     )
+
+
+async def _enrich_workflow_mk01_after_install(
+    installed: dict[str, Any],
+    mk01_extra: dict[str, Any],
+    *,
+    organization_id: int,
+) -> dict[str, Any]:
+    """Persist mk01 fields (e.g. capability_module_ids) on the created workflow draft."""
+    wf_id = installed.get("id")
+    if wf_id is None:
+        return installed
+    wf_cfg = dict(installed.get("workflow_configurations") or {})
+    mk01 = dict(wf_cfg.get("mk01") or {})
+    mk01.update(mk01_extra)
+    wf_cfg["mk01"] = mk01
+    try:
+        updated = await db_client.update_workflow(
+            int(wf_id),
+            name=None,
+            workflow_definition=None,
+            template_context_variables=None,
+            workflow_configurations=wf_cfg,
+            organization_id=organization_id,
+        )
+        merged = dict(installed)
+        merged["workflow_configurations"] = dict(updated.workflow_configurations or wf_cfg)
+        return merged
+    except ValueError:
+        merged = dict(installed)
+        merged["workflow_configurations"] = wf_cfg
+        return merged
+
+
+@router.post("/install-from-capability-modules")
+async def install_workflow_from_capability_modules(
+    request: InstallFromCapabilityModulesRequest,
+    user: UserModel = Depends(get_user),
+):
+    """
+    MK-01-CAPABILITY-MODULES slice 3: resolve selected capability modules to the best
+    vertical pack + variant, then install via the same path as install-from-catalog.
+    """
+    try:
+        resolution = resolve_install_target_for_modules(request.module_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    catalog_request = InstallFromCatalogRequest(
+        slug=resolution["slug"],
+        workflow_name=request.workflow_name,
+        variant_id=resolution.get("variant_id"),
+    )
+    installed = await install_workflow_from_catalog(catalog_request, user)
+    if isinstance(installed, dict):
+        installed = await _enrich_workflow_mk01_after_install(
+            installed,
+            {
+                "capability_module_ids": resolution.get("requested_module_ids") or [],
+                "capability_matched_module_ids": resolution.get("matched_module_ids") or [],
+            },
+            organization_id=user.selected_organization_id,
+        )
+        installed["capability_resolution"] = resolution
+    return installed
+
+
+@router.post("/install-from-capability-modules/plan")
+async def install_workflow_capability_plan(
+    request: InstallCapabilityPlanRequest,
+    user: UserModel = Depends(get_user),
+):
+    """
+    MK-01-CAPABILITY-MODULES slice 4: install one workflow per pack in the compose plan
+    (when selected capabilities span multiple verticals).
+    """
+    try:
+        plan = compose_capability_install_plan(request.module_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    workflows: list[dict[str, Any]] = []
+    prefix = request.workflow_name_prefix.strip()
+    for inst in plan["installs"]:
+        display = inst.get("display_name") or inst["slug"]
+        wf_name = f"{prefix} · {display}".strip()[:200]
+        catalog_request = InstallFromCatalogRequest(
+            slug=inst["slug"],
+            workflow_name=wf_name,
+            variant_id=inst.get("variant_id"),
+        )
+        installed = await install_workflow_from_catalog(catalog_request, user)
+        if isinstance(installed, dict):
+            installed = await _enrich_workflow_mk01_after_install(
+                installed,
+                {
+                    "capability_module_ids": inst.get("module_ids") or [],
+                    "capability_install_plan": True,
+                },
+                organization_id=user.selected_organization_id,
+            )
+            installed["capability_install"] = inst
+            workflows.append(installed)
+
+    return {
+        "plan": plan,
+        "workflows": workflows,
+        "workflow_count": len(workflows),
+    }
 
 
 @router.get("/templates")

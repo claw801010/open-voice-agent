@@ -21,6 +21,10 @@ SHORT_NAMES: dict[str, str] = {
     "telecom-utilities-outage-faq": "buyer-demo-telecom-outage.sh",
     "public-sector-civic-services-faq": "buyer-demo-civic-permits.sh",
     "hr-staffing-recruiting-faq": "buyer-demo-hr-recruiting.sh",
+    "construction-trades-faq": "buyer-demo-construction-site.sh",
+    "handyman-home-services-faq": "buyer-demo-handyman-quote.sh",
+    "barber-beauty-salon-faq": "buyer-demo-salon-booking.sh",
+    "solopreneur-coach-faq": "buyer-demo-solopreneur-intake.sh",
 }
 
 _TEMPLATE = """#!/usr/bin/env bash

@@ -23,6 +23,9 @@ VERTICAL_BUILTIN_SLUGS = (
     "vertical_telecom",
     "vertical_gov",
     "vertical_hr",
+    "vertical_trades",
+    "vertical_beauty",
+    "vertical_solopreneur",
 )
 
 # Catalog slug → built-in vertical profile id
@@ -37,6 +40,10 @@ CATALOG_SLUG_TO_VOICE_PROFILE_ID: dict[str, str] = {
     "telecom-utilities-outage-faq": "builtin:vertical_telecom",
     "public-sector-civic-services-faq": "builtin:vertical_gov",
     "hr-staffing-recruiting-faq": "builtin:vertical_hr",
+    "construction-trades-faq": "builtin:vertical_trades",
+    "handyman-home-services-faq": "builtin:vertical_trades",
+    "barber-beauty-salon-faq": "builtin:vertical_beauty",
+    "solopreneur-coach-faq": "builtin:vertical_solopreneur",
 }
 
 _COMMON_EXTENDED_EN = (
@@ -283,6 +290,80 @@ _VERTICAL_SPEECH: dict[str, SpeechDeliverySettings] = {
         similarity_boost=0.86,
         speed=0.98,
     ),
+    "vertical_trades": SpeechDeliverySettings(
+        authenticity_level=0.76,
+        tone="warm",
+        behavior="balanced",
+        enable_professional_fillers=True,
+        filler_intensity="medium",
+        enable_extended_fillers=True,
+        extended_filler_phrases=[
+            "Happy to help with that",
+            "Let me check our service area",
+            "One moment while I look at the schedule",
+            *_COMMON_EXTENDED_EN,
+        ],
+        multilingual_fillers={
+            "en-US": ["Happy to help", "One moment", "Let me check the schedule"],
+            "es-US": ["Con gusto", "Un momento", "Déjeme revisar la agenda"],
+        },
+        enable_breath_pauses=True,
+        authenticity_layer=layer_subtle().model_copy(
+            update={"key_projection_terms": ["appointment", "visit", "estimate"]}
+        ),
+        stability=0.7,
+        similarity_boost=0.88,
+        speed=1.0,
+    ),
+    "vertical_beauty": SpeechDeliverySettings(
+        authenticity_level=0.84,
+        tone="warm",
+        behavior="balanced",
+        enable_professional_fillers=True,
+        filler_intensity="medium",
+        enable_extended_fillers=True,
+        extended_filler_phrases=[
+            "Absolutely",
+            "Let me find the right stylist for you",
+            "One sec while I check openings",
+            *_COMMON_EXTENDED_EN,
+        ],
+        multilingual_fillers={
+            "en-US": ["Absolutely", "One moment", "Let me check openings"],
+            "es-US": ["Claro que sí", "Un momento", "Déjeme revisar disponibilidad"],
+        },
+        enable_breath_pauses=True,
+        authenticity_layer=layer_warm().model_copy(
+            update={"key_projection_terms": ["appointment", "stylist", "service"]}
+        ),
+        stability=0.65,
+        similarity_boost=0.9,
+        speed=1.02,
+    ),
+    "vertical_solopreneur": SpeechDeliverySettings(
+        authenticity_level=0.8,
+        tone="warm",
+        behavior="consultative",
+        enable_professional_fillers=True,
+        filler_intensity="low",
+        enable_extended_fillers=True,
+        extended_filler_phrases=[
+            "Great question",
+            "Let me share how that works",
+            "One moment while I check my calendar",
+            *_COMMON_EXTENDED_EN,
+        ],
+        multilingual_fillers={
+            "en-US": ["Great question", "One moment", "Let me check my calendar"],
+        },
+        enable_breath_pauses=True,
+        authenticity_layer=layer_subtle().model_copy(
+            update={"key_projection_terms": ["discovery", "call", "program"]}
+        ),
+        stability=0.72,
+        similarity_boost=0.87,
+        speed=0.99,
+    ),
 }
 
 _VERTICAL_META: dict[str, dict[str, Any]] = {
@@ -335,6 +416,21 @@ _VERTICAL_META: dict[str, dict[str, Any]] = {
         "name": "Vertical — HR & staffing",
         "description": "Warm, encouraging delivery for candidate FAQ, application status, and interview scheduling.",
         "tags": ["vertical", "hr", "staffing", "recruiting", "mk01"],
+    },
+    "vertical_trades": {
+        "name": "Vertical — construction & home services",
+        "description": "Friendly, trustworthy delivery for contractors, handyman, and field-service booking.",
+        "tags": ["vertical", "construction", "handyman", "trades", "mk01"],
+    },
+    "vertical_beauty": {
+        "name": "Vertical — barber, beauty & salon",
+        "description": "Warm, upbeat cadence for salon services menu and appointment booking.",
+        "tags": ["vertical", "beauty", "salon", "barber", "mk01"],
+    },
+    "vertical_solopreneur": {
+        "name": "Vertical — solopreneur & entrepreneur",
+        "description": "Consultative, founder-led tone for discovery calls and client intake.",
+        "tags": ["vertical", "solopreneur", "coach", "entrepreneur", "mk01"],
     },
 }
 

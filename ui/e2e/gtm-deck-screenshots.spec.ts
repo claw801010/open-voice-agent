@@ -59,6 +59,25 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-mk01-workflow-catalog-capability-filters.png", async ({ page }) => {
+        await page.goto("/workflow/catalog");
+
+        await expect(page.getByRole("heading", { name: "Template catalog" })).toBeVisible({
+            timeout: 30_000,
+        });
+        const salonChip = page.getByTestId("catalog-capability-salon_appointment_booking");
+        await expect(salonChip).toBeVisible({ timeout: 15_000 });
+        await salonChip.click();
+        await expect(page.getByTestId("catalog-capability-install-banner")).toBeVisible({
+            timeout: 10_000,
+        });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-catalog-capability-filters.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-mk01-analytics-overview.png", async ({ page }) => {
         await page.goto(`/analytics?catalog_slug=${slug}&days=7`);
 
@@ -404,6 +423,86 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-mk01-analytics-call-detail-construction-site.png when construction call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_CONSTRUCTION_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_CONSTRUCTION_CALL_ID (booking_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(page.getByText("schedule_site_visit").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-construction-site.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-handyman-quote.png when handyman call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_HANDYMAN_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_HANDYMAN_CALL_ID (quote_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(page.getByText("capture_quote_intent").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-handyman-quote.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-salon-booking.png when salon call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_SALON_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_SALON_CALL_ID (booking_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(page.getByText("book_salon_appointment").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-salon-booking.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-analytics-call-detail-solopreneur-intake.png when solopreneur call id provided", async ({
+        page,
+    }) => {
+        const callId = process.env.E2E_GTM_SOLOPRENEUR_CALL_ID?.trim();
+        test.skip(!callId, "Set E2E_GTM_SOLOPRENEUR_CALL_ID (lead_capture_complex demo call).");
+
+        await page.goto(`/analytics/calls/${encodeURIComponent(callId)}`);
+        await expect(page.getByRole("heading", { level: 1, name: callId })).toBeVisible({
+            timeout: 30_000,
+        });
+        const traceHeading = page.getByRole("heading", { name: "Call trace & quality" });
+        await traceHeading.scrollIntoViewIfNeeded();
+        await expect(page.getByText("capture_lead_intent").first()).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-analytics-call-detail-solopreneur-intake.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-mk01-settings-local-payments-collections.png", async ({ page }) => {
         await page.goto("/settings#local-payments");
 
@@ -716,6 +815,86 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-mk01-workflow-wire-construction-scheduling.png when construction workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_CONSTRUCTION_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_CONSTRUCTION_WORKFLOW_ID (booking_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("booking_complex")).toBeVisible({ timeout: 15_000 });
+        const wireCalendar = page.getByTestId("wire-local-calendar-button");
+        await expect(wireCalendar).toBeVisible({ timeout: 15_000 });
+        await wireCalendar.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-construction-scheduling.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-handyman-integrations.png when handyman workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_HANDYMAN_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_HANDYMAN_WORKFLOW_ID (quote_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("quote_complex")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-handyman-integrations.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-salon-scheduling.png when salon workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_SALON_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_SALON_WORKFLOW_ID (booking_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("booking_complex")).toBeVisible({ timeout: 15_000 });
+        const wireCalendar = page.getByTestId("wire-local-calendar-button");
+        await expect(wireCalendar).toBeVisible({ timeout: 15_000 });
+        await wireCalendar.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-salon-scheduling.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk01-workflow-wire-solopreneur-integrations.png when solopreneur workflow id provided", async ({
+        page,
+    }) => {
+        const workflowId = process.env.E2E_GTM_SOLOPRENEUR_WORKFLOW_ID?.trim();
+        test.skip(!workflowId, "Set E2E_GTM_SOLOPRENEUR_WORKFLOW_ID (lead_capture_complex catalog workflow).");
+
+        await openCatalogWorkflowEditor(page, workflowId);
+        const guide = page.getByTestId("catalog-guide-card");
+        await expect(guide).toBeVisible({ timeout: 30_000 });
+        await expect(guide.getByText("lead_capture_complex")).toBeVisible({ timeout: 15_000 });
+        const wireIntegrations = page.getByTestId("wire-local-integrations-button");
+        await expect(wireIntegrations).toBeVisible({ timeout: 15_000 });
+        await wireIntegrations.scrollIntoViewIfNeeded();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk01-workflow-wire-solopreneur-integrations.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-mk01-workflow-wire-ehr-messaging.png when workflow id provided", async ({
         page,
     }) => {
@@ -796,6 +975,28 @@ test.describe("GTM deck screenshots (opt-in)", () => {
         });
     });
 
+    test("writes gtm-we01-inference-profiles-quick-switch.png", async ({ page }) => {
+        const profilesLoaded = page.waitForResponse(
+            (res) => res.url().includes("/api/v1/inference-profiles") && res.status() === 200,
+            { timeout: 30_000 },
+        );
+        await page.goto("/model-configurations");
+        await profilesLoaded;
+
+        await expect(page.getByTestId("inference-profile-quick-switch")).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByTestId("inference-profile-card-local_edge_lean")).toBeVisible({
+            timeout: 15_000,
+        });
+        await expect(page.getByTestId("local-inference-setup-panel")).toBeVisible();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-we01-inference-profiles-quick-switch.png"),
+            fullPage: false,
+        });
+    });
+
     test("writes gtm-we01-voice-profiles-page.png", async ({ page }) => {
         await page.goto("/voice-profiles");
 
@@ -862,6 +1063,62 @@ test.describe("GTM deck screenshots (opt-in)", () => {
                 gtmImagesDir(),
                 "gtm-we01-workflow-voice-profile-quick-pick.png",
             ),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk03-overview-operator-path.png", async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.removeItem("ovo_hint_dismissed:overview_operator_path_v1");
+        });
+        await page.goto("/overview");
+
+        await expect(page.getByRole("heading", { name: /Welcome/ })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByTestId("overview-operator-hint")).toBeVisible({ timeout: 15_000 });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk03-overview-operator-path.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk03-recipes-hub.png", async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.removeItem("ovo_hint_dismissed:settings_recipes_v1");
+        });
+        await page.goto("/recipes");
+
+        await expect(page.getByRole("heading", { name: "Integration recipes" })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByTestId("recipes-page-hint")).toBeVisible({ timeout: 15_000 });
+        await expect(page.getByTestId("builder-recipes-panel")).toBeVisible();
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk03-recipes-hub.png"),
+            fullPage: false,
+        });
+    });
+
+    test("writes gtm-mk03-analytics-capability-filter.png", async ({ page }) => {
+        const capabilityId = "salon_appointment_booking";
+        await page.addInitScript(() => {
+            localStorage.removeItem("ovo_hint_dismissed:analytics_filters_overview_v1");
+        });
+        await page.goto(`/analytics?capability_module_id=${capabilityId}&days=7`);
+
+        await expect(page.getByRole("heading", { name: "Analytics", exact: true })).toBeVisible({
+            timeout: 30_000,
+        });
+        await expect(page.getByLabel("Capability motion (optional)")).toHaveValue(capabilityId);
+        await expect(page.getByTestId("analytics-overview-filter-hint")).toBeVisible({
+            timeout: 15_000,
+        });
+
+        await page.screenshot({
+            path: path.join(gtmImagesDir(), "gtm-mk03-analytics-capability-filter.png"),
             fullPage: false,
         });
     });

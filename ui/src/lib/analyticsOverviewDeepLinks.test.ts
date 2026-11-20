@@ -89,6 +89,15 @@ describe("analyticsOverviewDeepLinks", () => {
         expect(href).toContain("days=14");
     });
 
+    it("buildAnalyticsOverviewHref includes capability_module_id", () => {
+        const href = buildAnalyticsOverviewHref({
+            catalogSlug: "construction-trades-faq",
+            capabilityModuleId: "site_visit_scheduling",
+        });
+        expect(href).toContain("capability_module_id=site_visit_scheduling");
+        expect(href).toContain("catalog_slug=construction-trades-faq");
+    });
+
     it("buildMarketplaceAnalyticsProofHref uses variant tools from catalog JSON", () => {
         const href = buildMarketplaceAnalyticsProofHref({
             catalogSlug: "retail-wismo-faq",

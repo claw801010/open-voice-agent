@@ -70,6 +70,11 @@ export interface Mk01InstallMetadata {
     source_template_id?: number;
     /** Graph variant from install (e.g. booking_complex, collections_complex). */
     catalog_variant_id?: string;
+    /** MK-01-CAPABILITY-MODULES: motions selected at marketplace install. */
+    capability_module_ids?: string[];
+    capability_matched_module_ids?: string[];
+    /** True when installed via multi-pack compose plan. */
+    capability_install_plan?: boolean;
 }
 
 export interface WorkflowConfigurations {
@@ -85,6 +90,8 @@ export interface WorkflowConfigurations {
     model_overrides?: ModelOverrides;  // Per-workflow model configuration overrides
     /** Org voice delivery preset; omit to use organization default. */
     voice_profile_id?: string;
+    /** Catalog inference stack (cloud / local / hybrid); omit to use org Model configurations. */
+    inference_profile_id?: string;
     mk01?: Mk01InstallMetadata;
     [key: string]: unknown;  // Allow additional properties for future configurations
 }

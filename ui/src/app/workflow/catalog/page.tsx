@@ -1,18 +1,26 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 
 import { MarketplaceCatalog } from '@/components/catalog/MarketplaceCatalog';
 import { getVerticalPacksCatalogApiV1CatalogVerticalPacksGet } from '@/client/sdk.gen';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
+import { loadStaticCapabilityModules } from '@/lib/catalog/capabilityModules';
+import { parseCapabilityModuleIdsFromSearchParams } from '@/lib/catalog/catalogDeepLinks';
 import type { CatalogJson } from '@/lib/catalog/filterVerticalPacks';
 import logger from '@/lib/logger';
 
 import WorkflowLayout from '../WorkflowLayout';
 
 export default function WorkflowCatalogPage() {
+    const searchParams = useSearchParams();
+    const initialCapabilityModuleIds = useMemo(
+        () => parseCapabilityModuleIdsFromSearchParams(searchParams),
+        [searchParams],
+    );
     const { user, redirectToLogin, loading: authLoading } = useAuth();
     const [catalog, setCatalog] = useState<CatalogJson | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -55,6 +63,8 @@ export default function WorkflowCatalogPage() {
                 catalog={catalog}
                 loadError={loadError}
                 installable
+                capabilityModules={loadStaticCapabilityModules()}
+                initialCapabilityModuleIds={initialCapabilityModuleIds}
                 title="Template catalog"
                 subtitle="Each pack is a ready-made voice workflow for a common business scenario. Install copies it into your organization so you can run Web tests right away; add phone numbers when you are ready for PSTN."
                 backButton={

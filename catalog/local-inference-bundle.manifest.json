@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "profile_id": "local_edge_lean",
+  "description": "Reference manifest for air-gapped local inference bundles. Runtime bundles include ollama/manifests and ollama/blobs copied from the host Ollama store.",
+  "ollama_models": [
+    {
+      "model": "llama3.2:3b",
+      "purpose": "llm",
+      "size_hint_mb": 2000
+    }
+  ],
+  "speaches_models": [
+    {
+      "model": "Systran/faster-distil-whisper-small.en",
+      "purpose": "stt"
+    },
+    {
+      "model": "hexgrad/Kokoro-82M",
+      "purpose": "tts"
+    }
+  ],
+  "export": {
+    "script": "scripts/export_local_inference_bundle.sh",
+    "include_speaches_cache_flag": "--include-speaches-cache"
+  },
+  "import": {
+    "script": "scripts/import_local_inference_bundle.sh",
+    "env": "LOCAL_INFERENCE_BUNDLE"
+  }
+}

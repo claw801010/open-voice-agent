@@ -32,6 +32,10 @@ SLUG_WORKFLOW_ENV_KEYS: dict[str, str] = {
     "smb-franchise-location-faq": "E2E_GTM_SMB_WORKFLOW_ID",
     "public-sector-civic-services-faq": "E2E_GTM_CIVIC_WORKFLOW_ID",
     "hr-staffing-recruiting-faq": "E2E_GTM_HR_WORKFLOW_ID",
+    "construction-trades-faq": "E2E_GTM_CONSTRUCTION_WORKFLOW_ID",
+    "handyman-home-services-faq": "E2E_GTM_HANDYMAN_WORKFLOW_ID",
+    "barber-beauty-salon-faq": "E2E_GTM_SALON_WORKFLOW_ID",
+    "solopreneur-coach-faq": "E2E_GTM_SOLOPRENEUR_WORKFLOW_ID",
 }
 
 

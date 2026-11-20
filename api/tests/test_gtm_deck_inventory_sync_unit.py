@@ -26,4 +26,4 @@ def test_gtm_deck_inventory_matches_vertical_packs_catalog_test() -> None:
         f"  only in gen: {sorted(set(gen_pngs) - set(catalog_test_pngs))}\n"
         f"  only in test: {sorted(set(catalog_test_pngs) - set(gen_pngs))}"
     )
-    assert len(gen_pngs) == 41
+    assert len(gen_pngs) == 54

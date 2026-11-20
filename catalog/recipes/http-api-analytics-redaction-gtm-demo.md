@@ -80,8 +80,12 @@ Suggested filenames under **`docs/images/`** (add files when ready; safe to comm
 | `gtm-mk01-workflow-wire-civic-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_CIVIC_WORKFLOW_ID`, `permit_status_complex`). |
 | `gtm-mk01-workflow-wire-hr-integrations.png` | Workflow editor — **Wire local integrations** (`E2E_GTM_HR_WORKFLOW_ID`, `application_status_complex`). |
 | `gtm-we01-voice-profiles-page.png` | **Voice profiles** list with recommended presets visible. |
+| `gtm-we01-inference-profiles-quick-switch.png` | **Model configurations** — inference profile quick switch + local setup panel. |
 | `gtm-we01-voice-profiles-natural-delivery.png` | **Voice profiles** — **Authentic — natural** preset with **Natural delivery** editor expanded. |
 | `gtm-we01-workflow-editor-outcome-checklist.png` | Workflow editor right rail — **Outcome checklist** + catalog HTTP guide (`E2E_GTM_WORKFLOW_ID`). |
+| `gtm-mk03-overview-operator-path.png` | Home **Overview** — dismissible **Operator path** guide (catalog → Web test → analytics → recipes). |
+| `gtm-mk03-recipes-hub.png` | **`/recipes`** — integration recipes hub (embed, PSTN, campaigns) + first-visit hint. |
+| `gtm-mk03-analytics-capability-filter.png` | Analytics Overview — **`capability_module_id`** filter (e.g. salon appointment booking). |
 
 Wire these into slides or a Notion page; Mintlify can reference them later from `docs/` if you promote the story to the public docs site.
 

@@ -4,9 +4,12 @@ import { BarChart3, BookOpen, Bot, Settings2, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { GitHubStarBadge } from "@/components/layout/GitHubStarBadge";
+import { DismissibleHintBanner } from "@/components/onboarding/DismissibleHintBanner";
+import { GettingStartedWizard } from "@/components/onboarding/GettingStartedWizard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
+import { DISMISSIBLE_HINT_KEYS } from "@/lib/onboarding/dismissibleHints";
 
 export default function OverviewPage() {
     const { user, provider } = useAuth();
@@ -59,6 +62,25 @@ export default function OverviewPage() {
                 </div>
             </section>
 
+            <GettingStartedWizard />
+
+            <DismissibleHintBanner
+                hintKey={DISMISSIBLE_HINT_KEYS.overviewOperatorPath}
+                title="Operator path"
+                data-testid="overview-operator-hint"
+            >
+                <p>
+                    <strong className="font-medium text-foreground">Build</strong> — pick a template in the catalog, customize
+                    in the editor, run <strong className="font-medium text-foreground">Simulation → Web test</strong>.{' '}
+                    <strong className="font-medium text-foreground">Operate</strong> — filter analytics by capability or
+                    workflow, then drill into call lists.{' '}
+                    <Link href="/recipes" className="text-foreground/90 underline-offset-2 hover:underline">
+                        Integration recipes
+                    </Link>{' '}
+                    cover embed, PSTN, and campaigns.
+                </p>
+            </DismissibleHintBanner>
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <Card className="ovo-bento-cell border-0 bg-transparent shadow-none">
                     <CardHeader>
@@ -70,8 +92,11 @@ export default function OverviewPage() {
                             Build and manage AI voice agents with the visual workflow editor
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="flex flex-wrap gap-2">
                         <Button asChild>
+                            <Link href="/workflow/create">Create with AI</Link>
+                        </Button>
+                        <Button variant="outline" asChild>
                             <Link href="/workflow">Go to agents</Link>
                         </Button>
                     </CardContent>
@@ -84,7 +109,7 @@ export default function OverviewPage() {
                         </div>
                         <CardTitle>Configure services</CardTitle>
                         <CardDescription>
-                            Set up LLM, TTS, and STT providers for your organization
+                            Local models work out of the box — or add cloud API keys when you want them
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -109,7 +134,7 @@ export default function OverviewPage() {
                             <Link href="/usage">Usage</Link>
                         </Button>
                         <Button asChild variant="outline" size="sm">
-                            <Link href="/analytics">Analytics</Link>
+                            <Link href="/analytics/quality">Quality & improvement</Link>
                         </Button>
                     </CardContent>
                 </Card>
@@ -125,6 +150,9 @@ export default function OverviewPage() {
                     <CardContent className="flex flex-wrap gap-2">
                         <Button asChild variant="outline" size="sm">
                             <Link href="/workflow/catalog">Template catalog</Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                            <Link href="/recipes">Integration recipes</Link>
                         </Button>
                         <Button asChild variant="outline" size="sm">
                             <a

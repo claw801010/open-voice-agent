@@ -20,6 +20,7 @@ export function buildAnalyticsCallsExploreHref(opts: {
     toolName?: string;
     catalogSlug?: string;
     catalogVariantId?: string;
+    capabilityModuleId?: string;
     insightsSinceIso?: string;
     insightsUntilIso?: string;
 }): string {
@@ -30,6 +31,8 @@ export function buildAnalyticsCallsExploreHref(opts: {
     if (slug) q.set("catalog_slug", slug);
     const cv = opts.catalogVariantId?.trim();
     if (cv) q.set("catalog_variant_id", cv);
+    const cmid = opts.capabilityModuleId?.trim();
+    if (cmid) q.set("capability_module_id", cmid);
     if (opts.insightsSinceIso && opts.insightsUntilIso) {
         const { since, until } = isoRangeToUtcDateParams(opts.insightsSinceIso, opts.insightsUntilIso);
         if (since) q.set("since", since);
@@ -43,6 +46,7 @@ export function buildAnalyticsCallsExploreHref(opts: {
 export function buildCatalogGuideAnalyticsHref(opts: {
     catalogSlug: string;
     catalogVariantId?: string | null;
+    capabilityModuleId?: string | null;
     exampleToolNames: readonly string[];
 }): string {
     const skipToolFilter = new Set(["lookup_availability", "reserve_pickup_slot"]);
@@ -51,6 +55,7 @@ export function buildCatalogGuideAnalyticsHref(opts: {
     return buildAnalyticsCallsExploreHref({
         catalogSlug: opts.catalogSlug,
         catalogVariantId: opts.catalogVariantId ?? undefined,
+        capabilityModuleId: opts.capabilityModuleId ?? undefined,
         toolName: primaryTool,
     });
 }
@@ -59,6 +64,7 @@ export function buildCatalogGuideAnalyticsHref(opts: {
 export function buildAnalyticsOverviewHref(opts: {
     catalogSlug: string;
     catalogVariantId?: string | null;
+    capabilityModuleId?: string | null;
     days?: number;
 }): string {
     const q = new URLSearchParams();
@@ -66,6 +72,8 @@ export function buildAnalyticsOverviewHref(opts: {
     if (slug) q.set("catalog_slug", slug);
     const cv = opts.catalogVariantId?.trim();
     if (cv) q.set("catalog_variant_id", cv);
+    const cmid = opts.capabilityModuleId?.trim();
+    if (cmid) q.set("capability_module_id", cmid);
     const days = opts.days ?? 7;
     if (days !== 7) q.set("days", String(days));
     const s = q.toString();
@@ -76,6 +84,7 @@ export function buildAnalyticsOverviewHref(opts: {
 export function buildMarketplaceAnalyticsProofHref(opts: {
     catalogSlug: string;
     catalogVariantId?: string | null;
+    capabilityModuleId?: string | null;
 }): string | null {
     const slug = opts.catalogSlug.trim();
     if (!slug) return null;
@@ -84,6 +93,7 @@ export function buildMarketplaceAnalyticsProofHref(opts: {
     return buildCatalogGuideAnalyticsHref({
         catalogSlug: slug,
         catalogVariantId: opts.catalogVariantId,
+        capabilityModuleId: opts.capabilityModuleId,
         exampleToolNames: hint.example_tool_names,
     });
 }
@@ -95,6 +105,7 @@ export function buildAnalyticsCallsOutcomeExploreHref(opts: {
     outcomeLabel: string;
     catalogSlug?: string;
     catalogVariantId?: string;
+    capabilityModuleId?: string;
     insightsSinceIso?: string;
     insightsUntilIso?: string;
 }): string | null {
@@ -106,6 +117,8 @@ export function buildAnalyticsCallsOutcomeExploreHref(opts: {
     if (slug) q.set("catalog_slug", slug);
     const cv = opts.catalogVariantId?.trim();
     if (cv) q.set("catalog_variant_id", cv);
+    const cmid = opts.capabilityModuleId?.trim();
+    if (cmid) q.set("capability_module_id", cmid);
     if (opts.insightsSinceIso && opts.insightsUntilIso) {
         const { since, until } = isoRangeToUtcDateParams(opts.insightsSinceIso, opts.insightsUntilIso);
         if (since) q.set("since", since);

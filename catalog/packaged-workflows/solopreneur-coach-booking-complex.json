@@ -1,0 +1,68 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting; offer help with discovery call booking.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": {
+        "x": 0,
+        "y": 140
+      },
+      "data": {
+        "name": "Discovery call booking",
+        "prompt": "Assistant for **{{brand_name}}** (solopreneur / entrepreneur). Answer offerings FAQ; when the caller wants a **discovery or strategy call**, capture timezone, topic, and preferred window. Call HTTP tool **book_discovery_call** at {{scheduling_api_base_url}}/api/v1/appointments \u2014 confirm only after tool success.\n\nEscalate enterprise or partnership inquiries to {{support_phone}}.\n\nWire **book_discovery_call** after install.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": {
+        "x": 0,
+        "y": 280
+      },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm any next step documented.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": {
+        "label": "Continue",
+        "condition": "After greeting"
+      }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": {
+        "label": "End",
+        "condition": "When resolved or escalated"
+      }
+    }
+  ]
+}

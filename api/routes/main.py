@@ -8,6 +8,7 @@ from api.routes.catalog import router as catalog_router
 from api.routes.campaign import router as campaign_router
 from api.routes.credentials import router as credentials_router
 from api.routes.feedback import router as feedback_router
+from api.routes.inference_profiles import router as inference_profiles_router
 from api.routes.integration import router as integration_router
 from api.routes.knowledge_base import router as knowledge_base_router
 from api.routes.local_ehr import router as local_ehr_router
@@ -47,6 +48,7 @@ router.include_router(catalog_router)
 router.include_router(superuser_router)
 router.include_router(workflow_router)
 router.include_router(user_router)
+router.include_router(inference_profiles_router)
 router.include_router(campaign_router)
 router.include_router(credentials_router)
 router.include_router(tool_router)

@@ -12,8 +12,9 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | **API, MCP, IDE, agents** | [READMEADK.md](READMEADK.md) | [READMELEARNME.md](READMELEARNME.md) §3–10 |
 | **Minimal-code integrations** | [recipes/README.md](recipes/README.md) | Per-recipe files in [recipes/](recipes/) |
 | **Marketplace vertical packs (catalog + runbooks)** | [catalog/README.md](catalog/README.md) | [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md), [runbooks/README.md](runbooks/README.md), [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md), [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) |
-| **Buyer demo + GTM deck (10 verticals, local all-in-one)** | [catalog/recipes/catalog-buyer-demo.md](catalog/recipes/catalog-buyer-demo.md) | `./scripts/verify_mk01_buyer_shipped.sh`, [buyer-demo-gtm-day.md](catalog/recipes/buyer-demo-gtm-day.md), `./scripts/prepare_mk01_pr.sh` (`--split-hints`, `--stage N`), [prebuild-vertical-demo-matrix.md](catalog/recipes/prebuild-vertical-demo-matrix.md), [docs/images/](docs/images/) (`gtm-mk01-*`, 41 frames) |
+| **Buyer demo + GTM deck (14 verticals, local all-in-one)** | [catalog/recipes/catalog-buyer-demo.md](catalog/recipes/catalog-buyer-demo.md) | `./scripts/verify_mk01_buyer_shipped.sh`, [buyer-demo-gtm-day.md](catalog/recipes/buyer-demo-gtm-day.md), [OUTSTANDING.md](catalog/OUTSTANDING.md), [prebuild-vertical-demo-matrix.md](catalog/recipes/prebuild-vertical-demo-matrix.md), [docs/images/](docs/images/) (`gtm-mk01-*`, `gtm-mk03-*`, 54 frames) |
 | **Strategy & roadmap** | [READMEPLANNING.md](READMEPLANNING.md) | [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) |
+| **Omnichannel CRM & ERP (long-term platform)** | [READMEPLANNING.md](READMEPLANNING.md) §9 | [catalog/ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md), epic **ERP-01** in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) |
 | **Shipping & changelog** | [READMENEWRELEASES.md](READMENEWRELEASES.md) | Execution IDs in READMEPLANTOEXECUTE |
 
 ## All root guides (one line each)
@@ -23,10 +24,11 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | [README.md](README.md) | Project pitch, quick start, links |
 | [DOCS.md](DOCS.md) | This map |
 | [READMEEXPERIENCE.md](READMEEXPERIENCE.md) | Three tiers: no-code, builder, ADK journeys |
+| [docs/superpowers/specs/2026-07-03-master-cxd-design.md](docs/superpowers/specs/2026-07-03-master-cxd-design.md) | **Master CXD** — marketing → onboarding → daily use → growth (journey maps, CTAs, waves) |
 | [READMEADK.md](READMEADK.md) | OpenAPI, MCP, auth, IDE agents |
 | [READMELEARNME.md](READMELEARNME.md) | Architecture, lifecycles, domain model |
 | [READMEBUILDME.md](READMEBUILDME.md) | Env, Docker, fork sync, extension boundaries |
-| [READMEPLANNING.md](READMEPLANNING.md) | Strategy, pillars, marketplace §6, experience §8 |
+| [READMEPLANNING.md](READMEPLANNING.md) | Strategy, pillars, marketplace §6, experience §8, CRM/ERP §9 |
 | [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) | Epics MK-01, WE-01, DX-01 — actionable backlog |
 | [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md) | Marketplace: curated packs + import/skills research |
 | [READMENEWRELEASES.md](READMENEWRELEASES.md) | What shipped (tie to execution IDs) |
@@ -47,5 +49,6 @@ Use this page to **navigate** the repo-authored docs. Upstream product docs (dep
 | **MK-01** | Marketplace / vertical packs |
 | **WE-01** | Workflow editor UX parity |
 | **DX-01** | Beautified three-tier experience |
+| **ERP-01** | Omnichannel CRM & ERP platform |
 
-Details: [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md).
+Details: [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md). Blueprint: [catalog/ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md).

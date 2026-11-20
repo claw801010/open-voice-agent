@@ -32,6 +32,8 @@ export type VerticalPack = {
     preview_audio_url?: string | null;
     /** Simple + booking/complex JSON graphs; default install uses workflow_template ref only */
     workflow_variants?: WorkflowVariantMeta[];
+    /** MK-01-CAPABILITY-MODULES: composable motions (API-enriched on vertical-packs) */
+    capability_module_ids?: string[];
 };
 
 export type CatalogJson = {
@@ -49,6 +51,8 @@ export type CatalogFilters = {
     languages: string[];
     /** Pack must have at least one selected tag (OR) */
     complianceTags: string[];
+    /** Pack must implement at least one selected capability module (OR) */
+    capabilityModules: string[];
 };
 
 export const defaultCatalogFilters = (): CatalogFilters => ({
@@ -56,6 +60,7 @@ export const defaultCatalogFilters = (): CatalogFilters => ({
     useCaseSearch: '',
     languages: [],
     complianceTags: [],
+    capabilityModules: [],
 });
 
 export function filterVerticalPacks(packs: VerticalPack[], f: CatalogFilters): VerticalPack[] {
@@ -79,6 +84,12 @@ export function filterVerticalPacks(packs: VerticalPack[], f: CatalogFilters): V
         if (f.complianceTags.length > 0) {
             const tags = new Set(p.compliance_tags ?? []);
             if (!f.complianceTags.some((t) => tags.has(t))) {
+                return false;
+            }
+        }
+        if (f.capabilityModules.length > 0) {
+            const mods = new Set(p.capability_module_ids ?? []);
+            if (!f.capabilityModules.some((m) => mods.has(m))) {
                 return false;
             }
         }

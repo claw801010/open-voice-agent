@@ -18,23 +18,24 @@ export type WorkflowCreationOption = {
 
 export const WORKFLOW_CREATION_OPTIONS: WorkflowCreationOption[] = [
     {
+        id: 'builder',
+        title: 'Agent Builder (AI)',
+        subtitle: 'Describe your use case — AI drafts the full graph',
+        bestPractice:
+            'Fastest path when you know the goal but not the node layout. Review tools and variables, then Web test before publish.',
+        href: '/workflow/create',
+        icon: Bot,
+        recommended: true,
+    },
+    {
         id: 'catalog',
         title: 'Template catalog',
         subtitle: 'Install a vertical pack with runbook + sample variables',
         bestPractice:
-            'Best for GTM demos and first production agents — packs include booking-style HTTP proof and analytics-friendly response mappings.',
+            'Best for industry runbooks, local stubs, and analytics-friendly HTTP proof out of the box.',
         href: '/workflow/catalog',
         icon: Store,
         recommended: true,
-    },
-    {
-        id: 'builder',
-        title: 'Agent Builder',
-        subtitle: 'Describe your use case; AI drafts the graph',
-        bestPractice:
-            'Good when you know the conversation goal but not the node layout. Review tools and template variables before publishing.',
-        href: '/workflow/create',
-        icon: Bot,
     },
     {
         id: 'import',

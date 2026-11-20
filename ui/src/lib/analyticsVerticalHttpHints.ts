@@ -59,6 +59,22 @@ export const VERTICAL_HTTP_PROOF_HINTS: Record<string, VerticalHttpProofHint> = 
         example_tool_names: ["schedule_interview", "lookup_application_status", "confirm_or_reschedule_interview"],
         suggested_response_mapping_keys: ["interview_id", "slot_start", "application_id", "status_code", "last_updated", "confirmation_code", "invite_download_url"],
     },
+    "construction-trades-faq": {
+        example_tool_names: ["schedule_site_visit", "capture_project_intent"],
+        suggested_response_mapping_keys: ["appointment_id", "slot_start", "confirmation_code", "intent_id", "follow_up_by"],
+    },
+    "handyman-home-services-faq": {
+        example_tool_names: ["schedule_home_service", "capture_quote_intent"],
+        suggested_response_mapping_keys: ["appointment_id", "slot_start", "confirmation_code", "intent_id"],
+    },
+    "barber-beauty-salon-faq": {
+        example_tool_names: ["book_salon_appointment", "route_call_to_location"],
+        suggested_response_mapping_keys: ["appointment_id", "slot_start", "confirmation_code", "route_id", "target_location_code"],
+    },
+    "solopreneur-coach-faq": {
+        example_tool_names: ["book_discovery_call", "capture_lead_intent"],
+        suggested_response_mapping_keys: ["meeting_id", "meeting_start", "intent_id", "confirmation_code", "follow_up_by"],
+    },
 };
 
 /** Per-variant HTTP tool focus for catalog guide wire buttons (MK-01 complex variants). */

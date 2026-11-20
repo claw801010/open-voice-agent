@@ -43,6 +43,8 @@ import { TemplateVariablesRailPanel } from './TemplateVariablesRailPanel';
 import { WorkflowHappyPathStrip } from './WorkflowHappyPathStrip';
 import { WorkflowUsageTrendPanel } from './WorkflowUsageTrendPanel';
 import { WorkflowVerticalGuideCard } from './WorkflowVerticalGuideCard';
+import { DismissibleHintBanner } from '@/components/onboarding/DismissibleHintBanner';
+import { DISMISSIBLE_HINT_KEYS } from '@/lib/onboarding/dismissibleHints';
 
 function nodeInspectorRows(node: FlowNode): { label: string; value: string }[] {
     const d = node.data;
@@ -122,6 +124,8 @@ export type WorkflowEditorRightRailProps = {
     catalogSlug?: string | null;
     catalogVariantId?: string | null;
     catalogDisplayName?: string | null;
+    /** MK-03 — call list deep link with mk01 filters when present */
+    workflowAnalyticsCallsHref?: string | null;
 };
 
 /**
@@ -167,6 +171,7 @@ export function WorkflowEditorRightRail({
     catalogSlug = null,
     catalogVariantId = null,
     catalogDisplayName = null,
+    workflowAnalyticsCallsHref = null,
 }: WorkflowEditorRightRailProps) {
     const guidanceBlock =
         graphNodes.length > 0 ? (
@@ -180,6 +185,7 @@ export function WorkflowEditorRightRail({
                     toolNamesByUuid={toolNamesByUuid}
                     catalogSlug={catalogSlug}
                     editorMode={mode}
+                    workflowAnalyticsCallsHref={workflowAnalyticsCallsHref}
                 />
                 {catalogSlug ? (
                     <WorkflowVerticalGuideCard
@@ -241,6 +247,20 @@ export function WorkflowEditorRightRail({
                     </p>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-3 space-y-4 text-sm">
+                    <DismissibleHintBanner
+                        hintKey={DISMISSIBLE_HINT_KEYS.simulationRail}
+                        title="Simulation mode"
+                        data-testid="simulation-rail-hint"
+                    >
+                        <p>
+                            Use <strong className="font-medium text-foreground">Start Web test</strong> for a free browser
+                            mic check (no PSTN). When the outcome checklist is green, publish and wire production via{' '}
+                            <Link href="/recipes" className="text-foreground/90 underline-offset-2 hover:underline">
+                                integration recipes
+                            </Link>
+                            .
+                        </p>
+                    </DismissibleHintBanner>
                     {guidanceBlock}
                     {onWebTest ? (
                         <section className="rounded-md border border-teal-500/25 bg-teal-500/5 p-3 space-y-2">

@@ -13,6 +13,12 @@ from api.db.models import UserModel
 from api.enums import OrganizationConfigurationKey
 from api.services.analytics.analytics_calls_csv import analytics_call_rows_to_csv_bytes
 from api.services.analytics.analytics_redact import coerce_detail_redaction_enabled
+from api.schemas.agent_self_improvement import (
+    ImprovementProposalActionResponse,
+    ImprovementQueueListResponse,
+    SelfImprovementPolicyPutBody,
+    SelfImprovementPolicyResponse,
+)
 from api.schemas.analytics_call_review import (
     ApplyWorkflowImprovementBody,
     ApplyWorkflowImprovementResponse,
@@ -36,6 +42,15 @@ from api.services.analytics.call_follow_ups import (
 )
 from api.services.analytics.call_intel import parse_analytics_call_id
 from api.services.analytics.call_review_ai import generate_call_ai_review
+from api.services.analytics.self_improvement_queue import (
+    approve_improvement_proposal,
+    enqueue_from_call_review,
+    get_self_improvement_policy,
+    list_improvement_queue,
+    put_self_improvement_policy,
+    reject_improvement_proposal,
+)
+from api.services.analytics.interaction_timeline_service import fetch_interaction_timeline
 from api.services.analytics.analytics_qm_export_schedule import (
     merge_put_into_stored_schedule,
     normalize_analytics_qm_export_schedule_document,
@@ -305,6 +320,10 @@ async def get_analytics_insights(
         None,
         description="MK-01 graph variant (workflow_configurations.mk01.catalog_variant_id), e.g. simple or booking_complex",
     ),
+    capability_module_id: Optional[str] = Query(
+        None,
+        description="MK-01 capability motion id (workflow_configurations.mk01.capability_module_ids jsonb array member)",
+    ),
 ):
     org_id = _require_org(user)
     start, end = _utc_aware_bounds(days, since, until)
@@ -315,6 +334,7 @@ async def get_analytics_insights(
         workflow_id=workflow_id,
         catalog_slug=catalog_slug,
         catalog_variant_id=catalog_variant_id,
+        capability_module_id=capability_module_id,
     )
     tools_ct = int(row["calls_with_logged_tools"])
     qs = row.get("quality_summary") or {}
@@ -347,6 +367,10 @@ async def list_analytics_calls(
         None,
         description="MK-01 catalog_variant_id (same semantics as GET /analytics/insights)",
     ),
+    capability_module_id: Optional[str] = Query(
+        None,
+        description="MK-01 capability motion id (mk01.capability_module_ids array member)",
+    ),
     since: Optional[datetime] = Query(None, description="UTC inclusive lower bound"),
     until: Optional[datetime] = Query(None, description="UTC inclusive upper bound"),
     disposition: Optional[str] = Query(None),
@@ -368,6 +392,7 @@ async def list_analytics_calls(
         workflow_id=workflow_id,
         catalog_slug=catalog_slug,
         catalog_variant_id=catalog_variant_id,
+        capability_module_id=capability_module_id,
         since=since,
         until=until,
         disposition=disposition,
@@ -393,6 +418,10 @@ async def export_analytics_calls_csv(
     catalog_variant_id: Optional[str] = Query(
         None,
         description="MK-01 catalog_variant_id filter",
+    ),
+    capability_module_id: Optional[str] = Query(
+        None,
+        description="MK-01 capability motion id (mk01.capability_module_ids array member)",
     ),
     since: Optional[datetime] = Query(None, description="UTC inclusive lower bound"),
     until: Optional[datetime] = Query(None, description="UTC inclusive upper bound"),
@@ -424,6 +453,7 @@ async def export_analytics_calls_csv(
         workflow_id=workflow_id,
         catalog_slug=catalog_slug,
         catalog_variant_id=catalog_variant_id,
+        capability_module_id=capability_module_id,
         since=since,
         until=until,
         disposition=disposition,
@@ -757,6 +787,30 @@ async def generate_call_ai_review_route(
     )
     ann_patch = set_cached_ai_review(run.annotations, review)
     await db_client.update_workflow_run(run_id, annotations=ann_patch)
+
+    wf = run.workflow
+    catalog_slug = None
+    if wf and isinstance(wf.workflow_configurations, dict):
+        mk01 = wf.workflow_configurations.get("mk01") or {}
+        if isinstance(mk01, dict):
+            catalog_slug = mk01.get("catalog_slug")
+    quality_score = None
+    qm = detail.get("qm_scorecard") if isinstance(detail, dict) else None
+    if isinstance(qm, dict) and qm.get("overall_score") is not None:
+        try:
+            quality_score = float(qm["overall_score"])
+        except (TypeError, ValueError):
+            quality_score = None
+    await enqueue_from_call_review(
+        org_id,
+        call_id=call_id,
+        workflow_id=run.workflow_id,
+        workflow_name=wf.name if wf else None,
+        catalog_slug=str(catalog_slug) if catalog_slug else None,
+        review=review,
+        quality_score=quality_score,
+    )
+
     recs = [
         CallReviewRecommendation(
             title=str(r.get("title") or "Improvement"),
@@ -859,6 +913,97 @@ async def list_review_inbox(
     ]
     pending_rows = await db_client.list_review_inbox(org_id, limit=200, status="pending")
     return ReviewInboxListResponse(items=items, pending_count=len(pending_rows))
+
+
+@router.get("/self-improvement/policy", response_model=SelfImprovementPolicyResponse)
+async def get_self_improvement_policy_route(user: UserModel = Depends(get_user)):
+    org_id = _require_org(user)
+    return SelfImprovementPolicyResponse(**await get_self_improvement_policy(org_id))
+
+
+@router.put("/self-improvement/policy", response_model=SelfImprovementPolicyResponse)
+async def put_self_improvement_policy_route(
+    body: SelfImprovementPolicyPutBody,
+    user: UserModel = Depends(get_user),
+):
+    org_id = _require_org(user)
+    payload = await put_self_improvement_policy(
+        org_id,
+        mode=body.mode,
+        evidence_gates=body.evidence_gates,
+        category_decisions=body.category_decisions,
+    )
+    return SelfImprovementPolicyResponse(**payload)
+
+
+@router.get("/self-improvement/queue", response_model=ImprovementQueueListResponse)
+async def list_self_improvement_queue_route(
+    user: UserModel = Depends(get_user),
+    status: str = Query("pending", description="pending | approved | rejected | auto_applied | all"),
+):
+    org_id = _require_org(user)
+    status_filter = None if status == "all" else status
+    payload = await list_improvement_queue(org_id, status=status_filter)
+    return ImprovementQueueListResponse(**payload)
+
+
+@router.post(
+    "/self-improvement/queue/{proposal_id}/approve",
+    response_model=ImprovementProposalActionResponse,
+)
+async def approve_self_improvement_proposal_route(
+    proposal_id: str,
+    user: UserModel = Depends(get_user),
+):
+    org_id = _require_org(user)
+    try:
+        proposal, message, node_id = await approve_improvement_proposal(
+            org_id, user.id, proposal_id
+        )
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+    return ImprovementProposalActionResponse(
+        proposal=proposal,
+        message=message,
+        applied_node_id=node_id,
+    )
+
+
+@router.post(
+    "/self-improvement/queue/{proposal_id}/reject",
+    response_model=ImprovementProposalActionResponse,
+)
+async def reject_self_improvement_proposal_route(
+    proposal_id: str,
+    user: UserModel = Depends(get_user),
+):
+    org_id = _require_org(user)
+    try:
+        proposal, message = await reject_improvement_proposal(org_id, user.id, proposal_id)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+    return ImprovementProposalActionResponse(proposal=proposal, message=message)
+
+
+class InteractionTimelineResponse(BaseModel):
+    events: list[dict[str, Any]] = Field(default_factory=list)
+    total: int = 0
+
+
+@router.get("/interactions", response_model=InteractionTimelineResponse)
+async def list_interaction_timeline(
+    user: UserModel = Depends(get_user),
+    channel: str = Query("all", description="all | voice | sms | email"),
+    limit: int = Query(50, ge=1, le=200),
+):
+    org_id = _require_org(user)
+    ch = None if channel == "all" else channel
+    payload = await fetch_interaction_timeline(org_id, channel=ch, limit=limit)
+    return InteractionTimelineResponse(**payload)
 
 
 @router.post(

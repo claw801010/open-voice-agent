@@ -37,6 +37,7 @@ When READMEPLANNING’s near/mid/long bullets become real work, add or extend th
 6. [Marketplace and GTM — ready-to-bake business voice](#6-marketplace-and-gtm--ready-to-bake-business-voice)
 7. [Risks, dependencies, sequencing](#7-risks-dependencies-sequencing)
 8. [Three experience tiers — no-code, builder, agentic dev kit](#8-three-experience-tiers--no-code-builder-agentic-dev-kit)
+9. [Pillar 4 — Omnichannel CRM & ERP platform](#9-pillar-4--omnichannel-crm--erp-platform)
 
 ---
 
@@ -48,9 +49,9 @@ Mature conversational AI stacks (exemplars: **Vapi**-class voice APIs, **PolyAI*
 |-------|-------------------------|---------------------|
 | **Authoring** | Visual flow, versioning, dev/stage/prod, templates, prompt variables, A/B or canary | **Partial:** workflow definitions and versioning exist ([api/db/models.py](api/db/models.py) `WorkflowDefinitionModel`, [api/routes/workflow.py](api/routes/workflow.py)). **Gap:** first-class env promotion, A/B at runtime. |
 | **Runtime quality** | Barge-in, endpointing, fillers, multilingual, noise profiles, human handoff, warm transfer, voicemail handling | **Partial:** VAD and ambient config from workflow into Pipecat ([api/services/pipecat/run_pipeline.py](api/services/pipecat/run_pipeline.py)). **Gap:** productized “quality packs” per vertical. |
-| **Omnichannel** | Voice + chat + SMS with one session/brain | **Gap:** mostly voice-centric today; expand deliberately. |
-| **Integrations** | CRM, ticketing, calendars, DWH, signed webhooks, MCP | **Partial:** integrations route, Nango path ([api/services/integrations/nango.py](api/services/integrations/nango.py)). **Shipped:** MCP HTTP mount at `/api/v1/mcp` ([api/app.py](api/app.py)). |
-| **Operations** | Per-call forensics, PII redaction, retention, RBAC, SSO, audit, quotas | **Partial:** org quotas, `WorkflowRunModel` JSON blobs ([api/db/models.py](api/db/models.py)). **Gap:** enterprise SSO, row-level security, redaction pipeline. |
+| **Omnichannel** | Voice + chat + SMS with one session/brain | **Partial:** voice + WebRTC + embed are production paths; local CRM/scheduling/payments/EHR stubs prove ERP-shaped HTTP. **Gap:** SMS, email, WhatsApp, push as first-class channels with unified timeline — see [§9](#9-pillar-4--omnichannel-crm--erp-platform). |
+| **Integrations** | CRM, ticketing, calendars, DWH, signed webhooks, MCP | **Partial:** Nango + HTTP tools; **Shipped:** local-all-in-one scheduling, payments, integrations, EHR ([catalog/recipes/local-all-in-one-gtm-demo.md](catalog/recipes/local-all-in-one-gtm-demo.md)). **Gap:** bi-directional CRM/ERP sync and native Salesforce/NetSuite objects — we integrate with top stacks **and** ship faster vertical delivery via capability modules. |
+| **Operations** | Per-call forensics, PII redaction, retention, RBAC, SSO, audit, quotas | **Partial:** org quotas, analytics HTTP-span RLS, QM scorecard, redaction matrix. **Gap:** enterprise SSO, tenant-wide RLS, immutable compliance ledger — [catalog/ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md) §3–6. |
 | **GTM** | Marketplace, embeds, white-label, partner APIs | **Partial:** embed tokens under `/workflow` ([api/routes/workflow_embed.py](api/routes/workflow_embed.py)). **Gap:** marketplace distribution and payments. |
 
 **Near-term:** pick 3–5 checklist rows to score; align roadmap to biggest revenue or retention lift.
@@ -254,6 +255,16 @@ Near-real-time export to **Snowflake** / **BigQuery** with stable star schemas f
 
 SIPREC or equivalent recording interchange, exportable **CDRs**, mature **webhook signing** and replay protection, SLAs for enterprise contracts.
 
+### 21. Omnichannel CRM & ERP — become the system they want
+
+Long-term growth: **unified customer and operations data** (profiles, hierarchy, orders, inventory, omnichannel timeline) on the same codebase as voice agents — **offline-first local edge**, **multi-tenant cloud SaaS**, and **hybrid sync**. Native connectors to Salesforce, HubSpot, NetSuite, Shopify, major EHRs, and ticketing; **product delivery beats point solutions** because voice, workflows, analytics, and ERP-shaped local demos ship in one install.
+
+**Mechanics (conceptual):** materialized-path org hierarchy, `unified_profiles`, channel adapters, BAA-aware inference router, SIMPLE vs ADVANCED operator UI, self-service portals for B2B/B2C/internal staff.
+
+**Blueprint:** [catalog/ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md) · **Execution:** epic **ERP-01** in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md).
+
+**Reality check:** local scheduling, payments, integrations, EHR, and inference profiles are **Shipped**; unified CRM schema, async channels, and sync gateway are **Gap**.
+
 ---
 
 ## 6. Marketplace and GTM — ready-to-bake business voice
@@ -374,6 +385,51 @@ Full **no-code**, **builder**, and **ADK** checklists with “masterful” quali
 
 ---
 
+## 9. Pillar 4 — Omnichannel CRM & ERP platform
+
+**Goal:** on top of voice AI, marketplace verticals, and local edge inference, become the **CRM + ERP operators actually run** — with **honest integration** to incumbent systems and **superior time-to-value** for omnichannel customer operations.
+
+**Strategic wedge:** buyers already wire CRM and calendar via HTTP tools; we **extend local-all-in-one** ([local-scheduling-all-in-one.md](catalog/recipes/local-scheduling-all-in-one.md), [local-integrations-all-in-one.md](catalog/recipes/local-integrations-all-in-one.md), [local-payments-all-in-one.md](catalog/recipes/local-payments-all-in-one.md)) into a **unified data plane** rather than asking customers to rip-and-replace Salesforce or NetSuite on day one.
+
+### What we ship today (local capabilities depth)
+
+| Layer | Shipped | Partial | Gap |
+|-------|---------|---------|-----|
+| **Scheduling / calendar** | Built-in local scheduling API, `.ics`, install auto-wire | — | Multi-facility hierarchy |
+| **CRM-shaped actions** | `capture_lead_intent`, `update_crm_deal_stage`, local integrations store | Nango OAuth to external CRM | Bi-directional sync |
+| **Payments / billing** | Local collections, redirect, concierge enroll | — | B2B invoice objects |
+| **Healthcare records** | Local EHR, `ehr_sync_complex` | — | FHIR production connectors |
+| **AI inference** | Inference profiles, Ollama + Speaches, air-gap bundle | Hybrid cloud LLM | BAA compliance middleware |
+| **Operator UX** | Hyper-density shell, capability filters, analytics QM | Recipes hub, dismissible hints | SIMPLE/ADVANCED density toggle |
+| **Voice omnichannel** | Voice + WebRTC + campaigns | — | SMS/email/WhatsApp/push timeline |
+
+### Architecture pillars (target)
+
+1. **Vertical omnichannel utility** — async + sync pipelines for SMS/MMS, email, WhatsApp, voice, push; healthcare, supply chain, and retail OOTB configs ([blueprint §2](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md#2-vertical-omnichannel-utility)).
+2. **Hierarchical nesting + tenant isolation** — `enterprise_nodes` materialized path, RLS on cloud SaaS, single-tenant local migration ([blueprint §3](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md#3-core-architecture--postgresql-schemas)).
+3. **Offline sync** — UUIDv7, `sync_vector`, conflict rules for edge ↔ cloud ([blueprint §5](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md#5-offline-sync-layer)).
+4. **Compliance-aware hybrid inference** — local default; cloud only through BAA-verified endpoints with immutable audit ([blueprint §6](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md#6-hybrid-inference-router--compliance)).
+5. **Graduated UX** — SIMPLE dashboards vs ADVANCED telemetry workspace; dual-track onboarding ([blueprint §8](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md#8-graduated-uxui-framework)).
+
+### Competitive posture
+
+| Incumbent strength | Our delivery advantage |
+|--------------------|------------------------|
+| Salesforce / HubSpot CRM depth | Voice-native workflows + call analytics + capability-module install in minutes |
+| NetSuite / ERP completeness | Local edge demos without buyer API keys; vertical packs with HTTP proof |
+| Twilio / messaging APIs | Unified profile timeline tied to workflow runs and QM |
+| Point telehealth / patient portal | EHR sync happy-path + HIPAA-oriented logging roadmap (bet #4) |
+
+**Near-term (0–3 mo):** extend local integrations schema toward `erp_orders` / timeline bridge; document SIMPLE operator paths in recipes; fund **ERP-01-CORE-SCHEMA** slice only.
+
+**Mid-term (3–12 mo):** omnichannel interaction ingest for voice + one async channel; hierarchy API; BAA inference middleware; SIMPLE/ADVANCED UI toggle.
+
+**Long-term (12+ mo):** full sync gateway, supply-chain EDI vertical, B2B sub-tenant portals, optional cell-based tenant isolation (bet #7).
+
+**Execution:** epic **ERP-01** in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) — one package InProgress at a time.
+
+---
+
 ## Summary matrix (pillars vs bets)
 
 | Pillar | Primary bets from the list above |
@@ -383,5 +439,6 @@ Full **no-code**, **builder**, and **ADK** checklists with “masterful” quali
 | Cost / independence | 1, 7, 8, 10, 12, 15, 20 |
 | Marketplace / GTM | §6 catalog, 1, 2, 3, 4, 18, 19 |
 | Experience tiers (no-code / builder / ADK) | §8, DX-01 packages in [READMEPLANTOEXECUTE.md](READMEPLANTOEXECUTE.md) |
+| Omnichannel CRM & ERP (§9) | 4, 7, 10, 15, 19, **21**; epic **ERP-01**; [ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md) |
 
 Revisit this file quarterly; archive superseded decisions in git history rather than endless append-only growth in one section.

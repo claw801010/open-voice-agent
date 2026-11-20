@@ -1,9 +1,13 @@
 "use client";
 
 import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 import { HttpIntegrationCachePolicySection } from "@/components/HttpIntegrationCachePolicySection";
+import { DismissibleHintBanner } from "@/components/onboarding/DismissibleHintBanner";
+import { BuilderRecipesPanel } from "@/components/recipes/BuilderRecipesPanel";
 import { LocalEhrSection } from "@/components/settings/LocalEhrSection";
 import { LocalIntegrationsSection } from "@/components/settings/LocalIntegrationsSection";
 import { LocalMessagingSection } from "@/components/settings/LocalMessagingSection";
@@ -18,6 +22,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DISMISSIBLE_HINT_KEYS, resetDismissibleHints } from "@/lib/onboarding/dismissibleHints";
+import { resetGettingStarted } from "@/lib/onboarding/gettingStarted";
 
 export default function SettingsPage() {
   useEffect(() => {
@@ -36,6 +43,32 @@ export default function SettingsPage() {
             Manage your platform configuration and integrations.
           </p>
         </div>
+
+        <Card data-settings-section="recipes">
+          <CardHeader>
+            <CardTitle>Integration recipes</CardTitle>
+            <CardDescription>
+              Builder-tier checklists for embed widgets, inbound PSTN, and outbound campaigns. Tier 3: see READMEADK
+              and MCP below.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <DismissibleHintBanner
+              hintKey={DISMISSIBLE_HINT_KEYS.settingsRecipes}
+              title="Go live safely"
+              data-testid="settings-recipes-hint"
+            >
+              <p>
+                Publish a workflow first. Use Simulation → Web test before pointing carriers or embed domains at your
+                API.
+              </p>
+            </DismissibleHintBanner>
+            <BuilderRecipesPanel variant="compact" showTitle={false} />
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/recipes">Full recipe page</Link>
+            </Button>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -132,6 +165,33 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <HttpIntegrationCachePolicySection />
+          </CardContent>
+        </Card>
+
+        <Card data-settings-section="help">
+          <CardHeader>
+            <CardTitle>Help & onboarding</CardTitle>
+            <CardDescription>
+              Reset guided setup and in-product tips if you dismissed them or want to walk through again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              data-testid="settings-reset-onboarding"
+              onClick={() => {
+                resetGettingStarted();
+                resetDismissibleHints();
+                toast.success("Onboarding and tips reset — open Home to restart");
+              }}
+            >
+              Reset guided setup & tips
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/overview">Open Home</Link>
+            </Button>
           </CardContent>
         </Card>
 

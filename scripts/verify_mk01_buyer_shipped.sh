@@ -38,6 +38,16 @@ echo "== Pytest (buyer + GTM inventory, no DB required for most) =="
   api/tests/test_run_all_buyer_demos_unit.py \
   api/tests/test_mk01_split_pr_scripts_unit.py \
   api/tests/test_check_voice_previews_spoken_unit.py \
+  api/tests/test_inference_profiles_unit.py \
+  api/tests/test_inference_profiles_routes.py \
+  api/tests/test_oob_defaults_unit.py \
+  api/tests/test_local_inference_unit.py \
+  api/tests/test_local_inference_bundle_unit.py \
+  api/tests/test_capability_modules_catalog.py \
+  api/tests/test_capability_modules_compose_unit.py \
+  api/tests/test_catalog_voice_preview_scripts_unit.py \
+  api/tests/test_catalog_preview_audio_unit.py \
+  api/tests/test_install_from_capability_modules_routes.py \
   "api/tests/test_vertical_packs_catalog.py::test_gtm_deck_png_inventory_on_disk" \
   -q --tb=no
 
@@ -48,11 +58,12 @@ echo "== UI Vitest (buyer hints) =="
   src/lib/catalog/buyerDemoDefaults.test.ts \
   src/lib/catalog/buyerDemoSeededCalls.test.ts \
   src/lib/catalog/buyerDemoVoicePreview.test.ts \
+  src/lib/catalog/capabilityModules.test.ts \
   src/lib/catalog/filterVerticalPacks.test.ts 2>/dev/null) \
   || echo "WARN: ui vitest skipped (run: cd ui && npm test)"
 
 echo ""
-echo "== Buyer demo dry-run map (10 verticals) =="
+echo "== Buyer demo dry-run map (14 verticals) =="
 BUYER_DEMO_SKIP_CHECK=1 "${ROOT}/scripts/run_all_buyer_demos.sh" | tail -5
 
 echo ""
@@ -61,7 +72,7 @@ echo "== Voice preview spoken check (advisory) =="
 
 echo ""
 echo "OK — MK-01 buyer/GTM offline gates passed."
-echo "Incomplete: MK-01-VOICE-SPOKEN (spoken ElevenLabs previews — optional for ship)."
+echo "Incomplete: MK-01-VOICE-SPOKEN slice 2 (spoken WAVs — deferred; see catalog/OUTSTANDING.md)"
 echo "Spoken voice: add ELEVENLABS_API_KEY + ELEVENLABS_VOICE_ID to api/.env, then ./scripts/regen_catalog_voice_previews.sh"
 echo "Strict check: ./scripts/check_voice_previews_spoken.sh --strict"
 echo "Live capture (optional): ./scripts/gtm_live_capture_ready.sh --run-capture"

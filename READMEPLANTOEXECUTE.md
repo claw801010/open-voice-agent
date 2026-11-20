@@ -6,6 +6,8 @@ This file turns **[READMEPLANNING.md](READMEPLANNING.md)** into **traceable exec
 
 **Three experience tiers** (beautified no-code, minimal-code builders, full **agentic dev kit** with API + MCP + IDE): strategy in [READMEPLANNING.md](READMEPLANNING.md) §8; step-by-step journeys and **quality bar** in **[READMEEXPERIENCE.md](READMEEXPERIENCE.md)**; doc index in **[DOCS.md](DOCS.md)**; packages under epic **DX-01** below.
 
+**Omnichannel CRM & ERP (long-term platform):** strategy in [READMEPLANNING.md](READMEPLANNING.md) §9 and growth bet **#21**; production blueprint in **[catalog/ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md)**; packages under epic **ERP-01** below. **Local capabilities shipped today** (scheduling, payments, integrations, EHR, inference profiles) are **slice 0** of that roadmap—not a separate product.
+
 ## Table of contents
 
 - [Documentation workflow](#documentation-workflow-use-for-all-major-efforts)
@@ -16,6 +18,7 @@ This file turns **[READMEPLANNING.md](READMEPLANNING.md)** into **traceable exec
 - [WE-01 Hyper-density SaaS UI extension (brief)](#we-01-hyper-density-saas-ui-extension-brief)
 - [WE-01-HYPER-DENSITY — package](#we-01-hyper-density--high-density-shell-and-operator-chrome)
 - [Epic DX-01](#epic-dx-01-three-tier-experience-nocode-builder-agentic-adk)
+- [Epic ERP-01](#epic-erp-01--omnichannel-crm--erp-platform)
 - [Epic index](#epic-index-add-rows-as-new-epics-appear)
 - [Changelog of this file](#changelog-of-execution-doc-itself)
 
@@ -81,14 +84,15 @@ Follow [READMEBUILDME.md](READMEBUILDME.md) **§6 Fork and upstream sync playboo
 
 | Active packages (`InProgress` / `Incomplete`) | Owner | Notes |
 |--------------------------------|-------|-------|
-| **MK-01-VOICE-SPOKEN** (`Incomplete`) | _TBD_ | Silent WAV placeholders on `main`; spoken regen needs **`ELEVENLABS_API_KEY`** + **`ELEVENLABS_VOICE_ID`** in `api/.env`. |
+| **MK-01-VOICE-SPOKEN** (`Incomplete`) | _TBD_ | **Deferred** — see [catalog/OUTSTANDING.md](catalog/OUTSTANDING.md). Slice 1 regen infra **Done**; spoken WAVs when you add keys or `--local-tts`. |
+| **WE-01-INFERENCE-PROFILES** (`Done`) | _TBD_ | Slices 1–6: quick-switch, Speaches **:8100**, workflow override, air-gap bundle, Playwright, GTM frame, route tests. |
 
 #### Rolling pass notes (keep short; update when you ship a slice)
 
 | | |
 |--|--|
-| **This pass (shipped in repo now)** | **MK-01-VOICE-SPOKEN advisory** — **`check_voice_previews_spoken.sh`**; **`gtm_buyer_demo_pack.sh --verify`**; **`stage_mk01_split.sh --dry-run`** + **`prepare_mk01_pr.sh --dry-stage`**. **MK-01-SHIP-PR staging** — **`stage_mk01_split.sh`** + **`prepare_mk01_pr.sh --stage N`**; **`test_mk01_split_pr_scripts_unit.py`**; docs/CI path updates for split helpers. **MK-01 buyer demo matrix + live GTM deck** — 10-vertical shortcuts/seed scripts, **`verify_mk01_buyer_shipped.sh`** / **`gtm_buyer_demo_pack.sh`**, **`buyer-demo-gtm-day.md`** SE runbook; **42/42** Playwright deck capture (`gtm_capture_deck.sh`); **`LocalEhrSection`** waits for OSS auth before config fetch; **`gtm-local-all-in-one-demo.sh`** booking 409 retry + `pretty_json` stdin fix; analytics buyer-demo E2E + call-detail strict-mode fixes. **workflowImport client committed** (fixes `next build` module-not-found); build/type fixes (`WorkflowTable`, `CallReviewPanel`, `include_qm_summary`); **`seed_gtm_analytics_demo_call.py`** + **`gtm_capture_deck.sh`** auto-seed; Playwright GTM timeout + OSS cookie fallback. **Full OpenAPI client + call review SDK** — fixed **`QmScorecardGetResponse`** forward ref ([analytics.py](api/routes/analytics.py)); offline export via **`generate_ui_openapi_client.sh --full --offline`**; [analyticsCallReviewApi.ts](ui/src/lib/analyticsCallReviewApi.ts) uses generated SDK. **GTM script** — [gtm_capture_deck.sh](scripts/gtm_capture_deck.sh) auto sample call id + `ui/.env` bootstrap; Playwright [ossSession.ts](ui/e2e/ossSession.ts) cookie fallback when `/api/auth/session` fails. **Alembic merge** — `4462d25364f9` merges `b7c3e9d12f01` (analytics span RLS) + `f8a91c2d4e6b` (product_feedback); CI runs `alembic upgrade head` + analytics route integration tests ([api-pytest-usage-rollup.yml](.github/workflows/api-pytest-usage-rollup.yml)). **MK-01 post-call review route tests** — [test_analytics_call_review_routes.py](api/tests/test_analytics_call_review_routes.py): `POST …/ai-review` (heuristic + cache + `force_refresh`), `GET`/`POST …/follow-ups`, `POST …/apply-workflow-improvement` (+ `recommendation_index`); org/404 guards. **GTM PNGs** committed under [docs/images/](docs/images/) (overview, calls, QM schedule, workflow import, get-started, settings cache, editor checklist). **GTM + test hygiene** — fixed analytics **`call_engineering_links`** circular import ([langfuse_trace_id.py](api/services/analytics/langfuse_trace_id.py)); GTM captures for **scorecard rubric**, **call review**, **quality widget** ([gtm-deck-screenshots.spec.ts](ui/e2e/gtm-deck-screenshots.spec.ts)); Playwright call-detail **AI call review** smoke. **QM list + client CSV alignment** — `GET /analytics/calls?include_qm_summary=true` adds `cx_score`, `containment`, `qa_score`, `scorecard_pass_rate` per row; call list fetches with flag; client **Export CSV (page)** columns match server export ([exportAnalyticsCallsCsv.ts](ui/src/lib/exportAnalyticsCallsCsv.ts)). **Playwright:** call-list rubric smoke, Overview **CX & containment** widget, optional call-detail panels when **`E2E_GTM_SAMPLE_CALL_ID`** set ([analytics-overview.spec.ts](ui/e2e/analytics-overview.spec.ts)). **STACK_AUTH + WE-01 authoring slice** — `resolve_stack_team_permissions_url` + [test_stack_auth_team_permissions_url_unit.py](api/tests/test_stack_auth_team_permissions_url_unit.py); HTTP tool **`response_storage_mode`** (`live_only` \| `org_cache_when_enabled`) on [HttpApiConfig](api/routes/tool.py) + [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) / [page.tsx](ui/src/app/tools/[toolUuid]/page.tsx); [test_http_tool_response_storage_mode_unit.py](api/tests/test_http_tool_response_storage_mode_unit.py); [api-pytest-usage-rollup.yml](.github/workflows/api-pytest-usage-rollup.yml). **MK-01 analytics:** Overview **Revenue & booking** widget shows **vertical HTTP proof hints** when **Vertical slug** is set ([analyticsVerticalHttpHints.ts](ui/src/lib/analyticsVerticalHttpHints.ts)); matrix § widgets ↔ `response_mapping` ([VERTICAL_ANALYTICS_HTTP_MATRIX.md](catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md)). **`GET /analytics/insights`** **`calls_with_tool_evidence`** (+ legacy **`calls_with_logged_tools`**) + **`tool_name_mix`** (KPI row + top tools strip — [analytics_calls_client.py](api/db/analytics_calls_client.py), [AnalyticsDashboardClient.tsx](ui/src/app/analytics/AnalyticsDashboardClient.tsx)). **Overview → calls:** clickable **Top outcomes** / **Top tools** ([analyticsOverviewDeepLinks.ts](ui/src/lib/analyticsOverviewDeepLinks.ts)). **Scheduled QM CSV:** `GET`/`PUT /analytics/qm-export-schedule` + ARQ (`ENABLE_ANALYTICS_QM_EXPORT_CRON`) → object storage ([analytics_qm_export_tasks.py](api/tasks/analytics_qm_export_tasks.py)); call list UI ([AnalyticsCallsListContent.tsx](ui/src/app/analytics/calls/AnalyticsCallsListContent.tsx)); **`next_run_at_utc`** + **Next dispatch** preview ([analytics_qm_export_schedule.py](api/services/analytics/analytics_qm_export_schedule.py), [analyticsCallsApi.ts](ui/src/lib/analyticsCallsApi.ts)); **Playwright** OSS **`/analytics/calls`** redirect + authenticated calls page smoke ([analytics-overview.spec.ts](ui/e2e/analytics-overview.spec.ts)). **MK-01 Phase D (partial):** **`analytics_http_tool_spans`** — Pipecat persist; call **detail** + **list** `tool_names` + **`tool_name`** query filter + **`insights`** `calls_with_tool_evidence` / `tool_name_mix` ([analytics_calls_client.py](api/db/analytics_calls_client.py), [analytics_http_tool_span_client.py](api/db/analytics_http_tool_span_client.py), migration `e8f4a2c91b00`); **Postgres RLS** + `app.current_organization_id` ([analytics_http_tool_span_rls.py](api/db/analytics_http_tool_span_rls.py), migration `b7c3e9d12f01`); reviewer **[ANALYTICS_REDACTION_MATRIX.md](catalog/ANALYTICS_REDACTION_MATRIX.md)** (surfaces × redaction v1 × RBAC). **WE-01-DATASTORE-INTEG:** HTTP cache draft **`integration_overrides`** per connection + **`policy_audit`** `integration_overrides_count` + schema **v4** ([http_tool_cache_policy.py](api/services/workflow/tools/http_tool_cache_policy.py), [organization.py](api/routes/organization.py)); Settings **per-integration** table ([HttpIntegrationCachePolicySection.tsx](ui/src/components/HttpIntegrationCachePolicySection.tsx), [httpIntegrationCachePolicy.ts](ui/src/lib/httpIntegrationCachePolicy.ts)); **Docs (phase 3)** draft-era governance + audit on [http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx). **MK-01-LIVE-TRACE:** per-call **`live_trace`** + **`quality_report`** on analytics detail + live Web test **Tools & LLM** rail. **MK-01-INSIGHTS-QUALITY:** org **`quality_summary`** + Overview **CX & containment** widget. **MK-01-QM-SCORECARD:** org rubric **`GET`/`PUT /analytics/qm-scorecard`**, QA **`criteria`** JSON, call-detail pass/fail grid, **smart QM export** sampling, Langfuse deep link, QM CSV columns (`cx_score`, `containment`, `qa_score`, `scorecard_pass_rate`), **Copy for QA node** prompt hint ([qm_scorecard.py](api/services/analytics/qm_scorecard.py), [CallScorecardPanel.tsx](ui/src/components/analytics/CallScorecardPanel.tsx)). |
-| **Next pass (suggested)** | **`Incomplete`:** **MK-01-VOICE-SPOKEN** — set keys in `api/.env`, run `./scripts/regen_catalog_voice_previews.sh`, then `./scripts/check_voice_previews_spoken.sh --strict`. **MK-01-SHIP-PR** merged ([PR #1](https://github.com/claw801010/open-voice-agent/pull/1)). **Offline gate:** `./scripts/verify_mk01_buyer_shipped.sh`. |
+| **This pass (shipped in repo now)** | **MK-01-CAPABILITY-MODULES (slice 1)** — **`catalog/capability-modules.json`** (33 motions); **`GET /api/v1/catalog/capability-modules`**; vertical-packs enrichment + marketplace capability filters/badges; pytest + Vitest. **MK-01-VOICE-SPOKEN advisory** — **`check_voice_previews_spoken.sh`**; **`gtm_buyer_demo_pack.sh --verify`**; **`stage_mk01_split.sh --dry-run`** + **`prepare_mk01_pr.sh --dry-stage`**. **MK-01-SHIP-PR staging** — **`stage_mk01_split.sh`** + **`prepare_mk01_pr.sh --stage N`**; **`test_mk01_split_pr_scripts_unit.py`**; docs/CI path updates for split helpers. **MK-01 buyer demo matrix + live GTM deck** — 10-vertical shortcuts/seed scripts, **`verify_mk01_buyer_shipped.sh`** / **`gtm_buyer_demo_pack.sh`**, **`buyer-demo-gtm-day.md`** SE runbook; **42/42** Playwright deck capture (`gtm_capture_deck.sh`); **`LocalEhrSection`** waits for OSS auth before config fetch; **`gtm-local-all-in-one-demo.sh`** booking 409 retry + `pretty_json` stdin fix; analytics buyer-demo E2E + call-detail strict-mode fixes. **workflowImport client committed** (fixes `next build` module-not-found); build/type fixes (`WorkflowTable`, `CallReviewPanel`, `include_qm_summary`); **`seed_gtm_analytics_demo_call.py`** + **`gtm_capture_deck.sh`** auto-seed; Playwright GTM timeout + OSS cookie fallback. **Full OpenAPI client + call review SDK** — fixed **`QmScorecardGetResponse`** forward ref ([analytics.py](api/routes/analytics.py)); offline export via **`generate_ui_openapi_client.sh --full --offline`**; [analyticsCallReviewApi.ts](ui/src/lib/analyticsCallReviewApi.ts) uses generated SDK. **GTM script** — [gtm_capture_deck.sh](scripts/gtm_capture_deck.sh) auto sample call id + `ui/.env` bootstrap; Playwright [ossSession.ts](ui/e2e/ossSession.ts) cookie fallback when `/api/auth/session` fails. **Alembic merge** — `4462d25364f9` merges `b7c3e9d12f01` (analytics span RLS) + `f8a91c2d4e6b` (product_feedback); CI runs `alembic upgrade head` + analytics route integration tests ([api-pytest-usage-rollup.yml](.github/workflows/api-pytest-usage-rollup.yml)). **MK-01 post-call review route tests** — [test_analytics_call_review_routes.py](api/tests/test_analytics_call_review_routes.py): `POST …/ai-review` (heuristic + cache + `force_refresh`), `GET`/`POST …/follow-ups`, `POST …/apply-workflow-improvement` (+ `recommendation_index`); org/404 guards. **GTM PNGs** committed under [docs/images/](docs/images/) (overview, calls, QM schedule, workflow import, get-started, settings cache, editor checklist). **GTM + test hygiene** — fixed analytics **`call_engineering_links`** circular import ([langfuse_trace_id.py](api/services/analytics/langfuse_trace_id.py)); GTM captures for **scorecard rubric**, **call review**, **quality widget** ([gtm-deck-screenshots.spec.ts](ui/e2e/gtm-deck-screenshots.spec.ts)); Playwright call-detail **AI call review** smoke. **QM list + client CSV alignment** — `GET /analytics/calls?include_qm_summary=true` adds `cx_score`, `containment`, `qa_score`, `scorecard_pass_rate` per row; call list fetches with flag; client **Export CSV (page)** columns match server export ([exportAnalyticsCallsCsv.ts](ui/src/lib/exportAnalyticsCallsCsv.ts)). **Playwright:** call-list rubric smoke, Overview **CX & containment** widget, optional call-detail panels when **`E2E_GTM_SAMPLE_CALL_ID`** set ([analytics-overview.spec.ts](ui/e2e/analytics-overview.spec.ts)). **STACK_AUTH + WE-01 authoring slice** — `resolve_stack_team_permissions_url` + [test_stack_auth_team_permissions_url_unit.py](api/tests/test_stack_auth_team_permissions_url_unit.py); HTTP tool **`response_storage_mode`** (`live_only` \| `org_cache_when_enabled`) on [HttpApiConfig](api/routes/tool.py) + [HttpApiToolConfig.tsx](ui/src/app/tools/[toolUuid]/components/HttpApiToolConfig.tsx) / [page.tsx](ui/src/app/tools/[toolUuid]/page.tsx); [test_http_tool_response_storage_mode_unit.py](api/tests/test_http_tool_response_storage_mode_unit.py); [api-pytest-usage-rollup.yml](.github/workflows/api-pytest-usage-rollup.yml). **MK-01 analytics:** Overview **Revenue & booking** widget shows **vertical HTTP proof hints** when **Vertical slug** is set ([analyticsVerticalHttpHints.ts](ui/src/lib/analyticsVerticalHttpHints.ts)); matrix § widgets ↔ `response_mapping` ([VERTICAL_ANALYTICS_HTTP_MATRIX.md](catalog/VERTICAL_ANALYTICS_HTTP_MATRIX.md)). **`GET /analytics/insights`** **`calls_with_tool_evidence`** (+ legacy **`calls_with_logged_tools`**) + **`tool_name_mix`** (KPI row + top tools strip — [analytics_calls_client.py](api/db/analytics_calls_client.py), [AnalyticsDashboardClient.tsx](ui/src/app/analytics/AnalyticsDashboardClient.tsx)). **Overview → calls:** clickable **Top outcomes** / **Top tools** ([analyticsOverviewDeepLinks.ts](ui/src/lib/analyticsOverviewDeepLinks.ts)). **Scheduled QM CSV:** `GET`/`PUT /analytics/qm-export-schedule` + ARQ (`ENABLE_ANALYTICS_QM_EXPORT_CRON`) → object storage ([analytics_qm_export_tasks.py](api/tasks/analytics_qm_export_tasks.py)); call list UI ([AnalyticsCallsListContent.tsx](ui/src/app/analytics/calls/AnalyticsCallsListContent.tsx)); **`next_run_at_utc`** + **Next dispatch** preview ([analytics_qm_export_schedule.py](api/services/analytics/analytics_qm_export_schedule.py), [analyticsCallsApi.ts](ui/src/lib/analyticsCallsApi.ts)); **Playwright** OSS **`/analytics/calls`** redirect + authenticated calls page smoke ([analytics-overview.spec.ts](ui/e2e/analytics-overview.spec.ts)). **MK-01 Phase D (partial):** **`analytics_http_tool_spans`** — Pipecat persist; call **detail** + **list** `tool_names` + **`tool_name`** query filter + **`insights`** `calls_with_tool_evidence` / `tool_name_mix` ([analytics_calls_client.py](api/db/analytics_calls_client.py), [analytics_http_tool_span_client.py](api/db/analytics_http_tool_span_client.py), migration `e8f4a2c91b00`); **Postgres RLS** + `app.current_organization_id` ([analytics_http_tool_span_rls.py](api/db/analytics_http_tool_span_rls.py), migration `b7c3e9d12f01`); reviewer **[ANALYTICS_REDACTION_MATRIX.md](catalog/ANALYTICS_REDACTION_MATRIX.md)** (surfaces × redaction v1 × RBAC). **WE-01-DATASTORE-INTEG:** HTTP cache draft **`integration_overrides`** per connection + **`policy_audit`** `integration_overrides_count` + schema **v4** ([http_tool_cache_policy.py](api/services/workflow/tools/http_tool_cache_policy.py), [organization.py](api/routes/organization.py)); Settings **per-integration** table ([HttpIntegrationCachePolicySection.tsx](ui/src/components/HttpIntegrationCachePolicySection.tsx), [httpIntegrationCachePolicy.ts](ui/src/lib/httpIntegrationCachePolicy.ts)); **Docs (phase 3)** draft-era governance + audit on [http-tool-data-policy.mdx](docs/integrations/http-tool-data-policy.mdx). **MK-01-LIVE-TRACE:** per-call **`live_trace`** + **`quality_report`** on analytics detail + live Web test **Tools & LLM** rail. **MK-01-INSIGHTS-QUALITY:** org **`quality_summary`** + Overview **CX & containment** widget. **MK-01-QM-SCORECARD:** org rubric **`GET`/`PUT /analytics/qm-scorecard`**, QA **`criteria`** JSON, call-detail pass/fail grid, **smart QM export** sampling, Langfuse deep link, QM CSV columns (`cx_score`, `containment`, `qa_score`, `scorecard_pass_rate`), **Copy for QA node** prompt hint ([qm_scorecard.py](api/services/analytics/qm_scorecard.py), [CallScorecardPanel.tsx](ui/src/components/analytics/CallScorecardPanel.tsx)). |
+| **Next pass (suggested)** | **Deferred:** [OUTSTANDING.md](catalog/OUTSTANDING.md) — voice previews when ready. **Done:** OpenAPI client regen (`capability_module_id` typed SDK); GTM **54** frames incl. **mk03** live captures. |
 
 ### Strategic review (major bets)
 
@@ -101,8 +105,9 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | **Three experience tiers** (no-code, builder, OpenAPI + MCP ADK) | Widen TAM: operators, integrators, and product engineers in one product story. | [READMEPLANNING.md](READMEPLANNING.md) §8, [READMEADK.md](READMEADK.md), **DX-01** here. |
 | **Imports / adapters** (Make, n8n, Zapier, skills) *after* native catalog is strong | Switching cost from other stacks. | [READMEMARKETPLACEPLANNING.md](READMEMARKETPLACEPLANNING.md), **MK-01-IMPORT-OPTIONS**; only when adapters are **scoped**, not “implied by marketing”. |
 | **Enterprise ops** (SSO, audit, PII) | Sticky revenue; requires dedicated security work. | [READMEPLANNING.md](READMEPLANNING.md) competitive row **Operations**. |
+| **Omnichannel CRM & ERP platform** (local depth → unified data plane) | Long-term moat: become the CRM/ERP they want while integrating Salesforce/NetSuite natively; beat incumbents on **delivery speed** via voice + local-all-in-one + capability modules. | [READMEPLANNING.md](READMEPLANNING.md) §9, [ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md) → **ERP-01** below. |
 
-**Suggested next (meta):** In a 30–60 min review, pick **one** from marketplace, **one** from authoring/UX, and **one** from tiers or enterprise; log the decision in your issue tracker with these IDs and adjust **Active packages** above.
+**Suggested next (meta):** In a 30–60 min review, pick **one** from marketplace, **one** from authoring/UX, and **one** from tiers, enterprise, or **ERP-01 slice 1**; log the decision in your issue tracker with these IDs and adjust **Active packages** above.
 
 ### Checklist before you add work from READMEPLANNING
 
@@ -132,6 +137,23 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 **Shipped in repo:** reviewer worksheet [catalog/TEMPLATE_QUALITY_RUBRIC.md](catalog/TEMPLATE_QUALITY_RUBRIC.md); pytest [test_vertical_packs_catalog.py](api/tests/test_vertical_packs_catalog.py) for `vertical-packs.json`, on-disk runbook / packaged refs, **JSON parse + minimal graph shape**, **voice skeleton invariants**, **directed happy-path spine**, and **rubric (3) prompt tokens**; **install-from-catalog API happy-path** [test_install_from_catalog_routes.py](api/tests/test_install_from_catalog_routes.py); [.github/pull_request_template.md](.github/pull_request_template.md); links from [catalog/README.md](catalog/README.md). **Prebuild / revenue:** [catalog/PREBUILD_VERTICAL_ROADMAP.md](catalog/PREBUILD_VERTICAL_ROADMAP.md) (booking + **`roadmap_motions`** per vertical + runbook **High-revenue motions (roadmap)** sections; **WE-01** HTTP tool expectations); rubric **row 9** (shipped vs roadmap claims). **Analytics:** [catalog/ANALYTICS_VERTICAL_ROADMAP.md](catalog/ANALYTICS_VERTICAL_ROADMAP.md) + [catalog/analytics-calls-api-draft.yaml](catalog/analytics-calls-api-draft.yaml) + [api/routes/analytics.py](api/routes/analytics.py) + **MK-01-ANALYTICS-VERTICAL** package (**`Done`**).
 
 **Next pass:** **MK-01-CATALOG-INSURANCE** — **`Done`** (seed pack). **Insurance PREBUILD tail:** **`Done`**. **WE-01** polish optional.
+
+### MK-01-BUYER-GTM-MATRIX — Fourteen-vertical alignment (slice 2)
+
+**Status:** `Done`
+
+**Goal:** Align buyer-demo scripts, GTM smoke, and PREBUILD matrix docs with **14** catalog packs (including four field-service verticals).
+
+**Acceptance criteria:**
+
+- [x] **`catalog/OUTSTANDING.md`** — deferred work tracker (voice previews + optional polish).
+- [x] Script echo copy **10 → 14** verticals ([check_buyer_demo_matrix.sh](scripts/check_buyer_demo_matrix.sh), [gtm_capture_deck.sh](scripts/gtm_capture_deck.sh), [verify_mk01_buyer_shipped.sh](scripts/verify_mk01_buyer_shipped.sh)).
+- [x] **PREBUILD matrix** — four field-service rows ([prebuild-vertical-demo-matrix.md](catalog/recipes/prebuild-vertical-demo-matrix.md)).
+- [x] **`gtm-local-all-in-one-demo.sh`** — field-service buyer-primary smokes (`book_slot`, quotes, leads).
+- [x] **Buyer demo recipe** — 14 shortcut scripts + field-service table ([catalog-buyer-demo.md](catalog/recipes/catalog-buyer-demo.md)).
+- [x] **CI** — `test_buyer_demo_defaults_fourteen_packs` + script regression guards.
+
+---
 
 ### MK-01-BUYER-GTM-MATRIX — Ten-vertical buyer demo + live deck
 
@@ -168,18 +190,26 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ### MK-01-VOICE-SPOKEN — ElevenLabs catalog voice previews
 
-**Status:** `Incomplete`
+**Status:** `Incomplete` (slice 1 infrastructure **Done**; spoken WAV commit pending API keys or local Speaches)
 
-**Goal:** Replace silent **`catalog/voice-previews/*.wav`** placeholders with spoken ElevenLabs samples for marketplace **Preview voice**.
+**Goal:** Replace silent **`catalog/voice-previews/*.wav`** placeholders with spoken samples for marketplace **Preview voice**.
 
-**Remaining:**
+**Slice 1 (Done — regen infrastructure):**
+
+- [x] **`catalog_preview_audio.py`** — ElevenLabs + Speaches synthesis, per-profile voice id map, vertical delivery settings.
+- [x] **`catalog/voice-preview-tts-config.json`** + **`catalog/voice-preview-elevenlabs-ids.json`** — TTS defaults and per-vertical voice buckets.
+- [x] **`regen_catalog_voice_previews.sh`** — fallback chain: ElevenLabs → `--local-tts` Speaches → silent.
+- [x] **CI** — [test_catalog_preview_audio_unit.py](api/tests/test_catalog_preview_audio_unit.py).
+
+**Slice 2 (remaining — spoken WAVs on disk):** **Deferred** — see [catalog/OUTSTANDING.md](catalog/OUTSTANDING.md). Resume when you say you are ready or ask *what's outstanding*.
 
 - [x] Advisory gate — **`check_voice_previews_spoken.sh`** (warn while silent; **`--strict`** for CI/release).
-- [ ] Set `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID` in `api/.env`, then `./scripts/regen_catalog_voice_previews.sh`
+- [ ] Set `ELEVENLABS_API_KEY` + voice ids (env or **`voice-preview-elevenlabs-ids.json`**), then `./scripts/regen_catalog_voice_previews.sh`
+- [ ] **Or** local Speaches: `./scripts/regen_catalog_voice_previews.sh --local-tts` with Kokoro on `:8100`
 - [ ] `./scripts/check_voice_previews_spoken.sh --strict` shows **0 silent** slugs.
 - [ ] Optional GTM frame **`gtm-we01-voice-profiles-natural-delivery.png`** refresh after UI copy change.
 
-**Key files:** [regen_catalog_voice_previews.sh](scripts/regen_catalog_voice_previews.sh), [catalog/voice-previews/README.md](catalog/voice-previews/README.md).
+**Key files:** [regen_catalog_voice_previews.sh](scripts/regen_catalog_voice_previews.sh), [catalog/voice-previews/README.md](catalog/voice-previews/README.md), [catalog_preview_audio.py](api/services/voice/catalog_preview_audio.py).
 
 ---
 
@@ -378,6 +408,82 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 - [x] SEO-friendly public page **optional** — [ui/src/app/templates/](ui/src/app/templates/) (`/templates` with `metadata` in `layout.tsx`; server-side catalog fetch with `revalidate`).
 
 **Key files:** [ui/src/components/catalog/MarketplaceCatalog.tsx](ui/src/components/catalog/MarketplaceCatalog.tsx), [ui/src/app/workflow/catalog/page.tsx](ui/src/app/workflow/catalog/page.tsx), [ui/src/app/templates/page.tsx](ui/src/app/templates/page.tsx).
+
+---
+
+### MK-01-CAPABILITY-MODULES — Modular business motions (catalog slice 1)
+
+**Status:** `Done` (slice 1 — catalog + API + marketplace filters/badges)
+
+**Goal:** Composable capability catalog mapping top buyer-demanded motions (appointment, FAQ, product help, lead verification, WISMO, handoff, …) to shipped vertical packs—without duplicating full vertical JSON.
+
+**Acceptance criteria:**
+
+- [x] **`catalog/capability-modules.json`** — **40** modules across **7** categories with **`demand_rank`**, **`typical_http_tools`**, **`pack_refs`** (slug + optional **`variant_id`**).
+- [x] **API** — `GET /api/v1/catalog/capability-modules`; **`GET /api/v1/catalog/vertical-packs`** enriches each pack with **`capability_module_ids`** ([capability_modules.py](api/services/catalog/capability_modules.py), [catalog.py](api/routes/catalog.py)).
+- [x] **Marketplace UI** — capability filter chips + pack card badges ([capabilityModules.ts](ui/src/lib/catalog/capabilityModules.ts), [MarketplaceCatalog.tsx](ui/src/components/catalog/MarketplaceCatalog.tsx)).
+- [x] **CI** — [test_capability_modules_catalog.py](api/tests/test_capability_modules_catalog.py); Vitest [capabilityModules.test.ts](ui/src/lib/catalog/capabilityModules.test.ts); **`verify_mk01_buyer_shipped.sh`**.
+
+### MK-01-CAPABILITY-MODULES — Field services verticals (slice 2)
+
+**Status:** `Done`
+
+**Goal:** Expand marketplace for **construction / trades**, **handyman / home services**, **barber / beauty / salon**, and **solopreneur / entrepreneur** buyers—wired to capability modules and local all-in-one demos.
+
+**Acceptance criteria:**
+
+- [x] **Four new vertical packs** in [vertical-packs.json](catalog/vertical-packs.json) (**14** total): `construction-trades-faq`, `handyman-home-services-faq`, `barber-beauty-salon-faq`, `solopreneur-coach-faq` with simple + complex variants and packaged graphs.
+- [x] **Voice profiles** — `builtin:vertical_trades`, `vertical_beauty`, `vertical_solopreneur` ([vertical_presets.py](api/services/voice/vertical_presets.py)).
+- [x] **Capability modules** — site visit, estimate intake, salon booking, stylist routing, discovery call, solopreneur intake ([capability-modules.json](catalog/capability-modules.json) v2).
+- [x] **Buyer demo** — defaults, hints, shortcut scripts, GTM env keys for **14** verticals; placeholder voice previews.
+- [x] **Runbooks** + CI rubric for all four packs ([test_vertical_packs_catalog.py](api/tests/test_vertical_packs_catalog.py)).
+
+**Next pass (optional):** spoken ElevenLabs regen (`./scripts/regen_catalog_voice_previews.sh` with API keys).
+
+### MK-01-CAPABILITY-MODULES — Multi-pack compose (slice 4)
+
+**Status:** `Done`
+
+**Goal:** When selected capabilities span multiple verticals, compose a minimal multi-pack install plan and install all workflows in one action.
+
+**Acceptance criteria:**
+
+- [x] **`compose_capability_install_plan()`** — greedy set-cover grouping + per-pack variant resolution ([capability_modules.py](api/services/catalog/capability_modules.py)).
+- [x] **API** — `GET /api/v1/catalog/capability-modules/compose-plan`; `POST /api/v1/workflow/install-from-capability-modules/plan`.
+- [x] **Marketplace UI** — multi-vertical banner + **Install plan (N)** dialog ([MarketplaceCatalog.tsx](ui/src/components/catalog/MarketplaceCatalog.tsx)).
+- [x] **Voice previews** — industry scripts for all **14** verticals ([profile_preview.py](api/services/voice/profile_preview.py)); [test_catalog_voice_preview_scripts_unit.py](api/tests/test_catalog_voice_preview_scripts_unit.py).
+- [x] **GTM** — four field-service **wire-local** frames (**51** deck PNGs total).
+
+---
+
+### MK-01-CAPABILITY-MODULES — Marketplace QA (slice 5)
+
+**Status:** `Done`
+
+**Goal:** Buyer-facing capability docs, Playwright coverage for install-by-capability flows, and deck inventory doc sync.
+
+**Acceptance criteria:**
+
+- [x] **`catalog/CAPABILITY_MODULES.md`** — buyer-facing overview of motions + install paths.
+- [x] **Playwright** — capability filter banner + single-pack **Install best match** ([catalog-marketplace.spec.ts](ui/e2e/catalog-marketplace.spec.ts)).
+- [x] **GTM doc** — [docs/images/README.md](docs/images/README.md) reflects **51** deck frames.
+- [x] **Compose fix** — greedy set-cover picks **maximum** module coverage per pack (not minimum).
+
+---
+
+### MK-01-CAPABILITY-MODULES — Install by capability (slice 3)
+
+**Status:** `Done`
+
+**Goal:** Buyers select capability motions in the marketplace and install the best-matching vertical pack + variant in one step.
+
+**Acceptance criteria:**
+
+- [x] **Resolver** — `resolve_install_target_for_modules()` in [capability_modules.py](api/services/catalog/capability_modules.py).
+- [x] **API** — `GET /api/v1/catalog/capability-modules/resolve`; `POST /api/v1/workflow/install-from-capability-modules`.
+- [x] **Marketplace UI** — capability filter banner + install dialog ([MarketplaceCatalog.tsx](ui/src/components/catalog/MarketplaceCatalog.tsx), [resolveCapabilityInstall.ts](ui/src/lib/catalog/resolveCapabilityInstall.ts)).
+- [x] **GTM** — **`gtm-mk01-workflow-catalog-capability-filters.png`** + four field-service call-detail frames (**47** deck PNGs).
+- [x] **CI** — [test_capability_modules_resolve_unit.py](api/tests/test_capability_modules_resolve_unit.py), [test_install_from_capability_modules_routes.py](api/tests/test_install_from_capability_modules_routes.py).
 
 ---
 
@@ -776,6 +882,36 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ---
 
+### WE-01-INFERENCE-PROFILES — Cloud / local edge / hybrid model stacks
+
+**Status:** `Done` (slices 1–6 shipped)
+
+**Goal:** One-click switch between **cloud**, **lean local edge** (Ollama LLM + Speaches STT/TTS), and **hybrid** (local STT/TTS + cloud LLM for agent skills) without reconfiguring each service tab.
+
+**Shipped (slice 1):**
+
+- [x] Catalog — [inference-profiles.json](catalog/inference-profiles.json) (`cloud_balanced`, `local_edge_lean`, `hybrid_edge`).
+- [x] API — `GET /api/v1/inference-profiles`, `POST /api/v1/inference-profiles/{id}/apply` ([inference_profiles.py](api/routes/inference_profiles.py)).
+- [x] UI — **Inference profile** quick-switch on [Model configurations](ui/src/app/model-configurations/page.tsx) ([InferenceProfileQuickSwitch.tsx](ui/src/components/InferenceProfileQuickSwitch.tsx)).
+- [x] Bootstrap — `setup_local_inference.sh` + `start_local_inference.sh` (Speaches); **`SKIP_LOCAL_MODELS=1`** skips pulls.
+- [x] OOB defaults — new users get **local_edge_lean** without API keys; capability scan + **Set up local models** in UI.
+- [x] API — `GET /inference-profiles/capabilities`, `POST /inference-profiles/setup` (Docker + Ollama pull).
+- [x] Tests — [test_inference_profiles_unit.py](api/tests/test_inference_profiles_unit.py), [inferenceProfiles.test.ts](ui/src/lib/inferenceProfiles.test.ts).
+
+**Next slices:**
+
+- [x] Docker Compose service for Speaches (STT/TTS) — `local-inference` profile on host **:8100**; [start_local_inference.sh](scripts/start_local_inference.sh).
+- [x] Workflow-level inference profile override — `inference_profile_id` on workflow + [WorkflowInferenceProfileSection.tsx](ui/src/components/WorkflowInferenceProfileSection.tsx).
+- [x] Optional bundled model tarball / air-gapped install path — [local-inference-bundle.manifest.json](catalog/local-inference-bundle.manifest.json), [export_local_inference_bundle.sh](scripts/export_local_inference_bundle.sh), [import_local_inference_bundle.sh](scripts/import_local_inference_bundle.sh), [local_inference_bundle.py](api/services/configuration/local_inference_bundle.py); `LOCAL_INFERENCE_BUNDLE` in [setup_local_inference.sh](scripts/setup_local_inference.sh) + API setup.
+- [x] Playwright smoke on profile switch — [inference-profiles.spec.ts](ui/e2e/inference-profiles.spec.ts).
+- [x] GTM deck frame — **`gtm-we01-inference-profiles-quick-switch.png`** ([gtm-deck-screenshots.spec.ts](ui/e2e/gtm-deck-screenshots.spec.ts)); placeholder in [gen_gtm_deck_placeholder_pngs.py](scripts/gen_gtm_deck_placeholder_pngs.py).
+- [x] API route integration tests — [test_inference_profiles_routes.py](api/tests/test_inference_profiles_routes.py) (list, apply, capabilities, setup).
+- [x] Docs — inference profiles + air-gap bundle in [inference-providers.mdx](docs/configurations/inference-providers.mdx) and [READMEBUILDME.md](READMEBUILDME.md).
+
+**Key files:** [inference_profiles.py](api/services/configuration/inference_profiles.py), [setup_local_inference.sh](scripts/setup_local_inference.sh), [export_local_inference_bundle.sh](scripts/export_local_inference_bundle.sh).
+
+---
+
 ### WE-01-VOICE-PROFILES — Org voice delivery presets + per-workflow override
 
 **Status:** `Done`
@@ -881,10 +1017,11 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 - [x] Optional: Postman / OpenAPI import link — `{BACKEND}/api/v1/openapi.json` noted in recipes.
 - [x] [READMEEXPERIENCE.md](READMEEXPERIENCE.md) builder journey links to each shipped recipe (§ Starter recipes).
 - [x] [recipes/README.md](recipes/README.md) index lists every recipe file with one-line purpose.
+- [x] In-app **`/recipes`** hub + Settings compact panel + sidebar link (MK-03 slice 3 — [builderRecipes.ts](ui/src/lib/recipes/builderRecipes.ts)).
 
-**Key files:** [recipes/](recipes/) (markdown per recipe); Mintlify or public docs can mirror; deep links from [ui/src/app/](ui/src/app/) later.
+**Key files:** [recipes/](recipes/) (markdown per recipe); in-app [ui/src/app/recipes/page.tsx](ui/src/app/recipes/page.tsx); Mintlify or public docs can mirror.
 
-**Note:** In-app dashboard “Connect” / “Recipes” drawer is still optional; repo docs satisfy the package.
+**Note:** ~~In-app dashboard “Connect” / “Recipes” drawer is still optional~~ — shipped via MK-03 slice 3.
 
 ---
 
@@ -907,13 +1044,262 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 ---
 
+---
+
+## Epic MK-02 — Catalog install lineage (marketplace → workflow)
+
+**Epic owner:** _TBD_  
+**Strategy anchor:** [READMEPLANNING.md](READMEPLANNING.md) §6 marketplace + **Authoring** row — connect buyer capability picks to durable workflow metadata and operator UI.
+
+**Goal:** When buyers install from the marketplace (especially **Install by capability**), persist **which motions** drove the install and surface that lineage in the workflow editor—without duplicating catalog JSON.
+
+### MK-02-CATALOG-LINEAGE — Capability metadata persistence (slice 1)
+
+**Status:** `Done`
+
+**Goal:** Persist `capability_module_ids` on `workflow_configurations.mk01` and show a header hint in the editor.
+
+**Acceptance criteria:**
+
+- [x] **`_enrich_workflow_mk01_after_install()`** — persists mk01 fields after catalog create ([workflow.py](api/routes/workflow.py)).
+- [x] **Capability install routes** — single + multi-pack plan write `capability_module_ids` (and `capability_install_plan`) to DB.
+- [x] **Editor header** — **Capabilities · …** metadata line ([headerMetadata.ts](ui/src/lib/workflow/headerMetadata.ts), [WorkflowEditorHeader.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx)).
+- [x] **CI** — [test_install_from_capability_modules_routes.py](api/tests/test_install_from_capability_modules_routes.py) asserts stored mk01; Vitest [headerMetadata.test.ts](ui/src/lib/workflow/headerMetadata.test.ts).
+
+**Next slice (optional):** marketplace pack cards → analytics by capability motion; workflow-scoped **Calls** shortcut in header.
+
+### MK-02-CATALOG-LINEAGE — Analytics filter + marketplace deep-link (slice 2)
+
+**Status:** `Done`
+
+**Goal:** Filter analytics by capability motion; open marketplace with install motions from the editor header.
+
+**Acceptance criteria:**
+
+- [x] **`capability_module_id`** query param on `GET /analytics/insights`, `GET /analytics/calls`, and `GET /analytics/calls/export` — jsonb `?` on `mk01.capability_module_ids` ([mk01_workflow_filters.py](api/services/analytics/mk01_workflow_filters.py)).
+- [x] **Call list UI** — filter field + URL param ([AnalyticsCallsListContent.tsx](ui/src/app/analytics/calls/AnalyticsCallsListContent.tsx)).
+- [x] **Marketplace deep-link** — `/workflow/catalog?capabilities=…` pre-selects chips; editor **Capabilities · …** links when `mk01.capability_module_ids` present ([catalogDeepLinks.ts](ui/src/lib/catalog/catalogDeepLinks.ts), [WorkflowEditorHeader.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx)).
+- [x] **CI** — [test_mk01_capability_analytics_filter_unit.py](api/tests/test_mk01_capability_analytics_filter_unit.py); route asserts in [test_analytics_calls_routes.py](api/tests/test_analytics_calls_routes.py); Vitest [catalogDeepLinks.test.ts](ui/src/lib/catalog/catalogDeepLinks.test.ts), [headerMetadata.test.ts](ui/src/lib/workflow/headerMetadata.test.ts).
+
+---
+
+## Epic MK-03 — Operator analytics lineage (install motion → insights)
+
+**Epic owner:** _TBD_  
+**Strategy anchor:** [READMEPLANNING.md](READMEPLANNING.md) §6 marketplace + **Operations** row — operators trace call quality back to buyer motions that drove each install.
+
+**Goal:** Close the loop from **capability install metadata** to **Analytics Overview** and the workflow editor, complementing MK-02 call-list filters.
+
+### MK-03-ANALYTICS-LINEAGE — Overview filter + editor analytics link (slice 1)
+
+**Status:** `Done`
+
+**Goal:** Filter Analytics Overview by capability motion; link from editor header to motion-scoped insights.
+
+**Acceptance criteria:**
+
+- [x] **Analytics Overview** — `capability_module_id` URL param + filter field; insights fetch and widget drill-downs preserve the filter ([AnalyticsDashboardClient.tsx](ui/src/app/analytics/AnalyticsDashboardClient.tsx)).
+- [x] **Editor header** — **Analytics** link when `mk01.capability_module_ids` present → `/analytics?capability_module_id=…` (+ catalog slug/variant when set) ([analyticsOverviewHrefFromMk01](ui/src/lib/workflow/headerMetadata.ts), [WorkflowEditorHeader.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx)).
+- [x] **CI** — Vitest [headerMetadata.test.ts](ui/src/lib/workflow/headerMetadata.test.ts), [analyticsOverviewDeepLinks.test.ts](ui/src/lib/analyticsOverviewDeepLinks.test.ts).
+
+### MK-03-ANALYTICS-LINEAGE — Marketplace + editor Calls + CX hints (slice 2)
+
+**Status:** `Done`
+
+**Goal:** Capability-scoped analytics from marketplace; per-workflow Calls link; first-time dismissible guides.
+
+**Acceptance criteria:**
+
+- [x] **Capability filter banner** — **Preview analytics** / **Preview calls** when capability chips selected ([MarketplaceCatalog.tsx](ui/src/components/catalog/MarketplaceCatalog.tsx)); pack card links include `capability_module_id` when filters active.
+- [x] **Editor header** — **Calls** link → `/analytics/calls?workflow_id=…` (+ mk01 filters) with hover tooltips on Capabilities / Analytics / Calls ([WorkflowEditorHeader.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx)).
+- [x] **Dismissible CX hints** — catalog quick-start, analytics overview/calls filter guides, editor lineage banner ([DismissibleHintBanner.tsx](ui/src/components/onboarding/DismissibleHintBanner.tsx), [dismissibleHints.ts](ui/src/lib/onboarding/dismissibleHints.ts)).
+- [x] **CI** — Vitest [catalogDeepLinks.test.ts](ui/src/lib/catalog/catalogDeepLinks.test.ts), [headerMetadata.test.ts](ui/src/lib/workflow/headerMetadata.test.ts), [dismissibleHints.test.ts](ui/src/lib/onboarding/dismissibleHints.test.ts).
+
+### MK-03-ANALYTICS-LINEAGE — Onboarding hub + simulation CX (slice 3)
+
+**Status:** `Done`
+
+**Goal:** First-time operator path, in-product builder recipes, simulation rail guidance, happy-path analytics fix.
+
+**Acceptance criteria:**
+
+- [x] **Overview** — dismissible operator path banner; Resources links to `/recipes` ([overview/page.tsx](ui/src/app/overview/page.tsx)).
+- [x] **Recipes hub** — `/recipes` page + compact panel on `/settings`; sidebar **Recipes** link ([builderRecipes.ts](ui/src/lib/recipes/builderRecipes.ts), [BuilderRecipesPanel.tsx](ui/src/components/recipes/BuilderRecipesPanel.tsx)).
+- [x] **Simulation rail** — dismissible first-visit hint (Web test → recipes) ([WorkflowEditorRightRail.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorRightRail.tsx)).
+- [x] **Editor header** — Edit / Simulation tab hover tooltips ([WorkflowEditorHeader.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowEditorHeader.tsx)).
+- [x] **Happy path** — Call analytics link uses `workflow_id` via [analyticsCallsHrefForWorkflow](ui/src/lib/workflow/headerMetadata.ts) ([WorkflowHappyPathStrip.tsx](ui/src/app/workflow/[workflowId]/components/WorkflowHappyPathStrip.tsx)).
+- [x] **CI** — Vitest [builderRecipes.test.ts](ui/src/lib/recipes/builderRecipes.test.ts).
+
+### MK-03-ANALYTICS-LINEAGE — GTM deck frames (slice 4)
+
+**Status:** `Done` (Playwright specs + inventory; live capture via `./scripts/gtm_capture_deck.sh`)
+
+**Goal:** Deck PNGs for operator onboarding and capability-scoped analytics filters.
+
+**Acceptance criteria:**
+
+- [x] **`gtm-mk03-overview-operator-path.png`** — Overview operator path hint ([gtm-deck-screenshots.spec.ts](ui/e2e/gtm-deck-screenshots.spec.ts)).
+- [x] **`gtm-mk03-recipes-hub.png`** — `/recipes` integration hub.
+- [x] **`gtm-mk03-analytics-capability-filter.png`** — Analytics Overview with `capability_module_id` filter.
+- [x] **Inventory** — **54** frames synced across [gen_gtm_deck_placeholder_pngs.py](scripts/gen_gtm_deck_placeholder_pngs.py), pytest, and [docs/images/README.md](docs/images/README.md).
+
+---
+
+## Epic ERP-01 — Omnichannel CRM & ERP platform
+
+**Epic owner:** _TBD_  
+**Strategy anchor:** [READMEPLANNING.md](READMEPLANNING.md) §9, growth bet **#21**  
+**Blueprint (DDL, router, topology, UX):** [catalog/ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md)  
+**Goal:** extend **Shipped** local capabilities (scheduling, payments, integrations, EHR, inference profiles) into a **unified CRM + ERP data plane** with omnichannel timeline, org hierarchy, offline sync, and compliance-aware hybrid AI — on one codebase for **local edge** and **cloud SaaS**.
+
+**Positioning:** integrate natively with top CRM/ERP/ticketing stacks; **win on product delivery** (voice workflows, analytics proof, zero-setup local demos, capability-module install).
+
+**WIP:** one **ERP-01-*** package `InProgress` at a time (same rule as MK-01 / WE-01).
+
+### ERP-01-LOCAL-AUDIT — Local capabilities depth review (slice 0)
+
+**Status:** `Done` (documented in blueprint §1)
+
+**Shipped anchors:**
+
+| Capability | Routes / services | Recipe |
+|------------|-------------------|--------|
+| Scheduling | [local_scheduling.py](api/routes/local_scheduling.py) | [local-scheduling-all-in-one.md](catalog/recipes/local-scheduling-all-in-one.md) |
+| Payments | [local_payments.py](api/routes/local_payments.py) | [local-payments-all-in-one.md](catalog/recipes/local-payments-all-in-one.md) |
+| CRM/OSS/ATS stubs | [local_integrations.py](api/routes/local_integrations.py) | [local-integrations-all-in-one.md](catalog/recipes/local-integrations-all-in-one.md) |
+| EHR | [local_ehr.py](api/routes/local_ehr.py) | [healthcare-ehr-all-in-one.md](catalog/recipes/healthcare-ehr-all-in-one.md) |
+| Inference edge | [inference_profiles.py](api/services/configuration/inference_profiles.py), [local_inference.py](api/services/configuration/local_inference.py) | [inference-providers.mdx](docs/configurations/inference-providers.mdx) |
+| Business motions | [capability-modules.json](catalog/capability-modules.json) | [CAPABILITY_MODULES.md](catalog/CAPABILITY_MODULES.md) |
+
+**Gap (feeds packages below):** unified profiles, hierarchy, async channels, sync gateway, BAA middleware, SIMPLE/ADVANCED ERP workspace.
+
+### ERP-01-CORE-SCHEMA — Tenant bridge, hierarchy DDL, RLS session
+
+**Status:** `NotStarted`
+
+**Goal:** Alembic migration for `cloud_tenants`, `enterprise_nodes`, `unified_profiles`, `omnichannel_interactions`, `erp_orders`, `compliance_audit_ledger`; bridge `legacy_organization_id` from existing org model.
+
+**Acceptance criteria:**
+
+- [ ] DDL matches [blueprint §3](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md#3-core-architecture--postgresql-schemas) (ltree paths, RLS policies, indexes).
+- [ ] `erp_db_session` sets `app.current_tenant_id` (pattern from [analytics_http_tool_span_rls.py](api/db/analytics_http_tool_span_rls.py)).
+- [ ] `scripts/erp_migrate_local_edge.sql` disables RLS for single-tenant embed.
+- [ ] Pytest: tenant isolation cannot read cross-tenant rows.
+
+**Key files (target):** `api/db/erp_models.py`, `api/db/erp_session.py`, `alembic/versions/*_erp_core.py`.
+
+### ERP-01-PROFILES — Unified profiles + voice timeline bridge
+
+**Status:** `NotStarted`
+
+**Goal:** CRUD API for `unified_profiles`; post-call hook writes `omnichannel_interactions` with `channel=VOICE` and `workflow_run_id`.
+
+**Acceptance criteria:**
+
+- [ ] `GET/POST /api/v1/erp/profiles` with search by email/phone.
+- [ ] `GET /api/v1/erp/profiles/{id}/timeline` paginated.
+- [ ] Pipecat / analytics bridge from [call_intel.py](api/services/analytics/call_intel.py).
+- [ ] Route tests + redaction policy alignment ([ANALYTICS_REDACTION_MATRIX.md](catalog/ANALYTICS_REDACTION_MATRIX.md)).
+
+### ERP-01-HIERARCHY — Recursive org tree API + SIMPLE UI
+
+**Status:** `NotStarted`
+
+**Goal:** Materialized-path `enterprise_nodes`; recursive CTE list/descendants; ADVANCED mode tree rail.
+
+**Acceptance criteria:**
+
+- [ ] `GET/POST /api/v1/erp/nodes` + `…/descendants`.
+- [ ] UI: hierarchy tree in ADVANCED workspace only ([blueprint §8](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md#82-layout-behavior)).
+- [ ] B2B account = `node_type ACCOUNT` with scoped portal queries.
+
+### ERP-01-OMNI-ASYNC — SMS / email / WhatsApp ingest
+
+**Status:** `NotStarted`
+
+**Goal:** Webhook ingress for one async channel (start with SMS or email); unified timeline resolution.
+
+**Acceptance criteria:**
+
+- [ ] Signed webhooks; idempotent `channel_session_id`.
+- [ ] Profile merge rules (phone/email/whatsapp_id).
+- [ ] Workflow trigger or HTTP tool can reply outbound on same thread.
+
+### ERP-01-SYNC — Edge ↔ cloud sync gateway
+
+**Status:** `NotStarted`
+
+**Goal:** Push/pull batches with `sync_vector` conflict policy ([blueprint §5](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md#5-offline-sync-layer)).
+
+**Acceptance criteria:**
+
+- [ ] `POST /api/v1/erp/sync/push` and `…/pull`.
+- [ ] Migrate `run/local_*` JSON stores to ERP tables on first sync.
+- [ ] Conflict entries returned for financial rows; JSONB metadata CRDT merge.
+
+### ERP-01-INFERENCE-COMPLY — BAA router + audit ledger
+
+**Status:** `NotStarted`
+
+**Goal:** Extend inference profiles with `requires_baa` path, PII scrubber, immutable `compliance_audit_ledger`.
+
+**Acceptance criteria:**
+
+- [ ] `HybridInferenceRouter` halts if endpoint ∉ `BAA_VERIFIED_ENDPOINTS`.
+- [ ] `X-Zero-Data-Retention` headers enforced on outbound cloud calls.
+- [ ] Audit row per cloud inference in regulated mode.
+- [ ] Unit tests mirroring [test_inference_profiles_unit.py](api/tests/test_inference_profiles_unit.py).
+
+### ERP-01-UX-DENSITY — SIMPLE / ADVANCED workspace toggle
+
+**Status:** `NotStarted`
+
+**Goal:** Org-persisted `viewMode`; compliance banner when BAA cloud active; reuse WE-01 hyper-density primitives.
+
+**Acceptance criteria:**
+
+- [ ] `ui/src/lib/erp/workspaceDensity.ts` + settings persistence API.
+- [ ] SIMPLE: rollup cards + single CTA; ADVANCED: sync strip + telemetry terminal + JSON drawer.
+- [ ] Playwright smoke: toggle survives reload.
+- [ ] Dual-track onboarding links to [recipes/](recipes/) and [bootstrap_fresh_dev.sh](scripts/bootstrap_fresh_dev.sh).
+
+### ERP-01-ERP-OBJECTS — Orders, inventory, B2B invoice flows
+
+**Status:** `NotStarted`
+
+**Goal:** `erp_orders` + `erp_inventory_events`; retail/supply-chain workflow HTTP tools update local ERP objects.
+
+**Acceptance criteria:**
+
+- [ ] Order create from voice HTTP tool with idempotency key.
+- [ ] WhatsApp → shipment status → inventory event (blueprint §9.3 example).
+- [ ] Analytics `mapped_data` shows ERP proof on call detail.
+
+### ERP-01-INFRA — Docker Compose offline stack (optional accelerator)
+
+**Status:** `NotStarted`
+
+**Goal:** Compose profile: local Postgres + pgvector + Ollama/Speaches + optional sync-gateway sidecar.
+
+**Acceptance criteria:**
+
+- [ ] Extends [docker-compose-local.yaml](docker-compose-local.yaml) without breaking default dev.
+- [ ] Documented in [READMEBUILDME.md](READMEBUILDME.md) and blueprint §7.
+
+**Sequencing:** **LOCAL-AUDIT** (`Done`) → **CORE-SCHEMA** → **PROFILES** + **HIERARCHY** (parallel only if two owners) → **OMNI-ASYNC** → **SYNC** → **INFERENCE-COMPLY** + **UX-DENSITY** → **ERP-OBJECTS** → vertical packs.
+
+---
+
 ## Epic index (add rows as new epics appear)
 
 | ID | Title | READMEPLANNING anchor |
 |----|--------|------------------------|
+| MK-03 | Operator analytics lineage (**slice 1–4 `Done`**) | §6 Marketplace → analytics |
+| MK-02 | Catalog install lineage (**slice 1–2 `Done`**) | §6 Marketplace → workflow metadata |
 | MK-01 | Marketplace: ready-to-bake vertical packs | §6 Marketplace and GTM |
 | MK-01-RUBRIC | Template quality rubric (**`Done`** — CI + runbook happy-path + Playwright catalog install flow) | §2 Pillar 1 near-term (template quality) |
 | MK-01-BUYER-GTM-MATRIX | Ten-vertical buyer demo + live GTM deck (**`Done`**) | [catalog-buyer-demo.md](catalog/recipes/catalog-buyer-demo.md) |
+| MK-01-CAPABILITY-MODULES | Modular business motions catalog (**`Done`** slice 1 — filters + API) | [capability-modules.json](catalog/capability-modules.json) |
 | MK-01-SHIP-PR | Commit + open PR for buyer/GTM slice (**`Done`** — [PR #1](https://github.com/claw801010/open-voice-agent/pull/1)) | [prepare_mk01_pr.sh](scripts/prepare_mk01_pr.sh) |
 | MK-01-VOICE-SPOKEN | ElevenLabs spoken voice previews (**`Incomplete`**) | [catalog/voice-previews/README.md](catalog/voice-previews/README.md) |
 | MK-01-PREBUILD-COMPLETE | All revenue motions shipped (**`Done`** — empty `roadmap_motions`, demo matrix, variant Playwright) | §6 Marketplace and GTM |
@@ -930,6 +1316,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 | WE-01-HYPER-DENSITY | High-density SaaS extension (`Done` — slices 1–3) | [Brief](#we-01-hyper-density-saas-ui-extension-brief) · [Package](#we-01-hyper-density--high-density-shell-and-operator-chrome) |
 | WE-01-DATASTORE-INTEG | Org datastore vs integration-backed HTTP cache (**`Done`** — Redis runtime v1, **`cache_hit`** in analytics spans; org draft **GET**/**PUT** + **`/settings`**; [storage model](docs/voice-agent/tools/http-api.mdx#storage-model), [policy](docs/integrations/http-tool-data-policy.mdx)) | Pillar 1; Integrations row |
 | DX-01 | Three-tier experience (no-code, builder, ADK) | §8 Experience tiers |
+| ERP-01 | Omnichannel CRM & ERP platform (**`NotStarted`** — blueprint + packages; slice 0 local audit **`Done`**) | §9 Pillar 4, bet **#21**, [ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md) |
 | _TBD_ | (next epic) | … |
 
 ---
@@ -938,6 +1325,7 @@ Decide *which* of these to fund next; they are **candidates** from [READMEPLANNI
 
 | Date | Change |
 |------|--------|
+| 2026-06-18 | **ERP-01** — Omnichannel CRM & ERP epic + [ERP_CRM_PLATFORM_BLUEPRINT.md](catalog/ERP_CRM_PLATFORM_BLUEPRINT.md); READMEPLANNING §9 + bet **#21**; strategic review row; **ERP-01-LOCAL-AUDIT** slice 0 **`Done`**. |
 | 2026-05-23 | **WE-01 operator shell Lighthouse** — **`perf:lighthouse:auth:operator`**, **`auth:operator:full`**, **`summary:latest-operator`**; [we01-lighthouse-auth-e2e.sh](scripts/we01-lighthouse-auth-e2e.sh) **`--operator`** for **`/overview`** + **`/reports`**. |
 | 2026-05-25 | **MK-01 depth (vertical voice profiles)** — **`vertical_*`** built-ins + tone/behavior/extended/multilingual fillers; catalog **`recommended_voice_profile_id`**; install binds **`voice_profile_id`**. |
 | 2026-05-25 | **MK-01-PREBUILD (SMB CRM lead capture)** — **`lead_capture_complex`**; all **seven** packs empty **`roadmap_motions`**. |

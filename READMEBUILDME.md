@@ -182,7 +182,8 @@ bash scripts/bootstrap_fresh_dev.sh
 - **Creates** `venv/` (override with `VENV_DIR`), **copies** [api/.env.example](api/.env.example) → `api/.env` if missing, **runs** [scripts/migrate.sh](scripts/migrate.sh), **`npm ci`** + **`npm test`** in [ui/](ui/).
 - **Does not** start long-running API/UI processes (avoids port conflicts and matches how developers run hot-reload). **Optional voice/Pipecat:** after bootstrap, run [scripts/setup_pipecat.sh](scripts/setup_pipecat.sh) for full real-time audio stacks (not required to smoke-test the dashboard or HTTP tool editor).
 - **MK-01 local demos:** bootstrap appends `ENVIRONMENT=local` and `ENABLE_LOCAL_*` to `api/.env` when missing (calendar, payments, integrations, EHR, messaging).
-- **Skips** (environment variables): `SKIP_SUBMODULE=1`, `SKIP_DOCKER=1`, `SKIP_UI_TEST=1`, `SKIP_PIP=1` — see the script header.
+- **Skips** (environment variables): `SKIP_SUBMODULE=1`, `SKIP_DOCKER=1`, `SKIP_UI_TEST=1`, `SKIP_PIP=1`, **`SKIP_LOCAL_MODELS=1`** (skip Ollama pulls) — see the script header.
+- **Local edge inference (optional):** after bootstrap, **`./scripts/start_local_inference.sh`** (Speaches STT/TTS on **:8100** via Docker `local-inference` profile) and **`./scripts/setup_local_inference.sh`** (Ollama `llama3.2:3b`). Switch stack at **Model configurations → Inference profile**. **Air-gapped:** export on a connected machine with **`./scripts/export_local_inference_bundle.sh`**, copy the tarball, then **`LOCAL_INFERENCE_BUNDLE=/path/to/bundle.tar.gz ./scripts/setup_local_inference.sh`** on the offline host.
 
 ### Windows and WSL (local dev)
 

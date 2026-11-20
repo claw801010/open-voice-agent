@@ -137,8 +137,9 @@ echo "HTTP ${code}"
 pretty_json </tmp/gtm-msg.json
 
 echo ""
-echo "== POST local-integrations — buyer-primary tools (all 10 verticals) =="
+echo "== POST local-integrations — buyer-primary tools (all 14 verticals) =="
 INT="${BASE}/api/v1/local-integrations/api/v1"
+SCHED="${BASE}/api/v1/local-scheduling"
 
 smoke_integration() {
   local label="$1"
@@ -160,6 +161,19 @@ smoke_integration balance "/accounts/balance" '{"account_token":"acct-demo","org
 smoke_integration leads "/leads/intent" '{"location_id":"store-42","intent":"catering","organization_id":1}'
 smoke_integration permits "/permits/status" '{"permit_id":"PER-GTM-1","organization_id":1}'
 smoke_integration applications "/applications/status" '{"application_id":"APP-GTM-1","organization_id":1}'
+smoke_integration quote_handyman "/quotes/intent" '{"service_type":"drywall repair","zip_code":"90210","organization_id":1}'
+smoke_integration lead_coach "/leads/intent" '{"location_id":"solo-coach","intent":"discovery_call","organization_id":1}'
+
+echo ""
+echo "== POST local-scheduling — field-service buyer tools =="
+SALON_SLOT="$(python3 -c 'import datetime; print(datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))')"
+code="$(curl -sS -o /tmp/gtm-salon-book.json -w "%{http_code}" \
+  -X POST "${SCHED}/book_slot" \
+  -H "Content-Type: application/json" \
+  -d "{\"slot_start\":\"${SALON_SLOT}\",\"patient_name\":\"GTM Salon Guest\",\"organization_id\":1}")" || true
+echo "  /book_slot (salon) → HTTP ${code}"
+[[ "$code" == "200" ]] || die "book_slot failed"
+pretty_json </tmp/gtm-salon-book.json | head -8
 
 if [[ -n "$TOKEN" ]]; then
   echo ""

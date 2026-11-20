@@ -6,6 +6,7 @@ import SignInClient from "@/components/SignInClient";
 import { getServerAccessToken,getServerAuthProvider,getServerUser } from "@/lib/auth/server";
 import logger from '@/lib/logger';
 import { getRedirectUrl } from "@/lib/utils";
+import { resolvePostLoginPath } from "@/lib/onboarding/postLoginRedirect";
 
 export const dynamic = 'force-dynamic';
 
@@ -36,8 +37,8 @@ export default async function Home() {
           logger.debug('[HomePage] Redirecting to /workflow - user has workflows');
           redirect('/workflow');
         } else {
-          logger.debug('[HomePage] Redirecting to /workflow/create - no workflows found');
-          redirect('/workflow/create');
+          logger.debug('[HomePage] Redirecting to /overview - new org onboarding');
+          redirect(resolvePostLoginPath(0));
         }
       } else {
         redirect('/auth/login');
@@ -50,8 +51,8 @@ export default async function Home() {
 
       logger.error('[HomePage] Error checking workflows for local provider:', error);
       // Default to /workflow/create on actual errors
-      logger.debug('[HomePage] Defaulting to /workflow/create due to error');
-      redirect('/workflow/create');
+      logger.debug('[HomePage] Defaulting to /overview due to error');
+      redirect(resolvePostLoginPath(0));
     }
   }
 

@@ -37,6 +37,7 @@ import {
     type WorkflowConfigurations,
 } from "@/types/workflow-configurations";
 
+import { WorkflowInferenceProfileSection } from "@/components/WorkflowInferenceProfileSection";
 import { WorkflowVoiceProfileSection } from "@/components/voice/WorkflowVoiceProfileSection";
 
 import { EmbedDialog } from "../components/EmbedDialog";
@@ -1190,6 +1191,12 @@ function WorkflowSettingsInner({
                             />
 
                             <WorkflowVoiceProfileSection
+                                workflowConfigurations={workflowConfigurations}
+                                workflowName={workflowName || workflow.name}
+                                onSave={saveWorkflowConfigurations}
+                            />
+
+                            <WorkflowInferenceProfileSection
                                 workflowConfigurations={workflowConfigurations}
                                 workflowName={workflowName || workflow.name}
                                 onSave={saveWorkflowConfigurations}

@@ -31,6 +31,10 @@ from api.services.analytics.insights_quality_rollup import (
     QUALITY_ROLLUP_MAX_RUNS,
     rollup_quality_insights,
 )
+from api.services.analytics.mk01_workflow_filters import (
+    append_capability_module_mix_sql,
+    capability_module_id_sql_bindparam,
+)
 from api.services.analytics.qm_export_sampling import select_run_ids_smart_export
 from api.services.analytics.qm_scorecard import (
     DEFAULT_QM_SCORECARD,
@@ -97,6 +101,7 @@ class AnalyticsCallsClient(BaseDBClient):
         workflow_id: int | None = None,
         catalog_slug: str | None = None,
         catalog_variant_id: str | None = None,
+        capability_module_id: str | None = None,
     ) -> dict[str, Any]:
         """
         Roll-up counts for default dashboard (vertical / booking GTM).
@@ -131,6 +136,8 @@ class AnalyticsCallsClient(BaseDBClient):
                     "workflows.workflow_configurations->'mk01'->>'catalog_variant_id' = :cvid"
                 ).bindparams(cvid=catalog_variant_id)
             )
+        if capability_module_id is not None:
+            base_conds.append(capability_module_id_sql_bindparam(capability_module_id))
 
         with_outcome_extra = text(
             """
@@ -158,6 +165,9 @@ class AnalyticsCallsClient(BaseDBClient):
                 " AND workflows.workflow_configurations->'mk01'->>'catalog_variant_id' = :cvid"
             )
             mix_params["cvid"] = catalog_variant_id
+        mix_sql_extra, mix_params = append_capability_module_mix_sql(
+            mix_sql_extra, mix_params, capability_module_id
+        )
 
         mix_q = text(
             f"""
@@ -327,6 +337,7 @@ class AnalyticsCallsClient(BaseDBClient):
         workflow_id: int | None = None,
         catalog_slug: str | None = None,
         catalog_variant_id: str | None = None,
+        capability_module_id: str | None = None,
         since: datetime | None = None,
         until: datetime | None = None,
         disposition: str | None = None,
@@ -365,6 +376,8 @@ class AnalyticsCallsClient(BaseDBClient):
                     "workflows.workflow_configurations->'mk01'->>'catalog_variant_id' = :cvid"
                 ).bindparams(cvid=catalog_variant_id)
             )
+        if capability_module_id is not None:
+            base = base.where(capability_module_id_sql_bindparam(capability_module_id))
         if since is not None:
             base = base.where(WorkflowRunModel.created_at >= since)
         if until is not None:
@@ -548,6 +561,7 @@ class AnalyticsCallsClient(BaseDBClient):
         workflow_id: int | None = None,
         catalog_slug: str | None = None,
         catalog_variant_id: str | None = None,
+        capability_module_id: str | None = None,
         since: datetime | None = None,
         until: datetime | None = None,
         disposition: str | None = None,
@@ -582,6 +596,7 @@ class AnalyticsCallsClient(BaseDBClient):
                     workflow_id=workflow_id,
                     catalog_slug=catalog_slug,
                     catalog_variant_id=catalog_variant_id,
+                    capability_module_id=capability_module_id,
                     since=since,
                     until=until,
                     max_rows=max_rows,
@@ -604,6 +619,7 @@ class AnalyticsCallsClient(BaseDBClient):
                 workflow_id=workflow_id,
                 catalog_slug=catalog_slug,
                 catalog_variant_id=catalog_variant_id,
+                capability_module_id=capability_module_id,
                 since=since,
                 until=until,
                 disposition=disposition,

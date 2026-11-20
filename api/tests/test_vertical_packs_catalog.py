@@ -89,6 +89,9 @@ def test_recommended_voice_profiles_enable_natural_delivery_for_consumer_vertica
         "smb-franchise-location-faq",
         "telecom-utilities-outage-faq",
         "hr-staffing-recruiting-faq",
+        "handyman-home-services-faq",
+        "barber-beauty-salon-faq",
+        "solopreneur-coach-faq",
     }
     for pack in catalog["packs"]:
         slug = pack["slug"]
@@ -139,6 +142,10 @@ _LOCAL_TOOL_POST_PATH: dict[str, tuple[str, str]] = {
     "schedule_interview": ("scheduling", "/api/v1/appointments"),
     "schedule_lead_callback": ("scheduling", "/api/v1/appointments"),
     "schedule_service_callback": ("scheduling", "/api/v1/appointments"),
+    "schedule_site_visit": ("scheduling", "/api/v1/appointments"),
+    "schedule_home_service": ("scheduling", "/api/v1/appointments"),
+    "book_salon_appointment": ("scheduling", "/book_slot"),
+    "book_discovery_call": ("scheduling", "/api/v1/appointments"),
     "reschedule_appointment": ("scheduling", "/api/v1/appointments/reschedule"),
     "confirm_or_reschedule_interview": ("scheduling", "/api/v1/appointments/reschedule"),
     # payments
@@ -156,6 +163,7 @@ _LOCAL_TOOL_POST_PATH: dict[str, tuple[str, str]] = {
     "lookup_account_balance": ("integrations", "/api/v1/accounts/balance"),
     "report_card_lost_stolen": ("integrations", "/api/v1/cards/block"),
     "capture_lead_intent": ("integrations", "/api/v1/leads/intent"),
+    "capture_project_intent": ("integrations", "/api/v1/leads/intent"),
     "route_call_to_location": ("integrations", "/api/v1/locations/route"),
     "lookup_outage_status": ("integrations", "/api/v1/outages/status"),
     "lookup_permit_status": ("integrations", "/api/v1/permits/status"),
@@ -253,8 +261,13 @@ _GTM_DECK_REQUIRED_PNGS: tuple[str, ...] = (
     "gtm-mk01-analytics-call-detail-smb-leads.png",
     "gtm-mk01-analytics-call-detail-civic-permits.png",
     "gtm-mk01-analytics-call-detail-hr-recruiting.png",
+    "gtm-mk01-analytics-call-detail-construction-site.png",
+    "gtm-mk01-analytics-call-detail-handyman-quote.png",
+    "gtm-mk01-analytics-call-detail-salon-booking.png",
+    "gtm-mk01-analytics-call-detail-solopreneur-intake.png",
     "gtm-mk01-workflow-import-dialog.png",
     "gtm-mk01-workflow-catalog-marketplace.png",
+    "gtm-mk01-workflow-catalog-capability-filters.png",
     "gtm-mk01-settings-local-all-in-one.png",
     "gtm-mk01-settings-local-ehr-records.png",
     "gtm-mk01-settings-local-payments-collections.png",
@@ -270,6 +283,10 @@ _GTM_DECK_REQUIRED_PNGS: tuple[str, ...] = (
     "gtm-mk01-workflow-wire-smb-integrations.png",
     "gtm-mk01-workflow-wire-civic-integrations.png",
     "gtm-mk01-workflow-wire-hr-integrations.png",
+    "gtm-mk01-workflow-wire-construction-scheduling.png",
+    "gtm-mk01-workflow-wire-handyman-integrations.png",
+    "gtm-mk01-workflow-wire-salon-scheduling.png",
+    "gtm-mk01-workflow-wire-solopreneur-integrations.png",
     "gtm-we01-workflow-get-started.png",
     "gtm-we01-settings-http-cache-policy.png",
     "gtm-we01-voice-profiles-page.png",
@@ -277,6 +294,10 @@ _GTM_DECK_REQUIRED_PNGS: tuple[str, ...] = (
     "gtm-we01-http-tool-happy-path.png",
     "gtm-we01-workflow-editor-outcome-checklist.png",
     "gtm-we01-workflow-voice-profile-quick-pick.png",
+    "gtm-we01-inference-profiles-quick-switch.png",
+    "gtm-mk03-overview-operator-path.png",
+    "gtm-mk03-recipes-hub.png",
+    "gtm-mk03-analytics-capability-filter.png",
 )
 
 

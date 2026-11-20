@@ -21,9 +21,13 @@ const ENV_BY_SLUG: Record<string, string> = {
     'smb-franchise-location-faq': 'E2E_GTM_SMB_CALL_ID',
     'public-sector-civic-services-faq': 'E2E_GTM_CIVIC_CALL_ID',
     'hr-staffing-recruiting-faq': 'E2E_GTM_HR_CALL_ID',
+    'construction-trades-faq': 'E2E_GTM_CONSTRUCTION_CALL_ID',
+    'handyman-home-services-faq': 'E2E_GTM_HANDYMAN_CALL_ID',
+    'barber-beauty-salon-faq': 'E2E_GTM_SALON_CALL_ID',
+    'solopreneur-coach-faq': 'E2E_GTM_SOLOPRENEUR_CALL_ID',
 };
 
-/** All ten buyer-default verticals with Playwright call-id env var names. */
+/** All buyer-default verticals with Playwright call-id env var names. */
 export function buyerDemoSeededCallCases(): BuyerDemoSeededCallCase[] {
     const defaults = buyerDemoDefaults.defaults as Record<string, string>;
     return Object.entries(defaults).map(([catalogSlug, catalogVariantId]) => ({

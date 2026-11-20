@@ -175,4 +175,14 @@ async def process_workflow_completion(
     except Exception as e:
         logger.error(f"Error calculating cost for workflow {workflow_run_id}: {e}")
 
+    # Step 5: Omnichannel timeline — voice call completed
+    try:
+        run = await db_client.get_workflow_run_by_id(workflow_run_id)
+        if run and run.workflow and run.workflow.organization_id:
+            from api.services.analytics.interaction_timeline_service import record_voice_completion
+
+            await record_voice_completion(int(run.workflow.organization_id), run)
+    except Exception as e:
+        logger.warning(f"Timeline ingest skipped for run {workflow_run_id}: {e}")
+
     logger.info(f"Completed workflow completion processing for run {workflow_run_id}")

@@ -29,6 +29,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useSidebar } from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PostHogEvent } from "@/constants/posthog-events";
 import { WORKFLOW_RUN_MODES } from "@/constants/workflowRunModes";
 import { getPublicFeedbackUrl } from "@/lib/feedbackUrl";
@@ -57,6 +58,14 @@ interface WorkflowEditorHeaderProps {
     onCustomizeInstall?: () => void;
     /** WE-01-HEADER: template source (catalog / DB template); no PII */
     templateSourceLabel?: string | null;
+    /** MK-01 capability install motions (marketplace). */
+    capabilityMotivationLabel?: string | null;
+    /** MK-02 — marketplace catalog with motions pre-filtered */
+    capabilityMotivationHref?: string | null;
+    /** MK-03 — analytics overview filtered by install motion */
+    capabilityAnalyticsHref?: string | null;
+    /** MK-03 — call list for this workflow (and mk01 filters when present) */
+    workflowAnalyticsCallsHref?: string | null;
     /** Short band from catalog JSON when available */
     costLatencyHint?: string | null;
     /** WE-01-HEADER: latest run with cost_info from GET /workflow/{id}/runs (tokens · duration) */
@@ -102,6 +111,10 @@ export const WorkflowEditorHeader = ({
     isInstallationLocked = false,
     onCustomizeInstall,
     templateSourceLabel = null,
+    capabilityMotivationLabel = null,
+    capabilityMotivationHref = null,
+    capabilityAnalyticsHref = null,
+    workflowAnalyticsCallsHref = null,
     costLatencyHint = null,
     recentRunUsageHint = null,
     recentRunAggregateHint = null,
@@ -223,15 +236,73 @@ export const WorkflowEditorHeader = ({
                         </span>
                         <span className="hidden md:inline break-words">{workflowName}</span>
                     </h1>
-                    <div
-                        className="hidden sm:flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-white/80 leading-snug"
-                        aria-label="Workflow metadata"
-                    >
+                    <TooltipProvider delayDuration={300}>
+                        <div
+                            className="hidden sm:flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-white/80 leading-snug"
+                            aria-label="Workflow metadata"
+                        >
                         <span className="font-mono tabular-nums text-white/80 shrink-0">ID {workflowId}</span>
                         {templateSourceLabel ? (
                             <span className="text-amber-200/90 truncate max-w-[min(100%,14rem)]" title={templateSourceLabel}>
                                 {templateSourceLabel}
                             </span>
+                        ) : null}
+                        {capabilityMotivationLabel ? (
+                            capabilityMotivationHref ? (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link
+                                            href={capabilityMotivationHref}
+                                            className="text-sky-200/90 truncate max-w-[min(100%,20rem)] hover:text-sky-100 hover:underline underline-offset-2"
+                                        >
+                                            {capabilityMotivationLabel}
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="max-w-xs text-left">
+                                        Open the template catalog with these buyer motions pre-selected. Install again
+                                        or compare packs without losing your filter.
+                                    </TooltipContent>
+                                </Tooltip>
+                            ) : (
+                                <span
+                                    className="text-sky-200/90 truncate max-w-[min(100%,20rem)]"
+                                    title={capabilityMotivationLabel}
+                                >
+                                    {capabilityMotivationLabel}
+                                </span>
+                            )
+                        ) : null}
+                        {capabilityAnalyticsHref ? (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link
+                                        href={capabilityAnalyticsHref}
+                                        className="text-violet-200/90 shrink-0 hover:text-violet-100 hover:underline underline-offset-2"
+                                    >
+                                        Analytics
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="max-w-xs text-left">
+                                    Analytics Overview filtered by your primary install capability motion (and catalog
+                                    slug when set).
+                                </TooltipContent>
+                            </Tooltip>
+                        ) : null}
+                        {workflowAnalyticsCallsHref ? (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Link
+                                        href={workflowAnalyticsCallsHref}
+                                        className="text-violet-200/90 shrink-0 hover:text-violet-100 hover:underline underline-offset-2"
+                                    >
+                                        Calls
+                                    </Link>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" className="max-w-xs text-left">
+                                    Call list for this workflow only — review outcomes, tool traces, and QM export
+                                    filters.
+                                </TooltipContent>
+                            </Tooltip>
                         ) : null}
                         {costLatencyHint ? (
                             <span
@@ -300,46 +371,63 @@ export const WorkflowEditorHeader = ({
                                 Voice: {voiceProfileLabel}
                             </Link>
                         ) : null}
-                    </div>
-                    {showEditorModeTabs && onEditorModeChange && !isViewingHistoricalVersion ? (
-                        <div
-                            className="ovo-segmented-track flex w-fit gap-0.5 p-0.5"
-                            role="tablist"
-                            aria-label="Editor mode"
-                        >
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-label="Edit mode: inspector and workflow graph"
-                                aria-selected={editorMode === "edit"}
-                                className={cn(
-                                    'rounded-full border border-transparent px-3 py-1 text-xs font-medium ease-ovo-spring duration-200',
-                                    'transition-[color,background-color,border-color,box-shadow,transform]',
-                                    editorMode === 'edit'
-                                        ? 'border-teal-500/40 bg-teal-600 text-white shadow-md shadow-teal-900/30'
-                                        : 'text-muted-foreground hover:text-foreground',
-                                )}
-                                onClick={() => onEditorModeChange('edit')}
-                            >
-                                Edit
-                            </button>
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-label="Simulation mode: test calls and simulation tools"
-                                aria-selected={editorMode === 'simulation'}
-                                className={cn(
-                                    'rounded-full border border-transparent px-3 py-1 text-xs font-medium ease-ovo-spring duration-200',
-                                    'transition-[color,background-color,border-color,box-shadow,transform]',
-                                    editorMode === 'simulation'
-                                        ? 'border-teal-500/40 bg-teal-600 text-white shadow-md shadow-teal-900/30'
-                                        : 'text-muted-foreground hover:text-foreground',
-                                )}
-                                onClick={() => onEditorModeChange('simulation')}
-                            >
-                                Simulation
-                            </button>
                         </div>
+                    </TooltipProvider>
+                    {showEditorModeTabs && onEditorModeChange && !isViewingHistoricalVersion ? (
+                        <TooltipProvider delayDuration={300}>
+                            <div
+                                className="ovo-segmented-track flex w-fit gap-0.5 p-0.5"
+                                role="tablist"
+                                aria-label="Editor mode"
+                            >
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            type="button"
+                                            role="tab"
+                                            aria-label="Edit mode: inspector and workflow graph"
+                                            aria-selected={editorMode === "edit"}
+                                            className={cn(
+                                                'rounded-full border border-transparent px-3 py-1 text-xs font-medium ease-ovo-spring duration-200',
+                                                'transition-[color,background-color,border-color,box-shadow,transform]',
+                                                editorMode === 'edit'
+                                                    ? 'border-teal-500/40 bg-teal-600 text-white shadow-md shadow-teal-900/30'
+                                                    : 'text-muted-foreground hover:text-foreground',
+                                            )}
+                                            onClick={() => onEditorModeChange('edit')}
+                                        >
+                                            Edit
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="max-w-xs text-xs text-left">
+                                        Wire the graph, HTTP tools, and template variables. Right rail shows node inspector.
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <button
+                                            type="button"
+                                            role="tab"
+                                            aria-label="Simulation mode: test calls and simulation tools"
+                                            aria-selected={editorMode === 'simulation'}
+                                            className={cn(
+                                                'rounded-full border border-transparent px-3 py-1 text-xs font-medium ease-ovo-spring duration-200',
+                                                'transition-[color,background-color,border-color,box-shadow,transform]',
+                                                editorMode === 'simulation'
+                                                    ? 'border-teal-500/40 bg-teal-600 text-white shadow-md shadow-teal-900/30'
+                                                    : 'text-muted-foreground hover:text-foreground',
+                                            )}
+                                            onClick={() => onEditorModeChange('simulation')}
+                                        >
+                                            Simulation
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="max-w-xs text-xs text-left">
+                                        Web test, usage trend, and outcome checklist — no PSTN until you publish and wire recipes.
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
+                        </TooltipProvider>
                     ) : null}
                 </div>
             </div>

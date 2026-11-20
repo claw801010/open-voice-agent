@@ -19,3 +19,10 @@ def test_gtm_local_all_in_one_demo_booking_uses_unique_slots() -> None:
     text = SMOKE_SCRIPT.read_text(encoding="utf-8")
     assert "random.randint(0,59)" in text
     assert "Slot already booked" in text
+
+
+def test_gtm_local_all_in_one_demo_includes_field_service_smokes() -> None:
+    text = SMOKE_SCRIPT.read_text(encoding="utf-8")
+    assert "field-service buyer tools" in text
+    assert "/book_slot" in text
+    assert "/quotes/intent" in text

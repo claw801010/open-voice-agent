@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "description": "Default agent self-improvement governance policy (MK-01-SELFIMPROVE). Defines which AI-proposed improvements may be applied automatically (no human in the loop) versus held in an approval queue, based on improvement category, risk tier, and evidence thresholds. Org-level overrides merge on top of these defaults.",
+  "modes": {
+    "off": "No proposals are generated or applied.",
+    "suggest": "Proposals are generated but every change waits in the approval queue (no auto-apply).",
+    "auto_with_queue": "Low-risk, auto-eligible categories apply automatically when evidence gates pass; everything else queues for human approval.",
+    "full_auto": "Everything auto-applies when evidence gates pass, except categories marked block (those always require a human)."
+  },
+  "default_mode": "suggest",
+  "evidence_gates": {
+    "min_supporting_calls": 3,
+    "max_quality_score_to_trigger": 0.7,
+    "min_confidence": 0.6,
+    "cooldown_hours": 24,
+    "max_auto_applies_per_day": 3
+  },
+  "risk_tiers": {
+    "low": "Wording, tone, recap, pacing — no change to policy, money, identity, or compliance.",
+    "medium": "Conversation logic — scheduling, routing, tool usage, objection handling. Can change outcomes.",
+    "high": "Compliance, disclosure, PII handling, pricing/quotes, legal/financial commitments."
+  },
+  "categories": [
+    {
+      "id": "phrasing_tone",
+      "label": "Phrasing & tone",
+      "risk_tier": "low",
+      "decision": "auto_apply",
+      "summary": "Reword for warmth, clarity, or brevity without changing meaning or policy.",
+      "keywords": ["tone", "wording", "phrase", "rephrase", "friendly", "concise", "clarity", "greeting", "sound", "warmer", "natural"]
+    },
+    {
+      "id": "confirmation_recap",
+      "label": "Confirmation & recap",
+      "risk_tier": "low",
+      "decision": "auto_apply",
+      "summary": "Confirm or recap captured details before ending or acting.",
+      "keywords": ["confirm", "recap", "read back", "verify details", "summarize", "repeat back", "spell"]
+    },
+    {
+      "id": "latency_pacing",
+      "label": "Latency & pacing",
+      "risk_tier": "low",
+      "decision": "auto_apply",
+      "summary": "Reduce talk-over, dead air, or filler; improve turn-taking and pacing.",
+      "keywords": ["pacing", "interrupt", "talk over", "dead air", "filler", "pause", "slow down", "speed", "barge"]
+    },
+    {
+      "id": "objection_handling",
+      "label": "Objection handling",
+      "risk_tier": "low",
+      "decision": "auto_apply",
+      "summary": "Acknowledge concerns and offer a compliant, non-pricing rebuttal or reassurance.",
+      "keywords": ["objection", "hesitant", "reassure", "concern", "pushback", "rebuttal", "acknowledge"]
+    },
+    {
+      "id": "scheduling_logic",
+      "label": "Scheduling logic",
+      "risk_tier": "medium",
+      "decision": "queue",
+      "summary": "Change how slots are offered, confirmed, or rescheduled.",
+      "keywords": ["slot", "schedule", "reschedule", "booking", "appointment", "availability", "calendar", "no-show"]
+    },
+    {
+      "id": "routing_escalation",
+      "label": "Routing & escalation",
+      "risk_tier": "medium",
+      "decision": "queue",
+      "summary": "Change when and how the agent hands off to a human or another queue.",
+      "keywords": ["escalate", "handoff", "transfer", "route", "human agent", "supervisor", "warm transfer"]
+    },
+    {
+      "id": "tool_usage",
+      "label": "Tool & data capture",
+      "risk_tier": "medium",
+      "decision": "queue",
+      "summary": "Change when an HTTP tool is called or which fields are captured.",
+      "keywords": ["tool", "http", "api call", "capture", "lookup", "field", "mapped_data", "variable"]
+    },
+    {
+      "id": "disclosure_compliance",
+      "label": "Disclosure & compliance",
+      "risk_tier": "high",
+      "decision": "block",
+      "summary": "Recording disclosure, consent language, or regulated scripts. Always requires a human.",
+      "keywords": ["disclosure", "consent", "recording", "compliance", "tcpa", "gdpr", "hipaa", "regulation", "legal", "mini-miranda"]
+    },
+    {
+      "id": "pii_handling",
+      "label": "PII & sensitive data",
+      "risk_tier": "high",
+      "decision": "block",
+      "summary": "How the agent handles SSN, card numbers, PHI, or other sensitive identifiers. Always requires a human.",
+      "keywords": ["ssn", "social security", "pan", "card number", "pci", "phi", "redact", "sensitive", "full number", "date of birth"]
+    },
+    {
+      "id": "pricing_quote",
+      "label": "Pricing & quotes",
+      "risk_tier": "high",
+      "decision": "queue",
+      "summary": "Any change that quotes prices, fees, discounts, or financial commitments.",
+      "keywords": ["price", "pricing", "quote", "fee", "discount", "refund", "charge", "cost", "waiver", "credit", "payment amount"]
+    },
+    {
+      "id": "unknown",
+      "label": "Uncategorized",
+      "risk_tier": "medium",
+      "decision": "queue",
+      "summary": "Could not classify confidently — route to a human by default.",
+      "keywords": []
+    }
+  ]
+}

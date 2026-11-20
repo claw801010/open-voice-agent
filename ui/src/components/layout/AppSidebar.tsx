@@ -3,6 +3,7 @@
 import type { Team } from "@stackframe/stack";
 import {
   AudioLines,
+  BookOpen,
   Brain,
   ChevronLeft,
   ChevronRight,
@@ -18,6 +19,7 @@ import {
   Phone,
   Settings,
   ShieldCheck,
+  Sparkles,
   Store,
   TrendingUp,
   Workflow,
@@ -25,7 +27,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import ThemeToggle from "@/components/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
@@ -60,6 +62,11 @@ import {
 import { useAppConfig } from "@/context/AppConfigContext";
 import type { LocalUser } from "@/lib/auth";
 import { useAuth } from "@/lib/auth";
+import {
+    loadGettingStartedState,
+    onboardingProgressLabel,
+    shouldShowResumeSetup,
+} from "@/lib/onboarding/gettingStarted";
 import { cn } from "@/lib/utils";
 
 // Lazy load SelectedTeamSwitcher - we'll pass selectedTeam from our context
@@ -90,6 +97,21 @@ export function AppSidebar() {
   }
   const selectedTeam = selectedTeamRef.current;
 
+  const [resumeSetupLabel, setResumeSetupLabel] = useState<string | null>(null);
+  useEffect(() => {
+    const sync = () => {
+      const state = loadGettingStartedState();
+      if (shouldShowResumeSetup(state)) {
+        setResumeSetupLabel(onboardingProgressLabel(state));
+      } else {
+        setResumeSetupLabel(null);
+      }
+    };
+    sync();
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, [pathname]);
+
   // Version info from app config context
   const versionInfo = config ? { ui: config.uiVersion, api: config.apiVersion } : null;
 
@@ -105,6 +127,16 @@ export function AppSidebar() {
       url: "/overview",
       icon: Home,
     },
+    ...(resumeSetupLabel
+      ? [
+          {
+            title: `Resume setup (${resumeSetupLabel})`,
+            url: "/overview",
+            icon: Sparkles,
+            testId: "sidebar-resume-setup",
+          },
+        ]
+      : []),
   ];
 
   const buildSection = [
@@ -117,6 +149,11 @@ export function AppSidebar() {
           title: "Templates",
           url: "/workflow/catalog",
           icon: Store,
+        },
+        {
+          title: "Recipes",
+          url: "/recipes",
+          icon: BookOpen,
         },
         {
           title: "Campaigns",
@@ -187,6 +224,11 @@ export function AppSidebar() {
       icon: ClipboardList,
     },
     {
+      title: "Quality & improvement",
+      url: "/analytics/quality",
+      icon: ShieldCheck,
+    },
+    {
       title: "Review inbox",
       url: "/analytics/review",
       icon: ShieldCheck,
@@ -220,7 +262,11 @@ export function AppSidebar() {
                   isItemActive && "bg-accent text-accent-foreground"
                 )}
               >
-                <Link href={item.url} onClick={handleMobileNavClick}>
+                <Link
+                  href={item.url}
+                  onClick={handleMobileNavClick}
+                  data-testid={'testId' in item ? (item as { testId?: string }).testId : undefined}
+                >
                   <Icon className="h-4 w-4" />
                   <span className="sr-only">{item.title}</span>
                 </Link>
@@ -242,7 +288,11 @@ export function AppSidebar() {
           isItemActive && "bg-accent text-accent-foreground"
         )}
       >
-        <Link href={item.url} onClick={handleMobileNavClick}>
+        <Link
+          href={item.url}
+          onClick={handleMobileNavClick}
+          data-testid={'testId' in item ? (item as { testId?: string }).testId : undefined}
+        >
           <Icon className="h-4 w-4" />
           <span>{item.title}</span>
         </Link>

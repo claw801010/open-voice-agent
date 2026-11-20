@@ -6,3 +6,5 @@ class FunctionNames:
     PROCESS_CAMPAIGN_BATCH = "process_campaign_batch"
     PROCESS_KNOWLEDGE_BASE_DOCUMENT = "process_knowledge_base_document"
     RUN_ANALYTICS_QM_EXPORT_FOR_ORG = "run_analytics_qm_export_for_org"
+    ROLLUP_SELF_IMPROVEMENT_FOR_ORG = "rollup_self_improvement_for_org"
+    ROLLUP_SELF_IMPROVEMENT_ALL_ORGS = "rollup_self_improvement_all_orgs"

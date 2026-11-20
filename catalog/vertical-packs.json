@@ -1,5 +1,5 @@
 {
-  "catalog_version": 10,
+  "catalog_version": 11,
   "description": "Canonical vertical pack metadata for MK-01 marketplace work. Packaged graphs live under catalog/packaged-workflows/; install uses POST /api/v1/workflow/install-from-catalog. Each pack has pack_semver (see catalog/README.md). Optional workflow_variants list simple vs complex graphs for the same vertical (complex = booking/API-ready prompts); default install uses workflow_template.packaged_definition_ref.",
   "packs": [
     {
@@ -95,8 +95,8 @@
         "After catalog install, workflows expose MK-01 catalog_slug \u2014 filter /analytics and /analytics/calls by that slug.",
         "Prove triage \u2192 handoff with outcome_key in gathered_context and HTTP tool mapped_data on call detail.",
         "booking_complex: book_slot; confirm_remind: reschedule_appointment; concierge_complex: enroll_concierge_visit + catalog_variant_id filter.",
-        "ehr_sync_complex: lookup_patient_context, verify_prior_auth, send_confirmation_sms, sync_chart_to_ehr — live workflow timeline on call detail.",
-        "Human-in-the-loop: queue SMS/email follow-ups with suggested_message → Analytics → Review inbox.",
+        "ehr_sync_complex: lookup_patient_context, verify_prior_auth, send_confirmation_sms, sync_chart_to_ehr \u2014 live workflow timeline on call detail.",
+        "Human-in-the-loop: queue SMS/email follow-ups with suggested_message \u2192 Analytics \u2192 Review inbox.",
         "Export CSV for booking / reminder / concierge funnel QA."
       ],
       "roadmap_motions": []
@@ -842,6 +842,283 @@
         "application_status_complex: filter tool_name lookup_application_status and catalog_variant_id=application_status_complex.",
         "interview_confirm_complex: filter tool_name confirm_or_reschedule_interview and catalog_variant_id=interview_confirm_complex.",
         "CSV export supports QM sampling for candidate experience experiments."
+      ],
+      "roadmap_motions": []
+    },
+    {
+      "slug": "construction-trades-faq",
+      "pack_semver": "1.0.0",
+      "industry": "Construction / trades",
+      "display_name": "Construction FAQ & site visits",
+      "summary": "Licensed contractor voice flow: services and service-area FAQ, on-site estimate scheduling, and project intake\u2014designed for remodelers, GCs, and specialty trades without quoting firm prices on the call.",
+      "use_cases": [
+        "services and licensing FAQ",
+        "service area and hours",
+        "site visit / walkthrough scheduling (booking_complex + schedule_site_visit)",
+        "project estimate intake (estimate_complex + capture_project_intent)"
+      ],
+      "languages": [
+        "en-US",
+        "es-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt",
+        "recording-disclosure-required",
+        "licensed-contractor-copy-required"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/construction-trades-faq/voice-preview/audio",
+      "recommended_voice_profile_id": "builtin:vertical_trades",
+      "cost_latency_estimate_band": "Low\u2013medium latency for FAQ; higher when scheduling tools add RTT",
+      "runbook_path": "runbooks/construction-trades-faq.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "construction-trades-faq.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Construction FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "construction-trades-faq.json",
+          "description": "Minimal contractor FAQ for fast field-services demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Site visit scheduling",
+          "complexity": "complex",
+          "packaged_definition_ref": "construction-trades-booking-complex.json",
+          "description": "Schedule on-site estimates; wire HTTP schedule_site_visit after install."
+        },
+        {
+          "variant_id": "estimate_complex",
+          "label": "Project estimate intake",
+          "complexity": "complex",
+          "packaged_definition_ref": "construction-trades-estimate-complex.json",
+          "description": "Capture bid/estimate intent to CRM; wire HTTP capture_project_intent after install."
+        }
+      ],
+      "default_template_variables": {
+        "company_name": "Your Construction Co.",
+        "support_phone": "+1-555-0181",
+        "services_page_url": "https://construction.example.com/services",
+        "default_trade_code": "REMODEL-RESIDENTIAL",
+        "scheduling_api_base_url": "https://scheduling.example.com/api/v1",
+        "crm_api_base_url": "https://crm.example.com/v1",
+        "crm_lead_source_code": "VOICE-INBOUND-CONSTRUCTION"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug construction-trades-faq after install.",
+        "booking_complex: tool_name schedule_site_visit; estimate_complex: capture_project_intent."
+      ],
+      "roadmap_motions": []
+    },
+    {
+      "slug": "handyman-home-services-faq",
+      "pack_semver": "1.0.0",
+      "industry": "Handyman / home services",
+      "display_name": "Handyman FAQ & service booking",
+      "summary": "Owner-operator home services template: services menu and ZIP coverage FAQ, visit booking, and quote intake\u2014ideal for handyman, cleaning, and small home-repair brands.",
+      "use_cases": [
+        "services menu and service-area FAQ",
+        "home service visit booking (booking_complex + schedule_home_service)",
+        "quote / estimate intake (quote_complex + capture_service_quote)"
+      ],
+      "languages": [
+        "en-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt",
+        "recording-disclosure-required"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/handyman-home-services-faq/voice-preview/audio",
+      "recommended_voice_profile_id": "builtin:vertical_trades",
+      "cost_latency_estimate_band": "Low latency for FAQ; medium when scheduling wired",
+      "runbook_path": "runbooks/handyman-home-services-faq.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "handyman-home-services-faq.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Handyman FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "handyman-home-services-faq.json",
+          "description": "Minimal home-services FAQ flow."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Service visit booking",
+          "complexity": "complex",
+          "packaged_definition_ref": "handyman-home-services-booking-complex.json",
+          "description": "Wire HTTP schedule_home_service after install."
+        },
+        {
+          "variant_id": "quote_complex",
+          "label": "Quote intake",
+          "complexity": "complex",
+          "packaged_definition_ref": "handyman-home-services-quote-complex.json",
+          "description": "Wire HTTP capture_quote_intent after install."
+        }
+      ],
+      "default_template_variables": {
+        "business_name": "Your Handyman Service",
+        "support_phone": "+1-555-0182",
+        "services_page_url": "https://handyman.example.com/services",
+        "service_area_zips": "90210,90211,90212",
+        "scheduling_api_base_url": "https://scheduling.example.com/api/v1",
+        "crm_api_base_url": "https://crm.example.com/v1",
+        "crm_lead_source_code": "VOICE-INBOUND-HANDYMAN",
+        "quoting_api_base_url": "https://quotes.example.com/v1"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug handyman-home-services-faq.",
+        "booking_complex: schedule_home_service; quote_complex: capture_service_quote."
+      ],
+      "roadmap_motions": []
+    },
+    {
+      "slug": "barber-beauty-salon-faq",
+      "pack_semver": "1.0.0",
+      "industry": "Barber / beauty / salon",
+      "display_name": "Salon FAQ & appointments",
+      "summary": "Barber, salon, and beauty studio voice agent: services menu FAQ, appointment booking, and stylist routing\u2014reduce no-shows with policy-safe scheduling language.",
+      "use_cases": [
+        "services menu and cancellation policy FAQ",
+        "salon appointment booking (booking_complex + book_salon_appointment)",
+        "stylist / chair routing (stylist_router_complex + route_to_stylist)"
+      ],
+      "languages": [
+        "en-US",
+        "es-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt",
+        "recording-disclosure-required"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/barber-beauty-salon-faq/voice-preview/audio",
+      "recommended_voice_profile_id": "builtin:vertical_beauty",
+      "cost_latency_estimate_band": "Low\u2013medium latency; booking tools add calendar RTT",
+      "runbook_path": "runbooks/barber-beauty-salon-faq.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "barber-beauty-salon-faq.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Salon FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "barber-beauty-salon-faq.json",
+          "description": "Minimal salon FAQ for chair-side demos."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Appointment booking",
+          "complexity": "complex",
+          "packaged_definition_ref": "barber-beauty-salon-booking-complex.json",
+          "description": "Wire HTTP book_salon_appointment (book_slot) after install."
+        },
+        {
+          "variant_id": "location_router_complex",
+          "label": "Stylist / chair routing",
+          "complexity": "complex",
+          "packaged_definition_ref": "barber-beauty-salon-stylist-router-complex.json",
+          "description": "Wire HTTP route_call_to_location after install."
+        }
+      ],
+      "default_template_variables": {
+        "salon_name": "Your Salon & Barbershop",
+        "support_phone": "+1-555-0183",
+        "services_menu_url": "https://salon.example.com/menu",
+        "default_stylist_code": "STYLIST-DEMO-01",
+        "scheduling_api_base_url": "https://scheduling.example.com/api/v1",
+        "routing_api_base_url": "https://routing.example.com/v1",
+        "routing_policy_code": "SALON-STYLIST-ROUTE-STD",
+        "locations_api_base_url": "https://locations.example.com/v1"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug barber-beauty-salon-faq.",
+        "booking_complex: book_salon_appointment; stylist_router_complex: route_to_stylist."
+      ],
+      "roadmap_motions": []
+    },
+    {
+      "slug": "solopreneur-coach-faq",
+      "pack_semver": "1.0.0",
+      "industry": "Solopreneur / entrepreneur",
+      "display_name": "Solopreneur FAQ & discovery calls",
+      "summary": "Founder-led and solopreneur voice template: offerings FAQ, discovery-call booking, and client intake\u2014coaches, consultants, creators, and one-person agencies.",
+      "use_cases": [
+        "offerings and positioning FAQ",
+        "discovery / strategy call booking (booking_complex + book_discovery_call)",
+        "client intake capture (intake_complex + capture_client_intake)"
+      ],
+      "languages": [
+        "en-US"
+      ],
+      "supported_modes": [
+        "webrtc",
+        "pstn"
+      ],
+      "compliance_tags": [
+        "no-payment-card-in-prompt",
+        "recording-disclosure-required"
+      ],
+      "preview_audio_url": "/api/v1/catalog/vertical-packs/solopreneur-coach-faq/voice-preview/audio",
+      "recommended_voice_profile_id": "builtin:vertical_solopreneur",
+      "cost_latency_estimate_band": "Low latency for FAQ; CRM/scheduling tools add RTT",
+      "runbook_path": "runbooks/solopreneur-coach-faq.md",
+      "workflow_template": {
+        "source": "packaged_definition",
+        "packaged_definition_ref": "solopreneur-coach-faq.json"
+      },
+      "workflow_variants": [
+        {
+          "variant_id": "simple",
+          "label": "Solopreneur FAQ (default install)",
+          "complexity": "simple",
+          "packaged_definition_ref": "solopreneur-coach-faq.json",
+          "description": "Minimal founder-led FAQ flow."
+        },
+        {
+          "variant_id": "booking_complex",
+          "label": "Discovery call booking",
+          "complexity": "complex",
+          "packaged_definition_ref": "solopreneur-coach-booking-complex.json",
+          "description": "Wire HTTP book_discovery_call after install."
+        },
+        {
+          "variant_id": "lead_capture_complex",
+          "label": "Client intake (CRM)",
+          "complexity": "complex",
+          "packaged_definition_ref": "solopreneur-coach-intake-complex.json",
+          "description": "Wire HTTP capture_lead_intent after install."
+        }
+      ],
+      "default_template_variables": {
+        "brand_name": "Your Brand / Coaching Practice",
+        "support_phone": "+1-555-0184",
+        "offerings_page_url": "https://brand.example.com/offerings",
+        "scheduling_api_base_url": "https://scheduling.example.com/api/v1",
+        "crm_api_base_url": "https://crm.example.com/v1",
+        "crm_lead_source_code": "VOICE-INBOUND-SOLO"
+      },
+      "analytics_hooks": [
+        "Filter analytics by catalog_slug solopreneur-coach-faq.",
+        "booking_complex: book_discovery_call; intake_complex: capture_client_intake."
       ],
       "roadmap_motions": []
     }

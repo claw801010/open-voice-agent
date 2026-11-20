@@ -4,7 +4,10 @@
 
 | File | Role |
 |------|------|
-| [vertical-packs.json](vertical-packs.json) | Canonical JSON for **≥5** verticals (healthcare, retail, B2B SaaS, insurance, hospitality); each entry references a **runbook** under [runbooks/](../runbooks/). |
+| [vertical-packs.json](vertical-packs.json) | Canonical JSON for **14** verticals (enterprise + field services); each entry references a **runbook** under [runbooks/](../runbooks/). |
+| [capability-modules.json](capability-modules.json) | **MK-01-CAPABILITY-MODULES** — composable buyer motions with **`pack_refs`** into vertical packs; buyer guide [CAPABILITY_MODULES.md](CAPABILITY_MODULES.md); **`GET /api/v1/catalog/capability-modules`**. |
+| [community-registry.json](community-registry.json) | **MK-01-REGISTRY** — unified public index (verticals, tools, prompts, recipes, inference, governance); builder [build_community_catalog.py](../scripts/build_community_catalog.py); guide [COMMUNITY_REGISTRY.md](COMMUNITY_REGISTRY.md); **`GET /api/v1/catalog/registry`**. |
+| [community-registry-distribution.json](community-registry-distribution.json) | Tier defaults + price overrides for registry listings (free → enterprise). |
 | [catalog-variant-http-tools.json](catalog-variant-http-tools.json) | **Variant → HTTP tool names** for complex packaged graphs; consumed by workflow catalog guide + [analyticsVerticalHttpHints.ts](../ui/src/lib/analyticsVerticalHttpHints.ts). |
 | [PREBUILD_VERTICAL_ROADMAP.md](PREBUILD_VERTICAL_ROADMAP.md) | **Booking + revenue motions** gap analysis vs shipped graphs; next slices for prebuilt marketplace demos (**MK-01-RUBRIC**). |
 | [ANALYTICS_VERTICAL_ROADMAP.md](ANALYTICS_VERTICAL_ROADMAP.md) | **Calls, dashboards, APIs, DB** — analytics companion for vertical prebuilds (**MK-01-ANALYTICS-VERTICAL**). |
@@ -17,13 +20,17 @@
 | [recipes/local-integrations-all-in-one.md](recipes/local-integrations-all-in-one.md) | **All-in-one local integrations** — CRM, OSS, ATS, banking, civic, hospitality HTTP tools. |
 | [recipes/healthcare-ehr-all-in-one.md](recipes/healthcare-ehr-all-in-one.md) | **Healthcare EHR + messaging** — patient context, prior auth, chart sync, SMS/email, review inbox. |
 | [recipes/local-all-in-one-gtm-demo.md](recipes/local-all-in-one-gtm-demo.md) | **GTM walkthrough** — zero-`:8765` demo script + UI checklist for local stack. |
-| [recipes/prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) | **PREBUILD complete:** slug × variant × HTTP tool × local endpoint matrix for GTM / QA (all 10 verticals). |
+| [recipes/prebuild-vertical-demo-matrix.md](recipes/prebuild-vertical-demo-matrix.md) | **PREBUILD complete:** slug × variant × HTTP tool × local endpoint matrix for GTM / QA (all **14** verticals). |
+| [OUTSTANDING.md](OUTSTANDING.md) | **Deferred work** — voice previews (ElevenLabs) and optional polish; ask *what's outstanding* when ready. |
+| [ERP_CRM_PLATFORM_BLUEPRINT.md](ERP_CRM_PLATFORM_BLUEPRINT.md) | **ERP-01** — omnichannel CRM & ERP architecture (DDL, sync, inference compliance, UX density); extends local-all-in-one recipes; [READMEPLANNING.md](../READMEPLANNING.md) §9. |
 | [recipes/catalog-buyer-demo.md](recipes/catalog-buyer-demo.md) | One-command buyer install + shortcut scripts; **`run_all_buyer_demos.sh`**, **`gtm_buyer_demo_pack.sh`**. |
 | [buyer-demo-defaults.json](buyer-demo-defaults.json) | Default **`catalog_variant_id`** + settings hash per slug for marketplace proof links and `./scripts/buyer-demo-*.sh`. |
 | [buyer-demo-hints.json](buyer-demo-hints.json) | **In-product tips** — buyer story, wire-local hover copy, compliance notes (marketplace + workflow guide). |
 | [recipes/buyer-demo-gtm-day.md](recipes/buyer-demo-gtm-day.md) | **SE runbook** — 45-minute buyer + GTM day (verify → stack → seed → demo flow). |
 | [voice-previews/](voice-previews/) | Hosted **`{slug}.wav`** for marketplace voice preview (`regen_catalog_voice_previews.sh`). |
-| [voice-previews/README.md](voice-previews/README.md) | Regenerate / `--report` silent vs spoken placeholders. |
+| [voice-previews/README.md](voice-previews/README.md) | ElevenLabs / Speaches / silent fallback chain. |
+| [voice-preview-tts-config.json](voice-preview-tts-config.json) | Speaches + ElevenLabs defaults for preview regen. |
+| [voice-preview-elevenlabs-ids.json](voice-preview-elevenlabs-ids.json) | Per-vertical ElevenLabs voice id buckets. |
 | [analytics-calls-api-draft.yaml](analytics-calls-api-draft.yaml) | **OpenAPI draft** — contract for `GET /api/v1/analytics/insights`, `GET /api/v1/analytics/calls` + detail ([api/routes/analytics.py](../api/routes/analytics.py)); **HttpToolSpanSummary**; insights + `catalog_slug` filters. |
 | [packaged-workflows/looptalk-simulated-caller.json](packaged-workflows/looptalk-simulated-caller.json) | **System** adversary graph for LoopTalk quick-persona tests (not a marketplace vertical); installed per org as `[System] LoopTalk simulated caller` via `POST /api/v1/looptalk/test-sessions/quick-persona`. |
 | [PARTNER_REVIEW.md](PARTNER_REVIEW.md) | Partner / community **review checklist** (safety, PII, telephony compliance) before a pack is **published** — **MK-01-PARTNER**. |

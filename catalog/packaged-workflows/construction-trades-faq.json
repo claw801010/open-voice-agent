@@ -1,0 +1,68 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting; offer help with construction faq.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": {
+        "x": 0,
+        "y": 140
+      },
+      "data": {
+        "name": "Construction FAQ",
+        "prompt": "You are the voice assistant for **{{company_name}}**, a licensed construction or remodeling contractor. Answer **services**, **service area**, **licensing/insurance FAQ**, and **business hours** from published copy. Reference {{services_page_url}} when callers ask what you build.\n\nNever quote firm prices without a site visit. Never collect payment card numbers on the call. Escalate complex structural or permit questions to {{support_phone}}.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": {
+        "x": 0,
+        "y": 280
+      },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm any next step documented.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": {
+        "label": "Continue",
+        "condition": "After greeting"
+      }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": {
+        "label": "End",
+        "condition": "When resolved or escalated"
+      }
+    }
+  ]
+}

@@ -15,6 +15,7 @@ from api.services.configuration.check_validity import (
     UserConfigurationValidator,
 )
 from api.services.configuration.defaults import DEFAULT_SERVICE_PROVIDERS
+from api.services.configuration.oob_defaults import ensure_oob_user_configuration
 from api.services.configuration.masking import check_for_masked_keys, mask_user_config
 from api.services.configuration.merge import merge_user_configurations
 from api.services.configuration.registry import REGISTRY, ServiceType
@@ -92,6 +93,11 @@ async def get_user_configurations(
     user: UserModel = Depends(get_user),
 ) -> UserConfigurationRequestResponseSchema:
     user_configurations = await db_client.get_user_configurations(user.id)
+    oob = ensure_oob_user_configuration(user_configurations)
+    if oob.model_dump(exclude_none=True) != user_configurations.model_dump(
+        exclude_none=True
+    ):
+        user_configurations = await db_client.update_user_configuration(user.id, oob)
     masked_config = mask_user_config(user_configurations)
 
     # Add organization pricing info if available

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { getWorkflowsApiV1WorkflowFetchGet } from "@/client/sdk.gen";
 import type { WorkflowListResponse } from "@/client/types.gen";
 import { Badge } from "@/components/ui/badge";
+import { DismissibleHintBanner } from "@/components/onboarding/DismissibleHintBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ import {
     type QmScorecardRubric,
 } from "@/lib/analyticsCallsApi";
 import { useAuth } from "@/lib/auth";
+import { DISMISSIBLE_HINT_KEYS } from "@/lib/onboarding/dismissibleHints";
 import { downloadAnalyticsCallsCsv } from "@/lib/exportAnalyticsCallsCsv";
 
 function formatDurationMs(ms: number): string {
@@ -70,6 +72,7 @@ function listParamsFromSearchParams(sp: URLSearchParams) {
         workflow_id: wf != null && Number.isFinite(wf) ? wf : undefined,
         catalog_slug: sp.get("catalog_slug")?.trim() || undefined,
         catalog_variant_id: sp.get("catalog_variant_id")?.trim() || undefined,
+        capability_module_id: sp.get("capability_module_id")?.trim() || undefined,
         since: utcDayStart(sp.get("since") || "") || undefined,
         until: utcDayEnd(sp.get("until") || "") || undefined,
         disposition: sp.get("disposition")?.trim() || undefined,
@@ -122,6 +125,7 @@ export default function AnalyticsCallsListContent() {
     const [toolName, setToolName] = useState("");
     const [catalogSlug, setCatalogSlug] = useState("");
     const [catalogVariantId, setCatalogVariantId] = useState("");
+    const [capabilityModuleId, setCapabilityModuleId] = useState("");
 
     const dashboardStats = useMemo(() => {
         const toolSet = new Set<string>();
@@ -155,6 +159,7 @@ export default function AnalyticsCallsListContent() {
         setToolName(searchParams.get("tool_name") || "");
         setCatalogSlug(searchParams.get("catalog_slug") || "");
         setCatalogVariantId(searchParams.get("catalog_variant_id") || "");
+        setCapabilityModuleId(searchParams.get("capability_module_id") || "");
     }, [searchParams]);
 
     useEffect(() => {
@@ -246,6 +251,7 @@ export default function AnalyticsCallsListContent() {
         if (workflowId && workflowId !== "all") q.set("workflow_id", workflowId);
         if (catalogSlug.trim()) q.set("catalog_slug", catalogSlug.trim());
         if (catalogVariantId.trim()) q.set("catalog_variant_id", catalogVariantId.trim());
+        if (capabilityModuleId.trim()) q.set("capability_module_id", capabilityModuleId.trim());
         if (sinceDay) q.set("since", sinceDay);
         if (untilDay) q.set("until", untilDay);
         if (disposition.trim()) q.set("disposition", disposition.trim());
@@ -286,6 +292,19 @@ export default function AnalyticsCallsListContent() {
 
     return (
         <div className="space-y-6 pb-10">
+            <DismissibleHintBanner
+                hintKey={DISMISSIBLE_HINT_KEYS.analyticsFiltersCalls}
+                title="Finding the right calls"
+                data-testid="analytics-calls-filter-hint"
+            >
+                <p>
+                    Start with <span className="text-foreground/90">Workflow</span> when you opened a link from the
+                    editor header. Combine with <span className="text-foreground/90">Capability motion</span> to compare
+                    all agents installed for the same buyer motion. Server export uses the same filters as this list (up
+                    to 5,000 rows).
+                </p>
+            </DismissibleHintBanner>
+
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
@@ -819,6 +838,15 @@ export default function AnalyticsCallsListContent() {
                             placeholder="mk01.catalog_variant_id — e.g. simple, booking_complex"
                             value={catalogVariantId}
                             onChange={(e) => setCatalogVariantId(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="capability-module">Capability motion (optional)</Label>
+                        <Input
+                            id="capability-module"
+                            placeholder="mk01.capability_module_ids member, e.g. site_visit_scheduling"
+                            value={capabilityModuleId}
+                            onChange={(e) => setCapabilityModuleId(e.target.value)}
                         />
                     </div>
                     <div className="space-y-2">

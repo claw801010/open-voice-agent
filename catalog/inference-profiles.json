@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "default_profile_id": "local_edge_lean",
+  "description": "One-click LLM + STT + TTS stacks for cloud, local edge, and hybrid deployments. Applied via POST /api/v1/inference-profiles/{id}/apply.",
+  "profiles": [
+    {
+      "id": "cloud_balanced",
+      "label": "Cloud balanced",
+      "tier": "cloud",
+      "requires_api_keys": true,
+      "summary": "OpenAI LLM, Deepgram STT, ElevenLabs TTS — best quality when cloud API keys are configured.",
+      "edge_notes": "Requires OPENAI_API_KEY, DEEPGRAM_API_KEY, ELEVENLABS_API_KEY (or org service keys).",
+      "local_models": [],
+      "configuration": {
+        "is_realtime": false,
+        "llm": { "provider": "openai", "model": "gpt-4o-mini" },
+        "stt": { "provider": "deepgram", "model": "nova-3-general", "language": "en" },
+        "tts": { "provider": "elevenlabs", "model": "eleven_flash_v2_5" }
+      }
+    },
+    {
+      "id": "local_edge_lean",
+      "label": "Local edge (lean)",
+      "tier": "local",
+      "requires_api_keys": false,
+      "summary": "Ollama LLM + faster-whisper STT + Kokoro TTS — works out of the box with no API keys.",
+      "edge_notes": "Run Speaches (STT/TTS) and Ollama (LLM) on localhost; use ./scripts/setup_local_inference.sh to pull models.",
+      "local_models": [
+        { "runtime": "ollama", "model": "llama3.2:3b", "size_hint_mb": 2000, "purpose": "llm" },
+        {
+          "runtime": "speaches",
+          "model": "Systran/faster-distil-whisper-small.en",
+          "purpose": "stt"
+        },
+        { "runtime": "speaches", "model": "hexgrad/Kokoro-82M", "purpose": "tts" }
+      ],
+      "configuration": {
+        "is_realtime": false,
+        "llm": {
+          "provider": "speaches",
+          "model": "llama3.2",
+          "base_url": "http://localhost:11434/v1"
+        },
+        "stt": {
+          "provider": "speaches",
+          "model": "Systran/faster-distil-whisper-small.en",
+          "base_url": "http://localhost:8100/v1",
+          "language": "en"
+        },
+        "tts": {
+          "provider": "speaches",
+          "model": "kokoro",
+          "voice": "af_heart",
+          "base_url": "http://localhost:8100/v1",
+          "speed": 1.0
+        }
+      }
+    },
+    {
+      "id": "hybrid_edge",
+      "label": "Hybrid edge",
+      "tier": "hybrid",
+      "requires_api_keys": true,
+      "summary": "Local STT/TTS on device; cloud LLM (gpt-4o-mini) for reasoning, tools, and agent skills.",
+      "edge_notes": "Keeps transcription and voice on-box; needs OPENAI_API_KEY for the LLM only.",
+      "local_models": [
+        {
+          "runtime": "speaches",
+          "model": "Systran/faster-distil-whisper-small.en",
+          "purpose": "stt"
+        },
+        { "runtime": "speaches", "model": "hexgrad/Kokoro-82M", "purpose": "tts" }
+      ],
+      "configuration": {
+        "is_realtime": false,
+        "llm": { "provider": "openai", "model": "gpt-4o-mini" },
+        "stt": {
+          "provider": "speaches",
+          "model": "Systran/faster-distil-whisper-small.en",
+          "base_url": "http://localhost:8100/v1",
+          "language": "en"
+        },
+        "tts": {
+          "provider": "speaches",
+          "model": "kokoro",
+          "voice": "af_heart",
+          "base_url": "http://localhost:8100/v1",
+          "speed": 1.0
+        }
+      }
+    }
+  ]
+}

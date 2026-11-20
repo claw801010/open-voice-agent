@@ -1,4 +1,5 @@
 import { MarketplaceCatalog } from '@/components/catalog/MarketplaceCatalog';
+import { loadStaticCapabilityModules } from '@/lib/catalog/capabilityModules';
 import type { CatalogJson } from '@/lib/catalog/filterVerticalPacks';
 
 async function loadCatalog(): Promise<{ catalog: CatalogJson | null; error: string | null }> {
@@ -38,6 +39,7 @@ export default async function PublicTemplatesPage() {
                 catalog={catalog}
                 loadError={error}
                 installable={false}
+                capabilityModules={loadStaticCapabilityModules()}
                 title="Voice workflow templates"
                 subtitle="Browse industry packs before you sign in—filters match industry, use case, language, and compliance. After you sign in, install copies a pack into your org for Web tests; add phone numbers when you are ready for PSTN."
             />

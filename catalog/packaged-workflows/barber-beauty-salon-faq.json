@@ -1,0 +1,68 @@
+{
+  "nodes": [
+    {
+      "id": "n-start",
+      "type": "startCall",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "data": {
+        "name": "Start",
+        "prompt": "Brief greeting; offer help with salon faq.",
+        "is_start": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-agent",
+      "type": "agentNode",
+      "position": {
+        "x": 0,
+        "y": 140
+      },
+      "data": {
+        "name": "Salon FAQ",
+        "prompt": "You are the voice assistant for **{{salon_name}}**, a barber shop, salon, or beauty studio. Answer **services menu**, **hours**, **cancellation policy**, and **pricing tiers** from published copy at {{services_menu_url}}.\n\nNever collect card numbers on the call. Offer booking or stylist handoff when callers are ready.",
+        "allow_interrupt": true,
+        "add_global_prompt": false
+      }
+    },
+    {
+      "id": "n-end",
+      "type": "endCall",
+      "position": {
+        "x": 0,
+        "y": 280
+      },
+      "data": {
+        "name": "End",
+        "prompt": "Close warmly; confirm any next step documented.",
+        "is_end": true,
+        "allow_interrupt": false,
+        "add_global_prompt": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "n-start",
+      "target": "n-agent",
+      "data": {
+        "label": "Continue",
+        "condition": "After greeting"
+      }
+    },
+    {
+      "id": "e2",
+      "source": "n-agent",
+      "target": "n-end",
+      "data": {
+        "label": "End",
+        "condition": "When resolved or escalated"
+      }
+    }
+  ]
+}

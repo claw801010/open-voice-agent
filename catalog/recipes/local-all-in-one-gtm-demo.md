@@ -69,7 +69,7 @@ See [prebuild-vertical-demo-matrix.md](prebuild-vertical-demo-matrix.md) for slu
 
 Preflight + live capture: `./scripts/gtm_live_capture_ready.sh` (add `--run-capture` when API/UI are up).
 
-Capture deck PNGs with `./scripts/gtm_capture_deck.sh` (`E2E_GTM_DECK_SCREENSHOTS=1`) — **41 frames** (see [http-api-analytics-redaction-gtm-demo.md](http-api-analytics-redaction-gtm-demo.md)):
+Capture deck PNGs with `./scripts/gtm_capture_deck.sh` (`E2E_GTM_DECK_SCREENSHOTS=1`) — **54 frames** (see [http-api-analytics-redaction-gtm-demo.md](http-api-analytics-redaction-gtm-demo.md)):
 
 | File | What to show |
 |------|----------------|

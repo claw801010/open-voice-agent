@@ -37,6 +37,20 @@ From here you can configure each service:
 
 Select a provider from the dropdown and configure the API key, model, and any provider-specific settings. For Dograh's own models, see [Service Keys](api-keys) for instructions on creating Service Keys.
 
+## Inference profiles (cloud, local edge, hybrid)
+
+At the top of **Model Configurations**, use **Inference profile** to switch the whole LLM + STT + TTS stack in one click:
+
+| Profile | When to use |
+|---------|-------------|
+| **Local edge (lean)** | Default for self-hosted — Ollama LLM + Speaches STT/TTS on **localhost**; **no API keys** required |
+| **Hybrid edge** | Local STT/TTS on device; cloud LLM (OpenAI) for reasoning and tools — needs **`OPENAI_API_KEY`** |
+| **Cloud balanced** | OpenAI + Deepgram + ElevenLabs — best quality when cloud keys are configured |
+
+**Set up local models** scans Ollama (**:11434**) and Speaches (**:8100**), starts Speaches via Docker when needed, and pulls lean OSS weights. Per-agent override: open the agent → **Settings** → **Inference profile** (inherits org default when unset).
+
+**Air-gapped installs:** on a connected machine run **`./scripts/setup_local_inference.sh`** then **`./scripts/export_local_inference_bundle.sh`**. Copy **`dist/local-inference-bundle.tar.gz`** to the offline host and run **`LOCAL_INFERENCE_BUNDLE=/path/to/bundle.tar.gz ./scripts/setup_local_inference.sh`**. See **`catalog/local-inference-bundle.manifest.json`** in the repo for the reference manifest.
+
 ## Agent-Level Model Overrides
 
 You can override the global model configuration for any individual agent. This is useful when different agents have different requirements — for example, a customer support agent might use a faster, cheaper LLM while a sales agent uses a more capable one.

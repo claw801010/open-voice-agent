@@ -53,21 +53,34 @@ from api.tasks.analytics_qm_export_tasks import (
     cron_enqueue_analytics_qm_exports,
     run_analytics_qm_export_for_org,
 )
+from api.tasks.self_improvement_tasks import (
+    rollup_self_improvement_all_orgs,
+    rollup_self_improvement_for_org,
+)
 from api.services.analytics.analytics_qm_export_schedule import (
     QM_EXPORT_CRON_DISPATCH_MINUTE_UTC,
 )
 
 _QM_EXPORT_CRON_JOBS = []
-if ENABLE_ANALYTICS_QM_EXPORT_CRON:
-    from arq.cron import cron
+_SELF_IMPROVE_CRON_JOBS = []
+from arq.cron import cron
 
+if ENABLE_ANALYTICS_QM_EXPORT_CRON:
     _QM_EXPORT_CRON_JOBS = [
         cron(
             cron_enqueue_analytics_qm_exports,
             minute=QM_EXPORT_CRON_DISPATCH_MINUTE_UTC,
             run_at_startup=False,
-        )
+        ),
     ]
+
+_SELF_IMPROVE_CRON_JOBS = [
+    cron(
+        rollup_self_improvement_all_orgs,
+        minute={15},
+        run_at_startup=False,
+    ),
+]
 
 
 class WorkerSettings:
@@ -79,8 +92,10 @@ class WorkerSettings:
         process_campaign_batch,
         process_knowledge_base_document,
         run_analytics_qm_export_for_org,
+        rollup_self_improvement_for_org,
+        rollup_self_improvement_all_orgs,
     ]
-    cron_jobs = _QM_EXPORT_CRON_JOBS
+    cron_jobs = _QM_EXPORT_CRON_JOBS + _SELF_IMPROVE_CRON_JOBS
     redis_settings = REDIS_SETTINGS
     max_jobs = 10
 

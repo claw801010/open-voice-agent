@@ -10,7 +10,11 @@
     "smb-franchise-location-faq": "lead_capture_complex",
     "telecom-utilities-outage-faq": "outage_status_complex",
     "public-sector-civic-services-faq": "permit_status_complex",
-    "hr-staffing-recruiting-faq": "application_status_complex"
+    "hr-staffing-recruiting-faq": "application_status_complex",
+    "construction-trades-faq": "booking_complex",
+    "handyman-home-services-faq": "quote_complex",
+    "barber-beauty-salon-faq": "booking_complex",
+    "solopreneur-coach-faq": "lead_capture_complex"
   },
   "settings_sections": {
     "healthcare-clinic-screening": "local-ehr",
@@ -22,6 +26,10 @@
     "smb-franchise-location-faq": "local-integrations",
     "telecom-utilities-outage-faq": "local-integrations",
     "public-sector-civic-services-faq": "local-integrations",
-    "hr-staffing-recruiting-faq": "local-integrations"
+    "hr-staffing-recruiting-faq": "local-integrations",
+    "construction-trades-faq": "local-scheduling",
+    "handyman-home-services-faq": "local-integrations",
+    "barber-beauty-salon-faq": "local-scheduling",
+    "solopreneur-coach-faq": "local-integrations"
   }
 }

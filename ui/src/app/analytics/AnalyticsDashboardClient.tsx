@@ -72,6 +72,8 @@ import {
 import { verticalHttpProofHintForSlug } from "@/lib/analyticsVerticalHttpHints";
 import { formatHttpCacheHitRate } from "@/lib/httpCacheInsights";
 import { useAuth } from "@/lib/auth";
+import { DismissibleHintBanner } from '@/components/onboarding/DismissibleHintBanner';
+import { DISMISSIBLE_HINT_KEYS } from '@/lib/onboarding/dismissibleHints';
 import { cn } from "@/lib/utils";
 
 /** Canonical slugs from catalog/vertical-packs.json — align MK-01 install `catalog_slug` when publishing. */
@@ -120,6 +122,7 @@ export function AnalyticsDashboardClient() {
     const idDays = useId();
     const idSlug = useId();
     const idVariant = useId();
+    const idCapability = useId();
     const idRedaction = useId();
     const searchParams = useSearchParams();
     const { user, loading: authLoading, getAccessToken } = useAuth();
@@ -127,6 +130,7 @@ export function AnalyticsDashboardClient() {
     const [days, setDays] = useState(7);
     const [catalogSlug, setCatalogSlug] = useState("");
     const [catalogVariantId, setCatalogVariantId] = useState("");
+    const [capabilityModuleId, setCapabilityModuleId] = useState("");
     const [data, setData] = useState<AnalyticsInsights | null>(null);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState<string | null>(null);
@@ -255,6 +259,8 @@ export function AnalyticsDashboardClient() {
         setCatalogSlug(c != null && c.length > 0 ? c : "");
         const cv = searchParams.get("catalog_variant_id");
         setCatalogVariantId(cv != null && cv.length > 0 ? cv : "");
+        const cm = searchParams.get("capability_module_id");
+        setCapabilityModuleId(cm != null && cm.length > 0 ? cm : "");
         urlSyncReady.current = true;
     }, [searchParams]);
 
@@ -264,11 +270,12 @@ export function AnalyticsDashboardClient() {
         if (days !== 7) p.set("days", String(days));
         if (catalogSlug.trim()) p.set("catalog_slug", catalogSlug.trim());
         if (catalogVariantId.trim()) p.set("catalog_variant_id", catalogVariantId.trim());
+        if (capabilityModuleId.trim()) p.set("capability_module_id", capabilityModuleId.trim());
         const qs = p.toString();
         const next = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
         if (next === `${window.location.pathname}${window.location.search}`) return;
         window.history.replaceState(null, "", next);
-    }, [days, catalogSlug, catalogVariantId]);
+    }, [days, catalogSlug, catalogVariantId, capabilityModuleId]);
 
     const load = useCallback(async () => {
         if (!getAccessToken) return;
@@ -279,6 +286,7 @@ export function AnalyticsDashboardClient() {
                 days,
                 catalog_slug: catalogSlug.trim() || undefined,
                 catalog_variant_id: catalogVariantId.trim() || undefined,
+                capability_module_id: capabilityModuleId.trim() || undefined,
             });
             setData(d);
         } catch (e) {
@@ -289,7 +297,7 @@ export function AnalyticsDashboardClient() {
         } finally {
             setLoading(false);
         }
-    }, [getAccessToken, days, catalogSlug, catalogVariantId]);
+    }, [getAccessToken, days, catalogSlug, catalogVariantId, capabilityModuleId]);
 
     useEffect(() => {
         if (authLoading || !user) return;
@@ -472,6 +480,7 @@ export function AnalyticsDashboardClient() {
                                                     toolName: row.tool_name,
                                                     catalogSlug: catalogSlug.trim() || undefined,
                                                     catalogVariantId: catalogVariantId.trim() || undefined,
+                                                    capabilityModuleId: capabilityModuleId.trim() || undefined,
                                                     insightsSinceIso: data.since,
                                                     insightsUntilIso: data.until,
                                                 })}
@@ -636,6 +645,7 @@ export function AnalyticsDashboardClient() {
                                         outcomeLabel: row.outcome,
                                         catalogSlug: catalogSlug.trim() || undefined,
                                         catalogVariantId: catalogVariantId.trim() || undefined,
+                                        capabilityModuleId: capabilityModuleId.trim() || undefined,
                                         insightsSinceIso: data.since,
                                         insightsUntilIso: data.until,
                                     });
@@ -768,6 +778,7 @@ export function AnalyticsDashboardClient() {
                                                     toolName: n,
                                                     catalogSlug: catalogSlug.trim() || undefined,
                                                     catalogVariantId: catalogVariantId.trim() || undefined,
+                                                    capabilityModuleId: capabilityModuleId.trim() || undefined,
                                                     insightsSinceIso: data?.since,
                                                     insightsUntilIso: data?.until,
                                                 })}
@@ -805,6 +816,22 @@ export function AnalyticsDashboardClient() {
 
     return (
         <div className="space-y-6">
+            <DismissibleHintBanner
+                hintKey={DISMISSIBLE_HINT_KEYS.analyticsFiltersOverview}
+                title="How filters work"
+                data-testid="analytics-overview-filter-hint"
+            >
+                <p>
+                    Match fields stored on installed workflows under{' '}
+                    <code className="text-[11px]">workflow_configurations.mk01</code>: vertical{' '}
+                    <code className="text-[11px]">catalog_slug</code>, graph{' '}
+                    <code className="text-[11px]">catalog_variant_id</code>, and capability{' '}
+                    <code className="text-[11px]">capability_module_ids</code>. Click top outcomes or tools to drill
+                    into the call list with the same window. Catalog-installed workflows link here from the editor
+                    header.
+                </p>
+            </DismissibleHintBanner>
+
             <div className="flex flex-wrap items-end justify-between gap-3">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:items-end">
                     <div className="grid gap-1.5">
@@ -850,6 +877,21 @@ export function AnalyticsDashboardClient() {
                         />
                         <p className="text-[11px] text-muted-foreground">
                             MK-01 <code>catalog_variant_id</code> from install (simple vs complex).
+                        </p>
+                    </div>
+                    <div className="grid max-w-sm gap-1.5">
+                        <Label className="text-xs" htmlFor={idCapability}>
+                            Capability motion (optional)
+                        </Label>
+                        <Input
+                            id={idCapability}
+                            value={capabilityModuleId}
+                            onChange={(e) => setCapabilityModuleId(e.target.value)}
+                            placeholder="e.g. site_visit_scheduling"
+                            className="w-full"
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                            MK-01 <code>capability_module_ids</code> member on installed workflows.
                         </p>
                     </div>
                 </div>
