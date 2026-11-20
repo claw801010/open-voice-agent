@@ -18,4 +18,10 @@ coturn/
 *.wav
 !catalog/voice-previews/
 !catalog/voice-previews/*.wav
-dograh_pcm_cache/
+dograh_pcm_cache/node_modules/
+target/
+dist/
+.next/
+__pycache__/
+*.pyc
+.worktrees/
